@@ -1,0 +1,52 @@
+my-next-app/
+├── .github/                 # GitHub specific configurations
+│   ├── workflows/           # CI/CD pipelines (e.g., main.yml, tests.yml)
+│   └── pull_request_template.md
+├── .husky/                  # Git hooks (pre-commit linting, commit-msg)
+├── .vscode/                 # Editor settings for team consistency
+│   ├── extensions.json
+│   └── settings.json
+├── public/                  # Static assets (fonts, images, icons)
+│   |── images/
+|   └── file_structures/
+|       └──initial_file-structure.txt   # Contains information on initial file structure
+├── src/
+│   ├── app/                 # App Router (Pages & Layouts)
+│   │   ├── (auth)/          # Route Group: Auth specific layouts/pages
+│   │   │   ├── login/
+│   │   │   └── register/
+│   │   ├── (dashboard)/     # Route Group: Protected routes
+│   │   │   └── settings/
+│   │   ├── api/             # API Routes (Route Handlers)
+│   │   ├── error.tsx        # Global error UI
+│   │   ├── layout.tsx       # Root layout
+│   │   ├── loading.tsx      # Global loading UI
+│   │   ├── not-found.tsx    # 404 UI
+│   │   └── page.tsx         # Home page
+│   ├── components/
+│   │   ├── ui/              # Reusable generic UI (Buttons, Inputs, Modals)
+│   │   ├── layout/          # Structural components (Navbar, Sidebar, Footer)
+│   │   └── features/        # Feature-specific components (e.g., AuthForm, DashboardChart)
+│   ├── config/              # Environment config & constants
+│   │   ├── site.ts          # Site metadata
+│   │   └── env.ts           # Type-safe env variable validation (e.g., T3 Env)
+│   ├── hooks/               # Custom React hooks (useScroll, useAuth)
+│   ├── lib/                 # Utility functions & libraries
+│   │   ├── db.ts            # Database client singleton (Prisma, Drizzle, etc.)
+│   │   ├── utils.ts         # Helper functions (clsx, twMerge)
+│   │   └── validators/      # Zod/Yup schemas for validation
+│   ├── services/            # API calls / External service logic
+│   ├── styles/              # Global styles (if not using Tailwind only)
+│   │   └── globals.css
+│   ├── types/               # TypeScript type definitions
+│   │   └── index.d.ts       # Global types
+│   └── middleware.ts        # Next.js Middleware (placed in src root)
+├── .env.example             # Template for env variables (NO secrets)
+├── .eslintrc.json           # Linting rules
+├── .gitignore               # Ignored files
+├── .prettierrc              # Formatting rules
+├── next.config.js           # Next.js configuration
+├── package.json
+├── postcss.config.js
+├── tailwind.config.ts
+└── tsconfig.json
