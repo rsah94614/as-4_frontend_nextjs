@@ -99,7 +99,7 @@ export default function LoginPage() {
                 type="submit"
                 className="w-full h-12 rounded-full text-base"
               >
-                Login
+                <Link href="/dashboard">Login</Link>
               </Button>
 
             </form>
