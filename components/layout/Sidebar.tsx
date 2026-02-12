@@ -85,7 +85,7 @@ export default function Sidebar() {
           }}
         >
           <LogOut className="w-5 h-5 text-red-500" />
-          Log out
+          <Link href="/login">Log out</Link>
         </button>
       </div>
     </aside>
