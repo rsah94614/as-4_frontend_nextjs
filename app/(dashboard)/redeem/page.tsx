@@ -1,78 +1,190 @@
-import { Trophy, Gift, Star, Award } from "lucide-react";
+"use client";
 
-export default function RewardsPage() {
-    const rewardCategories = [
-        {
-            title: "Spot Awards",
-            description: "Instant recognition for outstanding contributions",
-            icon: Star,
-            count: 45,
-            color: "bg-yellow-50 text-yellow-600 border-yellow-200",
-        },
-        {
-            title: "Quarterly Awards",
-            description: "Best performers of the quarter",
-            icon: Trophy,
-            count: 12,
-            color: "bg-orange-50 text-orange-600 border-orange-200",
-        },
-        {
-            title: "Peer Recognition",
-            description: "Nominations from team members",
-            icon: Award,
-            count: 89,
-            color: "bg-blue-50 text-blue-600 border-blue-200",
-        },
-        {
-            title: "Gift Vouchers",
-            description: "Redeemable gift cards and vouchers",
-            icon: Gift,
-            count: 34,
-            color: "bg-green-50 text-green-600 border-green-200",
-        },
-    ];
+import { useState, useMemo, useRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { TicketPercent, ChevronLeft, ChevronRight } from "lucide-react";
+import { coupons, mostRedeemedProducts, rewardCategories } from "./data";
 
-    return (
-        <div>
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Rewards</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Manage and distribute employee rewards.
-                    </p>
-                </div>
-                <button className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors">
-                    + New Reward
-                </button>
-            </div>
+export default function RedeemPage() {
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
 
-            {/* Reward Categories */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                {rewardCategories.map((category) => (
-                    <div
-                        key={category.title}
-                        className={`rounded-xl border p-6 shadow-sm cursor-pointer hover:shadow-md transition-shadow ${category.color}`}
-                    >
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <h3 className="text-lg font-semibold">{category.title}</h3>
-                                <p className="text-sm mt-1 opacity-80">{category.description}</p>
-                            </div>
-                            <category.icon className="w-8 h-8 opacity-70" />
-                        </div>
-                        <p className="text-3xl font-bold mt-4">{category.count}</p>
-                        <p className="text-sm opacity-70">rewards given this month</p>
-                    </div>
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  /* ================= SCROLL FUNCTION ================= */
+  const scroll = (direction: "left" | "right") => {
+    if (!carouselRef.current) return;
+
+    const scrollAmount = 300;
+
+    carouselRef.current.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
+
+  /* ================= FILTER COUPONS ================= */
+  const filteredCoupons = useMemo(() => {
+    return coupons.filter((coupon) => {
+      if (!coupon.is_active) return false;
+      if (!selectedCategory) return true;
+
+      // 🔥 Supports multiple categories
+      return coupon.category_id.includes(selectedCategory);
+    });
+  }, [selectedCategory]);
+
+  /* ================= FILTER PRODUCTS ================= */
+  const filteredProducts = useMemo(() => {
+    return mostRedeemedProducts.filter((product) => {
+      if (!product.is_active) return false;
+      if (!selectedCategory) return true;
+
+      return product.category_id === selectedCategory;
+    });
+  }, [selectedCategory]);
+
+  return (
+    <div className="flex-1 w-full flex flex-col">
+      <div className="flex-1">
+        <div className="bg-white rounded-[36px] px-10 py-12 min-h-full max-w-[1200px] mx-auto">
+          {/* ================= CATEGORY DROPDOWN ================= */}
+          <div className="mb-10">
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              Reward Category
+            </label>
+
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-[280px] h-[42px] rounded-lg border border-gray-300 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+            >
+              <option value="">All Categories</option>
+
+              {rewardCategories
+                .filter((cat) => cat.is_active)
+                .map((category) => (
+                  <option
+                    key={category.category_id}
+                    value={category.category_id}
+                  >
+                    {category.category_name}
+                  </option>
                 ))}
-            </div>
+            </select>
+          </div>
 
-            {/* Recent Rewards */}
-            <div className="bg-white rounded-xl border shadow-sm mt-8 p-6">
-                <h2 className="text-lg font-semibold">Recent Rewards</h2>
-                <div className="mt-6 flex items-center justify-center h-48 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-400">Reward history will appear here</p>
-                </div>
+          {/* ================= COUPONS ================= */}
+          <h2 className="text-[22px] font-semibold text-gray-900 mb-8">
+            Coupons
+          </h2>
+
+          <div className="relative mb-12">
+            {/* LEFT ARROW */}
+            <button
+              onClick={() => scroll("left")}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-2 hover:scale-110 transition"
+            >
+              <ChevronLeft size={20} />
+            </button>
+
+            {/* RIGHT ARROW */}
+            <button
+              onClick={() => scroll("right")}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-2 hover:scale-110 transition"
+            >
+              <ChevronRight size={20} />
+            </button>
+
+            {/* SCROLL CONTAINER */}
+            <div
+              ref={carouselRef}
+              className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth snap-x px-10"
+            >
+              {filteredCoupons.length > 0 ? (
+                filteredCoupons.map((coupon) => (
+                  <div
+                    key={coupon.coupon_id}
+                    className="flex-shrink-0 snap-item"
+                  >
+                    <Card
+                      className="w-[240px] h-[215px] p-6 rounded-[28px] shadow border-0 transition hover:scale-[1.03]"
+                      style={{ backgroundColor: coupon.bgColor }}
+                    >
+                      <CardContent className="h-full flex flex-col items-left justify-center text-left gap-4">
+                        <TicketPercent
+                          className="mx-auto"
+                          size={65}
+                          strokeWidth={2.5}
+                        />
+
+                        <div>
+                          <p className="font-semibold text-[16px]">
+                            {coupon.coupon_name}
+                          </p>
+
+                          <p className="text-[11px] text-gray-700">
+                            {coupon.points_required.toLocaleString()} points
+                          </p>
+                        </div>
+
+                        <div className="text-[11px]  font-medium">
+                          ₹{coupon.monetary_value.toLocaleString()} each
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 px-4">
+                  No coupons available.
+                </p>
+              )}
             </div>
+          </div>
+
+          {/* ================= MOST REDEEMED ================= */}
+          <h2 className="text-[22px] font-semibold text-gray-900 mb-6">
+            Most Redeemed
+          </h2>
+
+          <div className="flex gap-6 flex-wrap">
+            {filteredProducts.length > 0 ? (
+              filteredProducts.map((product) => (
+                <Card
+                  key={product.product_id}
+                  className="w-[200px] h-[215px] rounded-[28px] bg-white border shadow-sm"
+                >
+                  <CardContent className="h-full flex flex-col items-center justify-center text-center gap-4">
+                    <img
+                      src={product.image}
+                      alt={product.product_name}
+                      className="w-20 object-contain"
+                    />
+
+                    <div>
+                      <p className="font-semibold text-[16px]">
+                        {product.product_name}
+                      </p>
+
+                      <p className="text-[11px] text-gray-600">
+                        {product.points_required.toLocaleString()} points
+                      </p>
+                    </div>
+
+                    <p className="text-[11px] font-medium">
+                      Worth ₹{product.monetary_value.toLocaleString()}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">
+                No most redeemed items available.
+              </p>
+            )}
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
