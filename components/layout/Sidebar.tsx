@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   Settings,
   LogOut,
+  X,
 } from "lucide-react";
 
 const navItems = [
@@ -20,74 +21,103 @@ const navItems = [
   { label: "Redeem", href: "/redeem", icon: Trophy },
   { label: "History", href: "/history", icon: Clock },
   { label: "Wallet", href: "/wallet", icon: Wallet },
-  { label: "Control Panel", href: "/admin", icon: SlidersHorizontal },
+  { label: "Control Panel", href: "/control-panel", icon: SlidersHorizontal },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex flex-col w-60 h-screen sticky top-0 overflow-y-auto bg-white">
-      {/* Logo */}
-      <div className="flex flex-col items-center px-6 py-6">
-        <Image
-          src="/logo.svg"
-          alt="Abhaar Logo"
-          width={80}
-          height={80}
-          priority
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          onClick={onClose}
         />
-      </div>
+      )}
 
-      {/* Navigation */}
-      <nav className="flex-1 px-4 py-2">
-        <ul className="space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
-                    ${isActive
-                      ? "bg-orange-100 text-orange-700"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                    }`}
-                >
-                  <item.icon className={`w-5 h-5 ${isActive ? "text-orange-600" : "text-gray-500"}`} />
-                  {item.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      {/* Bottom Section */}
-      <div className="px-4 pb-6 mt-auto space-y-1">
-        <Link
-          href="/settings"
-          className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
-            ${pathname.startsWith("/settings")
-              ? "bg-orange-100 text-orange-700"
-              : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            }`}
-        >
-          <Settings className={`w-5 h-5 ${pathname.startsWith("/settings") ? "text-orange-600" : "text-gray-500"}`} />
-          Settings
-        </Link>
-
+      <aside
+        className={`
+          fixed top-0 left-0 z-50 flex flex-col w-60 h-screen bg-white
+          transform transition-transform duration-300 ease-in-out
+          lg:sticky lg:translate-x-0
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        {/* Close button – mobile only */}
         <button
-          className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors w-full"
-          onClick={() => {
-            // TODO: Add logout logic
-            console.log("Logout clicked");
-          }}
+          onClick={onClose}
+          className="absolute top-4 right-4 p-1 rounded-lg hover:bg-gray-100 lg:hidden"
         >
-          <LogOut className="w-5 h-5 text-red-500" />
-          Log out
+          <X className="w-5 h-5 text-gray-500" />
         </button>
-      </div>
-    </aside>
+
+        {/* Logo */}
+        <div className="flex flex-col items-center px-6 py-6">
+          <Image
+            src="/logo.svg"
+            alt="Abhaar Logo"
+            width={80}
+            height={80}
+            priority
+          />
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-2 overflow-y-auto">
+          <ul className="space-y-1">
+            {navItems.map((item) => {
+              const isActive = pathname.startsWith(item.href);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={onClose}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
+                      ${isActive
+                        ? "bg-orange-100 text-orange-700"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      }`}
+                  >
+                    <item.icon className={`w-5 h-5 ${isActive ? "text-orange-600" : "text-gray-500"}`} />
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Bottom Section */}
+        <div className="px-4 pb-6 mt-auto space-y-1">
+          <Link
+            href="/settings"
+            onClick={onClose}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
+              ${pathname.startsWith("/settings")
+                ? "bg-orange-100 text-orange-700"
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              }`}
+          >
+            <Settings className={`w-5 h-5 ${pathname.startsWith("/settings") ? "text-orange-600" : "text-gray-500"}`} />
+            Settings
+          </Link>
+
+          <Link
+            href="/login"
+            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition-colors w-full"
+          >
+            <LogOut className="w-5 h-5 text-red-500" />
+            Log out
+          </Link>
+        </div>
+      </aside>
+    </>
   );
 }

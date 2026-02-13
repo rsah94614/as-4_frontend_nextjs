@@ -1,4 +1,3 @@
-//Placeholder for now, waiting for the figma 
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthProvider";
 
