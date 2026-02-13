@@ -124,3 +124,20 @@
     @apply bg-background text-foreground;
   }
 }
+/* ================= HIDE SCROLLBAR ================= */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE */
+  scrollbar-width: none;     /* Firefox */
+}
+/* ================= NETFLIX SNAP ================= */
+.snap-x {
+  scroll-snap-type: x mandatory;
+}
+
+.snap-item {
+  scroll-snap-align: start;
+}

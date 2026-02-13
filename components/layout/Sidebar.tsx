@@ -17,7 +17,7 @@ import {
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { label: "Review", href: "/review", icon: FileText },
-  { label: "Rewards", href: "/rewards", icon: Trophy },
+  { label: "Redeem", href: "/redeem", icon: Trophy },
   { label: "History", href: "/history", icon: Clock },
   { label: "Wallet", href: "/wallet", icon: Wallet },
   { label: "Control Panel", href: "/admin", icon: SlidersHorizontal },
