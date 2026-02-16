@@ -28,7 +28,7 @@ export default function DashboardRecognitionCard({
     return (
         <Card className="border border-[#d9d9d9] shadow-none rounded-3xl p-3">
             <CardContent className="p-0">
-                <div className="flex gap-6 ">
+                <div className="flex gap-6">
 
                     {/* Small Left Column */}
                     <div className="shrink-0">
