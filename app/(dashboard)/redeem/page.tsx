@@ -1,190 +1,109 @@
 "use client";
-
-import { useState, useMemo, useRef } from "react";
+import { useMemo, useState } from "react";
+import RewardDialog from "@/components/ui/RewardDialog";
+import { RewardItem } from "./models";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
-import { TicketPercent, ChevronLeft, ChevronRight } from "lucide-react";
-import { coupons, mostRedeemedProducts, rewardCategories } from "./data";
+import { TicketPercent } from "lucide-react";
+import { rewardItems } from "./data";
 
 export default function RedeemPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const router = useRouter();
+  const [selectedItem, setSelectedItem] = useState<RewardItem | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  const carouselRef = useRef<HTMLDivElement>(null);
-
-  /* ================= SCROLL FUNCTION ================= */
-  const scroll = (direction: "left" | "right") => {
-    if (!carouselRef.current) return;
-
-    const scrollAmount = 300;
-
-    carouselRef.current.scrollBy({
-      left: direction === "left" ? -scrollAmount : scrollAmount,
-      behavior: "smooth",
-    });
+  const handleOpen = (item: RewardItem) => {
+    setSelectedItem(item);
+    setDialogOpen(true);
   };
 
-  /* ================= FILTER COUPONS ================= */
-  const filteredCoupons = useMemo(() => {
-    return coupons.filter((coupon) => {
-      if (!coupon.is_active) return false;
-      if (!selectedCategory) return true;
+  const activeCoupons = useMemo(() => {
+    return rewardItems.filter(
+      (item) => item.type === "coupon" && item.is_active
+    );
+  }, []);
 
-      // 🔥 Supports multiple categories
-      return coupon.category_id.includes(selectedCategory);
-    });
-  }, [selectedCategory]);
-
-  /* ================= FILTER PRODUCTS ================= */
-  const filteredProducts = useMemo(() => {
-    return mostRedeemedProducts.filter((product) => {
-      if (!product.is_active) return false;
-      if (!selectedCategory) return true;
-
-      return product.category_id === selectedCategory;
-    });
-  }, [selectedCategory]);
+  const mostRedeemed = useMemo(() => {
+    return rewardItems
+      .filter(
+        (item) =>
+          item.type === "product" && item.is_active && !item.is_out_of_stock
+      )
+      .slice(0, 4);
+  }, []);
 
   return (
-    <div className="flex-1 w-full flex flex-col">
-      <div className="flex-1">
-        <div className="bg-white rounded-[36px] px-10 py-12 min-h-full max-w-[1200px] mx-auto">
-          {/* ================= CATEGORY DROPDOWN ================= */}
-          <div className="mb-10">
-            <label className="block text-sm font-medium mb-2 text-gray-700">
-              Reward Category
-            </label>
+    <div className="flex-1 w-full">
+      <div className="bg-white rounded-[36px] px-10 py-12 max-w-[1200px] mx-auto">
+        {/* Coupons */}
+        <h2 className="text-[22px] font-semibold mb-8">Coupons</h2>
 
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-[280px] h-[42px] rounded-lg border border-gray-300 px-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+        <div className="flex gap-6 overflow-x-auto scrollbar-hide mb-14">
+          {activeCoupons.map((coupon) => (
+            <Card
+              key={coupon.id}
+              onClick={() => handleOpen(coupon)}
+              className="min-w-[240px] h-[215px] rounded-[28px] cursor-pointer hover:scale-[1.02] transition"
+              style={{ backgroundColor: coupon.bgColor }}
             >
-              <option value="">All Categories</option>
-
-              {rewardCategories
-                .filter((cat) => cat.is_active)
-                .map((category) => (
-                  <option
-                    key={category.category_id}
-                    value={category.category_id}
-                  >
-                    {category.category_name}
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          {/* ================= COUPONS ================= */}
-          <h2 className="text-[22px] font-semibold text-gray-900 mb-8">
-            Coupons
-          </h2>
-
-          <div className="relative mb-12">
-            {/* LEFT ARROW */}
-            <button
-              onClick={() => scroll("left")}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-2 hover:scale-110 transition"
-            >
-              <ChevronLeft size={20} />
-            </button>
-
-            {/* RIGHT ARROW */}
-            <button
-              onClick={() => scroll("right")}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-2 hover:scale-110 transition"
-            >
-              <ChevronRight size={20} />
-            </button>
-
-            {/* SCROLL CONTAINER */}
-            <div
-              ref={carouselRef}
-              className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth snap-x px-10"
-            >
-              {filteredCoupons.length > 0 ? (
-                filteredCoupons.map((coupon) => (
-                  <div
-                    key={coupon.coupon_id}
-                    className="flex-shrink-0 snap-item"
-                  >
-                    <Card
-                      className="w-[240px] h-[215px] p-6 rounded-[28px] shadow border-0 transition hover:scale-[1.03]"
-                      style={{ backgroundColor: coupon.bgColor }}
-                    >
-                      <CardContent className="h-full flex flex-col items-left justify-center text-left gap-4">
-                        <TicketPercent
-                          className="mx-auto"
-                          size={65}
-                          strokeWidth={2.5}
-                        />
-
-                        <div>
-                          <p className="font-semibold text-[16px]">
-                            {coupon.coupon_name}
-                          </p>
-
-                          <p className="text-[11px] text-gray-700">
-                            {coupon.points_required.toLocaleString()} points
-                          </p>
-                        </div>
-
-                        <div className="text-[11px]  font-medium">
-                          ₹{coupon.monetary_value.toLocaleString()} each
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500 px-4">
-                  No coupons available.
+              <CardContent className="h-full flex flex-col items-center justify-center gap-4 text-center">
+                <TicketPercent size={48} />
+                <div>
+                  <p className="font-semibold">{coupon.title}</p>
+                  <p className="text-xs text-gray-700">
+                    {coupon.points_required.toLocaleString()} points
+                  </p>
+                </div>
+                <p className="text-xs font-medium">
+                  ₹{coupon.monetary_value.toLocaleString()} each
                 </p>
-              )}
-            </div>
-          </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-          {/* ================= MOST REDEEMED ================= */}
-          <h2 className="text-[22px] font-semibold text-gray-900 mb-6">
-            Most Redeemed
-          </h2>
+        {/* Most Redeemed */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-[22px] font-semibold">Most Redeemed</h2>
 
-          <div className="flex gap-6 flex-wrap">
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((product) => (
-                <Card
-                  key={product.product_id}
-                  className="w-[200px] h-[215px] rounded-[28px] bg-white border shadow-sm"
-                >
-                  <CardContent className="h-full flex flex-col items-center justify-center text-center gap-4">
-                    <img
-                      src={product.image}
-                      alt={product.product_name}
-                      className="w-20 object-contain"
-                    />
+          <button
+            onClick={() => router.push("/all_products")}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            View All Products →
+          </button>
+        </div>
 
-                    <div>
-                      <p className="font-semibold text-[16px]">
-                        {product.product_name}
-                      </p>
-
-                      <p className="text-[11px] text-gray-600">
-                        {product.points_required.toLocaleString()} points
-                      </p>
-                    </div>
-
-                    <p className="text-[11px] font-medium">
-                      Worth ₹{product.monetary_value.toLocaleString()}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">
-                No most redeemed items available.
-              </p>
-            )}
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {mostRedeemed.map((product) => (
+            <Card
+              key={product.id}
+              onClick={() => handleOpen(product)}
+              className="rounded-[28px] border cursor-pointer hover:scale-[1.02] transition"
+            >
+              <CardContent className="p-6 text-center">
+                <img
+                  src={product.image}
+                  alt={product.title}
+                  className="w-20 mx-auto mb-4"
+                />
+                <p className="font-semibold">{product.title}</p>
+                <p className="text-xs text-gray-600">
+                  {product.points_required.toLocaleString()} points
+                </p>
+                <p className="text-xs font-medium mt-1">
+                  Worth ₹{product.monetary_value.toLocaleString()}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
+      <RewardDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        item={selectedItem}
+      />
     </div>
   );
 }
