@@ -8,11 +8,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/Card"
+import { Button } from "@/components/ui/Button"
 import { Textarea } from "@/components/ui/textarea"
 import { Star, Bell, Paperclip, X } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/Input"
 import { teamMembers, teamLeader, loggedInUser } from "./data"
 
 /**
