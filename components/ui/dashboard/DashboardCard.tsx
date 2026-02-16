@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import {
     Card,
     CardContent,
-} from "@/components/ui/Card"
+} from "@/components/ui/card"
 interface DashboardCardProps {
     label: string;
     value: string;
