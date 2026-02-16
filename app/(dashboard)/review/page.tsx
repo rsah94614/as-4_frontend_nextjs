@@ -8,11 +8,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/Card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/Button"
 import { Textarea } from "@/components/ui/textarea"
 import { Star, Bell, Paperclip, X } from "lucide-react"
-import { Input } from "@/components/ui/Input"
+import { Input } from "@/components/ui/input"
 import { teamMembers, teamLeader, loggedInUser } from "./data"
 
 /**
@@ -143,11 +143,10 @@ export default function ReviewPage() {
                           <Star
                             key={star}
                             onClick={() => setRating(star)}
-                            className={`w-7 h-7 sm:w-8 sm:h-8 cursor-pointer transition ${
-                              star <= rating
+                            className={`w-7 h-7 sm:w-8 sm:h-8 cursor-pointer transition ${star <= rating
                                 ? "fill-yellow-500 text-yellow-500"
                                 : "text-gray-400"
-                            }`}
+                              }`}
                             aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
                           />
                         ))}

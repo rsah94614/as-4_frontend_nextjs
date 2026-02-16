@@ -2,6 +2,7 @@
 
 import { mockWallet, mockActivity } from "./mockData";
 import { Gift, Ticket } from "lucide-react";
+import Link from "next/link";
 
 export default function Wallet() {
     return (
@@ -57,9 +58,12 @@ export default function Wallet() {
 
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-semibold">Recent Transactions</h3>
-                    <button className="text-sm text-indigo-600 hover:underline">
+                    <Link
+                        href="/transactions"
+                        className="text-sm text-indigo-600 hover:underline"
+                    >
                         View all transactions
-                    </button>
+                    </Link>
                 </div>
 
                 <div className="flex flex-col gap-4">
@@ -84,8 +88,8 @@ export default function Wallet() {
 
                             <p
                                 className={`text-sm font-medium ${item.type === "CREDIT"
-                                        ? "text-green-600"
-                                        : "text-red-500"
+                                    ? "text-green-600"
+                                    : "text-red-500"
                                     }`}
                             >
                                 {item.type === "CREDIT"

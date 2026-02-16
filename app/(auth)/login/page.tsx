@@ -5,8 +5,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
-import { Card, CardContent } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/Button'
 

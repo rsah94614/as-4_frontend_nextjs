@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef } from "react";
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/card";
 import { TicketPercent, ChevronLeft, ChevronRight } from "lucide-react";
 import { coupons, mostRedeemedProducts, rewardCategories } from "./data";
 
