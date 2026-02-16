@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 
 import { Card, CardContent } from '@/components/ui/Card'
@@ -11,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/Button'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -120,21 +122,50 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // Call login API
+      const response = await fetch('http://localhost:8001/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: email, // Backend accepts email as username
+          password: password,
+        }),
+      })
 
-      // Simulate wrong password check (for demo purposes)
-      // In production, this would be handled by the backend
-      if (password !== 'correctpassword123') {
-        setErrors({ general: 'Invalid credentials' })
-        setLoading(false)
-        return
+      const data = await response.json()
+
+      if (response.ok) {
+        // Success - store tokens
+        localStorage.setItem('access_token', data.access_token)
+        localStorage.setItem('refresh_token', data.refresh_token)
+        localStorage.setItem('user', JSON.stringify(data.employee))
+
+        // Optional: Store token expiry
+        const expiresAt = Date.now() + (data.expires_in * 1000)
+        localStorage.setItem('token_expires_at', expiresAt.toString())
+
+        console.log('Login successful:', data.employee)
+
+        // Redirect to dashboard
+        router.push('/dashboard')
+      } else {
+        // Handle error responses
+        if (response.status === 401) {
+          setErrors({ general: 'Invalid email or password. Please try again.' })
+        } else if (data.error?.message) {
+          setErrors({ general: data.error.message })
+        } else if (data.detail) {
+          setErrors({ general: data.detail })
+        } else {
+          setErrors({ general: 'Login failed. Please try again.' })
+        }
       }
-
-      // Success - redirect to dashboard
-      window.location.href = '/dashboard'
     } catch (error) {
-      setErrors({ general: 'An error occurred. Please try again.' })
+      console.error('Login error:', error)
+      setErrors({ general: 'Network error. Please check your connection and try again.' })
+    } finally {
       setLoading(false)
     }
   }
@@ -196,6 +227,7 @@ export default function LoginPage() {
                   onBlur={() => handleBlur('email')}
                   className={`h-12 rounded-full ${errors.email && touched.email ? 'border-red-500 focus-visible:ring-red-500/20' : ''}`}
                   disabled={loading}
+                  autoComplete="email"
                 />
                 {errors.email && touched.email && (
                   <p className="text-red-500 text-sm mt-1">{errors.email}</p>
@@ -215,6 +247,7 @@ export default function LoginPage() {
                     onBlur={() => handleBlur('password')}
                     className={`h-12 rounded-full pr-12 ${errors.password && touched.password ? 'border-red-500 focus-visible:ring-red-500/20' : ''}`}
                     disabled={loading}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
