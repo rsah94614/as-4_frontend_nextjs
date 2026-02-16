@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import RewardDialog from "@/components/ui/RewardDialog";
 import { RewardItem } from "./models";
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/Card";
 import { TicketPercent } from "lucide-react";
 import { rewardItems } from "./data";
 
