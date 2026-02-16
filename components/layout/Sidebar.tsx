@@ -46,7 +46,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         className={`
           fixed top-0 left-0 z-50 flex flex-col w-60 h-screen bg-white border-r border-gray-200
           transform transition-transform duration-300 ease-in-out
-          lg:translate-x-0 lg:static lg:z-auto lg:shrink-0
+          lg:translate-x-0 lg:sticky lg:top-0 lg:z-auto lg:shrink-0
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >

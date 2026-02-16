@@ -8,11 +8,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/Card"
-import { Button } from "@/components/ui/Button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Star, Bell, Paperclip, X } from "lucide-react"
-import { Input } from "@/components/ui/Input"
+import { Input } from "@/components/ui/input"
 import { teamMembers, teamLeader, loggedInUser } from "./data"
 import { createReview } from "@/lib/reviewService"
 
@@ -113,11 +113,10 @@ function ReviewCard({ user }: ReviewCardProps) {
                 <Star
                   key={star}
                   onClick={() => setRating(star)}
-                  className={`w-8 h-8 cursor-pointer transition ${
-                    star <= rating
-                      ? "fill-yellow-500 text-yellow-500"
-                      : "text-gray-400"
-                  }`}
+                  className={`w-8 h-8 cursor-pointer transition ${star <= rating
+                    ? "fill-yellow-500 text-yellow-500"
+                    : "text-gray-400"
+                    }`}
                 />
               ))}
             </div>

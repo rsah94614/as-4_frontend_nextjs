@@ -6,10 +6,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2, CheckCircle, AlertCircle, Lock } from 'lucide-react'
 
-import { Card, CardContent } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams()
@@ -272,11 +272,10 @@ export default function ResetPasswordPage() {
                     value={newPassword}
                     onChange={handleNewPasswordChange}
                     onBlur={() => handleBlur('newPassword')}
-                    className={`h-12 rounded-full pr-12 ${
-                      errors.newPassword && touched.newPassword
-                        ? 'border-red-500 focus-visible:ring-red-500/20'
-                        : ''
-                    }`}
+                    className={`h-12 rounded-full pr-12 ${errors.newPassword && touched.newPassword
+                      ? 'border-red-500 focus-visible:ring-red-500/20'
+                      : ''
+                      }`}
                     disabled={loading || !token}
                     autoFocus
                   />
@@ -313,11 +312,10 @@ export default function ResetPasswordPage() {
                     value={confirmPassword}
                     onChange={handleConfirmPasswordChange}
                     onBlur={() => handleBlur('confirmPassword')}
-                    className={`h-12 rounded-full pr-12 ${
-                      errors.confirmPassword && touched.confirmPassword
-                        ? 'border-red-500 focus-visible:ring-red-500/20'
-                        : ''
-                    }`}
+                    className={`h-12 rounded-full pr-12 ${errors.confirmPassword && touched.confirmPassword
+                      ? 'border-red-500 focus-visible:ring-red-500/20'
+                      : ''
+                      }`}
                     disabled={loading || !token}
                   />
                   <button
