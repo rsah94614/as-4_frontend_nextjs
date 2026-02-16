@@ -1,254 +1,158 @@
-import { Coupon, Product, RewardCategory } from "./models";
+import { RewardCategory, RewardItem } from "./models";
 
-/* ================= REWARD CATEGORIES ================= */
+/* ================= CATEGORIES ================= */
 
 export const rewardCategories: RewardCategory[] = [
   {
-    category_id: "550e8400-e29b-41d4-a716-446655440000",
+    category_id: "ELEC",
     category_name: "Electronics",
     category_code: "ELEC",
-    description: "Electronic gadgets",
     is_active: true,
   },
   {
-    category_id: "550e8400-e29b-41d4-a716-446655440001",
+    category_id: "FASH",
     category_name: "Fashion",
     category_code: "FASH",
-    description: "Clothing and lifestyle",
     is_active: true,
   },
   {
-    category_id: "550e8400-e29b-41d4-a716-446655440002",
+    category_id: "FOOD",
     category_name: "Food",
     category_code: "FOOD",
-    description: "Food and dining vouchers",
     is_active: true,
   },
 ];
 
-/* ================= COUPONS ================= */
+/* ================= ALL REWARDS ================= */
 
-export const coupons: Coupon[] = [
+export const rewardItems: RewardItem[] = [
+  /* ===== Coupons ===== */
   {
-    coupon_id: "flipkart-1",
-    coupon_name: "Flipkart Coupon",
-    category_id: ["550e8400-e29b-41d4-a716-446655440000",
-                  "550e8400-e29b-41d4-a716-446655440001",], // Electronics & Fashion
+    id: "flipkart-1",
+    title: "Flipkart Coupon",
+    type: "coupon",
+    category_ids: ["ELEC"],
     points_required: 15000,
     monetary_value: 2000,
     bgColor: "#BFF4BB",
     is_active: true,
   },
   {
-    coupon_id: "myntra-1",
-    coupon_name: "Myntra Coupon",
-    category_id: ["550e8400-e29b-41d4-a716-446655440001",], // Fashion
-    points_required: 10000,
+    id: "amazon-1",
+    title: "Amazon Coupon",
+    type: "coupon",
+    category_ids: ["ELEC"],
+    points_required: 15000,
+    monetary_value: 500,
+    bgColor: "#EFB3CC",
+    is_active: true,
+  },
+  {
+    id: "flipkart-2",
+    title: "Flipkart Coupon",
+    type: "coupon",
+    category_ids: ["ELEC"],
+    points_required: 15000,
     monetary_value: 2000,
-    bgColor: "#DAC9FF",
+    bgColor: "#BFF4BB",
     is_active: true,
   },
   {
-    coupon_id: "zomato-1",
-    coupon_name: "Zomato Coupon",
-    category_id: ["550e8400-e29b-41d4-a716-446655440002",], // Food
+    id: "amazon-2",
+    title: "Amazon Coupon",
+    type: "coupon",
+    category_ids: ["ELEC"],
     points_required: 15000,
     monetary_value: 500,
     bgColor: "#EFB3CC",
+    is_active: true,
+  },{
+    id: "flipkart-3",
+    title: "Flipkart Coupon",
+    type: "coupon",
+    category_ids: ["ELEC"],
+    points_required: 15000,
+    monetary_value: 2000,
+    bgColor: "#BFF4BB",
     is_active: true,
   },
   {
-    coupon_id: "amazon-1",
-    coupon_name: "Amazon Coupon",
-    category_id: ["550e8400-e29b-41d4-a716-446655440001",
-                    "550e8400-e29b-41d4-a716-446655440000"], // Fashion & Electronics
-    points_required: 15000,
-    monetary_value: 500,
-    bgColor: "#EFB3CC",
-    is_active: true,
-  },
-   {
-    coupon_id: "amazon-2",
-    coupon_name: "Amazon Coupon",
-    category_id: ["550e8400-e29b-41d4-a716-446655440001",
-                    "550e8400-e29b-41d4-a716-446655440000"], // Fashion & Electronics
-    points_required: 15000,
-    monetary_value: 500,
-    bgColor: "#EFB3CC",
-    is_active: true,
-  },
-   {
-    coupon_id: "amazon-3",
-    coupon_name: "Amazon Coupon",
-    category_id: ["550e8400-e29b-41d4-a716-446655440001",
-                    "550e8400-e29b-41d4-a716-446655440000"], // Fashion & Electronics
-    points_required: 15000,
-    monetary_value: 500,
-    bgColor: "#EFB3CC",
-    is_active: true,
-  },
-   {
-    coupon_id: "amazon-4",
-    coupon_name: "Amazon Coupon",
-    category_id: ["550e8400-e29b-41d4-a716-446655440001",
-                    "550e8400-e29b-41d4-a716-446655440000"], // Fashion & Electronics
-    points_required: 15000,
-    monetary_value: 500,
-    bgColor: "#EFB3CC",
-    is_active: true,
-  },
-   {
-    coupon_id: "amazon-5",
-    coupon_name: "Amazon Coupon",
-    category_id: ["550e8400-e29b-41d4-a716-446655440001",
-                    "550e8400-e29b-41d4-a716-446655440000"], // Fashion & Electronics
-    points_required: 15000,
-    monetary_value: 500,
-    bgColor: "#EFB3CC",
-    is_active: true,
-  },
-   {
-    coupon_id: "amazon-6",
-    coupon_name: "Amazon Coupon",
-    category_id: ["550e8400-e29b-41d4-a716-446655440001",
-                    "550e8400-e29b-41d4-a716-446655440000"], // Fashion & Electronics
-    points_required: 15000,
-    monetary_value: 500,
-    bgColor: "#EFB3CC",
-    is_active: true,
-  },
-   {
-    coupon_id: "amazon-7",
-    coupon_name: "Amazon Coupon",
-    category_id: ["550e8400-e29b-41d4-a716-446655440001",
-                    "550e8400-e29b-41d4-a716-446655440000"], // Fashion & Electronics
+    id: "amazon-3",
+    title: "Amazon Coupon",
+    type: "coupon",
+    category_ids: ["ELEC"],
     points_required: 15000,
     monetary_value: 500,
     bgColor: "#EFB3CC",
     is_active: true,
   },
   
-];
 
-/* ================= MOST REDEEMED PRODUCTS ================= */
-
-export const mostRedeemedProducts: Product[] = [
+  /* ===== Products ===== */
   {
-    product_id: "iphone16",
-    product_name: "iPhone 16 Pro",
-    category_id: "550e8400-e29b-41d4-a716-446655440000", // Electronics
+    id: "iphone16",
+    title: "iPhone 16 Pro",
+    type: "product",
+    category_ids: ["ELEC"],
     points_required: 50000,
     monetary_value: 79990,
     image: "/images/Iphone.png",
     is_active: true,
+    is_out_of_stock: false,
   },
   {
-    product_id: "nike-shoes",
-    product_name: "Nike Air Max Sneakers",
-    category_id: "550e8400-e29b-41d4-a716-446655440001", // Fashion
+    id: "nike-air",
+    title: "Nike Air Max Sneakers",
+    type: "product",
+    category_ids: ["FASH"],
     points_required: 25000,
     monetary_value: 12999,
     image: "/images/nike.png",
     is_active: true,
+    is_out_of_stock: false,
   },
   {
-    product_id: "swiggy-voucher",
-    product_name: "Swiggy Premium Voucher",
-    category_id: "550e8400-e29b-41d4-a716-446655440002", // Food
+    id: "swiggy-1",
+    title: "Swiggy Premium Voucher",
+    type: "product",
+    category_ids: ["FOOD"],
     points_required: 8000,
     monetary_value: 1000,
     image: "/images/swiggy.png",
     is_active: true,
+    is_out_of_stock: true,
   },
-   {
-    product_id: "swiggy-voucher-1",
-    product_name: "Swiggy Premium Voucher",
-    category_id: "550e8400-e29b-41d4-a716-446655440002", // Food
+  {
+    id: "swiggy-2",
+    title: "Swiggy Premium Voucher",
+    type: "product",
+    category_ids: ["FOOD"],
     points_required: 8000,
-    monetary_value: 1000,
+    monetary_value: 2000,
     image: "/images/swiggy.png",
     is_active: true,
+    is_out_of_stock: false,
   },
-   {
-    product_id: "swiggy-voucher-2",
-    product_name: "Swiggy Premium Voucher",
-    category_id: "550e8400-e29b-41d4-a716-446655440002", // Food
+{
+    id: "swiggy-3",
+    title: "Swiggy Premium Voucher",
+    type: "product",
+    category_ids: ["FOOD"],
     points_required: 8000,
-    monetary_value: 1000,
+    monetary_value: 5000,
     image: "/images/swiggy.png",
     is_active: true,
+    is_out_of_stock: false,
   },
-   {
-    product_id: "swiggy-voucher-3",
-    product_name: "Swiggy Premium Voucher",
-    category_id: "550e8400-e29b-41d4-a716-446655440002", // Food
+  {
+    id: "swiggy-4",
+    title: "Swiggy Premium Voucher",
+    type: "product",
+    category_ids: ["FOOD"],
     points_required: 8000,
-    monetary_value: 1000,
+    monetary_value: 7000,
     image: "/images/swiggy.png",
     is_active: true,
+    is_out_of_stock: false,
   },
-   {
-    product_id: "swiggy-voucher-4",
-    product_name: "Swiggy Premium Voucher",
-    category_id: "550e8400-e29b-41d4-a716-446655440002", // Food
-    points_required: 8000,
-    monetary_value: 1000,
-    image: "/images/swiggy.png",
-    is_active: true,
-  },
-   {
-    product_id: "swiggy-voucher-5",
-    product_name: "Swiggy Premium Voucher",
-    category_id: "550e8400-e29b-41d4-a716-446655440002", // Food
-    points_required: 8000,
-    monetary_value: 1000,
-    image: "/images/swiggy.png",
-    is_active: true,
-  },
-   {
-    product_id: "swiggy-voucher-6",
-    product_name: "Swiggy Premium Voucher",
-    category_id: "550e8400-e29b-41d4-a716-446655440002", // Food
-    points_required: 8000,
-    monetary_value: 1000,
-    image: "/images/swiggy.png",
-    is_active: true,
-  },
-   {
-    product_id: "swiggy-voucher-7",
-    product_name: "Swiggy Premium Voucher",
-    category_id: "550e8400-e29b-41d4-a716-446655440002", // Food
-    points_required: 8000,
-    monetary_value: 1000,
-    image: "/images/swiggy.png",
-    is_active: true,
-  },
-   {
-    product_id: "swiggy-voucher-8",
-    product_name: "Swiggy Premium Voucher",
-    category_id: "550e8400-e29b-41d4-a716-446655440002", // Food
-    points_required: 8000,
-    monetary_value: 1000,
-    image: "/images/swiggy.png",
-    is_active: true,
-  },
-   {
-    product_id: "swiggy-voucher-9",
-    product_name: "Swiggy Premium Voucher",
-    category_id: "550e8400-e29b-41d4-a716-446655440002", // Food
-    points_required: 8000,
-    monetary_value: 1000,
-    image: "/images/swiggy.png",
-    is_active: true,
-  },
-   {
-    product_id: "swiggy-voucher-10",
-    product_name: "Swiggy Premium Voucher",
-    category_id: "550e8400-e29b-41d4-a716-446655440002", // Food
-    points_required: 8000,
-    monetary_value: 1000,
-    image: "/images/swiggy.png",
-    is_active: true,
-  },
-  
 ];
