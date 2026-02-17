@@ -1,9 +1,11 @@
 "use client";
-import { useMemo, useState } from "react";
+
+import { useState, useMemo, useRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { TicketPercent, ChevronLeft, ChevronRight } from "lucide-react";
 import RewardDialog from "@/components/ui/RewardDialog";
 import { RewardItem } from "./models";
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
 import { TicketPercent } from "lucide-react";
 import { rewardItems } from "./data";
 

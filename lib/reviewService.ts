@@ -1,63 +1,150 @@
-/**
- * Review API service — wraps axiosClient for recognition service endpoints.
- * Base route: /reviews
- */
+// lib/reviewService.ts
+// Talks to the Recognition Service (port 8005).
+//   POST /v1/reviews       → create review  (JSON body — NOT FormData)
+//   GET  /v1/reviews       → list reviews
+//   GET  /v1/reviews/{id}  → get review
+//   PUT  /v1/reviews/{id}  → update review
+//
+// Files are uploaded to Cloudinary first to get HTTPS URLs.
+// The backend stores only the URL — it never touches the file.
+// To switch to S3 later: replace cloudinaryUpload.ts only.
 
-import axiosClient from "./axiosClient";
+import { fetchWithAuth } from './auth'
+import { uploadToStorage } from './cloudinaryUpload'
 import type {
-    ReviewCreateRequest,
-    ReviewUpdateRequest,
-    ReviewResponse,
-    PaginatedReviewResponse,
-} from "./reviewTypes";
+  ReviewCreateRequest,
+  ReviewUpdateRequest,
+  ReviewResponse,
+  PaginatedReviewResponse,
+} from './reviewTypes'
 
-const BASE = "/reviews";
-
-/**
- * List reviews with pagination.
- * GET /reviews?page=&page_size=
- */
-export async function listReviews(
-    page: number = 1,
-    pageSize: number = 20
-): Promise<PaginatedReviewResponse> {
-    const { data } = await axiosClient.get<PaginatedReviewResponse>(BASE, {
-        params: { page, page_size: pageSize },
-    });
-    return data;
+export type {
+  ReviewCreateRequest,
+  ReviewUpdateRequest,
+  ReviewResponse,
+  PaginatedReviewResponse,
 }
 
-/**
- * Get a single review by ID.
- * GET /reviews/{id}
- */
-export async function getReview(id: string): Promise<ReviewResponse> {
-    const { data } = await axiosClient.get<ReviewResponse>(`${BASE}/${id}`);
-    return data;
+const RECOGNITION_API = process.env.NEXT_PUBLIC_RECOGNITION_API_URL || 'http://localhost:8005'
+
+const ENDPOINTS = {
+  LIST:   `${RECOGNITION_API}/v1/reviews`,
+  CREATE: `${RECOGNITION_API}/v1/reviews`,
+  GET:    (id: string) => `${RECOGNITION_API}/v1/reviews/${id}`,
+  UPDATE: (id: string) => `${RECOGNITION_API}/v1/reviews/${id}`,
+} as const
+
+// ─── Core service ─────────────────────────────────────────────────────────────
+
+export const reviewService = {
+  async listReviews(page = 1, pageSize = 20): Promise<PaginatedReviewResponse> {
+    const res = await fetchWithAuth(`${ENDPOINTS.LIST}?page=${page}&page_size=${pageSize}`)
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || 'Failed to fetch reviews')
+    }
+    return res.json()
+  },
+
+  async getReview(reviewId: string): Promise<ReviewResponse> {
+    const res = await fetchWithAuth(ENDPOINTS.GET(reviewId))
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || 'Failed to fetch review')
+    }
+    return res.json()
+  },
+
+  /** POST JSON matching backend ReviewCreateRequest — not FormData */
+  async createReview(data: ReviewCreateRequest): Promise<ReviewResponse> {
+    const res = await fetchWithAuth(ENDPOINTS.CREATE, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(data),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || 'Failed to create review')
+    }
+    return res.json()
+  },
+
+  async updateReview(reviewId: string, data: ReviewUpdateRequest): Promise<ReviewResponse> {
+    const res = await fetchWithAuth(ENDPOINTS.UPDATE(reviewId), {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(data),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || 'Failed to update review')
+    }
+    return res.json()
+  },
 }
 
+// ─── File upload helper ───────────────────────────────────────────────────────
+
 /**
- * Create a new review.
- * POST /reviews
+ * Upload a file to Cloudinary and return its secure HTTPS URL.
+ * That URL is what gets stored in the DB as image_url / video_url.
+ *
+ * To switch to S3: replace cloudinaryUpload.ts with s3Upload.ts
+ * exporting the same uploadToStorage(file) signature. Nothing else changes.
  */
-export async function createReview(
-    payload: ReviewCreateRequest
+export async function uploadFile(file: File): Promise<string> {
+  const result = await uploadToStorage(file)
+  return result.url
+}
+
+// ─── High-level helpers ───────────────────────────────────────────────────────
+
+/**
+ * Upload any attached files to Cloudinary to get URLs,
+ * then POST the review as JSON to the backend.
+ * Only the first image and first video are used (backend stores one of each).
+ */
+export async function createReviewWithFiles(
+  receiverId: string,
+  rating:     number,
+  comment:    string,
+  files:      File[]
 ): Promise<ReviewResponse> {
-    const { data } = await axiosClient.post<ReviewResponse>(BASE, payload);
-    return data;
+  if (rating < 1 || rating > 5)     throw new Error('Rating must be between 1 and 5')
+  if (comment.trim().length < 10)   throw new Error('Comment must be at least 10 characters')
+  if (comment.trim().length > 2000) throw new Error('Comment must not exceed 2000 characters')
+
+  let imageUrl: string | undefined
+  let videoUrl: string | undefined
+
+  for (const file of files) {
+    const kind = file.type.split('/')[0]
+    if (kind === 'image' && !imageUrl) imageUrl = await uploadFile(file)
+    if (kind === 'video' && !videoUrl) videoUrl = await uploadFile(file)
+  }
+
+  return reviewService.createReview({
+    receiver_id: receiverId,
+    rating,
+    comment: comment.trim(),
+    ...(imageUrl && { image_url: imageUrl }),
+    ...(videoUrl && { video_url: videoUrl }),
+  })
 }
 
 /**
- * Update an existing review.
- * PUT /reviews/{id}
+ * Adapter called by page.tsx — accepts FormData, extracts fields,
+ * uploads files to Cloudinary, then sends JSON to the backend.
  */
-export async function updateReview(
-    id: string,
-    payload: ReviewUpdateRequest
-): Promise<ReviewResponse> {
-    const { data } = await axiosClient.put<ReviewResponse>(
-        `${BASE}/${id}`,
-        payload
-    );
-    return data;
+export async function createReview(formData: FormData): Promise<ReviewResponse> {
+  const receiverId = formData.get('receiver_id') as string
+  const rating     = parseInt(formData.get('rating') as string, 10)
+  const comment    = formData.get('comment') as string
+
+  const files: File[] = []
+  formData.getAll('attachments').forEach((item) => {
+    if (item instanceof File) files.push(item)
+  })
+
+  return createReviewWithFiles(receiverId, rating, comment, files)
 }

@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_GATEWAY, //fetch base URL
+  baseURL: process.env.NEXT_PUBLIC_API_URL, //fetch base URL
   withCredentials: true,
 });
 

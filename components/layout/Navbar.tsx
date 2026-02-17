@@ -1,7 +1,8 @@
 'use client';
 
 import { Search, Bell, Menu } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { auth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 
 interface NavbarProps {
@@ -10,6 +11,23 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
     const [searchQuery, setSearchQuery] = useState('');
+    const [username,    setUsername]    = useState('');
+    const [initials,    setInitials]    = useState('');
+
+    useEffect(() => {
+        const user = auth.getUser();
+        if (user?.username) {
+            setUsername(user.username);
+            // Build initials from username words, fall back to first two chars
+            const parts = (user.username as string).trim().split(/\s+/);
+            setInitials(
+                parts.length >= 2
+                    ? (parts[0][0] + parts[1][0]).toUpperCase()
+                    : user.username.slice(0, 2).toUpperCase()
+            );
+        }
+    }, []);
+  
     const router = useRouter();
 
     const handleProfileClick = () => {
@@ -17,10 +35,10 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     };
 
     return (
-        <nav className="w-full pt-4 bg-gray-100">
-            <div className="px-6 sm:px-8">
-                <div className="flex items-center justify-between h-16 gap-4">
-                    {/* Hamburger menu - mobile only */}
+        <nav className="w-full bg-white border-b border-gray-200 flex-shrink-0">
+            <div className="px-4 sm:px-6">
+                <div className="flex items-center justify-between h-16 gap-2 sm:gap-4">
+                    {/* Hamburger — mobile only */}
                     <button
                         onClick={onMenuClick}
                         className="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden shrink-0"
@@ -44,30 +62,32 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                         </div>
                     </div>
 
-                    {/* Right Side - Notification and Profile */}
-                    <div className="flex items-center gap-4 shrink-0">
-                        {/* Notification Icon */}
+                    {/* Right — notifications + profile */}
+                    <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                         <button
                             className="w-10 h-10 rounded-full hover:bg-gray-200 transition-colors relative flex items-center justify-center"
                             aria-label="Notifications"
                         >
                             <Bell className="h-6 w-6 text-gray-900" />
                         </button>
-
-                        {/* Vertical Divider */}
+                      
                         <div className="h-10 w-px bg-gray-300"></div>
 
-                        {/* Profile */}
-                        <button
-                            onClick={handleProfileClick}
-                            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
-                                <span className="text-white font-medium text-sm">GH</span>
+
+                        <button className="flex items-center gap-2 hover:opacity-80 transition-opacity" 
+                                                  onClick={handleProfileClick}
+
+                          >
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0">
+                                <span className="text-white font-medium text-xs sm:text-sm">
+                                    {initials || '??'}
+                                </span>
                             </div>
-                            <span className="text-gray-900 font-medium hidden md:block text-base">
-                                Gautam Hazarika
-                            </span>
+                            {username && (
+                                <span className="text-gray-900 font-medium hidden md:block text-sm">
+                                    {username}
+                                </span>
+                            )}
                         </button>
                     </div>
                 </div>
