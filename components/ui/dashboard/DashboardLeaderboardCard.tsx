@@ -1,7 +1,7 @@
 import {
     Card,
     CardContent,
-} from "@/components/ui/Card"
+} from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Crown } from "lucide-react"
 

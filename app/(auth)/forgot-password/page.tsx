@@ -5,10 +5,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, Mail, Loader2, CheckCircle } from 'lucide-react'
 
-import { Card, CardContent } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
