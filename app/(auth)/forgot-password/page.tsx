@@ -210,9 +210,8 @@ export default function ForgotPasswordPage() {
                   value={email}
                   onChange={handleEmailChange}
                   onBlur={() => setTouched(true)}
-                  className={`h-12 rounded-full ${
-                    error && touched ? 'border-red-500 focus-visible:ring-red-500/20' : ''
-                  }`}
+                  className={`h-12 rounded-full ${error && touched ? 'border-red-500 focus-visible:ring-red-500/20' : ''
+                    }`}
                   disabled={loading}
                   autoFocus
                 />

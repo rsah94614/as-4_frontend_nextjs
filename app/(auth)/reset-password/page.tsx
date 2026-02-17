@@ -272,11 +272,10 @@ export default function ResetPasswordPage() {
                     value={newPassword}
                     onChange={handleNewPasswordChange}
                     onBlur={() => handleBlur('newPassword')}
-                    className={`h-12 rounded-full pr-12 ${
-                      errors.newPassword && touched.newPassword
-                        ? 'border-red-500 focus-visible:ring-red-500/20'
-                        : ''
-                    }`}
+                    className={`h-12 rounded-full pr-12 ${errors.newPassword && touched.newPassword
+                      ? 'border-red-500 focus-visible:ring-red-500/20'
+                      : ''
+                      }`}
                     disabled={loading || !token}
                     autoFocus
                   />
@@ -313,11 +312,10 @@ export default function ResetPasswordPage() {
                     value={confirmPassword}
                     onChange={handleConfirmPasswordChange}
                     onBlur={() => handleBlur('confirmPassword')}
-                    className={`h-12 rounded-full pr-12 ${
-                      errors.confirmPassword && touched.confirmPassword
-                        ? 'border-red-500 focus-visible:ring-red-500/20'
-                        : ''
-                    }`}
+                    className={`h-12 rounded-full pr-12 ${errors.confirmPassword && touched.confirmPassword
+                      ? 'border-red-500 focus-visible:ring-red-500/20'
+                      : ''
+                      }`}
                     disabled={loading || !token}
                   />
                   <button

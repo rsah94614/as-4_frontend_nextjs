@@ -13,6 +13,24 @@ function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
     day: "numeric", month: "short", year: "numeric"
   })
+import { useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Star, Bell, Paperclip, X } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { teamMembers, teamLeader, loggedInUser } from "./data"
+import { createReview } from "@/lib/reviewService"
+
+interface ReviewCardProps {
+  user: { id: string; name: string }
 }
 
 function initials(name: string) {
@@ -221,6 +239,18 @@ function ReviewForm({
               Click to attach photos or videos
             </p>
             <p className="text-xs text-slate-400">First image + first video are saved</p>
+            <div className="flex gap-3">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className={`w-8 h-8 cursor-pointer transition ${star <= rating
+                    ? "fill-yellow-500 text-yellow-500"
+                    : "text-gray-400"
+                    }`}
+                />
+              ))}
+            </div>
           </div>
         </label>
         <input id={`upload-${receiverId}-${mode}`} type="file" multiple accept="image/*,video/*" onChange={handleFiles} className="hidden" />
