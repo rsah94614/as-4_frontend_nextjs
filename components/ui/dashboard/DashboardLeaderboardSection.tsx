@@ -12,7 +12,7 @@ const leaderboard = [
 
 const DashboardLeaderboardSection = () => {
     return (
-        <section className="lg:col-span-2 bg-white rounded-3xl border p-6 shadow-none">
+        <section className="lg:col-span-2 bg-white rounded-3xl p-6 shadow-none">
             <div className="flex items-center justify-between mb-1">
                 <h2 className="text-2xl font-medium pb-4">Leaderboard</h2>
 
