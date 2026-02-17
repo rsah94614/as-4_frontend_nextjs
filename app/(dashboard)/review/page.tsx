@@ -13,24 +13,6 @@ function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
     day: "numeric", month: "short", year: "numeric"
   })
-import { useState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Star, Bell, Paperclip, X } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { teamMembers, teamLeader, loggedInUser } from "./data"
-import { createReview } from "@/lib/reviewService"
-
-interface ReviewCardProps {
-  user: { id: string; name: string }
 }
 
 function initials(name: string) {
@@ -47,11 +29,10 @@ function StarPicker({ value, onChange, readonly = false }: {
       {[1, 2, 3, 4, 5].map(s => (
         <Star
           key={s}
-          className={`transition-all ${readonly ? "w-4 h-4" : "w-7 h-7 cursor-pointer"} ${
-            s <= (readonly ? value : hovered || value)
-              ? "fill-amber-400 text-amber-400"
-              : "text-slate-200 fill-slate-200"
-          }`}
+          className={`transition-all ${readonly ? "w-4 h-4" : "w-7 h-7 cursor-pointer"} ${s <= (readonly ? value : hovered || value)
+            ? "fill-amber-400 text-amber-400"
+            : "text-slate-200 fill-slate-200"
+            }`}
           onClick={() => !readonly && onChange?.(s)}
           onMouseEnter={() => !readonly && setHovered(s)}
           onMouseLeave={() => !readonly && setHovered(0)}
@@ -65,8 +46,8 @@ function StarPicker({ value, onChange, readonly = false }: {
 function RatingBadge({ rating }: { rating: number }) {
   const color =
     rating >= 4 ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
-    rating >= 3 ? "bg-amber-50 text-amber-700 border-amber-100" :
-                  "bg-red-50 text-red-600 border-red-100"
+      rating >= 3 ? "bg-amber-50 text-amber-700 border-amber-100" :
+        "bg-red-50 text-red-600 border-red-100"
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-bold ${color}`}>
       <Star className="w-2.5 h-2.5 fill-current" />{rating}/5
@@ -122,12 +103,12 @@ function ReviewForm({
   onCancel: () => void
   mode: "create" | "edit"
 }) {
-  const [rating,  setRating]  = useState(initial?.rating  ?? 0)
+  const [rating, setRating] = useState(initial?.rating ?? 0)
   const [comment, setComment] = useState(initial?.comment ?? "")
-  const [files,   setFiles]   = useState<File[]>([])
-  const [busy,    setBusy]    = useState(false)
-  const [err,     setErr]     = useState<string | null>(null)
-  const [done,    setDone]    = useState(false)
+  const [files, setFiles] = useState<File[]>([])
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const [done, setDone] = useState(false)
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
@@ -239,18 +220,7 @@ function ReviewForm({
               Click to attach photos or videos
             </p>
             <p className="text-xs text-slate-400">First image + first video are saved</p>
-            <div className="flex gap-3">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  onClick={() => setRating(star)}
-                  className={`w-8 h-8 cursor-pointer transition ${star <= rating
-                    ? "fill-yellow-500 text-yellow-500"
-                    : "text-gray-400"
-                    }`}
-                />
-              ))}
-            </div>
+
           </div>
         </label>
         <input id={`upload-${receiverId}-${mode}`} type="file" multiple accept="image/*,video/*" onChange={handleFiles} className="hidden" />
@@ -297,9 +267,9 @@ function ReviewDetailModal({ reviewId, onClose, memberName, currentUserId, onEdi
   currentUserId: string
   onEdit: (review: ReviewResponse) => void
 }) {
-  const [review,  setReview]  = useState<ReviewResponse | null>(null)
+  const [review, setReview] = useState<ReviewResponse | null>(null)
   const [loading, setLoading] = useState(false)
-  const [err,     setErr]     = useState<string | null>(null)
+  const [err, setErr] = useState<string | null>(null)
 
   useEffect(() => {
     if (!reviewId) return
@@ -437,8 +407,8 @@ function ReviewRow({
   onView: (id: string, name: string) => void
   onEdit: (review: ReviewResponse) => void
 }) {
-  const isGiven     = review.reviewer_id === currentUserId
-  const otherName   = isGiven
+  const isGiven = review.reviewer_id === currentUserId
+  const otherName = isGiven
     ? (nameMap[review.receiver_id] ?? "Someone")
     : (nameMap[review.reviewer_id] ?? "Someone")
 
@@ -517,8 +487,8 @@ function EditReviewModal({ review, nameMap, onClose, onSuccess }: {
           receiverName={receiverName}
           mode="edit"
           initial={{
-            rating:    review.rating,
-            comment:   review.comment,
+            rating: review.rating,
+            comment: review.comment,
             image_url: review.image_url,
             video_url: review.video_url,
           }}
@@ -548,18 +518,18 @@ function SectionHeader({ title, subtitle, count }: { title: string; subtitle?: s
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ReviewPage() {
   const [loggedInUser, setLoggedInUser] = useState<TeamMember | null>(null)
-  const [teamMembers,  setTeamMembers]  = useState<TeamMember[]>([])
-  const [teamLeader,   setTeamLeader]   = useState<TeamMember | null>(null)
-  const [allReviews,   setAllReviews]   = useState<ReviewResponse[]>([])
-  const [loading,      setLoading]      = useState(true)
-  const [error,        setError]        = useState<string | null>(null)
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [teamLeader, setTeamLeader] = useState<TeamMember | null>(null)
+  const [allReviews, setAllReviews] = useState<ReviewResponse[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Detail modal state (GET /{id})
-  const [detailId,     setDetailId]     = useState<string | null>(null)
-  const [detailName,   setDetailName]   = useState("")
+  const [detailId, setDetailId] = useState<string | null>(null)
+  const [detailName, setDetailName] = useState("")
 
   // Edit modal state (PUT /{id})
-  const [editReview,   setEditReview]   = useState<ReviewResponse | null>(null)
+  const [editReview, setEditReview] = useState<ReviewResponse | null>(null)
 
   // ── Load data ────────────────────────────────────────────────────────────
   const loadAll = useCallback(async () => {
@@ -608,16 +578,16 @@ export default function ReviewPage() {
 
   // Build a name lookup from everyone we know about
   const nameMap: Record<string, string> = {}
-  ;[...teamMembers, ...(teamLeader ? [teamLeader] : []), ...(loggedInUser ? [loggedInUser] : [])]
-    .forEach(m => { nameMap[m.id] = m.name })
+    ;[...teamMembers, ...(teamLeader ? [teamLeader] : []), ...(loggedInUser ? [loggedInUser] : [])]
+      .forEach(m => { nameMap[m.id] = m.name })
 
-  const givenReviews    = allReviews.filter(r => r.reviewer_id === myId)
+  const givenReviews = allReviews.filter(r => r.reviewer_id === myId)
   const receivedReviews = allReviews.filter(r => r.receiver_id === myId)
 
   // ── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex h-screen bg-slate-50 items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
           <p className="text-sm text-slate-500">Loading…</p>
@@ -629,7 +599,7 @@ export default function ReviewPage() {
   // ── Error ─────────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="flex h-screen bg-slate-50 items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4 max-w-sm text-center">
           <AlertCircle className="w-10 h-10 text-red-400" />
           <p className="font-semibold text-black">Something went wrong</p>
@@ -643,8 +613,8 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 overflow-y-auto">
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-10">
+    <div className="min-h-screen overflow-y-auto">
+      <main className="max-w-5xl p-6 space-y-10">
 
         {/* Page header */}
         <div className="flex items-end justify-between">

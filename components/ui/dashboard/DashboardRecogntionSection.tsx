@@ -70,7 +70,7 @@ const recentRecognitions = [
 
 export const DashboardRecognitionSection = () => {
     return (
-        <section className="lg:col-span-3 bg-white rounded-3xl border p-6 shadow-none">
+        <section className="lg:col-span-3 bg-white rounded-3xl p-6 shadow-none">
             <div className="flex items-center justify-between mb-1">
                 <h2 className="text-2xl font-medium pb-4">Recent Recognitions</h2>
                 <Link href="/recognitions" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
