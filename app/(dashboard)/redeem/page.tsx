@@ -6,7 +6,6 @@ import { TicketPercent, ChevronLeft, ChevronRight } from "lucide-react";
 import RewardDialog from "@/components/ui/RewardDialog";
 import { RewardItem } from "./models";
 import { useRouter } from "next/navigation";
-import { TicketPercent } from "lucide-react";
 import { rewardItems } from "./data";
 
 export default function RedeemPage() {
