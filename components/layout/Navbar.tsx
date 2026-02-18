@@ -11,8 +11,8 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [username,    setUsername]    = useState('');
-    const [initials,    setInitials]    = useState('');
+    const [username, setUsername] = useState('');
+    const [initials, setInitials] = useState('');
 
     useEffect(() => {
         const user = auth.getUser();
@@ -27,7 +27,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             );
         }
     }, []);
-  
+
     const router = useRouter();
 
     const handleProfileClick = () => {
@@ -35,7 +35,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     };
 
     return (
-        <nav className="w-full bg-white border-b border-gray-200 flex-shrink-0">
+        <nav className="w-full pt-4 shrink-0">
             <div className="px-4 sm:px-6">
                 <div className="flex items-center justify-between h-16 gap-2 sm:gap-4">
                     {/* Hamburger — mobile only */}
@@ -70,14 +70,14 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                         >
                             <Bell className="h-6 w-6 text-gray-900" />
                         </button>
-                      
+
                         <div className="h-10 w-px bg-gray-300"></div>
 
 
-                        <button className="flex items-center gap-2 hover:opacity-80 transition-opacity" 
-                                                  onClick={handleProfileClick}
+                        <button className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                            onClick={handleProfileClick}
 
-                          >
+                        >
                             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0">
                                 <span className="text-white font-medium text-xs sm:text-sm">
                                     {initials || '??'}
