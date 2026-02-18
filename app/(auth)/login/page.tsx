@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useAuth } from '@/context/AuthProvider'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -13,12 +14,20 @@ import { Button } from '@/components/ui/button'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { loginUser, isAuthenticated, loading: authLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({})
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [authLoading, isAuthenticated, router])
 
   // Email validation function
   const validateEmail = (email: string): string | null => {
@@ -122,45 +131,13 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // Call login API
-      const response = await fetch('http://localhost:8001/v1/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: email, // Backend accepts email as username
-          password: password,
-        }),
-      })
+      const error = await loginUser(email, password)
 
-      const data = await response.json()
-
-      if (response.ok) {
-        // Success - store tokens
-        localStorage.setItem('access_token', data.access_token)
-        localStorage.setItem('refresh_token', data.refresh_token)
-        localStorage.setItem('user', JSON.stringify(data.employee))
-
-        // Optional: Store token expiry
-        const expiresAt = Date.now() + (data.expires_in * 1000)
-        localStorage.setItem('token_expires_at', expiresAt.toString())
-
-        console.log('Login successful:', data.employee)
-
-        // Redirect to dashboard
-        router.push('/dashboard')
+      if (error) {
+        setErrors({ general: error })
       } else {
-        // Handle error responses
-        if (response.status === 401) {
-          setErrors({ general: 'Invalid email or password. Please try again.' })
-        } else if (data.error?.message) {
-          setErrors({ general: data.error.message })
-        } else if (data.detail) {
-          setErrors({ general: data.detail })
-        } else {
-          setErrors({ general: 'Login failed. Please try again.' })
-        }
+        // Redirect to dashboard on success
+        router.push('/dashboard')
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -168,6 +145,15 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Don't render the login form while auth state is loading or user is already authenticated
+  if (authLoading || isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (

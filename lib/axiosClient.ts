@@ -9,7 +9,7 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use((config) => {
   // attach token in header
   // Backend team will handle via cookies
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
   if (token) config.headers.Authorization = `Bearer ${token}`;
 
   return config;
