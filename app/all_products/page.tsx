@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TicketPercent } from "lucide-react";
-import RewardDialog from "@/components/ui/RewardDialog";
+import RewardDialog from "@/components/features/rewards/RewardDialog";
 import { RewardItem } from "@/app/(dashboard)/redeem/models";
 import { rewardItems } from "@/app/(dashboard)/redeem/data";
 
@@ -57,11 +57,10 @@ export default function ViewAllPage() {
               <button
                 key={filter.value}
                 onClick={() => setSelectedFilter(filter.value)}
-                className={`px-5 py-2 rounded-full border text-sm transition ${
-                  selectedFilter === filter.value
+                className={`px-5 py-2 rounded-full border text-sm transition ${selectedFilter === filter.value
                     ? "bg-black text-white"
                     : "bg-white hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 {filter.label}
               </button>

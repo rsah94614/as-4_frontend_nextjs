@@ -25,9 +25,9 @@ import {
   RATING_POINTS_MAP,
   listReviews,
   type SubmitReviewResult,
-} from "@/lib/reviewOrchestrator";
-import { getTeamMembersForUI, type TeamMember } from "@/lib/employeeService";
-import type { ReviewResponse } from "@/lib/reviewTypes";
+} from "@/services/review-orchestrator";
+import { getTeamMembersForUI, type TeamMember } from "@/services/employee-service";
+import type { ReviewResponse } from "@/types/review";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

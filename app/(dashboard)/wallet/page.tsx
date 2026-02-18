@@ -14,8 +14,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Gift, Ticket, RefreshCw, ChevronLeft, ChevronRight, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
-import { auth } from "@/lib/auth";
-import { fetchWithAuth } from "@/lib/auth";
+import { auth, fetchWithAuth } from "@/services/auth-service";
 
 // ─── Env ──────────────────────────────────────────────────────────────────────
 
@@ -237,19 +236,17 @@ function TransactionRow({ txn }: { txn: Transaction }) {
 
       <div className="flex flex-col items-end flex-shrink-0 ml-4">
         <p
-          className={`text-sm font-semibold ${
-            isCredit ? "text-green-600" : "text-red-500"
-          }`}
+          className={`text-sm font-semibold ${isCredit ? "text-green-600" : "text-red-500"
+            }`}
         >
           {isCredit ? "+" : "-"}
           {txn.amount.toLocaleString()}
         </p>
         <span
           className={`text-[10px] px-2 py-0.5 rounded-full mt-1 font-medium
-            ${
-              txn.status.code === "SUCCESS"
-                ? "bg-green-100 text-green-700"
-                : txn.status.code === "FAILED"
+            ${txn.status.code === "SUCCESS"
+              ? "bg-green-100 text-green-700"
+              : txn.status.code === "FAILED"
                 ? "bg-red-100 text-red-600"
                 : "bg-amber-100 text-amber-700"
             }`}

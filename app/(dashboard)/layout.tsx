@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/features/auth/ProtectedRoute";
 
 export default function DashboardLayout({
   children,

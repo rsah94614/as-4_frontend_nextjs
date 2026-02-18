@@ -1,6 +1,6 @@
 "use client";
 
-import ProtectedRoute from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/features/auth/ProtectedRoute";
 
 export default function AdminLayout({
     children,
