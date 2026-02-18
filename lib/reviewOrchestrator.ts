@@ -16,7 +16,8 @@
  *       Wallet data lives only on the dedicated Wallet page.
  */
 
-import { fetchWithAuth, auth } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+import axiosClient from "@/lib/axiosClient";
 import { uploadToStorage } from "@/lib/cloudinaryUpload";
 import type { ReviewResponse, PaginatedReviewResponse } from "@/lib/reviewTypes";
 
@@ -236,59 +237,52 @@ export async function submitReview(
   }
 
   // 5. POST review → Recognition Service
-  const reviewRes = await fetchWithAuth(ENDPOINTS.REVIEWS_CREATE, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+  try {
+    const reviewRes = await axiosClient.post<ReviewResponse>(ENDPOINTS.REVIEWS_CREATE, {
       receiver_id: receiverId,
       rating,
       comment: comment.trim(),
       ...(imageUrl && { image_url: imageUrl }),
       ...(videoUrl && { video_url: videoUrl }),
-    }),
-  });
+    });
 
-  if (!reviewRes.ok) {
-    const err = await reviewRes.json().catch(() => ({}));
-    throw new Error(err.detail || err.error?.message || "Failed to create review.");
-  }
+    const review = reviewRes.data;
 
-  const review: ReviewResponse = await reviewRes.json();
+    // 6. Persist counters only after review is confirmed saved by backend
+    bumpCount(myId);
+    recordPair(myId, receiverId);
 
-  // 6. Persist counters only after review is confirmed saved by backend
-  bumpCount(myId);
-  recordPair(myId, receiverId);
+    // 7. POST credit-from-review → Wallet Service
+    let walletCreditSuccess = false;
+    let walletCreditError: string | undefined;
 
-  // 7. POST credit-from-review → Wallet Service
-  let walletCreditSuccess = false;
-  let walletCreditError: string | undefined;
+    try {
+      const creditRes = await axiosClient.post(
+        `${ENDPOINTS.CREDIT_FROM_REVIEW}?review_id=${review.review_id}`
+      );
 
-  try {
-    const creditRes = await fetchWithAuth(
-      `${ENDPOINTS.CREDIT_FROM_REVIEW}?review_id=${review.review_id}`,
-      { method: "POST" }
-    );
-
-    if (creditRes.ok) {
-      walletCreditSuccess = true;
-    } else if (creditRes.status === 409) {
-      // Already credited (idempotent duplicate) → treat as success
-      walletCreditSuccess = true;
-    } else {
-      const err = await creditRes.json().catch(() => ({}));
-      walletCreditError = err.detail || err.error?.message || "Wallet credit failed.";
+      if (creditRes.status === 200 || creditRes.status === 201) {
+        walletCreditSuccess = true;
+      }
+    } catch (e: any) {
+      if (e.response?.status === 409) {
+        // Already credited (idempotent duplicate) → treat as success
+        walletCreditSuccess = true;
+      } else {
+        walletCreditError = e.response?.data?.detail || e.message || "Wallet credit failed.";
+      }
     }
-  } catch (e) {
-    walletCreditError = e instanceof Error ? e.message : "Wallet service unavailable.";
-  }
 
-  return {
-    review,
-    pointsCredited: getPointsForRating(rating),
-    reviewsRemaining: getReviewsRemaining(),
-    walletCreditSuccess,
-    walletCreditError,
-  };
+    return {
+      review,
+      pointsCredited: getPointsForRating(rating),
+      reviewsRemaining: getReviewsRemaining(),
+      walletCreditSuccess,
+      walletCreditError,
+    };
+  } catch (error: any) {
+    throw new Error(error.response?.data?.detail || error.message || "Failed to create review.");
+  }
 }
 
 // ─── Review list ──────────────────────────────────────────────────────────────
@@ -297,12 +291,12 @@ export async function listReviews(
   page = 1,
   pageSize = 20
 ): Promise<PaginatedReviewResponse> {
-  const res = await fetchWithAuth(
-    `${ENDPOINTS.REVIEWS_LIST}?page=${page}&page_size=${pageSize}`
-  );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to fetch reviews.");
+  try {
+    const res = await axiosClient.get<PaginatedReviewResponse>(
+      `${ENDPOINTS.REVIEWS_LIST}?page=${page}&page_size=${pageSize}`
+    );
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.detail || "Failed to fetch reviews.");
   }
-  return res.json();
 }
