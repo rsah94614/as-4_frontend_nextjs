@@ -4,12 +4,12 @@
  * Review page — fixed version.
  *
  * Changes from original:
- * Wallet card REMOVED — points live on the Wallet page only
- * Monthly counter is PER-USER (keyed by employeeId in localStorage)
- * so employee A's count never bleeds into employee B's count
- * Per-pair disable: if emp1 already reviewed emp2 this month,
- * that option shows "(reviewed)" and is disabled in the dropdown
- * reviewOrchestrator no longer imports/exports wallet helpers
+ *  ✅  Wallet card REMOVED — points live on the Wallet page only
+ *  ✅  Monthly counter is PER-USER (keyed by employeeId in localStorage)
+ *      so employee A's count never bleeds into employee B's count
+ *  ✅  Per-pair disable: if emp1 already reviewed emp2 this month,
+ *      that option shows "(reviewed)" and is disabled in the dropdown
+ *  ✅  reviewOrchestrator no longer imports/exports wallet helpers
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -29,11 +29,11 @@ import {
 import { getTeamMembersForUI, type TeamMember } from "@/lib/employeeService";
 import type { ReviewResponse } from "@/lib/reviewTypes";
 
-//  Constants 
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const MAX = 5;
 
-// StarRating
+// ─── StarRating ───────────────────────────────────────────────────────────────
 
 function StarRating({
   value,
@@ -67,7 +67,7 @@ function StarRating({
   );
 }
 
-//  PointsBadge
+// ─── PointsBadge ──────────────────────────────────────────────────────────────
 
 function PointsBadge({ rating }: { rating: number }) {
   const pts = getPointsForRating(rating);
@@ -90,7 +90,7 @@ function PointsBadge({ rating }: { rating: number }) {
   );
 }
 
-//  MonthlyQuotaBar
+// ─── MonthlyQuotaBar ──────────────────────────────────────────────────────────
 
 function MonthlyQuotaBar({ used, max }: { used: number; max: number }) {
   const remaining = max - used;
@@ -125,13 +125,13 @@ function MonthlyQuotaBar({ used, max }: { used: number; max: number }) {
   );
 }
 
-//  FileChip
+// ─── FileChip ─────────────────────────────────────────────────────────────────
 
 function FileChip({ file, onRemove }: { file: File; onRemove: () => void }) {
   const isVideo = file.type.startsWith("video/");
   return (
     <div className="flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-sm">
-      <span className="text-base">{isVideo ?}</span>
+      <span className="text-base">{isVideo ? "🎬" : "🖼️"}</span>
       <span className="truncate max-w-[140px] text-slate-600">{file.name}</span>
       <button
         type="button"
@@ -144,7 +144,7 @@ function FileChip({ file, onRemove }: { file: File; onRemove: () => void }) {
   );
 }
 
-// Toast
+// ─── Toast ────────────────────────────────────────────────────────────────────
 
 type ToastKind = "success" | "error" | "warning";
 interface ToastState {
@@ -172,7 +172,7 @@ function Toast({ toast, onClose }: { toast: ToastState; onClose: () => void }) {
     >
       <div className="flex items-start gap-3">
         <span className="text-xl mt-0.5">
-          {toast.kind === "success" ?  : toast.kind === "error" ?}
+          {toast.kind === "success" ? "✅" : toast.kind === "error" ? "❌" : "⚠️"}
         </span>
         <div>
           <p className="font-semibold">{toast.title}</p>
@@ -188,7 +188,7 @@ function Toast({ toast, onClose }: { toast: ToastState; onClose: () => void }) {
   );
 }
 
-// ReviewCard
+// ─── ReviewCard ───────────────────────────────────────────────────────────────
 
 function ReviewCard({ review }: { review: ReviewResponse }) {
   return (
@@ -222,7 +222,7 @@ function ReviewCard({ review }: { review: ReviewResponse }) {
             rel="noreferrer"
             className="text-xs text-indigo-500 hover:underline"
           >
-             Image
+            🖼️ Image
           </a>
         )}
         {review.video_url && (
@@ -232,7 +232,7 @@ function ReviewCard({ review }: { review: ReviewResponse }) {
             rel="noreferrer"
             className="text-xs text-indigo-500 hover:underline"
           >
-             Video
+            🎬 Video
           </a>
         )}
       </div>
@@ -240,10 +240,10 @@ function ReviewCard({ review }: { review: ReviewResponse }) {
   );
 }
 
-// Main Page
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ReviewPage() {
-  // Data state 
+  // ── Data state ──────────────────────────────────────────────────────────────
   const [loggedInUser, setLoggedInUser] = useState<TeamMember | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [teamLeader, setTeamLeader] = useState<TeamMember | null>(null);
@@ -251,19 +251,19 @@ export default function ReviewPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  // Form state
+  // ── Form state ──────────────────────────────────────────────────────────────
   const [receiverId, setReceiverId] = useState("");
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Submission state
+  // ── Submission state ────────────────────────────────────────────────────────
   const [submitting, setSubmitting] = useState(false);
   const [lastResult, setLastResult] = useState<SubmitReviewResult | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
 
-  //Monthly quota + reviewed pairs (reactive)
+  // ── Monthly quota + reviewed pairs (reactive) ───────────────────────────────
   const [reviewsUsed, setReviewsUsed] = useState(0);
   // reviewedSet: Set of receiverIds already reviewed this month by this user
   const [reviewedSet, setReviewedSet] = useState<Set<string>>(new Set());
@@ -273,7 +273,7 @@ export default function ReviewPage() {
     setReviewedSet(getReviewedThisMonth());
   }, []);
 
-  //Load initial data
+  // ── Load initial data ───────────────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       setLoadingData(true);
@@ -306,7 +306,7 @@ export default function ReviewPage() {
     load();
   }, [refreshLocalState]);
 
-  // File handling 
+  // ── File handling ───────────────────────────────────────────────────────────
   const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files ?? []);
     const filtered = selected.filter(
@@ -319,13 +319,13 @@ export default function ReviewPage() {
   const removeFile = (idx: number) =>
     setFiles((prev) => prev.filter((_, i) => i !== idx));
 
-  // All reviewable members (manager + direct reports, excluding self)
+  // ── All reviewable members (manager + direct reports, excluding self) ────────
   const reviewableMembers: TeamMember[] = [
     ...(teamLeader ? [teamLeader] : []),
     ...teamMembers,
   ].filter((m) => m.id !== loggedInUser?.id);
 
-  // Submit
+  // ── Submit ──────────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -403,7 +403,7 @@ export default function ReviewPage() {
     }
   }
 
-  //Loading / error states 
+  // ─── Loading / error states ────────────────────────────────────────────────
 
   if (loadingData) {
     return (
@@ -478,7 +478,7 @@ export default function ReviewPage() {
       >
         {limitReached && (
           <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 font-medium">
-             You've used all 5 reviews this month. Quota resets on the 1st.
+            🚫 You've used all 5 reviews this month. Quota resets on the 1st.
           </div>
         )}
 
@@ -531,7 +531,7 @@ export default function ReviewPage() {
           {/* Inline hint when selected person is already reviewed */}
           {receiverId && reviewedSet.has(receiverId) && (
             <p className="mt-1.5 text-xs text-amber-600 font-medium">
-               You've already reviewed this person this month.
+              ⚠️ You've already reviewed this person this month.
             </p>
           )}
         </div>
@@ -649,7 +649,7 @@ export default function ReviewPage() {
             </li>
             {!lastResult.walletCreditSuccess && (
               <li className="text-amber-700">
-                 Wallet credit pending — {lastResult.walletCreditError}
+                ⚠️ Wallet credit pending — {lastResult.walletCreditError}
               </li>
             )}
           </ul>
@@ -672,3 +672,5 @@ export default function ReviewPage() {
     </div>
   );
 }
+
+
