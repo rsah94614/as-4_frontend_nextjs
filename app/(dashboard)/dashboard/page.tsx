@@ -1,7 +1,7 @@
 import { LayoutGrid, Users, Trophy, TrendingUp, Star } from "lucide-react";
-import DashboardCard from "@/components/ui/dashboard/DashboardCard";
-import DashboardRecognitionSection from "@/components/ui/dashboard/DashboardRecogntionSection";
-import DashboardLeaderboardSection from "@/components/ui/dashboard/DashboardLeaderboardSection";
+import DashboardCard from "@/components/features/dashboard/DashboardCard";
+import DashboardRecognitionSection from "@/components/features/dashboard/DashboardRecogntionSection";
+import DashboardLeaderboardSection from "@/components/features/dashboard/DashboardLeaderboardSection";
 
 
 

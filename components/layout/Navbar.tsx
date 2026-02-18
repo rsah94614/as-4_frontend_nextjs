@@ -2,7 +2,7 @@
 
 import { Search, Bell, Menu } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { auth } from '@/lib/auth';
+import { auth } from '@/services/auth-service';
 import { useRouter } from 'next/navigation';
 
 interface NavbarProps {

@@ -6,51 +6,51 @@ import {
   Loader2, Flag, Star, X, ChevronDown, ChevronUp,
   MessageSquare, TrendingUp, Calendar
 } from "lucide-react"
-import { fetchWithAuth } from "@/lib/auth"
-import Navbar  from "@/components/layout/Navbar"
+import { fetchWithAuth } from "@/services/auth-service"
+import Navbar from "@/components/layout/Navbar"
 import Sidebar from "@/components/layout/Sidebar"
 
 // ─── Env vars ─────────────────────────────────────────────────────────────────
 // FIX: Employee service runs on 8002, not 8003
-const EMPLOYEE_API    = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL    || "http://localhost:8002"
+const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || "http://localhost:8002"
 const RECOGNITION_API = process.env.NEXT_PUBLIC_RECOGNITION_API_URL || "http://localhost:8005"
 
 const FLAG_RATING = 2
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Employee {
-  employee_id:       string
-  username:          string
-  email:             string
+  employee_id: string
+  username: string
+  email: string
   designation_name?: string
-  department_name?:  string
-  manager_id?:       string
-  is_active:         boolean
+  department_name?: string
+  manager_id?: string
+  is_active: boolean
 }
 
 interface Review {
-  review_id:   string
+  review_id: string
   reviewer_id: string
   receiver_id: string
-  rating:      number
-  comment:     string
-  image_url?:  string | null
-  video_url?:  string | null
-  status_id:   string
-  review_at:   string
-  created_at:  string
-  created_by:  string
-  updated_at:  string
-  updated_by:  string
+  rating: number
+  comment: string
+  image_url?: string | null
+  video_url?: string | null
+  status_id: string
+  review_at: string
+  created_at: string
+  created_by: string
+  updated_at: string
+  updated_by: string
 }
 
 // ─── Calendar Strip ───────────────────────────────────────────────────────────
 function CalendarStrip({ month, year, onChange }: {
   month: number; year: number; onChange: (m: number, y: number) => void
 }) {
-  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-  const prev = () => month === 0  ? onChange(11, year - 1) : onChange(month - 1, year)
-  const next = () => month === 11 ? onChange(0,  year + 1) : onChange(month + 1, year)
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  const prev = () => month === 0 ? onChange(11, year - 1) : onChange(month - 1, year)
+  const next = () => month === 11 ? onChange(0, year + 1) : onChange(month + 1, year)
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <button onClick={prev} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition">
@@ -59,9 +59,8 @@ function CalendarStrip({ month, year, onChange }: {
       <div className="flex items-center gap-1 flex-wrap">
         {MONTHS.map((m, i) => (
           <button key={m} onClick={() => onChange(i, year)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
-              i === month ? "bg-orange-500 text-white shadow" : "text-slate-500 hover:bg-slate-100"
-            }`}>
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${i === month ? "bg-orange-500 text-white shadow" : "text-slate-500 hover:bg-slate-100"
+              }`}>
             {m}
           </button>
         ))}
@@ -83,7 +82,7 @@ function Stars({ value, size = "sm" }: { value: number; size?: "sm" | "md" }) {
   const cls = size === "md" ? "w-4 h-4" : "w-3 h-3"
   return (
     <div className="flex items-center gap-0.5">
-      {[1,2,3,4,5].map(i => (
+      {[1, 2, 3, 4, 5].map(i => (
         <Star key={i} className={`${cls} ${i <= value ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"}`} />
       ))}
     </div>
@@ -92,29 +91,26 @@ function Stars({ value, size = "sm" }: { value: number; size?: "sm" | "md" }) {
 
 // ─── Single review row ────────────────────────────────────────────────────────
 function ReviewRow({ review, employees }: { review: Review; employees: Employee[] }) {
-  const flagged  = review.rating <= FLAG_RATING
+  const flagged = review.rating <= FLAG_RATING
   const reviewer = employees.find(e => e.employee_id === review.reviewer_id)
 
   return (
-    <div className={`flex items-start gap-3 rounded-xl p-3 border ${
-      flagged ? "bg-red-50/60 border-red-100" : "bg-white border-slate-100"
-    }`}>
-      <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
-        flagged ? "bg-red-100 text-red-600" : "bg-slate-100 text-slate-600"
+    <div className={`flex items-start gap-3 rounded-xl p-3 border ${flagged ? "bg-red-50/60 border-red-100" : "bg-white border-slate-100"
       }`}>
+      <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${flagged ? "bg-red-100 text-red-600" : "bg-slate-100 text-slate-600"
+        }`}>
         {(reviewer?.username ?? "?").charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-semibold text-black">{reviewer?.username ?? "Unknown"}</span>
           <Stars value={review.rating} />
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-            flagged
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${flagged
               ? "bg-red-100 text-red-600"
               : review.rating >= 4
-              ? "bg-green-100 text-green-700"
-              : "bg-amber-100 text-amber-700"
-          }`}>{review.rating}/5</span>
+                ? "bg-green-100 text-green-700"
+                : "bg-amber-100 text-amber-700"
+            }`}>{review.rating}/5</span>
           {flagged && (
             <span className="flex items-center gap-0.5 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
               <Flag className="w-2.5 h-2.5" /> Flagged
@@ -141,20 +137,18 @@ function MemberSection({ member, reviews, employees, isManager }: {
   const memberReviews = reviews.filter(r => r.receiver_id === member.employee_id)
   if (memberReviews.length === 0) return null
 
-  const avg     = memberReviews.reduce((s, r) => s + r.rating, 0) / memberReviews.length
+  const avg = memberReviews.reduce((s, r) => s + r.rating, 0) / memberReviews.length
   const flagged = memberReviews.filter(r => r.rating <= FLAG_RATING).length
 
   return (
     <div className="space-y-2">
       <button
         onClick={() => setOpen(v => !v)}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition text-left ${
-          flagged > 0 ? "bg-red-50" : "bg-slate-50"
-        } hover:brightness-95`}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition text-left ${flagged > 0 ? "bg-red-50" : "bg-slate-50"
+          } hover:brightness-95`}
       >
-        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
-          isManager ? "bg-orange-100 text-orange-600" : "bg-slate-200 text-slate-600"
-        }`}>
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${isManager ? "bg-orange-100 text-orange-600" : "bg-slate-200 text-slate-600"
+          }`}>
           {member.username.charAt(0).toUpperCase()}
         </div>
         <span className="text-xs font-bold text-black flex-1 text-left">{member.username}</span>
@@ -193,21 +187,20 @@ function TeamSection({ manager, members, reviews, employees, expanded, onToggle 
   employees: Employee[]; expanded: boolean; onToggle: () => void
 }) {
   // FIX: Count reviews for all team members (manager + reports) as RECEIVERS
-  const teamIds     = useMemo(
+  const teamIds = useMemo(
     () => new Set([manager.employee_id, ...members.map(m => m.employee_id)]),
     [manager.employee_id, members]
   )
-  const teamReviews  = reviews.filter(r => teamIds.has(r.receiver_id))
+  const teamReviews = reviews.filter(r => teamIds.has(r.receiver_id))
   const flaggedCount = teamReviews.filter(r => r.rating <= FLAG_RATING).length
-  const totalCount   = teamReviews.length
-  const avg          = totalCount > 0
+  const totalCount = teamReviews.length
+  const avg = totalCount > 0
     ? teamReviews.reduce((s, r) => s + r.rating, 0) / totalCount
     : 0
 
   return (
-    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${
-      flaggedCount > 0 ? "border-red-100" : "border-slate-100"
-    }`}>
+    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${flaggedCount > 0 ? "border-red-100" : "border-slate-100"
+      }`}>
       <button onClick={onToggle} className="w-full flex items-center gap-3 p-4 hover:bg-slate-50/50 transition text-left">
         <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold flex-shrink-0">
           {manager.username.charAt(0).toUpperCase()}
@@ -269,15 +262,15 @@ function TeamSection({ manager, members, reviews, employees, expanded, onToggle 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function AdminReviewsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [employees,   setEmployees]   = useState<Employee[]>([])
-  const [allReviews,  setAllReviews]  = useState<Review[]>([])
-  const [loading,     setLoading]     = useState(true)
-  const [error,       setError]       = useState<string | null>(null)
-  const [search,      setSearch]      = useState("")
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [allReviews, setAllReviews] = useState<Review[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
   const [showFlagged, setShowFlagged] = useState(false)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
-  const [month,       setMonth]       = useState(new Date().getMonth())
-  const [year,        setYear]        = useState(new Date().getFullYear())
+  const [month, setMonth] = useState(new Date().getMonth())
+  const [year, setYear] = useState(new Date().getFullYear())
 
   // ── Paginated fetchers — backend caps both services at le=100 ─────────────
   // Employee service: param is `limit` (max 100)
@@ -337,7 +330,7 @@ export default function AdminReviewsPage() {
     } finally {
       setLoading(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -360,14 +353,14 @@ export default function AdminReviewsPage() {
       employees.map(e => e.manager_id).filter((id): id is string => !!id)
     )
     const mgrs = employees.filter(e => managersSet.has(e.employee_id))
-    const get  = (id: string) => employees.filter(e => e.manager_id === id)
+    const get = (id: string) => employees.filter(e => e.manager_id === id)
     return { managers: mgrs, getTeam: get }
   }, [employees])
 
   // ── Summary stats ──────────────────────────────────────────────────────────
   const totalReviews = reviews.length
   const flaggedTotal = reviews.filter(r => r.rating <= FLAG_RATING).length
-  const overallAvg   = totalReviews > 0
+  const overallAvg = totalReviews > 0
     ? reviews.reduce((s, r) => s + r.rating, 0) / totalReviews
     : 0
 
@@ -376,11 +369,11 @@ export default function AdminReviewsPage() {
   const filteredManagers = useMemo(() => {
     const term = search.toLowerCase()
     return managers.filter(m => {
-      const team  = getTeam(m.employee_id)
+      const team = getTeam(m.employee_id)
       const match = !term
         || m.username.toLowerCase().includes(term)
         || team.some(e => e.username.toLowerCase().includes(term))
-      const flag  = !showFlagged || (() => {
+      const flag = !showFlagged || (() => {
         const ids = new Set([m.employee_id, ...team.map(x => x.employee_id)])
         return reviews.some(r => ids.has(r.receiver_id) && r.rating <= FLAG_RATING)
       })()
@@ -425,11 +418,10 @@ export default function AdminReviewsPage() {
             </div>
             <div
               onClick={() => setShowFlagged(v => !v)}
-              className={`rounded-2xl border shadow-sm p-5 cursor-pointer transition-all select-none ${
-                showFlagged
+              className={`rounded-2xl border shadow-sm p-5 cursor-pointer transition-all select-none ${showFlagged
                   ? "bg-red-50 border-red-300"
                   : "bg-white border-slate-100 hover:border-red-200"
-              }`}
+                }`}
             >
               <p className="text-xs font-semibold text-red-400 uppercase tracking-widest mb-1 flex items-center gap-1">
                 <Flag className="w-3 h-3" /> Flagged

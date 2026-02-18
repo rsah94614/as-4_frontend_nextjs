@@ -3,8 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/context/AuthProvider";
-import { isAdminUser } from "@/lib/roleUtils";
+import { useAuth } from "@/providers/auth-provider";
+import { isAdminUser } from "@/lib/role-utils";
 import {
   Dialog,
   DialogTrigger,

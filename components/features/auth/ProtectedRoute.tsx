@@ -5,16 +5,16 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
-import { auth } from '@/lib/auth'
+import { auth } from '@/services/auth-service'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
   redirectTo?: string
 }
 
-export default function ProtectedRoute({ 
-  children, 
-  redirectTo = '/login' 
+export default function ProtectedRoute({
+  children,
+  redirectTo = '/login'
 }: ProtectedRouteProps) {
   const router = useRouter()
   const [isChecking, setIsChecking] = useState(true)

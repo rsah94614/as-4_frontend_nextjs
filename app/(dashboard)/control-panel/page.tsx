@@ -4,22 +4,22 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Trophy, Building2, UserRound, Users, Tags, Star, ShieldAlert, Loader2 } from 'lucide-react';
-import { auth } from '@/lib/auth';
-import { isAdminUser } from '@/lib/roleUtils';
+import { auth } from '@/services/auth-service';
+import { isAdminUser } from '@/lib/role-utils';
 
 const categories = [
-  { title: 'Rewards',           description: 'Manage individual reward items and point values.',                 href: '/rewards',           icon: Trophy,    color: 'bg-orange-100 text-orange-600', accent: 'group-hover:border-orange-200' },
-  { title: 'Departments',       description: 'Configure organisational department structures.',                  href: '/departments',       icon: Building2, color: 'bg-blue-100 text-blue-600',    accent: 'group-hover:border-blue-200'   },
-  { title: 'Designations',      description: 'Manage employee job titles and hierarchy levels.',                 href: '/designations',      icon: UserRound, color: 'bg-green-100 text-green-600',  accent: 'group-hover:border-green-200'  },
-  { title: 'Employees',         description: 'View and manage staff profiles and access.',                       href: '/employees',         icon: Users,     color: 'bg-purple-100 text-purple-600', accent: 'group-hover:border-purple-200' },
-  { title: 'Reward Categories', description: 'Organise rewards into logical groupings.',                         href: '/reward-categories', icon: Tags,      color: 'bg-red-100 text-red-600',       accent: 'group-hover:border-red-200'    },
-  { title: 'Reviews',           description: 'Monitor all peer reviews. Low ratings are flagged automatically.', href: '/reviews',           icon: Star,      color: 'bg-amber-100 text-amber-600',   accent: 'group-hover:border-amber-200'  },
+  { title: 'Rewards', description: 'Manage individual reward items and point values.', href: '/rewards', icon: Trophy, color: 'bg-orange-100 text-orange-600', accent: 'group-hover:border-orange-200' },
+  { title: 'Departments', description: 'Configure organisational department structures.', href: '/departments', icon: Building2, color: 'bg-blue-100 text-blue-600', accent: 'group-hover:border-blue-200' },
+  { title: 'Designations', description: 'Manage employee job titles and hierarchy levels.', href: '/designations', icon: UserRound, color: 'bg-green-100 text-green-600', accent: 'group-hover:border-green-200' },
+  { title: 'Employees', description: 'View and manage staff profiles and access.', href: '/employees', icon: Users, color: 'bg-purple-100 text-purple-600', accent: 'group-hover:border-purple-200' },
+  { title: 'Reward Categories', description: 'Organise rewards into logical groupings.', href: '/reward-categories', icon: Tags, color: 'bg-red-100 text-red-600', accent: 'group-hover:border-red-200' },
+  { title: 'Reviews', description: 'Monitor all peer reviews. Low ratings are flagged automatically.', href: '/reviews', icon: Star, color: 'bg-amber-100 text-amber-600', accent: 'group-hover:border-amber-200' },
 ];
 
 export default function ControlPanelHub() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
-  const [allowed,  setAllowed]  = useState(false);
+  const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
     const user = auth.getUser();

@@ -7,7 +7,7 @@ import {
   useState,
   useCallback,
 } from "react";
-import { auth, login as authLogin, User } from "@/lib/auth";
+import { auth, login as authLogin, User } from "@/services/auth-service";
 
 /* ------------------------------------------------------------------ */
 /*  Context shape                                                      */

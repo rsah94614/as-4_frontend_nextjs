@@ -14,7 +14,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { fetchWithAuth, auth } from "@/lib/auth";
+import { fetchWithAuth, auth } from "@/services/auth-service";
 import {
   TicketPercent,
   Package,
@@ -33,7 +33,7 @@ import {
 // ─── Env ──────────────────────────────────────────────────────────────────────
 
 const REWARDS_API = process.env.NEXT_PUBLIC_REWARDS_API_URL || "http://localhost:8006";
-const WALLET_API  = process.env.NEXT_PUBLIC_WALLET_API_URL  || "http://localhost:8004";
+const WALLET_API = process.env.NEXT_PUBLIC_WALLET_API_URL || "http://localhost:8004";
 
 // ─── Types (matching backend schemas.py exactly) ──────────────────────────────
 
@@ -146,9 +146,9 @@ async function redeemReward(
 
 function StockBadge({ status }: { status: string }) {
   const cfg = {
-    "In Stock":       { cls: "bg-emerald-100 text-emerald-700",  dot: "bg-emerald-500" },
-    "Limited Stock":  { cls: "bg-amber-100 text-amber-700",      dot: "bg-amber-500" },
-    "Out of Stock":   { cls: "bg-red-100 text-red-600",          dot: "bg-red-500" },
+    "In Stock": { cls: "bg-emerald-100 text-emerald-700", dot: "bg-emerald-500" },
+    "Limited Stock": { cls: "bg-amber-100 text-amber-700", dot: "bg-amber-500" },
+    "Out of Stock": { cls: "bg-red-100 text-red-600", dot: "bg-red-500" },
   }[status] ?? { cls: "bg-slate-100 text-slate-600", dot: "bg-slate-400" };
 
   return (
@@ -171,9 +171,9 @@ function RewardCard({
   onRedeem: (item: RewardItem) => void;
 }) {
   const outOfStock = item.stock_status === "Out of Stock";
-  const isCoupon   = item.category?.category_code?.toLowerCase().includes("coupon") ||
-                     item.reward_code?.toLowerCase().includes("coupon") ||
-                     item.reward_code?.toLowerCase().includes("voucher");
+  const isCoupon = item.category?.category_code?.toLowerCase().includes("coupon") ||
+    item.reward_code?.toLowerCase().includes("coupon") ||
+    item.reward_code?.toLowerCase().includes("voucher");
 
   const disabled = outOfStock || !canAfford;
 
@@ -187,11 +187,10 @@ function RewardCard({
     >
       {/* Top colour band */}
       <div
-        className={`h-2 w-full ${
-          isCoupon
+        className={`h-2 w-full ${isCoupon
             ? "bg-gradient-to-r from-amber-400 to-orange-400"
             : "bg-gradient-to-r from-indigo-400 to-violet-500"
-        }`}
+          }`}
       />
 
       <div className="flex flex-col flex-1 p-5">
@@ -471,16 +470,16 @@ function RedeemDialog({
 
 export default function RedeemPage() {
   // ── Server data ──────────────────────────────────────────────────────────
-  const [items, setItems]           = useState<RewardItem[]>([]);
+  const [items, setItems] = useState<RewardItem[]>([]);
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
-  const [wallet, setWallet]         = useState<WalletData | null>(null);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState<string | null>(null);
+  const [wallet, setWallet] = useState<WalletData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // ── UI state ─────────────────────────────────────────────────────────────
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
-  const [dialogState, setDialogState]       = useState<DialogState | null>(null);
-  const [dialogOpen, setDialogOpen]         = useState(false);
+  const [dialogState, setDialogState] = useState<DialogState | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // ── Load all data on mount ────────────────────────────────────────────────
   const loadAll = useCallback(async () => {
@@ -545,10 +544,10 @@ export default function RedeemPage() {
     setWallet((prev) =>
       prev
         ? {
-            ...prev,
-            available_points: prev.available_points - ptsSpent,
-            redeemed_points: prev.redeemed_points + ptsSpent,
-          }
+          ...prev,
+          available_points: prev.available_points - ptsSpent,
+          redeemed_points: prev.redeemed_points + ptsSpent,
+        }
         : prev
     );
     // Optimistic stock decrement
@@ -561,8 +560,8 @@ export default function RedeemPage() {
             available_stock: newStock,
             stock_status:
               newStock <= 0 ? "Out of Stock"
-              : newStock < 10 ? "Limited Stock"
-              : "In Stock",
+                : newStock < 10 ? "Limited Stock"
+                  : "In Stock",
           };
         }
         return i;
