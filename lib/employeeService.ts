@@ -6,74 +6,75 @@
 // Uses auth.getUser() to get the current employee_id from localStorage
 // (stored at login via auth.setTokens) — no extra /me request needed.
 
-import { fetchWithAuth, auth } from './auth'
+import { auth } from './auth'
+import axiosClient from './axiosClient'
 
 const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || 'http://localhost:8002'
 
 const ENDPOINTS = {
   LIST: `${EMPLOYEE_API}/v1/employees`,
-  GET:  (id: string) => `${EMPLOYEE_API}/v1/employees/${id}`,
+  GET: (id: string) => `${EMPLOYEE_API}/v1/employees/${id}`,
 } as const
 
 // ─── Types matching backend schemas.py ───────────────────────────────────────
 
 /** Matches EmployeeListItem from schemas.py */
 export interface Employee {
-  employee_id:       string
-  username:          string
-  email:             string
-  designation_id?:   string
+  employee_id: string
+  username: string
+  email: string
+  designation_id?: string
   designation_name?: string
-  department_id?:    string
-  department_name?:  string
-  manager_id?:       string
-  manager_name?:     string
-  status_id?:        string
-  status_name?:      string
-  is_active:         boolean
-  date_of_joining:   string
-  created_at:        string
-  updated_at?:       string
+  department_id?: string
+  department_name?: string
+  manager_id?: string
+  manager_name?: string
+  status_id?: string
+  status_name?: string
+  is_active: boolean
+  date_of_joining: string
+  created_at: string
+  updated_at?: string
 }
 
 /** Matches EmployeeDetailResponse from schemas.py */
 export interface EmployeeDetail {
-  employee_id:     string
-  username:        string
-  email:           string
-  is_active:       boolean
+  employee_id: string
+  username: string
+  email: string
+  is_active: boolean
   date_of_joining: string
   designation?: {
-    designation_id:   string
+    designation_id: string
     designation_name: string
     designation_code: string
-    level:            number
+    level: number
   }
   department?: {
-    department_id:   string
+    department_id: string
     department_name: string
     department_code: string
   }
   manager?: {
     employee_id: string
-    username:    string
-    email:       string
+    username: string
+    email: string
   }
   status?: {
-    status_id:   string
+    status_id: string
     status_code: string
     status_name: string
   }
   roles?: { role_id: string; role_name: string; role_code: string }[]
-  created_at:  string
+  created_at: string
   updated_at?: string
 }
 
 /** Shape used by UI components (ReviewCard, header, etc.) */
 export interface TeamMember {
-  id:           string
-  name:         string   // mapped from username
-  email?:       string
+  id: string
+  name: string   // mapped from username
+  email?: string
   designation?: string
 }
 
@@ -81,18 +82,18 @@ export interface TeamMember {
 
 export function detailToTeamMember(e: EmployeeDetail): TeamMember {
   return {
-    id:          e.employee_id,
-    name:        e.username,
-    email:       e.email,
+    id: e.employee_id,
+    name: e.username,
+    email: e.email,
     designation: e.designation?.designation_name,
   }
 }
 
 export function listItemToTeamMember(e: Employee): TeamMember {
   return {
-    id:          e.employee_id,
-    name:        e.username,
-    email:       e.email,
+    id: e.employee_id,
+    name: e.username,
+    email: e.email,
     designation: e.designation_name,
   }
 }
@@ -102,12 +103,12 @@ export function listItemToTeamMember(e: Employee): TeamMember {
 export const employeeService = {
   /** Fetch a single employee detail by ID */
   async getEmployee(id: string): Promise<EmployeeDetail> {
-    const res = await fetchWithAuth(ENDPOINTS.GET(id))
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || 'Failed to fetch employee')
+    try {
+      const res = await axiosClient.get<EmployeeDetail>(ENDPOINTS.GET(id));
+      return res.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Failed to fetch employee');
     }
-    return res.json()
   },
 
   /**
@@ -115,31 +116,33 @@ export const employeeService = {
    * Passing manager_id fetches all direct reports of that manager.
    */
   async listEmployees(params?: {
-    page?:          number
-    limit?:         number
-    manager_id?:    string
+    page?: number
+    limit?: number
+    manager_id?: string
     department_id?: string
-    is_active?:     boolean
-    search?:        string
-    sort_by?:       string
-    sort_order?:    string
+    is_active?: boolean
+    search?: string
+    sort_by?: string
+    sort_order?: string
   }): Promise<{ data: Employee[]; pagination: Record<string, unknown> }> {
     const q = new URLSearchParams()
-    if (params?.page)              q.set('page',          String(params.page))
-    if (params?.limit)             q.set('limit',         String(params.limit))
-    if (params?.manager_id)        q.set('manager_id',    params.manager_id)
-    if (params?.department_id)     q.set('department_id', params.department_id)
-    if (params?.is_active != null) q.set('is_active',     String(params.is_active))
-    if (params?.search)            q.set('search',        params.search)
-    if (params?.sort_by)           q.set('sort_by',       params.sort_by)
-    if (params?.sort_order)        q.set('sort_order',    params.sort_order)
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.limit) q.set('limit', String(params.limit))
+    if (params?.manager_id) q.set('manager_id', params.manager_id)
+    if (params?.department_id) q.set('department_id', params.department_id)
+    if (params?.is_active != null) q.set('is_active', String(params.is_active))
+    if (params?.search) q.set('search', params.search)
+    if (params?.sort_by) q.set('sort_by', params.sort_by)
+    if (params?.sort_order) q.set('sort_order', params.sort_order)
 
-    const res = await fetchWithAuth(`${ENDPOINTS.LIST}?${q.toString()}`)
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || 'Failed to fetch employees')
+    try {
+      const res = await axiosClient.get<{ data: Employee[]; pagination: Record<string, unknown> }>(
+        `${ENDPOINTS.LIST}?${q.toString()}`
+      );
+      return res.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Failed to fetch employees');
     }
-    return res.json()
   },
 }
 
@@ -154,8 +157,8 @@ export const employeeService = {
  */
 export async function getTeamMembersForUI(): Promise<{
   loggedInUser: TeamMember
-  teamMembers:  TeamMember[]
-  teamLeader:   TeamMember | null
+  teamMembers: TeamMember[]
+  teamLeader: TeamMember | null
 }> {
   // 1. Get current employee_id from the user stored in localStorage at login
   const storedUser = auth.getUser()
@@ -183,7 +186,7 @@ export async function getTeamMembersForUI(): Promise<{
 
   return {
     loggedInUser: detailToTeamMember(myDetail),
-    teamMembers:  teamRes.data.map(listItemToTeamMember),
+    teamMembers: teamRes.data.map(listItemToTeamMember),
     teamLeader,
   }
 }

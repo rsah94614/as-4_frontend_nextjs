@@ -9,7 +9,7 @@
 // The backend stores only the URL — it never touches the file.
 // To switch to S3 later: replace cloudinaryUpload.ts only.
 
-import { fetchWithAuth } from './auth'
+import axiosClient from './axiosClient'
 import { uploadToStorage } from './cloudinaryUpload'
 import type {
   ReviewCreateRequest,
@@ -28,9 +28,9 @@ export type {
 const RECOGNITION_API = process.env.NEXT_PUBLIC_RECOGNITION_API_URL || 'http://localhost:8005'
 
 const ENDPOINTS = {
-  LIST:   `${RECOGNITION_API}/v1/reviews`,
+  LIST: `${RECOGNITION_API}/v1/reviews`,
   CREATE: `${RECOGNITION_API}/v1/reviews`,
-  GET:    (id: string) => `${RECOGNITION_API}/v1/reviews/${id}`,
+  GET: (id: string) => `${RECOGNITION_API}/v1/reviews/${id}`,
   UPDATE: (id: string) => `${RECOGNITION_API}/v1/reviews/${id}`,
 } as const
 
@@ -38,48 +38,42 @@ const ENDPOINTS = {
 
 export const reviewService = {
   async listReviews(page = 1, pageSize = 20): Promise<PaginatedReviewResponse> {
-    const res = await fetchWithAuth(`${ENDPOINTS.LIST}?page=${page}&page_size=${pageSize}`)
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || 'Failed to fetch reviews')
+    try {
+      const res = await axiosClient.get<PaginatedReviewResponse>(
+        `${ENDPOINTS.LIST}?page=${page}&page_size=${pageSize}`
+      );
+      return res.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Failed to fetch reviews');
     }
-    return res.json()
   },
 
   async getReview(reviewId: string): Promise<ReviewResponse> {
-    const res = await fetchWithAuth(ENDPOINTS.GET(reviewId))
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || 'Failed to fetch review')
+    try {
+      const res = await axiosClient.get<ReviewResponse>(ENDPOINTS.GET(reviewId));
+      return res.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Failed to fetch review');
     }
-    return res.json()
   },
 
   /** POST JSON matching backend ReviewCreateRequest — not FormData */
   async createReview(data: ReviewCreateRequest): Promise<ReviewResponse> {
-    const res = await fetchWithAuth(ENDPOINTS.CREATE, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(data),
-    })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || 'Failed to create review')
+    try {
+      const res = await axiosClient.post<ReviewResponse>(ENDPOINTS.CREATE, data);
+      return res.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Failed to create review');
     }
-    return res.json()
   },
 
   async updateReview(reviewId: string, data: ReviewUpdateRequest): Promise<ReviewResponse> {
-    const res = await fetchWithAuth(ENDPOINTS.UPDATE(reviewId), {
-      method:  'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(data),
-    })
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.detail || 'Failed to update review')
+    try {
+      const res = await axiosClient.put<ReviewResponse>(ENDPOINTS.UPDATE(reviewId), data);
+      return res.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Failed to update review');
     }
-    return res.json()
   },
 }
 
@@ -106,12 +100,12 @@ export async function uploadFile(file: File): Promise<string> {
  */
 export async function createReviewWithFiles(
   receiverId: string,
-  rating:     number,
-  comment:    string,
-  files:      File[]
+  rating: number,
+  comment: string,
+  files: File[]
 ): Promise<ReviewResponse> {
-  if (rating < 1 || rating > 5)     throw new Error('Rating must be between 1 and 5')
-  if (comment.trim().length < 10)   throw new Error('Comment must be at least 10 characters')
+  if (rating < 1 || rating > 5) throw new Error('Rating must be between 1 and 5')
+  if (comment.trim().length < 10) throw new Error('Comment must be at least 10 characters')
   if (comment.trim().length > 2000) throw new Error('Comment must not exceed 2000 characters')
 
   let imageUrl: string | undefined
@@ -138,8 +132,8 @@ export async function createReviewWithFiles(
  */
 export async function createReview(formData: FormData): Promise<ReviewResponse> {
   const receiverId = formData.get('receiver_id') as string
-  const rating     = parseInt(formData.get('rating') as string, 10)
-  const comment    = formData.get('comment') as string
+  const rating = parseInt(formData.get('rating') as string, 10)
+  const comment = formData.get('comment') as string
 
   const files: File[] = []
   formData.getAll('attachments').forEach((item) => {
