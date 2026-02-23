@@ -2,8 +2,8 @@
  * review-orchestrator.ts
  *
  * Orchestrates the full review submission flow:
- *   1. Per-user monthly limit  — key: "rl:{employeeId}:{YYYY-MM}"  → count as string
- *   2. Per-pair reviewed check — key: "rp:{employeeId}:{YYYY-MM}"  → JSON string[] of receiverIds
+ *   1. Per-user monthly limit  — derived from GET /v1/reviews (backend is source of truth)
+ *   2. Per-pair reviewed check — derived from the same fetch (no localStorage)
  *      UI reads this to disable dropdown options already reviewed this month.
  *   3. Upload files to Cloudinary → get URLs
  *   4. POST review to Recognition Service
@@ -34,28 +34,9 @@ const ENDPOINTS = {
     CREDIT_FROM_REVIEW: `${WALLET_API}/v1/wallets/credit-from-review`,
 } as const;
 
+export const MAX_REVIEWS_PER_MONTH = 5;
+
 // ─── Internal helpers ─────────────────────────────────────────────────────────
-
-function getCurrentMonth(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function lsGet(key: string): string | null {
-    try {
-        return localStorage.getItem(key);
-    } catch {
-        return null;
-    }
-}
-
-function lsSet(key: string, val: string): void {
-    try {
-        localStorage.setItem(key, val);
-    } catch {
-        /* noop in SSR */
-    }
-}
 
 /** Returns the logged-in employee_id or throws */
 function requireMyId(): string {
@@ -64,95 +45,115 @@ function requireMyId(): string {
     return id as string;
 }
 
-// ─── Per-user monthly limit ───────────────────────────────────────────────────
-//
-// Key scheme: "rl:{employeeId}:{YYYY-MM}"
-//
-// Every employee gets their own counter that is completely separate from
-// every other employee's counter. Because the month is baked into the key,
-// the counter automatically resets on the 1st of each month — there is
-// nothing to clean up, old keys are simply ignored forever.
-
-const MAX_REVIEWS_PER_MONTH = 5;
-
-function limitKey(employeeId: string): string {
-    return `rl:${employeeId}:${getCurrentMonth()}`;
+/** ISO string for the first moment of the current month (UTC) */
+function currentMonthStart(): string {
+    const d = new Date();
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)).toISOString();
 }
 
-function readCount(employeeId: string): number {
-    return parseInt(lsGet(limitKey(employeeId)) ?? "0", 10) || 0;
-}
+// ─── Monthly state — fetched from the backend ─────────────────────────────────
 
-function bumpCount(employeeId: string): void {
-    lsSet(limitKey(employeeId), String(readCount(employeeId) + 1));
-}
-
-export function getReviewsUsed(): number {
-    try {
-        return readCount(requireMyId());
-    } catch {
-        return 0;
-    }
-}
-
-export function getReviewsRemaining(): number {
-    return Math.max(0, MAX_REVIEWS_PER_MONTH - getReviewsUsed());
-}
-
-export function canSubmitReview(): boolean {
-    return getReviewsRemaining() > 0;
-}
-
-// ─── Per-pair reviewed tracking ───────────────────────────────────────────────
-//
-// Key scheme: "rp:{employeeId}:{YYYY-MM}"
-// Value: JSON array of receiverIds this reviewer has already reviewed this month.
-//
-// Used by the UI to disable dropdown options for already-reviewed team members.
-// Like the limit key, the month in the key means it auto-resets each month.
-
-function pairKey(employeeId: string): string {
-    return `rp:${employeeId}:${getCurrentMonth()}`;
-}
-
-function readReviewedPairs(employeeId: string): string[] {
-    try {
-        const raw = lsGet(pairKey(employeeId));
-        if (!raw) return [];
-        return JSON.parse(raw) as string[];
-    } catch {
-        return [];
-    }
-}
-
-function recordPair(employeeId: string, receiverId: string): void {
-    const existing = readReviewedPairs(employeeId);
-    if (!existing.includes(receiverId)) {
-        lsSet(pairKey(employeeId), JSON.stringify([...existing, receiverId]));
-    }
+export interface MonthlyReviewState {
+    /** How many reviews the current user has given this calendar month */
+    reviewsUsed: number;
+    /** receiverIds the user has already reviewed this month */
+    reviewedReceiverIds: Set<string>;
+    /** Computed: how many slots remain */
+    reviewsRemaining: number;
+    /** Computed: whether the user may submit another review */
+    canSubmit: boolean;
 }
 
 /**
- * Returns a Set of receiverIds that the current logged-in user has already
- * reviewed this month. Use this in the dropdown to disable already-reviewed options.
+ * Fetches all reviews the current user has **given** this calendar month
+ * from the backend and returns derived monthly state.
+ *
+ * The backend already scopes results to the current user (reviewer_id = me
+ * OR receiver_id = me for EMPLOYEE/MANAGER roles), so we additionally filter
+ * client-side to only rows where reviewer_id === myId so that reviews
+ * *received* don't inflate the count.
+ *
+ * Paginates automatically — in practice a user can have at most
+ * MAX_REVIEWS_PER_MONTH given reviews per month, so a single page is always
+ * sufficient, but the loop is here for correctness.
+ */
+export async function fetchMonthlyReviewState(): Promise<MonthlyReviewState> {
+    const myId = requireMyId();
+    const monthStart = currentMonthStart();
+
+    const receiverIds = new Set<string>();
+    let page = 1;
+    const pageSize = 100; // large page — we expect at most MAX_REVIEWS_PER_MONTH results
+
+    while (true) {
+        const res = await axiosClient.get<PaginatedReviewResponse>(
+            `${ENDPOINTS.REVIEWS_LIST}?page=${page}&page_size=${pageSize}`
+        );
+
+        const { data, pagination } = res.data;
+
+        for (const review of data) {
+            // Only count reviews given by me this month
+            if (
+                review.reviewer_id === myId &&
+                review.review_at >= monthStart
+            ) {
+                receiverIds.add(review.receiver_id);
+            }
+        }
+
+        if (!pagination.has_next) break;
+        page++;
+    }
+
+    const reviewsUsed = receiverIds.size;
+    const reviewsRemaining = Math.max(0, MAX_REVIEWS_PER_MONTH - reviewsUsed);
+
+    return {
+        reviewsUsed,
+        reviewedReceiverIds: receiverIds,
+        reviewsRemaining,
+        canSubmit: reviewsRemaining > 0,
+    };
+}
+
+// ─── Convenience wrappers (always hit the backend) ────────────────────────────
+
+/**
+ * Returns how many reviews the current user has given this month.
+ * Hits the backend — call once per render, not in a tight loop.
+ */
+export async function getReviewsUsed(): Promise<number> {
+    return (await fetchMonthlyReviewState()).reviewsUsed;
+}
+
+/** Returns how many review slots remain this month. */
+export async function getReviewsRemaining(): Promise<number> {
+    return (await fetchMonthlyReviewState()).reviewsRemaining;
+}
+
+/** Returns true if the user may still submit a review this month. */
+export async function canSubmitReview(): Promise<boolean> {
+    return (await fetchMonthlyReviewState()).canSubmit;
+}
+
+/**
+ * Returns a Set of receiverIds that the current user has already reviewed
+ * this month. Use this to disable already-reviewed options in the dropdown.
  *
  * @example
- *   const reviewed = getReviewedThisMonth();
+ *   const reviewed = await getReviewedThisMonth();
  *   <option disabled={reviewed.has(member.id)}>…</option>
  */
-export function getReviewedThisMonth(): Set<string> {
-    try {
-        return new Set(readReviewedPairs(requireMyId()));
-    } catch {
-        return new Set();
-    }
+export async function getReviewedThisMonth(): Promise<Set<string>> {
+    return (await fetchMonthlyReviewState()).reviewedReceiverIds;
 }
 
 /**
- * Returns true if the logged-in user has already reviewed `receiverId` this month.
+ * Returns true if the current user has already reviewed `receiverId` this month.
  */
-export function hasAlreadyReviewed(receiverId: string): boolean {
-    return getReviewedThisMonth().has(receiverId);
+export async function hasAlreadyReviewed(receiverId: string): Promise<boolean> {
+    return (await getReviewedThisMonth()).has(receiverId);
 }
 
 // ─── Points mapping ───────────────────────────────────────────────────────────
@@ -201,8 +202,11 @@ export async function submitReview(
 ): Promise<SubmitReviewResult> {
     const myId = requireMyId();
 
-    // 1. Monthly limit guard (per-user)
-    if (!canSubmitReview()) {
+    // 1. Fetch real monthly state from the backend — single round-trip covers
+    //    both the limit check and the per-pair check, so we don't call twice.
+    const monthlyState = await fetchMonthlyReviewState();
+
+    if (!monthlyState.canSubmit) {
         throw new Error(
             `You've reached the ${MAX_REVIEWS_PER_MONTH}-review monthly limit. Resets on the 1st.`
         );
@@ -211,7 +215,7 @@ export async function submitReview(
     const { receiverId, rating, comment, files = [] } = params;
 
     // 2. Per-pair guard — prevent reviewing same person twice this month
-    if (hasAlreadyReviewed(receiverId)) {
+    if (monthlyState.reviewedReceiverIds.has(receiverId)) {
         throw new Error("You've already reviewed this person this month.");
     }
 
@@ -248,11 +252,7 @@ export async function submitReview(
 
         const review = reviewRes.data;
 
-        // 6. Persist counters only after review is confirmed saved by backend
-        bumpCount(myId);
-        recordPair(myId, receiverId);
-
-        // 7. POST credit-from-review → Wallet Service
+        // 6. POST credit-from-review → Wallet Service
         let walletCreditSuccess = false;
         let walletCreditError: string | undefined;
 
@@ -273,10 +273,13 @@ export async function submitReview(
             }
         }
 
+        // 7. Re-fetch so the caller always receives the true server-side remaining count
+        const updatedState = await fetchMonthlyReviewState();
+
         return {
             review,
             pointsCredited: getPointsForRating(rating),
-            reviewsRemaining: getReviewsRemaining(),
+            reviewsRemaining: updatedState.reviewsRemaining,
             walletCreditSuccess,
             walletCreditError,
         };

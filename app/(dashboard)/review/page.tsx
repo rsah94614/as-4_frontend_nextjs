@@ -1,37 +1,33 @@
 "use client";
 
 /**
- * Review page — fixed version.
+ * Review page.
  *
- * Changes from original:
- *  ✅  Wallet card REMOVED — points live on the Wallet page only
- *  ✅  Monthly counter is PER-USER (keyed by employeeId in localStorage)
- *      so employee A's count never bleeds into employee B's count
- *  ✅  Per-pair disable: if emp1 already reviewed emp2 this month,
- *      that option shows "(reviewed)" and is disabled in the dropdown
- *  ✅  reviewOrchestrator no longer imports/exports wallet helpers
+ * Aligned with review-orchestrator.ts v2:
+ *  ✅  getReviewsUsed / getReviewedThisMonth / canSubmitReview / hasAlreadyReviewed
+ *      are all async — they hit the backend, not localStorage.
+ *  ✅  refreshMonthlyState() is async and awaited everywhere it's called.
+ *  ✅  submit-time guards await the orchestrator instead of calling sync stubs.
+ *  ✅  Wallet card absent — points live on the Wallet page only.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   submitReview,
-  getReviewsRemaining,
   getReviewsUsed,
+  getReviewsRemaining,
   canSubmitReview,
   getPointsForRating,
   getReviewedThisMonth,
-  hasAlreadyReviewed,
+  fetchMonthlyReviewState,
   RATING_LABELS,
   RATING_POINTS_MAP,
+  MAX_REVIEWS_PER_MONTH,
   listReviews,
   type SubmitReviewResult,
 } from "@/services/review-orchestrator";
 import { getTeamMembersForUI, type TeamMember } from "@/services/employee-service";
 import type { ReviewResponse } from "@/types/review";
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const MAX = 5;
 
 // ─── StarRating ───────────────────────────────────────────────────────────────
 
@@ -76,9 +72,10 @@ function PointsBadge({ rating }: { rating: number }) {
     <span
       className={`inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-sm font-semibold
         transition-all duration-200
-        ${pts > 0
-          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-          : "bg-slate-100 text-slate-500 border border-slate-200"
+        ${
+          pts > 0
+            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+            : "bg-slate-100 text-slate-500 border border-slate-200"
         }`}
     >
       <span className="text-base">◆</span>
@@ -92,7 +89,15 @@ function PointsBadge({ rating }: { rating: number }) {
 
 // ─── MonthlyQuotaBar ──────────────────────────────────────────────────────────
 
-function MonthlyQuotaBar({ used, max }: { used: number; max: number }) {
+function MonthlyQuotaBar({
+  used,
+  max,
+  loading,
+}: {
+  used: number;
+  max: number;
+  loading: boolean;
+}) {
   const remaining = max - used;
   const pct = (used / max) * 100;
   return (
@@ -100,27 +105,33 @@ function MonthlyQuotaBar({ used, max }: { used: number; max: number }) {
       <div className="flex-1">
         <div className="flex justify-between text-xs text-slate-500 mb-1.5">
           <span className="font-medium">Monthly reviews</span>
-          <span>
-            <b className={remaining === 0 ? "text-red-500" : "text-slate-700"}>
-              {used}
-            </b>{" "}
-            / {max} used
-          </span>
+          {loading ? (
+            <span className="text-slate-400 italic">loading…</span>
+          ) : (
+            <span>
+              <b className={remaining === 0 ? "text-red-500" : "text-slate-700"}>
+                {used}
+              </b>{" "}
+              / {max} used
+            </span>
+          )}
         </div>
         <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500
               ${pct >= 100 ? "bg-red-400" : pct >= 80 ? "bg-amber-400" : "bg-emerald-400"}`}
-            style={{ width: `${Math.min(pct, 100)}%` }}
+            style={{ width: loading ? "0%" : `${Math.min(pct, 100)}%` }}
           />
         </div>
       </div>
-      <div
-        className={`text-sm font-semibold whitespace-nowrap
-          ${remaining === 0 ? "text-red-500" : "text-emerald-600"}`}
-      >
-        {remaining === 0 ? "Limit reached" : `${remaining} left`}
-      </div>
+      {!loading && (
+        <div
+          className={`text-sm font-semibold whitespace-nowrap
+            ${remaining === 0 ? "text-red-500" : "text-emerald-600"}`}
+        >
+          {remaining === 0 ? "Limit reached" : `${remaining} left`}
+        </div>
+      )}
     </div>
   );
 }
@@ -263,14 +274,26 @@ export default function ReviewPage() {
   const [lastResult, setLastResult] = useState<SubmitReviewResult | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
 
-  // ── Monthly quota + reviewed pairs (reactive) ───────────────────────────────
+  // ── Monthly quota + reviewed pairs — sourced from backend ───────────────────
   const [reviewsUsed, setReviewsUsed] = useState(0);
-  // reviewedSet: Set of receiverIds already reviewed this month by this user
   const [reviewedSet, setReviewedSet] = useState<Set<string>>(new Set());
+  const [quotaLoading, setQuotaLoading] = useState(true);
 
-  const refreshLocalState = useCallback(() => {
-    setReviewsUsed(getReviewsUsed());
-    setReviewedSet(getReviewedThisMonth());
+  /**
+   * Re-fetch monthly state from the backend and update local UI state.
+   * Called once on mount, and again after every successful submission.
+   */
+  const refreshMonthlyState = useCallback(async () => {
+    setQuotaLoading(true);
+    try {
+      const state = await fetchMonthlyReviewState();
+      setReviewsUsed(state.reviewsUsed);
+      setReviewedSet(state.reviewedReceiverIds);
+    } catch {
+      // Non-fatal — quota bar stays in its last known state
+    } finally {
+      setQuotaLoading(false);
+    }
   }, []);
 
   // ── Load initial data ───────────────────────────────────────────────────────
@@ -296,7 +319,9 @@ export default function ReviewPage() {
           setPastReviews(reviewsData.value.data);
         }
 
-        refreshLocalState();
+        // Fetch quota from backend (separate from page data load so quota
+        // errors don't block the whole page)
+        await refreshMonthlyState();
       } catch {
         setDataError("Something went wrong loading the page.");
       } finally {
@@ -304,7 +329,7 @@ export default function ReviewPage() {
       }
     }
     load();
-  }, [refreshLocalState]);
+  }, [refreshMonthlyState]);
 
   // ── File handling ───────────────────────────────────────────────────────────
   const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -319,22 +344,24 @@ export default function ReviewPage() {
   const removeFile = (idx: number) =>
     setFiles((prev) => prev.filter((_, i) => i !== idx));
 
-  // ── All reviewable members (manager + direct reports, excluding self) ────────
-  const reviewableMembers: TeamMember[] = [
-    ...(teamLeader ? [teamLeader] : []),
-    ...teamMembers,
-  ].filter((m) => m.id !== loggedInUser?.id);
-
   // ── Submit ──────────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!canSubmitReview()) {
+    // Re-fetch quota right before submitting so we have the freshest state,
+    // rather than trusting potentially-stale UI state.
+    const freshState = await fetchMonthlyReviewState().catch(() => null);
+
+    if (!freshState?.canSubmit) {
       setToast({
         kind: "warning",
         title: "Monthly limit reached",
-        body: "You can submit up to 5 reviews per month. Resets on the 1st.",
+        body: `You can submit up to ${MAX_REVIEWS_PER_MONTH} reviews per month. Resets on the 1st.`,
       });
+      if (freshState) {
+        setReviewsUsed(freshState.reviewsUsed);
+        setReviewedSet(freshState.reviewedReceiverIds);
+      }
       return;
     }
 
@@ -343,13 +370,14 @@ export default function ReviewPage() {
       return;
     }
 
-    // Per-pair guard in UI (belt-and-suspenders on top of orchestrator guard)
-    if (hasAlreadyReviewed(receiverId)) {
+    if (freshState.reviewedReceiverIds.has(receiverId)) {
       setToast({
         kind: "warning",
         title: "Already reviewed",
         body: "You've already reviewed this person this month.",
       });
+      // Sync UI set with what the server just told us
+      setReviewedSet(freshState.reviewedReceiverIds);
       return;
     }
 
@@ -369,8 +397,11 @@ export default function ReviewPage() {
       const result = await submitReview({ receiverId, rating, comment, files });
 
       setLastResult(result);
-      // Refresh both counter and reviewed-pairs from localStorage
-      refreshLocalState();
+
+      // Refresh quota bar from backend — result.reviewsRemaining comes from
+      // the orchestrator's post-submit re-fetch, but we also update the Set
+      // so the dropdown disables the newly-reviewed person immediately.
+      await refreshMonthlyState();
 
       // Prepend new review to list
       setPastReviews((prev) => [result.review, ...prev]);
@@ -403,6 +434,11 @@ export default function ReviewPage() {
     }
   }
 
+  // ─── Derived ───────────────────────────────────────────────────────────────
+  const limitReached = !quotaLoading && reviewsUsed >= MAX_REVIEWS_PER_MONTH;
+  const selectedAlreadyReviewed = !!receiverId && reviewedSet.has(receiverId);
+  const pointsPreview = rating > 0 ? getPointsForRating(rating) : null;
+
   // ─── Loading / error states ────────────────────────────────────────────────
 
   if (loadingData) {
@@ -428,9 +464,6 @@ export default function ReviewPage() {
     );
   }
 
-  const limitReached = !canSubmitReview();
-  const pointsPreview = rating > 0 ? getPointsForRating(rating) : null;
-
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
       {/* Toast */}
@@ -445,7 +478,11 @@ export default function ReviewPage() {
       </div>
 
       {/* Monthly quota bar */}
-      <MonthlyQuotaBar used={reviewsUsed} max={MAX} />
+      <MonthlyQuotaBar
+        used={reviewsUsed}
+        max={MAX_REVIEWS_PER_MONTH}
+        loading={quotaLoading}
+      />
 
       {/* Points reference table */}
       <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
@@ -478,7 +515,7 @@ export default function ReviewPage() {
       >
         {limitReached && (
           <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 font-medium">
-            🚫 You've used all 5 reviews this month. Quota resets on the 1st.
+            🚫 You've used all {MAX_REVIEWS_PER_MONTH} reviews this month. Quota resets on the 1st.
           </div>
         )}
 
@@ -490,13 +527,12 @@ export default function ReviewPage() {
           <select
             value={receiverId}
             onChange={(e) => setReceiverId(e.target.value)}
-            disabled={submitting}
+            disabled={submitting || quotaLoading}
             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm
               text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent"
           >
             <option value="">— Select a team member —</option>
 
-            {/* Manager group */}
             {teamLeader && (
               <optgroup label="My Manager">
                 <option
@@ -510,7 +546,6 @@ export default function ReviewPage() {
               </optgroup>
             )}
 
-            {/* Direct reports group */}
             {teamMembers.length > 0 && (
               <optgroup label="My Team">
                 {teamMembers.map((m) => (
@@ -528,8 +563,7 @@ export default function ReviewPage() {
             )}
           </select>
 
-          {/* Inline hint when selected person is already reviewed */}
-          {receiverId && reviewedSet.has(receiverId) && (
+          {selectedAlreadyReviewed && (
             <p className="mt-1.5 text-xs text-amber-600 font-medium">
               ⚠️ You've already reviewed this person this month.
             </p>
@@ -615,7 +649,7 @@ export default function ReviewPage() {
         {/* Submit */}
         <button
           type="submit"
-          disabled={submitting || limitReached || (!!receiverId && reviewedSet.has(receiverId))}
+          disabled={submitting || limitReached || selectedAlreadyReviewed || quotaLoading}
           className="w-full rounded-xl bg-indigo-600 text-white font-semibold py-3 text-sm
             hover:bg-indigo-700 active:scale-[0.98] transition-all
             disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -624,6 +658,11 @@ export default function ReviewPage() {
             <>
               <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               Submitting…
+            </>
+          ) : quotaLoading ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              Checking quota…
             </>
           ) : (
             "Submit Review"

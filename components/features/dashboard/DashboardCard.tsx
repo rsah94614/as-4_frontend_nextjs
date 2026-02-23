@@ -5,6 +5,7 @@ import {
     Card,
     CardContent,
 } from "@/components/ui/card"
+
 interface DashboardCardProps {
     label: string;
     value: string;
@@ -13,7 +14,6 @@ interface DashboardCardProps {
     changeLabel?: string;
     className?: string;
     iconBgColor?: string;
-
 }
 
 export default function DashboardCard({
@@ -25,8 +25,6 @@ export default function DashboardCard({
     className,
     iconBgColor,
 }: DashboardCardProps) {
-
-
     return (
         <Card className={cn("rounded-3xl border-0 shadow-none h-full", className)}>
             <CardContent className="px-6 py-4 flex flex-col gap-6">
@@ -41,19 +39,18 @@ export default function DashboardCard({
                         </h2>
                     </div>
 
-                    <div className={cn("p-3 rounded-xl shrink-0 ", iconBgColor ?? "bg-yellow-200")}>
+                    <div className={cn("p-3 rounded-xl shrink-0", iconBgColor ?? "bg-yellow-200")}>
                         <Icon className="text-blue-600 w-6 h-6" />
                     </div>
                 </div>
 
-
-                <p className="text-sm text-green-600 font-medium ">
-                    {change} {changeLabel}
-                </p>
+                {change && (
+                    <p className="text-sm text-green-600 font-medium">
+                        {change} {changeLabel}
+                    </p>
+                )}
 
             </CardContent>
         </Card>
-
-
     );
 }
