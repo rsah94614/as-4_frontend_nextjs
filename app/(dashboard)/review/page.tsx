@@ -652,7 +652,7 @@ export default function ReviewPage() {
           disabled={submitting || limitReached || selectedAlreadyReviewed || quotaLoading}
           className="w-full rounded-xl bg-indigo-600 text-white font-semibold py-3 text-sm
             hover:bg-indigo-700 active:scale-[0.98] transition-all
-            disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
         >
           {submitting ? (
             <>
