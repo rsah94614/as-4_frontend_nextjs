@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/providers/auth-provider";
+import { useAuth } from "@/providers/AuthProvider";
 import { isAdminUser } from "@/lib/role-utils";
 import {
   Dialog,
