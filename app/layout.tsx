@@ -1,5 +1,5 @@
 import "./globals.css";
-import { AuthProvider } from "@/providers/auth-provider";
+import { AuthProvider } from "@/providers/AuthProvider";
 
 export const metadata = {
   title: "Employee Reward & Recognition",
