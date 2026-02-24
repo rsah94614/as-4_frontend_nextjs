@@ -90,7 +90,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             {navItems
               .filter((item) => !item.adminOnly || isAdmin)
               .map((item) => {
-                const isActive = pathname.startsWith(item.href);
+                const isActive =
+                  pathname === item.href ||
+                  (pathname.startsWith(item.href + "/"));
                 return (
                   <li key={item.href}>
                     <Link
