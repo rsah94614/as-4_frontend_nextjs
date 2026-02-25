@@ -238,7 +238,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
                     tabIndex={-1}
                   >
                     {showPassword ? (
@@ -257,7 +257,7 @@ export default function LoginPage() {
               <div className="text-right pb-6">
                 <Link
                   href="/forgot-password"
-                  className="text-sm font-medium text-gray-700 hover:text-primary hover:underline transition-all duration-200"
+                  className="text-sm font-medium text-gray-700 hover:text-primary hover:underline transition-all duration-200 cursor-pointer"
                 >
                   Forgot Password?
                 </Link>
@@ -267,7 +267,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 rounded-full text-base bg-primary hover:bg-primary/90 active:bg-primary/80 active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-12 rounded-full text-base bg-primary hover:bg-primary/90 active:bg-primary/80 active:scale-[0.98] transition-all duration-150 disabled:opacity-50 cursor-pointer "
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">

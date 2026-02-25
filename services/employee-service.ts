@@ -9,7 +9,7 @@
 import { auth } from './auth-service'
 import axiosClient from './api-client'
 
-const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || 'http://localhost:8002'
+const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || 'http://localhost:8003'
 
 const ENDPOINTS = {
     LIST: `${EMPLOYEE_API}/v1/employees`,
