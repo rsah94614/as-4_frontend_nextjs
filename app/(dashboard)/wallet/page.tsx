@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { Gift, Ticket, RefreshCw, ChevronLeft, ChevronRight, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import { Gift, Ticket, RefreshCw, ChevronLeft, ChevronRight, ArrowDownCircle } from "lucide-react";
 import { auth, fetchWithAuth } from "@/services/auth-service";
 
 // ─── Env ──────────────────────────────────────────────────────────────────────

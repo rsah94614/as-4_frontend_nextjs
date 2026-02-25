@@ -123,11 +123,11 @@ function CategoryForm({ category, onSave, onClose }: {
       const r = await fetchWithAuth(url, { method, body: JSON.stringify(body) });
       if (!r.ok) {
         const d = await r.json();
-        throw new Error(Array.isArray(d.detail) ? d.detail.map((e: any) => e.msg).join(", ") : d.detail ?? "Request failed");
+        throw new Error(Array.isArray(d.detail) ? d.detail.map((e: { msg?: string }) => e.msg).join(", ") : d.detail ?? "Request failed");
       }
       onSave();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Request failed");
     } finally {
       setSaving(false);
     }
@@ -207,8 +207,8 @@ export default function CategoriesPage() {
       } else {
         setError("Failed to load categories. Check your connection or permissions.");
       }
-    } catch (e: any) {
-      setError(e.message ?? "An unexpected error occurred.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
@@ -226,153 +226,154 @@ export default function CategoriesPage() {
 
   const activeCount = categories.filter(c => c.is_active).length;
 
- return (
-  <div className="flex h-screen bg-slate-50 overflow-hidden">
-    <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+  return (
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-    <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-      <Navbar onMenuClick={() => setSidebarOpen(true)} />
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-      <main className="flex-1 overflow-y-auto p-6">
-      {/* Header */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "0 32px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🗂️</div>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#0f172a" }}>Reward Categories</h1>
-              <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>Manage reward category groups</p>
+        <main className="flex-1 overflow-y-auto p-6">
+          {/* Header */}
+          <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "0 32px" }}>
+            <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 36, height: 36, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🗂️</div>
+                <div>
+                  <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#0f172a" }}>Reward Categories</h1>
+                  <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>Manage reward category groups</p>
+                </div>
+              </div>
+              <Btn onClick={() => setModal("create")}>＋ New Category</Btn>
             </div>
           </div>
-          <Btn onClick={() => setModal("create")}>＋ New Category</Btn>
-        </div>
-      </div>
 
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px" }}>
-        {/* Stats Bar */}
-        {!loading && categories.length > 0 && (
-          <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
-            {[
-              { label: "Total", value: categories.length, color: "#6366f1", bg: "#eff6ff" },
-              { label: "Active", value: activeCount, color: "#059669", bg: "#d1fae5" },
-              { label: "Inactive", value: categories.length - activeCount, color: "#dc2626", bg: "#fee2e2" },
-            ].map(s => (
-              <div key={s.label} style={{
-                background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 12, padding: "12px 20px",
-                display: "flex", alignItems: "center", gap: 12,
-              }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: s.color }} />
-                <span style={{ fontSize: 13, color: "#64748b" }}>{s.label}</span>
-                <span style={{ fontSize: 18, fontWeight: 700, color: "#0f172a" }}>{s.value}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Toolbar */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-          <input
-            placeholder="Search by name or code…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ ...inputStyle, maxWidth: 280, flex: "1 1 200px" }}
-          />
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569", cursor: "pointer", userSelect: "none" }}>
-            <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} style={{ width: 15, height: 15 }} />
-            Active only
-          </label>
-          <span style={{ marginLeft: "auto", fontSize: 13, color: "#94a3b8" }}>
-            {filtered.length} {filtered.length === 1 ? "category" : "categories"}
-          </span>
-        </div>
-
-        {/* Error Banner */}
-        {error && !loading && (
-          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "12px 18px", marginBottom: 20, color: "#991b1b", fontSize: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span>⚠️ {error}</span>
-            <Btn variant="ghost" onClick={load} style={{ padding: "4px 12px", fontSize: 12 }}>Retry</Btn>
-          </div>
-        )}
-
-        {/* Table */}
-        <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1.5px solid #e2e8f0", background: "#f8fafc" }}>
-                {["Category", "Code", "Description", "Status", "Created", ""].map((h, i) => (
-                  <th key={i} style={{
-                    padding: "11px 16px", textAlign: "left", fontSize: 11, fontWeight: 700,
-                    color: "#64748b", letterSpacing: "0.07em", textTransform: "uppercase",
-                  }}>{h}</th>
+          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px" }}>
+            {/* Stats Bar */}
+            {!loading && categories.length > 0 && (
+              <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
+                {[
+                  { label: "Total", value: categories.length, color: "#6366f1", bg: "#eff6ff" },
+                  { label: "Active", value: activeCount, color: "#059669", bg: "#d1fae5" },
+                  { label: "Inactive", value: categories.length - activeCount, color: "#dc2626", bg: "#fee2e2" },
+                ].map(s => (
+                  <div key={s.label} style={{
+                    background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 12, padding: "12px 20px",
+                    display: "flex", alignItems: "center", gap: 12,
+                  }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: s.color }} />
+                    <span style={{ fontSize: 13, color: "#64748b" }}>{s.label}</span>
+                    <span style={{ fontSize: 18, fontWeight: 700, color: "#0f172a" }}>{s.value}</span>
+                  </div>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={6} style={{ padding: 60, textAlign: "center", color: "#94a3b8" }}>
-                    <div style={{ fontSize: 36, marginBottom: 10 }}>🗂️</div>
-                    <p style={{ margin: 0, fontWeight: 600, color: "#64748b" }}>No categories found</p>
-                    <p style={{ margin: "4px 0 16px", fontSize: 13 }}>Try a different search or create a new category</p>
-                    <Btn onClick={() => setModal("create")}>＋ New Category</Btn>
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((cat, idx) => (
-                  <tr key={cat.category_id} style={{
-                    borderBottom: idx < filtered.length - 1 ? "1px solid #f1f5f9" : "none",
-                    transition: "background 0.15s",
-                  }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "#fafbff")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <td style={{ padding: "14px 16px" }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>{cat.category_name}</span>
-                    </td>
-                    <td style={{ padding: "14px 16px" }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "#7c3aed", background: "#ede9fe", padding: "2px 8px", borderRadius: 6 }}>
-                        {cat.category_code}
-                      </span>
-                    </td>
-                    <td style={{ padding: "14px 16px", maxWidth: 300 }}>
-                      <span style={{ fontSize: 13, color: "#64748b", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                        {cat.description || <span style={{ color: "#cbd5e1", fontStyle: "italic" }}>No description</span>}
-                      </span>
-                    </td>
-                    <td style={{ padding: "14px 16px" }}>
-                      <Badge active={cat.is_active} />
-                    </td>
-                    <td style={{ padding: "14px 16px", fontSize: 13, color: "#94a3b8", whiteSpace: "nowrap" }}>
-                      {new Date(cat.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </td>
-                    <td style={{ padding: "14px 16px", textAlign: "right" }}>
-                      <Btn variant="ghost" onClick={() => { setSelected(cat); setModal("edit"); }} style={{ padding: "5px 12px", fontSize: 12 }}>
-                        ✏️ Edit
-                      </Btn>
-                    </td>
+              </div>
+            )}
+
+            {/* Toolbar */}
+            <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
+              <input
+                placeholder="Search by name or code…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ ...inputStyle, maxWidth: 280, flex: "1 1 200px" }}
+              />
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569", cursor: "pointer", userSelect: "none" }}>
+                <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} style={{ width: 15, height: 15 }} />
+                Active only
+              </label>
+              <span style={{ marginLeft: "auto", fontSize: 13, color: "#94a3b8" }}>
+                {filtered.length} {filtered.length === 1 ? "category" : "categories"}
+              </span>
+            </div>
+
+            {/* Error Banner */}
+            {error && !loading && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "12px 18px", marginBottom: 20, color: "#991b1b", fontSize: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>⚠️ {error}</span>
+                <Btn variant="ghost" onClick={load} style={{ padding: "4px 12px", fontSize: 12 }}>Retry</Btn>
+              </div>
+            )}
+
+            {/* Table */}
+            <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1.5px solid #e2e8f0", background: "#f8fafc" }}>
+                    {["Category", "Code", "Description", "Status", "Created", ""].map((h, i) => (
+                      <th key={i} style={{
+                        padding: "11px 16px", textAlign: "left", fontSize: 11, fontWeight: 700,
+                        color: "#64748b", letterSpacing: "0.07em", textTransform: "uppercase",
+                      }}>{h}</th>
+                    ))}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+                  ) : filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ padding: 60, textAlign: "center", color: "#94a3b8" }}>
+                        <div style={{ fontSize: 36, marginBottom: 10 }}>🗂️</div>
+                        <p style={{ margin: 0, fontWeight: 600, color: "#64748b" }}>No categories found</p>
+                        <p style={{ margin: "4px 0 16px", fontSize: 13 }}>Try a different search or create a new category</p>
+                        <Btn onClick={() => setModal("create")}>＋ New Category</Btn>
+                      </td>
+                    </tr>
+                  ) : (
+                    filtered.map((cat, idx) => (
+                      <tr key={cat.category_id} style={{
+                        borderBottom: idx < filtered.length - 1 ? "1px solid #f1f5f9" : "none",
+                        transition: "background 0.15s",
+                      }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#fafbff")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                      >
+                        <td style={{ padding: "14px 16px" }}>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>{cat.category_name}</span>
+                        </td>
+                        <td style={{ padding: "14px 16px" }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: "#7c3aed", background: "#ede9fe", padding: "2px 8px", borderRadius: 6 }}>
+                            {cat.category_code}
+                          </span>
+                        </td>
+                        <td style={{ padding: "14px 16px", maxWidth: 300 }}>
+                          <span style={{ fontSize: 13, color: "#64748b", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                            {cat.description || <span style={{ color: "#cbd5e1", fontStyle: "italic" }}>No description</span>}
+                          </span>
+                        </td>
+                        <td style={{ padding: "14px 16px" }}>
+                          <Badge active={cat.is_active} />
+                        </td>
+                        <td style={{ padding: "14px 16px", fontSize: 13, color: "#94a3b8", whiteSpace: "nowrap" }}>
+                          {new Date(cat.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </td>
+                        <td style={{ padding: "14px 16px", textAlign: "right" }}>
+                          <Btn variant="ghost" onClick={() => { setSelected(cat); setModal("edit"); }} style={{ padding: "5px 12px", fontSize: 12 }}>
+                            ✏️ Edit
+                          </Btn>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Modals */}
+          {modal === "create" && (
+            <Modal title="Create New Category" onClose={close}>
+              <CategoryForm onSave={saved} onClose={close} />
+            </Modal>
+          )}
+          {modal === "edit" && selected && (
+            <Modal title="Edit Category" onClose={close}>
+              <CategoryForm category={selected} onSave={saved} onClose={close} />
+            </Modal>
+          )}
+
+        </main>
       </div>
-
-      {/* Modals */}
-      {modal === "create" && (
-        <Modal title="Create New Category" onClose={close}>
-          <CategoryForm onSave={saved} onClose={close} />
-        </Modal>
-      )}
-      {modal === "edit" && selected && (
-        <Modal title="Edit Category" onClose={close}>
-          <CategoryForm category={selected} onSave={saved} onClose={close} />
-        </Modal>
-      )}
-
-       </main>
     </div>
-  </div>
-)};
+  )
+};

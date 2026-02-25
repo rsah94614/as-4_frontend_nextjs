@@ -31,7 +31,7 @@ export const auth = {
     /**
      * Store authentication tokens and user data
      */
-    setTokens: (accessToken: string, refreshToken: string, user: any, expiresIn: number) => {
+    setTokens: (accessToken: string, refreshToken: string, user: Record<string, unknown>, expiresIn: number) => {
         if (typeof window === 'undefined') return
 
         localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, accessToken)

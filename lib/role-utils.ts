@@ -4,7 +4,7 @@ import { auth } from '@/services/auth-service';
 
 export const ADMIN_ROLES = ['HR_ADMIN', 'ADMIN', 'SUPER_ADMIN'] as const;
 
-export function decodeJwtPayload(token: string): Record<string, any> | null {
+export function decodeJwtPayload(token: string): Record<string, unknown> | null {
     try {
         const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
         const json = decodeURIComponent(
@@ -25,7 +25,7 @@ export function getRolesFromToken(): string[] {
     if (!token) return [];
     const payload = decodeJwtPayload(token);
     if (!payload) return [];
-    const raw = payload.roles ?? payload.role ?? [];
+    const raw = (payload.roles ?? payload.role ?? []) as string[] | string;
     const arr: string[] = Array.isArray(raw) ? raw : String(raw).split(',');
     return arr.map((r: string) => r.trim().toUpperCase()).filter(Boolean);
 }
@@ -36,7 +36,9 @@ export function isAdminUser(): boolean {
     if (!user) return false;
 
     const tokenRoles = getRolesFromToken();
-    const userRoles: string[] = (user.roles ?? user.employee?.roles ?? []).map((r: string) =>
+    const userObj = user as Record<string, unknown>;
+    const rolesSource = (userObj.roles ?? (userObj.employee as Record<string, unknown> | undefined)?.roles ?? []) as string[];
+    const userRoles: string[] = rolesSource.map((r: string) =>
         r.toUpperCase()
     );
     const all = Array.from(new Set([...tokenRoles, ...userRoles]));

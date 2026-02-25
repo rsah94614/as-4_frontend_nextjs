@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth} from "@/providers/AuthProvider";
+import { useAuth } from "@/providers/AuthProvider";
 import { fetchWithAuth } from "@/services/auth-service";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
@@ -93,8 +93,8 @@ export default function ProfilePage() {
             if (!res.ok) throw new Error(`Failed to load profile (${res.status})`);
             const data: EmployeeDetail = await res.json();
             setProfile(data);
-        } catch (err: any) {
-            setError(err.message || "Something went wrong");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Something went wrong");
         } finally {
             setLoading(false);
         }

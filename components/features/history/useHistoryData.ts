@@ -50,8 +50,8 @@ export function useHistoryData() {
             const json: PaginatedHistoryResponse = await res.json();
             setAllHistory(json.data);
             setTotalItems(json.total_items);
-        } catch (err: any) {
-            setError(err.message || "Something went wrong");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Something went wrong");
         } finally {
             setLoading(false);
         }

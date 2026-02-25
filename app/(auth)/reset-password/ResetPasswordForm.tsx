@@ -10,11 +10,26 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 
+interface ResetPasswordFormProps {
+  token: string | null;
+  state: {
+    newPassword: string;
+    confirmPassword: string;
+    loading: boolean;
+    errors: { general?: string; newPassword?: string; confirmPassword?: string };
+  };
+  handlers: {
+    setNewPassword: (v: string) => void;
+    setConfirmPassword: (v: string) => void;
+    submit: () => void;
+  };
+}
+
 export default function ResetPasswordForm({
   token,
   state,
   handlers,
-}: any) {
+}: ResetPasswordFormProps) {
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
