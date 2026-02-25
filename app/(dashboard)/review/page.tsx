@@ -85,8 +85,8 @@ function StarRating({
           <Star
             size={size}
             className={`transition-all duration-200 ${display >= star
-                ? "text-amber-400 fill-amber-400 drop-shadow-sm"
-                : "text-slate-200 fill-slate-200"
+              ? "text-amber-400 fill-amber-400 drop-shadow-sm"
+              : "text-slate-200 fill-slate-200"
               }`}
           />
         </button>
@@ -745,21 +745,9 @@ export default function ReviewPage() {
                 Submit a review to reward your colleagues with points.
               </p>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Form */}
-      <form
-        onSubmit={handleSubmit}
-        className={`rounded-2xl bg-white border border-slate-100 shadow-sm p-6 flex flex-col gap-5
-          ${limitReached ? "opacity-60 pointer-events-none select-none" : ""}`}
-      >
-        {limitReached && (
-          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 font-medium">
-            🚫 You&apos;ve used all {MAX_REVIEWS_PER_MONTH} reviews this month. Quota resets on the 1st.
           </div>
         </div>
+
 
         {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
@@ -775,7 +763,7 @@ export default function ReviewPage() {
             <form
               onSubmit={handleSubmit}
               className={`rounded-3xl bg-white border border-slate-100 shadow-sm p-6 md:p-8 flex flex-col gap-6
-                ${limitReached ? "opacity-60 pointer-events-none select-none" : ""}`}
+                  ${limitReached ? "opacity-60 pointer-events-none select-none" : ""}`}
             >
               {limitReached && (
                 <div className="rounded-2xl bg-red-50 border border-red-200 px-5 py-4 text-sm text-red-700 font-medium flex items-center gap-3">
@@ -790,13 +778,6 @@ export default function ReviewPage() {
                   </div>
                 </div>
               )}
-
-          {selectedAlreadyReviewed && (
-            <p className="mt-1.5 text-xs text-amber-600 font-medium">
-              ⚠️ You&apos;ve already reviewed this person this month.
-            </p>
-          )}
-        </div>
               {/* Team member selector */}
               <div>
                 <label className="text-sm font-semibold text-slate-700 block mb-2">
@@ -1026,7 +1007,7 @@ export default function ReviewPage() {
                   <p className="text-sm font-semibold text-slate-700">Recent Reviews</p>
                   <span className="text-xs text-slate-400 ml-auto">{pastReviews.length} total</span>
                 </div>
-                <div className="flex flex-col gap-3 max-h-[600px] overflow-y-auto pr-1">
+                <div className="flex flex-col gap-3 max-h-150 overflow-y-auto pr-1">
                   {pastReviews.map((r) => (
                     <ReviewCard key={r.review_id} review={r} />
                   ))}
@@ -1045,8 +1026,8 @@ export default function ReviewPage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </div>
+        </div >
+      </div >
+    </div >
   );
 }
