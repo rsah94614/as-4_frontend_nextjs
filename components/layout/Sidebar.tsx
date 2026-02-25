@@ -126,10 +126,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               }`}
           >
-            <Settings
-              className={`w-5 h-5 ${pathname.startsWith("/settings") ? "text-orange-600" : "text-gray-500"}`}
-            />
-            Settings
+            
           </Link>
 
           {/* Logout with confirmation dialog */}
