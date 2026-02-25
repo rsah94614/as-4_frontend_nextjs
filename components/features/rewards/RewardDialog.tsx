@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { TicketPercent } from "lucide-react";
-import { RewardItem } from "@/app/(dashboard)/redeem/models";
+import { RewardItem } from "@/types/redeem-types";
 
 interface RewardDialogProps {
   open: boolean;
@@ -23,37 +23,35 @@ export default function RewardDialog({
 }: RewardDialogProps) {
   if (!item) return null;
 
-  const isCoupon = item.type === "coupon";
+  const isOutOfStock = item.stock_status === "out_of_stock";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-3xl p-8 max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
-            {item.title}
+            {item.reward_name}
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col items-center text-center gap-4 mt-4">
-          {isCoupon ? (
-            <TicketPercent size={60} />
-          ) : (
-            <img
-              src={item.image}
-              alt={item.title}
-              className="w-28 object-contain"
-            />
-          )}
+          <TicketPercent size={60} />
 
           <p className="text-sm text-gray-600">
-            {item.points_required.toLocaleString()} points required
+            {item.default_points.toLocaleString()} points required
           </p>
 
-          <p className="font-medium">
-            Worth ₹{item.monetary_value.toLocaleString()}
-          </p>
+          {item.description && (
+            <p className="text-sm text-gray-500">{item.description}</p>
+          )}
 
-          {item.is_out_of_stock ? (
+          {item.available_stock > 0 && (
+            <p className="text-xs text-gray-400">
+              {item.available_stock} in stock
+            </p>
+          )}
+
+          {isOutOfStock ? (
             <Button disabled className="w-full">
               Out of Stock
             </Button>

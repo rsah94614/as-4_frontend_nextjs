@@ -70,8 +70,8 @@ export function useResetPassword(
 
       setSuccess(true)
       onSuccess()
-    } catch (err: any) {
-      setErrors({ general: err.message || 'Something went wrong' })
+    } catch (err: unknown) {
+      setErrors({ general: err instanceof Error ? err.message : 'Something went wrong' })
     } finally {
       setLoading(false)
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Trophy, Building2, UserRound, Users, Tags, Star, ShieldAlert, Loader2 } from 'lucide-react';
@@ -18,17 +18,17 @@ const categories = [
 
 export default function ControlPanelHub() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
-  const [allowed, setAllowed] = useState(false);
+
+  const user = auth.getUser();
+  const allowed = user ? isAdminUser() : false;
 
   useEffect(() => {
-    const user = auth.getUser();
-    if (!user) { router.replace('/login'); return; }
-    setAllowed(isAdminUser());
-    setChecking(false);
+    if (!auth.getUser()) {
+      router.replace('/login');
+    }
   }, [router]);
 
-  if (checking) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center py-32">
         <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
