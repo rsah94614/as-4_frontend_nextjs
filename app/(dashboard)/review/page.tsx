@@ -85,8 +85,8 @@ function StarRating({
           <Star
             size={size}
             className={`transition-all duration-200 ${display >= star
-                ? "text-amber-400 fill-amber-400 drop-shadow-sm"
-                : "text-slate-200 fill-slate-200"
+              ? "text-amber-400 fill-amber-400 drop-shadow-sm"
+              : "text-slate-200 fill-slate-200"
               }`}
           />
         </button>
@@ -102,10 +102,11 @@ function PointsBadge({ rating }: { rating: number }) {
   if (rating === 0) return null;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all duration-200
+      className={`inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-sm font-semibold
+        transition-all duration-200
         ${pts > 0
-          ? "bg-violet-500 text-white"
-          : "bg-slate-100 text-slate-500"
+          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+          : "bg-slate-100 text-slate-500 border border-slate-200"
         }`}
     >
       <Award size={12} />
@@ -515,7 +516,7 @@ function SuccessCard({
 
 export default function ReviewPage() {
   // ── Data state ──────────────────────────────────────────────────────────────
-  const [loggedInUser, setLoggedInUser] = useState<TeamMember | null>(null);
+  const [, setLoggedInUser] = useState<TeamMember | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [teamLeader, setTeamLeader] = useState<TeamMember | null>(null);
   const [pastReviews, setPastReviews] = useState<ReviewResponse[]>([]);
@@ -747,6 +748,7 @@ export default function ReviewPage() {
           </div>
         </div>
 
+
         {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* ── LEFT: Submit Form ─────────────────────────────────────────── */}
@@ -761,7 +763,7 @@ export default function ReviewPage() {
             <form
               onSubmit={handleSubmit}
               className={`rounded-3xl bg-white border border-slate-100 shadow-sm p-6 md:p-8 flex flex-col gap-6
-                ${limitReached ? "opacity-60 pointer-events-none select-none" : ""}`}
+                  ${limitReached ? "opacity-60 pointer-events-none select-none" : ""}`}
             >
               {limitReached && (
                 <div className="rounded-2xl bg-red-50 border border-red-200 px-5 py-4 text-sm text-red-700 font-medium flex items-center gap-3">
@@ -776,7 +778,6 @@ export default function ReviewPage() {
                   </div>
                 </div>
               )}
-
               {/* Team member selector */}
               <div>
                 <label className="text-sm font-semibold text-slate-700 block mb-2">
@@ -1006,7 +1007,7 @@ export default function ReviewPage() {
                   <p className="text-sm font-semibold text-slate-700">Recent Reviews</p>
                   <span className="text-xs text-slate-400 ml-auto">{pastReviews.length} total</span>
                 </div>
-                <div className="flex flex-col gap-3 max-h-[600px] overflow-y-auto pr-1">
+                <div className="flex flex-col gap-3 max-h-150 overflow-y-auto pr-1">
                   {pastReviews.map((r) => (
                     <ReviewCard key={r.review_id} review={r} />
                   ))}
@@ -1025,8 +1026,8 @@ export default function ReviewPage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </div>
+        </div >
+      </div >
+    </div >
   );
 }

@@ -43,8 +43,9 @@ export const reviewService = {
                 `${ENDPOINTS.LIST}?page=${page}&page_size=${pageSize}`
             );
             return res.data;
-        } catch (error: any) {
-            throw new Error(error.response?.data?.detail || 'Failed to fetch reviews');
+        } catch (error: unknown) {
+            const axiosErr = error as { response?: { data?: { detail?: string } } };
+            throw new Error(axiosErr.response?.data?.detail || 'Failed to fetch reviews');
         }
     },
 
@@ -52,8 +53,9 @@ export const reviewService = {
         try {
             const res = await axiosClient.get<ReviewResponse>(ENDPOINTS.GET(reviewId));
             return res.data;
-        } catch (error: any) {
-            throw new Error(error.response?.data?.detail || 'Failed to fetch review');
+        } catch (error: unknown) {
+            const axiosErr = error as { response?: { data?: { detail?: string } } };
+            throw new Error(axiosErr.response?.data?.detail || 'Failed to fetch review');
         }
     },
 
@@ -62,8 +64,9 @@ export const reviewService = {
         try {
             const res = await axiosClient.post<ReviewResponse>(ENDPOINTS.CREATE, data);
             return res.data;
-        } catch (error: any) {
-            throw new Error(error.response?.data?.detail || 'Failed to create review');
+        } catch (error: unknown) {
+            const axiosErr = error as { response?: { data?: { detail?: string } } };
+            throw new Error(axiosErr.response?.data?.detail || 'Failed to create review');
         }
     },
 
@@ -71,8 +74,9 @@ export const reviewService = {
         try {
             const res = await axiosClient.put<ReviewResponse>(ENDPOINTS.UPDATE(reviewId), data);
             return res.data;
-        } catch (error: any) {
-            throw new Error(error.response?.data?.detail || 'Failed to update review');
+        } catch (error: unknown) {
+            const axiosErr = error as { response?: { data?: { detail?: string } } };
+            throw new Error(axiosErr.response?.data?.detail || 'Failed to update review');
         }
     },
 }

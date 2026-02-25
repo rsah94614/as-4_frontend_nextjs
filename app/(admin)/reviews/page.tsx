@@ -106,10 +106,10 @@ function ReviewRow({ review, employees }: { review: Review; employees: Employee[
           <span className="text-xs font-semibold text-black">{reviewer?.username ?? "Unknown"}</span>
           <Stars value={review.rating} />
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${flagged
-              ? "bg-red-100 text-red-600"
-              : review.rating >= 4
-                ? "bg-green-100 text-green-700"
-                : "bg-amber-100 text-amber-700"
+            ? "bg-red-100 text-red-600"
+            : review.rating >= 4
+              ? "bg-green-100 text-green-700"
+              : "bg-amber-100 text-amber-700"
             }`}>{review.rating}/5</span>
           {flagged && (
             <span className="flex items-center gap-0.5 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
@@ -330,7 +330,6 @@ export default function AdminReviewsPage() {
     } finally {
       setLoading(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -419,8 +418,8 @@ export default function AdminReviewsPage() {
             <div
               onClick={() => setShowFlagged(v => !v)}
               className={`rounded-2xl border shadow-sm p-5 cursor-pointer transition-all select-none ${showFlagged
-                  ? "bg-red-50 border-red-300"
-                  : "bg-white border-slate-100 hover:border-red-200"
+                ? "bg-red-50 border-red-300"
+                : "bg-white border-slate-100 hover:border-red-200"
                 }`}
             >
               <p className="text-xs font-semibold text-red-400 uppercase tracking-widest mb-1 flex items-center gap-1">
@@ -516,9 +515,7 @@ export default function AdminReviewsPage() {
                 onToggle={() => {
                   setExpandedIds(prev => {
                     const next = new Set(prev)
-                    next.has(mgr.employee_id)
-                      ? next.delete(mgr.employee_id)
-                      : next.add(mgr.employee_id)
+                    if (next.has(mgr.employee_id)) { next.delete(mgr.employee_id) } else { next.add(mgr.employee_id) }
                     return next
                   })
                 }}

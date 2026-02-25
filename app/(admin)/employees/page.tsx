@@ -110,11 +110,11 @@ function BulkImportModal({ onClose, onSuccess }: {
       const formData = new FormData()
       formData.append("file", file)
       const token = localStorage.getItem("access_token")
-const res = await fetch(`${AUTH_API}/v1/auth/bulk-import`, {
-  method: "POST",
-  headers: token ? { Authorization: `Bearer ${token}` } : {},
-  body: formData,
-})
+      const res = await fetch(`${AUTH_API}/v1/auth/bulk-import`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      })
       const data = await res.json()
       if (!res.ok) {
         const detail = data?.detail
@@ -200,13 +200,12 @@ const res = await fetch(`${AUTH_API}/v1/auth/bulk-import`, {
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
               onClick={() => fileRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition ${
-                dragOver
-                  ? "border-orange-400 bg-orange-50"
-                  : file
-                    ? "border-green-300 bg-green-50"
-                    : "border-slate-200 hover:border-orange-300 hover:bg-orange-50/40"
-              }`}
+              className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition ${dragOver
+                ? "border-orange-400 bg-orange-50"
+                : file
+                  ? "border-green-300 bg-green-50"
+                  : "border-slate-200 hover:border-orange-300 hover:bg-orange-50/40"
+                }`}
             >
               <input
                 ref={fileRef}
@@ -582,7 +581,6 @@ export default function AdminTeamsPage() {
     } finally {
       setLoading(false)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => { fetchAll() }, [fetchAll])
@@ -734,7 +732,7 @@ export default function AdminTeamsPage() {
                     onToggle={() => {
                       setExpandedIds(prev => {
                         const next = new Set(prev)
-                        next.has(mgr.employee_id) ? next.delete(mgr.employee_id) : next.add(mgr.employee_id)
+                        if (next.has(mgr.employee_id)) { next.delete(mgr.employee_id) } else { next.add(mgr.employee_id) }
                         return next
                       })
                     }}

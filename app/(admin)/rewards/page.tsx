@@ -148,8 +148,8 @@ function RewardForm({ item, categories, onSave, onClose }: {
       [k]: e.target.type === "checkbox"
         ? (e.target as HTMLInputElement).checked
         : e.target.type === "number"
-        ? Number(e.target.value)
-        : e.target.value,
+          ? Number(e.target.value)
+          : e.target.value,
     }));
 
   const submit = async () => {
@@ -161,32 +161,32 @@ function RewardForm({ item, categories, onSave, onClose }: {
       const method = isEdit ? "PATCH" : "POST";
       const body = isEdit
         ? {
-            reward_name: form.reward_name,
-            description: form.description,
-            default_points: form.default_points,
-            min_points: form.min_points,
-            max_points: form.max_points,
-            is_active: form.is_active,
-          }
+          reward_name: form.reward_name,
+          description: form.description,
+          default_points: form.default_points,
+          min_points: form.min_points,
+          max_points: form.max_points,
+          is_active: form.is_active,
+        }
         : {
-            reward_name: form.reward_name,
-            reward_code: form.reward_code,
-            description: form.description,
-            category_id: form.category_id,
-            default_points: form.default_points,
-            min_points: form.min_points,
-            max_points: form.max_points,
-            available_stock: form.available_stock,
-          };
+          reward_name: form.reward_name,
+          reward_code: form.reward_code,
+          description: form.description,
+          category_id: form.category_id,
+          default_points: form.default_points,
+          min_points: form.min_points,
+          max_points: form.max_points,
+          available_stock: form.available_stock,
+        };
 
       const r = await fetchWithAuth(url, { method, body: JSON.stringify(body) });
       if (!r.ok) {
         const d = await r.json();
-        throw new Error(Array.isArray(d.detail) ? d.detail.map((e: any) => e.msg).join(", ") : d.detail ?? "Request failed");
+        throw new Error(Array.isArray(d.detail) ? d.detail.map((e: { msg?: string }) => e.msg).join(", ") : d.detail ?? "Request failed");
       }
       onSave();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Request failed");
     } finally {
       setSaving(false);
     }
@@ -260,8 +260,8 @@ function RestockForm({ item, onSave, onClose }: { item: RewardItem; onSave: () =
         throw new Error(d.detail ?? "Request failed");
       }
       onSave();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Request failed");
     } finally {
       setSaving(false);
     }
@@ -335,8 +335,8 @@ export default function RewardsPage() {
       } else {
         setError("Failed to load catalog. Check your connection or permissions.");
       }
-    } catch (e: any) {
-      setError(e.message ?? "An unexpected error occurred.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
@@ -352,151 +352,151 @@ export default function RewardsPage() {
   const close = () => { setModal(null); setSelected(undefined); };
   const saved = () => { close(); load(); };
 
-return (
-  <div className="flex h-screen bg-slate-50 overflow-hidden">
-    <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+  return (
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-    <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-      <Navbar onMenuClick={() => setSidebarOpen(true)} />
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-      <main className="flex-1 overflow-y-auto p-6">
-      {/* Header */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "0 32px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🎁</div>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#0f172a" }}>Reward Catalog</h1>
-              <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>Manage all reward items</p>
-            </div>
-          </div>
-          <Btn onClick={() => setModal("create")}>＋ New Reward</Btn>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px" }}>
-        {/* Toolbar */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
-          <input
-            placeholder="Search by name or code…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ ...inputStyle, maxWidth: 280, flex: "1 1 200px" }}
-          />
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569", cursor: "pointer", userSelect: "none" }}>
-            <input type="checkbox" checked={activeOnly} onChange={e => { setActiveOnly(e.target.checked); setPage(1); }} style={{ width: 15, height: 15 }} />
-            Active only
-          </label>
-          {pagination && (
-            <span style={{ marginLeft: "auto", fontSize: 13, color: "#94a3b8" }}>
-              {pagination.total} items · page {pagination.current_page}/{pagination.total_pages}
-            </span>
-          )}
-        </div>
-
-        {/* Error Banner */}
-        {error && !loading && (
-          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "12px 18px", marginBottom: 20, color: "#991b1b", fontSize: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span>⚠️ {error}</span>
-            <Btn variant="ghost" onClick={load} style={{ padding: "4px 12px", fontSize: 12 }}>Retry</Btn>
-          </div>
-        )}
-
-        {/* Grid */}
-        {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 18 }}>
-            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: 80, color: "#94a3b8" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🎁</div>
-            <p style={{ margin: 0, fontWeight: 600, color: "#64748b" }}>No rewards found</p>
-            <p style={{ margin: "4px 0 16px", fontSize: 13 }}>Try a different search or create a new reward</p>
-            <Btn onClick={() => setModal("create")}>＋ New Reward</Btn>
-          </div>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 18 }}>
-            {filtered.map(item => (
-              <div key={item.catalog_id} style={{
-                background: "#fff", borderRadius: 14, border: "1.5px solid #e2e8f0",
-                padding: 20, display: "flex", flexDirection: "column", gap: 12,
-                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "#94a3b8", letterSpacing: "0.08em" }}>{item.reward_code}</p>
-                    <h3 style={{ margin: "3px 0 0", fontSize: 15, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.reward_name}</h3>
-                  </div>
-                  <Badge active={item.is_active} />
-                </div>
-                {item.description && (
-                  <p style={{ margin: 0, fontSize: 13, color: "#64748b", lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{item.description}</p>
-                )}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                  {(["Default", "Min", "Max"] as const).map((label, idx) => {
-                    const val = [item.default_points, item.min_points, item.max_points][idx];
-                    return (
-                      <div key={label} style={{ background: "#f8fafc", borderRadius: 8, padding: "8px 10px", textAlign: "center" }}>
-                        <p style={{ margin: 0, fontSize: 10, color: "#94a3b8", fontWeight: 600, letterSpacing: "0.05em" }}>{label}</p>
-                        <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#6366f1" }}>{val.toLocaleString()}</p>
-                        <p style={{ margin: 0, fontSize: 9, color: "#94a3b8" }}>pts</p>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <StockBadge stock={item.available_stock} />
-                  {item.category && (
-                    <span style={{ fontSize: 11, color: "#7c3aed", background: "#ede9fe", padding: "2px 8px", borderRadius: 6, fontWeight: 600 }}>
-                      {item.category.category_name}
-                    </span>
-                  )}
-                </div>
-                <div style={{ display: "flex", gap: 8, paddingTop: 4, borderTop: "1px solid #f1f5f9" }}>
-                  <Btn variant="ghost" onClick={() => { setSelected(item); setModal("edit"); }} style={{ flex: 1, justifyContent: "center" }}>✏️ Edit</Btn>
-                  <Btn variant="outline" onClick={() => { setSelected(item); setModal("restock"); }} style={{ flex: 1, justifyContent: "center" }}>📦 Stock</Btn>
+        <main className="flex-1 overflow-y-auto p-6">
+          {/* Header */}
+          <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "0 32px" }}>
+            <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 36, height: 36, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🎁</div>
+                <div>
+                  <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#0f172a" }}>Reward Catalog</h1>
+                  <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>Manage all reward items</p>
                 </div>
               </div>
-            ))}
+              <Btn onClick={() => setModal("create")}>＋ New Reward</Btn>
+            </div>
           </div>
-        )}
 
-        {/* Pagination */}
-        {pagination && pagination.total_pages > 1 && (
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 28 }}>
-            <Btn variant="ghost" onClick={() => setPage(p => p - 1)} disabled={!pagination.has_previous}>← Prev</Btn>
-            {Array.from({ length: pagination.total_pages }, (_, i) => i + 1).map(p => (
-              <button key={p} onClick={() => setPage(p)} style={{
-                width: 36, height: 36, borderRadius: 8, border: "1.5px solid",
-                borderColor: p === page ? "#6366f1" : "#e2e8f0",
-                background: p === page ? "#6366f1" : "#fff",
-                color: p === page ? "#fff" : "#475569",
-                cursor: "pointer", fontWeight: 600, fontSize: 13, fontFamily: "inherit",
-              }}>{p}</button>
-            ))}
-            <Btn variant="ghost" onClick={() => setPage(p => p + 1)} disabled={!pagination.has_next}>Next →</Btn>
+          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px" }}>
+            {/* Toolbar */}
+            <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
+              <input
+                placeholder="Search by name or code…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ ...inputStyle, maxWidth: 280, flex: "1 1 200px" }}
+              />
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569", cursor: "pointer", userSelect: "none" }}>
+                <input type="checkbox" checked={activeOnly} onChange={e => { setActiveOnly(e.target.checked); setPage(1); }} style={{ width: 15, height: 15 }} />
+                Active only
+              </label>
+              {pagination && (
+                <span style={{ marginLeft: "auto", fontSize: 13, color: "#94a3b8" }}>
+                  {pagination.total} items · page {pagination.current_page}/{pagination.total_pages}
+                </span>
+              )}
+            </div>
+
+            {/* Error Banner */}
+            {error && !loading && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "12px 18px", marginBottom: 20, color: "#991b1b", fontSize: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>⚠️ {error}</span>
+                <Btn variant="ghost" onClick={load} style={{ padding: "4px 12px", fontSize: 12 }}>Retry</Btn>
+              </div>
+            )}
+
+            {/* Grid */}
+            {loading ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 18 }}>
+                {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+              </div>
+            ) : filtered.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 80, color: "#94a3b8" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>🎁</div>
+                <p style={{ margin: 0, fontWeight: 600, color: "#64748b" }}>No rewards found</p>
+                <p style={{ margin: "4px 0 16px", fontSize: 13 }}>Try a different search or create a new reward</p>
+                <Btn onClick={() => setModal("create")}>＋ New Reward</Btn>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 18 }}>
+                {filtered.map(item => (
+                  <div key={item.catalog_id} style={{
+                    background: "#fff", borderRadius: 14, border: "1.5px solid #e2e8f0",
+                    padding: 20, display: "flex", flexDirection: "column", gap: 12,
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "#94a3b8", letterSpacing: "0.08em" }}>{item.reward_code}</p>
+                        <h3 style={{ margin: "3px 0 0", fontSize: 15, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.reward_name}</h3>
+                      </div>
+                      <Badge active={item.is_active} />
+                    </div>
+                    {item.description && (
+                      <p style={{ margin: 0, fontSize: 13, color: "#64748b", lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{item.description}</p>
+                    )}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                      {(["Default", "Min", "Max"] as const).map((label, idx) => {
+                        const val = [item.default_points, item.min_points, item.max_points][idx];
+                        return (
+                          <div key={label} style={{ background: "#f8fafc", borderRadius: 8, padding: "8px 10px", textAlign: "center" }}>
+                            <p style={{ margin: 0, fontSize: 10, color: "#94a3b8", fontWeight: 600, letterSpacing: "0.05em" }}>{label}</p>
+                            <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#6366f1" }}>{val.toLocaleString()}</p>
+                            <p style={{ margin: 0, fontSize: 9, color: "#94a3b8" }}>pts</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <StockBadge stock={item.available_stock} />
+                      {item.category && (
+                        <span style={{ fontSize: 11, color: "#7c3aed", background: "#ede9fe", padding: "2px 8px", borderRadius: 6, fontWeight: 600 }}>
+                          {item.category.category_name}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, paddingTop: 4, borderTop: "1px solid #f1f5f9" }}>
+                      <Btn variant="ghost" onClick={() => { setSelected(item); setModal("edit"); }} style={{ flex: 1, justifyContent: "center" }}>✏️ Edit</Btn>
+                      <Btn variant="outline" onClick={() => { setSelected(item); setModal("restock"); }} style={{ flex: 1, justifyContent: "center" }}>📦 Stock</Btn>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {pagination && pagination.total_pages > 1 && (
+              <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 28 }}>
+                <Btn variant="ghost" onClick={() => setPage(p => p - 1)} disabled={!pagination.has_previous}>← Prev</Btn>
+                {Array.from({ length: pagination.total_pages }, (_, i) => i + 1).map(p => (
+                  <button key={p} onClick={() => setPage(p)} style={{
+                    width: 36, height: 36, borderRadius: 8, border: "1.5px solid",
+                    borderColor: p === page ? "#6366f1" : "#e2e8f0",
+                    background: p === page ? "#6366f1" : "#fff",
+                    color: p === page ? "#fff" : "#475569",
+                    cursor: "pointer", fontWeight: 600, fontSize: 13, fontFamily: "inherit",
+                  }}>{p}</button>
+                ))}
+                <Btn variant="ghost" onClick={() => setPage(p => p + 1)} disabled={!pagination.has_next}>Next →</Btn>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Modals */}
+          {modal === "create" && (
+            <Modal title="Create New Reward" onClose={close}>
+              <RewardForm categories={categories} onSave={saved} onClose={close} />
+            </Modal>
+          )}
+          {modal === "edit" && selected && (
+            <Modal title="Edit Reward" onClose={close}>
+              <RewardForm item={selected} categories={categories} onSave={saved} onClose={close} />
+            </Modal>
+          )}
+          {modal === "restock" && selected && (
+            <Modal title="Add Stock" onClose={close}>
+              <RestockForm item={selected} onSave={saved} onClose={close} />
+            </Modal>
+          )}
+        </main>
       </div>
-
-      {/* Modals */}
-      {modal === "create" && (
-        <Modal title="Create New Reward" onClose={close}>
-          <RewardForm categories={categories} onSave={saved} onClose={close} />
-        </Modal>
-      )}
-      {modal === "edit" && selected && (
-        <Modal title="Edit Reward" onClose={close}>
-          <RewardForm item={selected} categories={categories} onSave={saved} onClose={close} />
-        </Modal>
-      )}
-      {modal === "restock" && selected && (
-        <Modal title="Add Stock" onClose={close}>
-          <RestockForm item={selected} onSave={saved} onClose={close} />
-        </Modal>
-      )}
-          </main>
     </div>
-  </div>
-);
+  );
 }
