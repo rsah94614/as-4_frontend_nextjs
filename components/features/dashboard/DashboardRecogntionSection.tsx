@@ -1,49 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import DashboardRecognitionCard from "./DashboardRecognitionCard";
-import { fetchWithAuth } from "@/services/auth-service";
-
-const RECOGNITION_API = process.env.NEXT_PUBLIC_RECOGNITION_API_URL || "http://localhost:8005";
-const EMPLOYEE_API    = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL    || "http://localhost:8003";
+import type { RecentReview } from "@/services/analytics-service";
 
 const AVATAR_COLORS = [
     "bg-purple-500", "bg-blue-500", "bg-orange-500",
     "bg-emerald-500", "bg-pink-500",
 ];
 
-interface RecognitionItem {
-    id: string;
-    from: string;
-    fromInitials: string;
-    to: string;
-    toInitials: string;
-    message: string;
-    points: number;
-    time: string;
-    color: string;
-    image: string | null;
-}
-
-interface RawRecognition {
-    recognition_id?: string;
-    id?: string;
-    sender_id: string;
-    receiver_id: string;
-    message: string;
-    points?: number;
-    created_at: string;
-}
-
-interface EmployeeInfo {
-    employee_id: string;
-    first_name: string;
-    last_name: string;
-    profile_image?: string | null;
-}
-
-function initials(first: string, last: string): string {
-    return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
+function userInitials(username: string): string {
+    const parts = username.split(/[._\s-]+/);
+    if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return username.slice(0, 2).toUpperCase();
 }
 
 function formatTime(iso: string): string {
@@ -58,83 +29,31 @@ function formatTime(iso: string): string {
     return date.toLocaleDateString();
 }
 
-const DashboardRecognitionSection = () => {
-    const [items, setItems] = useState<RecognitionItem[]>([]);
-    const [loading, setLoading] = useState(true);
+interface DashboardRecognitionSectionProps {
+    reviews: RecentReview[];
+    loading: boolean;
+}
 
-    useEffect(() => {
-        async function load() {
-            setLoading(true);
-            try {
-                // 1. Fetch recent recognitions
-                const recRes = await fetchWithAuth(
-                    `${RECOGNITION_API}/v1/recognitions?page=1&page_size=5`
-                );
-                if (!recRes.ok) return;
-                const recJson = await recRes.json();
-                const recognitions: RawRecognition[] = recJson.data ?? recJson.recognitions ?? recJson.items ?? [];
-
-                // 2. Collect unique employee IDs
-                const employeeIds = Array.from(
-                    new Set(
-                        recognitions.flatMap((r) => [r.sender_id, r.receiver_id])
-                    )
-                );
-
-                // 3. Fetch employee info for all IDs in parallel
-                const employeeMap = new Map<string, EmployeeInfo>();
-                await Promise.all(
-                    employeeIds.map(async (empId) => {
-                        try {
-                            const empRes = await fetchWithAuth(
-                                `${EMPLOYEE_API}/v1/employees/${empId}`
-                            );
-                            if (!empRes.ok) return;
-                            const emp: EmployeeInfo = await empRes.json();
-                            employeeMap.set(empId, emp);
-                        } catch {
-                            // ignore individual failures
-                        }
-                    })
-                );
-
-                // 4. Map recognitions to display items
-                const mapped: RecognitionItem[] = recognitions.map((r, i) => {
-                    const sender   = employeeMap.get(r.sender_id);
-                    const receiver = employeeMap.get(r.receiver_id);
-
-                    const fromName     = sender   ? `${sender.first_name} ${sender.last_name}`.trim()   : r.sender_id;
-                    const toName       = receiver ? `${receiver.first_name} ${receiver.last_name}`.trim() : r.receiver_id;
-                    const fromInitials = sender   ? initials(sender.first_name, sender.last_name) : "??";
-                    const toInitials   = receiver ? initials(receiver.first_name, receiver.last_name) : "??";
-
-                    return {
-                        id:           r.recognition_id ?? r.id ?? String(i),
-                        from:         fromName,
-                        fromInitials,
-                        to:           toName,
-                        toInitials,
-                        message:      r.message,
-                        points:       r.points ?? 0,
-                        time:         formatTime(r.created_at),
-                        color:        AVATAR_COLORS[i % AVATAR_COLORS.length],
-                        image:        sender?.profile_image ?? null,
-                    };
-                });
-
-                setItems(mapped);
-            } catch {
-                // silently fail
-            } finally {
-                setLoading(false);
-            }
-        }
-        load();
-    }, []);
+const DashboardRecognitionSection = ({
+    reviews,
+    loading,
+}: DashboardRecognitionSectionProps) => {
+    const items = reviews.map((r, i) => ({
+        id: r.review_id,
+        from: r.reviewer_name,
+        fromInitials: userInitials(r.reviewer_name),
+        to: "you",
+        toInitials: "",
+        message: r.comment,
+        points: r.rating,
+        time: formatTime(r.review_at),
+        color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+        image: null,
+    }));
 
     return (
         <section className="lg:col-span-3 bg-white rounded-3xl p-6 shadow-none">
-            <h2 className="text-2xl font-medium pb-4">Recent Recognitions</h2>
+            <h2 className="text-2xl font-medium pb-4">Recent Reviews</h2>
 
             <div className="space-y-3">
                 {loading &&
@@ -147,7 +66,7 @@ const DashboardRecognitionSection = () => {
 
                 {!loading && items.length === 0 && (
                     <p className="text-sm text-gray-400 text-center py-8">
-                        No recognitions yet.
+                        No reviews yet.
                     </p>
                 )}
 

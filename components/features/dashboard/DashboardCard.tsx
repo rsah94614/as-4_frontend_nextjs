@@ -45,7 +45,8 @@ export default function DashboardCard({
                 </div>
 
                 {change && (
-                    <p className="text-sm text-green-600 font-medium">
+                    <p className={`text-sm font-medium ${change.startsWith("-") ? "text-red-500" : "text-green-600"
+                        }`}>
                         {change} {changeLabel}
                     </p>
                 )}
