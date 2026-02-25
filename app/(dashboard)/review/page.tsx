@@ -14,11 +14,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   submitReview,
-  getReviewsUsed,
-  getReviewsRemaining,
-  canSubmitReview,
   getPointsForRating,
-  getReviewedThisMonth,
   fetchMonthlyReviewState,
   RATING_LABELS,
   RATING_POINTS_MAP,
@@ -72,10 +68,9 @@ function PointsBadge({ rating }: { rating: number }) {
     <span
       className={`inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-sm font-semibold
         transition-all duration-200
-        ${
-          pts > 0
-            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-            : "bg-slate-100 text-slate-500 border border-slate-200"
+        ${pts > 0
+          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+          : "bg-slate-100 text-slate-500 border border-slate-200"
         }`}
     >
       <span className="text-base">◆</span>
@@ -255,7 +250,7 @@ function ReviewCard({ review }: { review: ReviewResponse }) {
 
 export default function ReviewPage() {
   // ── Data state ──────────────────────────────────────────────────────────────
-  const [loggedInUser, setLoggedInUser] = useState<TeamMember | null>(null);
+  const [, setLoggedInUser] = useState<TeamMember | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [teamLeader, setTeamLeader] = useState<TeamMember | null>(null);
   const [pastReviews, setPastReviews] = useState<ReviewResponse[]>([]);
@@ -515,7 +510,7 @@ export default function ReviewPage() {
       >
         {limitReached && (
           <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 font-medium">
-            🚫 You've used all {MAX_REVIEWS_PER_MONTH} reviews this month. Quota resets on the 1st.
+            🚫 You&apos;ve used all {MAX_REVIEWS_PER_MONTH} reviews this month. Quota resets on the 1st.
           </div>
         )}
 
@@ -565,7 +560,7 @@ export default function ReviewPage() {
 
           {selectedAlreadyReviewed && (
             <p className="mt-1.5 text-xs text-amber-600 font-medium">
-              ⚠️ You've already reviewed this person this month.
+              ⚠️ You&apos;ve already reviewed this person this month.
             </p>
           )}
         </div>

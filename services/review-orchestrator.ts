@@ -264,12 +264,13 @@ export async function submitReview(
             if (creditRes.status === 200 || creditRes.status === 201) {
                 walletCreditSuccess = true;
             }
-        } catch (e: any) {
-            if (e.response?.status === 409) {
+        } catch (e: unknown) {
+            const axiosErr = e as { response?: { status?: number; data?: { detail?: string } }; message?: string };
+            if (axiosErr.response?.status === 409) {
                 // Already credited (idempotent duplicate) → treat as success
                 walletCreditSuccess = true;
             } else {
-                walletCreditError = e.response?.data?.detail || e.message || "Wallet credit failed.";
+                walletCreditError = axiosErr.response?.data?.detail || axiosErr.message || "Wallet credit failed.";
             }
         }
 
@@ -283,8 +284,9 @@ export async function submitReview(
             walletCreditSuccess,
             walletCreditError,
         };
-    } catch (error: any) {
-        throw new Error(error.response?.data?.detail || error.message || "Failed to create review.");
+    } catch (error: unknown) {
+        const axiosErr = error as { response?: { data?: { detail?: string } }; message?: string };
+        throw new Error(axiosErr.response?.data?.detail || axiosErr.message || "Failed to create review.");
     }
 }
 
@@ -299,7 +301,8 @@ export async function listReviews(
             `${ENDPOINTS.REVIEWS_LIST}?page=${page}&page_size=${pageSize}`
         );
         return res.data;
-    } catch (error: any) {
-        throw new Error(error.response?.data?.detail || "Failed to fetch reviews.");
+    } catch (error: unknown) {
+        const axiosErr = error as { response?: { data?: { detail?: string } } };
+        throw new Error(axiosErr.response?.data?.detail || "Failed to fetch reviews.");
     }
 }

@@ -106,8 +106,9 @@ export const employeeService = {
         try {
             const res = await axiosClient.get<EmployeeDetail>(ENDPOINTS.GET(id));
             return res.data;
-        } catch (error: any) {
-            throw new Error(error.response?.data?.detail || 'Failed to fetch employee');
+        } catch (error: unknown) {
+            const axiosErr = error as { response?: { data?: { detail?: string } } };
+            throw new Error(axiosErr.response?.data?.detail || 'Failed to fetch employee');
         }
     },
 
@@ -140,8 +141,9 @@ export const employeeService = {
                 `${ENDPOINTS.LIST}?${q.toString()}`
             );
             return res.data;
-        } catch (error: any) {
-            throw new Error(error.response?.data?.detail || 'Failed to fetch employees');
+        } catch (error: unknown) {
+            const axiosErr = error as { response?: { data?: { detail?: string } } };
+            throw new Error(axiosErr.response?.data?.detail || 'Failed to fetch employees');
         }
     },
 }

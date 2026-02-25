@@ -67,9 +67,10 @@ export async function uploadToStorage(file: File): Promise<UploadResult> {
             format: data.format as string,
             bytes: data.bytes as number,
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const axiosErr = error as { response?: { data?: { error?: { message?: string } } } };
         throw new Error(
-            error.response?.data?.error?.message || `Cloudinary upload failed`
+            axiosErr.response?.data?.error?.message || `Cloudinary upload failed`
         );
     }
 }

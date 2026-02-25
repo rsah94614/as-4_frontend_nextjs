@@ -25,10 +25,9 @@ export default function RedeemPage() {
             <button
               onClick={() => redeem.setActiveCategory("ALL")}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all
-                ${
-                  redeem.activeCategory === "ALL"
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                ${redeem.activeCategory === "ALL"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
             >
               All
@@ -39,10 +38,9 @@ export default function RedeemPage() {
                 key={cat.category_id}
                 onClick={() => redeem.setActiveCategory(cat.category_id)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all
-                  ${
-                    redeem.activeCategory === cat.category_id
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ${redeem.activeCategory === cat.category_id
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
               >
                 {cat.category_name}
@@ -123,15 +121,14 @@ export default function RedeemPage() {
       </div>
 
       {/* Dialog */}
-      {redeem.dialogOpen && redeem.wallet && (
-        <RedeemDialog
-          state={redeem.dialogState}
-          availablePoints={redeem.availablePoints}
-          walletId={redeem.wallet.wallet_id}
-          onClose={redeem.closeDialog}
-          onSuccess={redeem.handleSuccess}
-        />
-      )}
+      <RedeemDialog
+        open={redeem.dialogOpen}
+        state={redeem.dialogState}
+        availablePoints={redeem.availablePoints}
+        walletId={redeem.wallet?.wallet_id ?? ""}
+        onClose={redeem.closeDialog}
+        onSuccess={redeem.handleSuccess}
+      />
     </div>
   );
 }

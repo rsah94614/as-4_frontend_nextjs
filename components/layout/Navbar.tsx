@@ -1,7 +1,7 @@
 'use client';
 
 import { Search, Bell, Menu } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { auth } from '@/services/auth-service';
 import { useRouter } from 'next/navigation';
 
@@ -11,22 +11,17 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [username, setUsername] = useState('');
-    const [initials, setInitials] = useState('');
 
-    useEffect(() => {
-        const user = auth.getUser();
-        if (user?.username) {
-            setUsername(user.username);
-            // Build initials from username words, fall back to first two chars
-            const parts = (user.username as string).trim().split(/\s+/);
-            setInitials(
-                parts.length >= 2
-                    ? (parts[0][0] + parts[1][0]).toUpperCase()
-                    : user.username.slice(0, 2).toUpperCase()
-            );
-        }
-    }, []);
+    const user = auth.getUser();
+    let username = '';
+    let initials = '';
+    if (user?.username) {
+        username = user.username;
+        const parts = (user.username as string).trim().split(/\s+/);
+        initials = parts.length >= 2
+            ? (parts[0][0] + parts[1][0]).toUpperCase()
+            : user.username.slice(0, 2).toUpperCase();
+    }
 
     const router = useRouter();
 
