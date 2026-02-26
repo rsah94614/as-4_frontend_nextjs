@@ -19,6 +19,7 @@
 import { auth } from "@/services/auth-service";
 import axiosClient from "@/services/api-client";
 import { uploadToStorage } from "@/services/cloudinary";
+import { extractApiError, validateReviewInput, requireAuthenticatedUserId, categorizeFileUrls } from "@/lib/api-utils";
 import type { ReviewResponse, PaginatedReviewResponse } from "@/types/review";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -40,9 +41,7 @@ export const MAX_REVIEWS_PER_MONTH = 5;
 
 /** Returns the logged-in employee_id or throws */
 function requireMyId(): string {
-    const id = auth.getUser()?.employee_id;
-    if (!id) throw new Error("Authentication required.");
-    return id as string;
+    return requireAuthenticatedUserId();
 }
 
 /** ISO string for the first moment of the current month (UTC) */
@@ -220,25 +219,17 @@ export async function submitReview(
     }
 
     // 3. Local validation
-    if (rating < 1 || rating > 5) throw new Error("Rating must be between 1 and 5.");
-    if (comment.trim().length < 10) throw new Error("Comment must be at least 10 characters.");
-    if (comment.trim().length > 2000) throw new Error("Comment must not exceed 2000 characters.");
+    validateReviewInput(rating, comment);
     if (receiverId === myId) throw new Error("You cannot review yourself.");
 
     // 4. Upload files to Cloudinary in parallel
-    let imageUrl: string | undefined;
-    let videoUrl: string | undefined;
-
     const uploads = await Promise.all(
         files.map(async (file) => ({
             kind: file.type.split("/")[0],
             url: (await uploadToStorage(file)).url,
         }))
     );
-    for (const { kind, url } of uploads) {
-        if (kind === "image" && !imageUrl) imageUrl = url;
-        if (kind === "video" && !videoUrl) videoUrl = url;
-    }
+    const { imageUrl, videoUrl } = categorizeFileUrls(uploads);
 
     // 5. POST review → Recognition Service
     try {
@@ -285,8 +276,7 @@ export async function submitReview(
             walletCreditError,
         };
     } catch (error: unknown) {
-        const axiosErr = error as { response?: { data?: { detail?: string } }; message?: string };
-        throw new Error(axiosErr.response?.data?.detail || axiosErr.message || "Failed to create review.");
+        throw new Error(extractApiError(error, "Failed to create review."));
     }
 }
 
@@ -302,7 +292,6 @@ export async function listReviews(
         );
         return res.data;
     } catch (error: unknown) {
-        const axiosErr = error as { response?: { data?: { detail?: string } } };
-        throw new Error(axiosErr.response?.data?.detail || "Failed to fetch reviews.");
+        throw new Error(extractApiError(error, "Failed to fetch reviews."));
     }
 }

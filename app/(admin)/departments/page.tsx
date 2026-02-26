@@ -10,8 +10,8 @@ import {
     type Department,
     type DepartmentDetail,
     type DepartmentType,
-    type PaginationMeta,
 } from "@/services/department-service";
+import type { PaginationMeta } from "@/types/pagination";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 
@@ -70,7 +70,7 @@ export default function DepartmentsPage() {
 
     // ── Load department types for dropdown ────────────────────────────────────
     useEffect(() => {
-        departmentService.listTypes().then(setDepartmentTypes).catch(() => {});
+        departmentService.listTypes().then(setDepartmentTypes).catch(() => { });
     }, []);
 
     // ── Load list ──────────────────────────────────────────────────────────────

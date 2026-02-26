@@ -11,6 +11,7 @@
 
 import axiosClient from './api-client'
 import { uploadToStorage } from './cloudinary'
+import { extractApiError, validateReviewInput } from '@/lib/api-utils'
 import type {
     ReviewCreateRequest,
     ReviewUpdateRequest,
@@ -44,8 +45,7 @@ export const reviewService = {
             );
             return res.data;
         } catch (error: unknown) {
-            const axiosErr = error as { response?: { data?: { detail?: string } } };
-            throw new Error(axiosErr.response?.data?.detail || 'Failed to fetch reviews');
+            throw new Error(extractApiError(error, 'Failed to fetch reviews'));
         }
     },
 
@@ -54,8 +54,7 @@ export const reviewService = {
             const res = await axiosClient.get<ReviewResponse>(ENDPOINTS.GET(reviewId));
             return res.data;
         } catch (error: unknown) {
-            const axiosErr = error as { response?: { data?: { detail?: string } } };
-            throw new Error(axiosErr.response?.data?.detail || 'Failed to fetch review');
+            throw new Error(extractApiError(error, 'Failed to fetch review'));
         }
     },
 
@@ -65,8 +64,7 @@ export const reviewService = {
             const res = await axiosClient.post<ReviewResponse>(ENDPOINTS.CREATE, data);
             return res.data;
         } catch (error: unknown) {
-            const axiosErr = error as { response?: { data?: { detail?: string } } };
-            throw new Error(axiosErr.response?.data?.detail || 'Failed to create review');
+            throw new Error(extractApiError(error, 'Failed to create review'));
         }
     },
 
@@ -75,8 +73,7 @@ export const reviewService = {
             const res = await axiosClient.put<ReviewResponse>(ENDPOINTS.UPDATE(reviewId), data);
             return res.data;
         } catch (error: unknown) {
-            const axiosErr = error as { response?: { data?: { detail?: string } } };
-            throw new Error(axiosErr.response?.data?.detail || 'Failed to update review');
+            throw new Error(extractApiError(error, 'Failed to update review'));
         }
     },
 }
@@ -108,9 +105,7 @@ export async function createReviewWithFiles(
     comment: string,
     files: File[]
 ): Promise<ReviewResponse> {
-    if (rating < 1 || rating > 5) throw new Error('Rating must be between 1 and 5')
-    if (comment.trim().length < 10) throw new Error('Comment must be at least 10 characters')
-    if (comment.trim().length > 2000) throw new Error('Comment must not exceed 2000 characters')
+    validateReviewInput(rating, comment)
 
     let imageUrl: string | undefined
     let videoUrl: string | undefined
