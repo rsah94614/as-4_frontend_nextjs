@@ -9,8 +9,8 @@ import {
     designationService,
     type Designation,
     type DesignationDetail,
-    type PaginationMeta,
 } from "@/services/designation-service";
+import type { PaginationMeta } from "@/types/pagination";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 

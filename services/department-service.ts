@@ -11,6 +11,7 @@
 // and Bearer token handling.
 
 import orgApiClient from "./org-api-client";
+import type { PaginationMeta } from "@/types/pagination";
 
 // ─────────────────────────────────────────────
 // Types (mirror schemas.py in Organization Service)
@@ -48,14 +49,7 @@ export interface DepartmentDetail extends Department {
     updated_at: string | null;
 }
 
-export interface PaginationMeta {
-    current_page: number;
-    per_page: number;
-    total: number;
-    total_pages: number;
-    has_next: boolean;
-    has_previous: boolean;
-}
+
 
 export interface DepartmentListResponse {
     data: Department[];
