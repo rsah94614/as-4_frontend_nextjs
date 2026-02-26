@@ -43,14 +43,8 @@ export interface ReviewResponse {
     updated_by: string;
 }
 
-export interface PaginationMeta {
-    current_page: number;
-    per_page: number;
-    total: number;
-    total_pages: number;
-    has_next: boolean;
-    has_previous: boolean;
-}
+import type { PaginationMeta } from "./pagination";
+export type { PaginationMeta };
 
 export interface PaginatedReviewResponse {
     data: ReviewResponse[];

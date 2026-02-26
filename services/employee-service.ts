@@ -6,8 +6,8 @@
 // Uses auth.getUser() to get the current employee_id from localStorage
 // (stored at login via auth.setTokens) — no extra /me request needed.
 
-import { auth } from './auth-service'
 import axiosClient from './api-client'
+import { extractApiError, requireAuthenticatedUserId } from '@/lib/api-utils'
 
 const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || 'http://localhost:8003'
 
@@ -107,8 +107,7 @@ export const employeeService = {
             const res = await axiosClient.get<EmployeeDetail>(ENDPOINTS.GET(id));
             return res.data;
         } catch (error: unknown) {
-            const axiosErr = error as { response?: { data?: { detail?: string } } };
-            throw new Error(axiosErr.response?.data?.detail || 'Failed to fetch employee');
+            throw new Error(extractApiError(error, 'Failed to fetch employee'));
         }
     },
 
@@ -142,8 +141,7 @@ export const employeeService = {
             );
             return res.data;
         } catch (error: unknown) {
-            const axiosErr = error as { response?: { data?: { detail?: string } } };
-            throw new Error(axiosErr.response?.data?.detail || 'Failed to fetch employees');
+            throw new Error(extractApiError(error, 'Failed to fetch employees'));
         }
     },
 }
@@ -163,10 +161,7 @@ export async function getTeamMembersForUI(): Promise<{
     teamLeader: TeamMember | null
 }> {
     // 1. Get current employee_id from the user stored in localStorage at login
-    const storedUser = auth.getUser()
-    if (!storedUser?.employee_id) throw new Error('Authentication required')
-
-    const myId = storedUser.employee_id as string
+    const myId = requireAuthenticatedUserId()
 
     // 2. Fetch own full profile + direct reports in parallel
     const [myDetail, teamRes] = await Promise.all([
