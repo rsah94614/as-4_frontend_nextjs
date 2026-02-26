@@ -44,3 +44,9 @@ export function isAdminUser(): boolean {
     const all = Array.from(new Set([...tokenRoles, ...userRoles]));
     return all.some(r => (ADMIN_ROLES as readonly string[]).includes(r));
 }
+
+/** Returns true if the current user has the SUPER_ADMIN or SUPER_DEV role */
+export function isSuperDev(): boolean {
+    const roles = getRolesFromToken();
+    return roles.some(r => ['SUPER_ADMIN', 'SUPER_DEV', 'ADMIN'].includes(r));
+}

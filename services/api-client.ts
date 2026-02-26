@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type InternalAxiosRequestConfig } from "axios";
 import { auth } from "./auth-service";
 
 // Create a single axios instance for the entire app
@@ -8,6 +8,10 @@ const axiosClient = axios.create({
         "Content-Type": "application/json",
     },
 });
+
+/* ------------------------------------------------------------------ */
+/*  Auth interceptors (always active)                                  */
+/* ------------------------------------------------------------------ */
 
 // Request Interceptor: Attach the Access Token
 axiosClient.interceptors.request.use(
@@ -30,7 +34,10 @@ axiosClient.interceptors.response.use(
         const originalRequest = error.config;
 
         // strict check for 401 and avoid infinite loops
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // also don't retry if the request itself was for refreshing the token
+        const isRefreshRequest = originalRequest.url?.includes('/v1/auth/refresh');
+
+        if (error.response?.status === 401 && !originalRequest._retry && !isRefreshRequest) {
             originalRequest._retry = true;
 
             try {

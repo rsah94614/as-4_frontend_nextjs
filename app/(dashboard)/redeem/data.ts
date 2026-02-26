@@ -1,0 +1,48 @@
+import { RewardItem } from "./models";
+
+export const rewardItems: RewardItem[] = [
+    {
+        id: "1",
+        title: "Amazon Gift Card - ₹500",
+        type: "coupon",
+        points_required: 500,
+        monetary_value: 500,
+        is_out_of_stock: false,
+        is_active: true,
+        category_ids: ["coupon"],
+        bgColor: "#FF990020",
+    },
+    {
+        id: "2",
+        title: "Starbucks Coffee Voucher",
+        type: "coupon",
+        points_required: 200,
+        monetary_value: 200,
+        is_out_of_stock: false,
+        is_active: true,
+        category_ids: ["coupon", "FOOD"],
+        bgColor: "#00624120",
+    },
+    {
+        id: "3",
+        title: "Noise Wireless Earbuds",
+        type: "item",
+        points_required: 1500,
+        monetary_value: 1200,
+        image: "/images/earbuds.png",
+        is_out_of_stock: false,
+        is_active: true,
+        category_ids: ["ELEC"],
+    },
+    {
+        id: "4",
+        title: "Levi's Canvas Tote",
+        type: "item",
+        points_required: 400,
+        monetary_value: 400,
+        image: "/images/tote.png",
+        is_out_of_stock: true,
+        is_active: true,
+        category_ids: ["FASH"],
+    },
+];

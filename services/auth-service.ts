@@ -1,5 +1,7 @@
 // services/auth-service.ts - Authentication utility functions
 
+import axiosClient from './api-client'
+
 /**
  * Storage keys for authentication tokens
  */
@@ -98,36 +100,23 @@ export const auth = {
         localStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRES_AT)
     },
 
-    /**
-     * Refresh access token using refresh token
-     */
     refreshAccessToken: async (): Promise<boolean> => {
         const refreshToken = auth.getRefreshToken()
         if (!refreshToken) return false
 
         try {
-            const response = await fetch(AUTH_ENDPOINTS.REFRESH, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ refresh_token: refreshToken }),
+            const response = await axiosClient.post(AUTH_ENDPOINTS.REFRESH, {
+                refresh_token: refreshToken
             })
 
-            if (response.ok) {
-                const data = await response.json()
-                auth.setTokens(
-                    data.access_token,
-                    data.refresh_token,
-                    data.employee,
-                    data.expires_in
-                )
-                return true
-            }
-
-            // Refresh failed - clear tokens
-            auth.clearTokens()
-            return false
+            const data = response.data
+            auth.setTokens(
+                data.access_token,
+                data.refresh_token,
+                data.employee,
+                data.expires_in
+            )
+            return true
         } catch (error) {
             console.error('Token refresh error:', error)
             auth.clearTokens()
@@ -135,21 +124,13 @@ export const auth = {
         }
     },
 
-    /**
-     * Logout user
-     */
     logout: async (): Promise<void> => {
         const refreshToken = auth.getRefreshToken()
 
         if (refreshToken) {
             try {
-                await fetch(AUTH_ENDPOINTS.LOGOUT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${auth.getAccessToken()}`,
-                    },
-                    body: JSON.stringify({ refresh_token: refreshToken }),
+                await axiosClient.post(AUTH_ENDPOINTS.LOGOUT, {
+                    refresh_token: refreshToken
                 })
             } catch (error) {
                 console.error('Logout error:', error)
@@ -159,80 +140,54 @@ export const auth = {
         auth.clearTokens()
     },
 }
-
 /**
- * Make authenticated API request
+ * Make authenticated API request - now using Axios internally for 
+ * consistency and to trigger Developer Logger interceptors.
  */
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
-    // Check if token is expired
-    if (auth.isTokenExpired()) {
-        // Try to refresh
-        const refreshed = await auth.refreshAccessToken()
-        if (!refreshed) {
-            // Refresh failed - redirect to login
-            if (typeof window !== 'undefined') {
-                window.location.href = '/login'
-            }
-            throw new Error('Authentication required')
-        }
-    }
+    try {
+        // Map Fetch options to Axios config
+        const response = await axiosClient({
+            url,
+            method: options.method || 'GET',
+            data: options.body ? JSON.parse(options.body as string) : undefined,
+            headers: options.headers as any,
+        });
 
-    const token = auth.getAccessToken()
-
-    const headers = {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-    }
-
-    const response = await fetch(url, {
-        ...options,
-        headers,
-    })
-
-    // If we get 401, try to refresh token once
-    if (response.status === 401) {
-        const refreshed = await auth.refreshAccessToken()
-        if (refreshed) {
-            // Retry request with new token
-            const newToken = auth.getAccessToken()
-            return fetch(url, {
-                ...options,
+        // Return a Fetch-compatible response shim so existing code doesn't break
+        return {
+            ok: true,
+            status: response.status,
+            json: async () => response.data,
+            headers: {
+                get: (name: string) => response.headers[name.toLowerCase()],
+            },
+        } as unknown as Response;
+    } catch (error: any) {
+        // If it's an Axios error with a response
+        if (error.response) {
+            return {
+                ok: false,
+                status: error.response.status,
+                json: async () => error.response.data,
                 headers: {
-                    ...headers,
-                    Authorization: `Bearer ${newToken}`,
+                    get: (name: string) => error.response.headers[name.toLowerCase()],
                 },
-            })
-        } else {
-            // Refresh failed - redirect to login
-            if (typeof window !== 'undefined') {
-                window.location.href = '/login'
-            }
-            throw new Error('Authentication required')
+            } as unknown as Response;
         }
+        // Network errors or other issues
+        throw error;
     }
-
-    return response
 }
 
-/**
- * Login function
- */
 export async function login(email: string, password: string) {
-    const response = await fetch(AUTH_ENDPOINTS.LOGIN, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+    try {
+        const response = await axiosClient.post(AUTH_ENDPOINTS.LOGIN, {
             username: email,
             password: password,
-        }),
-    })
+        })
 
-    const data = await response.json()
-
-    if (response.ok) {
+        const data = response.data
         auth.setTokens(
             data.access_token,
             data.refresh_token,
@@ -240,62 +195,38 @@ export async function login(email: string, password: string) {
             data.expires_in
         )
         return { success: true, data }
-    }
-
-    return {
-        success: false,
-        error: data.error?.message || data.detail || 'Login failed'
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.response?.data?.detail || 'Login failed'
+        }
     }
 }
 
-/**
- * Forgot password function
- */
 export async function forgotPassword(email: string) {
-    const response = await fetch(AUTH_ENDPOINTS.FORGOT_PASSWORD, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-    })
-
-    const data = await response.json()
-
-    if (response.ok) {
-        return { success: true, data }
-    }
-
-    return {
-        success: false,
-        error: data.error?.message || data.detail || 'Failed to send reset email'
+    try {
+        const response = await axiosClient.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, { email })
+        return { success: true, data: response.data }
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.response?.data?.detail || 'Failed to send reset email'
+        }
     }
 }
 
-/**
- * Reset password function
- */
 export async function resetPassword(token: string, newPassword: string) {
-    const response = await fetch(AUTH_ENDPOINTS.RESET_PASSWORD, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+    try {
+        const response = await axiosClient.post(AUTH_ENDPOINTS.RESET_PASSWORD, {
             token,
             new_password: newPassword,
-        }),
-    })
-
-    const data = await response.json()
-
-    if (response.ok) {
-        return { success: true, data }
-    }
-
-    return {
-        success: false,
-        error: data.error?.message || data.detail || 'Failed to reset password'
+        })
+        return { success: true, data: response.data }
+    } catch (error: any) {
+        return {
+            success: false,
+            error: error.response?.data?.error?.message || error.response?.data?.detail || 'Failed to reset password'
+        }
     }
 }
 

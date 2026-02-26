@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { resetPassword } from '@/services/auth-service'
 
 type Errors = {
   newPassword?: string
@@ -54,18 +55,10 @@ export function useResetPassword(
     setErrors({})
 
     try {
-      const res = await fetch('http://localhost:8001/v1/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          new_password: newPassword,
-        }),
-      })
+      const result = await resetPassword(token, newPassword)
 
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data?.detail || 'Reset failed')
+      if (!result.success) {
+        throw new Error(result.error || 'Reset failed')
       }
 
       setSuccess(true)
