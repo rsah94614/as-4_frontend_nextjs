@@ -1,10 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/providers/AuthProvider";
-import { isAdminUser } from "@/lib/role-utils";
+import { isAdminUser, isSuperDev } from "@/lib/role-utils";
 import {
   Dialog,
   DialogTrigger,
@@ -26,6 +27,7 @@ import {
   Settings,
   LogOut,
   X,
+  Bug,
 } from "lucide-react";
 
 const navItems = [
@@ -46,6 +48,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { logoutUser } = useAuth();
   const isAdmin = isAdminUser();
+
+  const [isSuper, setIsSuper] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setIsSuper(isSuperDev());
+  }, [pathname]); // also depend on pathname so it has a chance to re-check if auth delayed
 
   return (
     <>
@@ -115,6 +125,28 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </ul>
         </nav>
 
+        {/* Dev Logger — SUPER_ADMIN only, non-production only */}
+        {mounted && process.env.NODE_ENV !== "production" && isSuper && (
+          <div className="px-4 py-2 shrink-0">
+            <div className="border-t border-gray-200 pt-2">
+              <Link
+                href="/dev-logger"
+                onClick={onClose}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
+                  ${pathname.startsWith("/dev-logger")
+                    ? "bg-violet-100 text-violet-700"
+                    : "text-violet-600 hover:bg-violet-50 hover:text-violet-800"
+                  }`}
+              >
+                <Bug
+                  className={`w-5 h-5 ${pathname.startsWith("/dev-logger") ? "text-violet-600" : "text-violet-500"}`}
+                />
+                Dev Logger
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Bottom section */}
         <div className="px-4 pb-6 mt-auto space-y-1 shrink-0">
           <Link
@@ -126,7 +158,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               }`}
           >
-            
+
           </Link>
 
           {/* Logout with confirmation dialog */}

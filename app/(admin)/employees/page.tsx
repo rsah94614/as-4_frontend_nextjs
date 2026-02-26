@@ -7,6 +7,7 @@ import {
   Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Download
 } from "lucide-react"
 import { fetchWithAuth } from "@/services/auth-service"
+import axiosClient from "@/services/api-client"
 import Navbar from "@/components/layout/Navbar"
 import Sidebar from "@/components/layout/Sidebar"
 
@@ -109,34 +110,30 @@ function BulkImportModal({ onClose, onSuccess }: {
     try {
       const formData = new FormData()
       formData.append("file", file)
-      const token = localStorage.getItem("access_token")
-      const res = await fetch(`${AUTH_API}/v1/auth/bulk-import`, {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        const detail = data?.detail
-        if (Array.isArray(detail)) {
-          setUploadError(
-            detail
-              .map((e: { msg?: string; loc?: string[] }) =>
-                [e.loc?.slice(1).join(" → "), e.msg].filter(Boolean).join(": ")
-              )
-              .join(" | ")
-          )
-        } else if (typeof detail === "string") {
-          setUploadError(detail)
-        } else {
-          setUploadError(`Upload failed (${res.status})`)
+      const res = await axiosClient.post(`${AUTH_API}/v1/auth/bulk-import`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
         }
-        return
-      }
+      })
+      const data = res.data
       setResult(data as BulkImportResult)
       if (data.succeeded > 0) onSuccess()
-    } catch (e) {
-      setUploadError(e instanceof Error ? e.message : "Upload failed")
+    } catch (err: any) {
+      const data = err.response?.data
+      const detail = data?.detail
+      if (Array.isArray(detail)) {
+        setUploadError(
+          detail
+            .map((e: { msg?: string; loc?: string[] }) =>
+              [e.loc?.slice(1).join(" → "), e.msg].filter(Boolean).join(": ")
+            )
+            .join(" | ")
+        )
+      } else if (typeof detail === "string") {
+        setUploadError(detail)
+      } else {
+        setUploadError(err.message || "Upload failed")
+      }
     } finally {
       setUploading(false)
     }

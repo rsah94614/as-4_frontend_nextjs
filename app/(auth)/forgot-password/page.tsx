@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, Mail, Loader2, CheckCircle } from 'lucide-react'
+import { forgotPassword } from '@/services/auth-service'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -55,25 +56,12 @@ export default function ForgotPasswordPage() {
     setLoading(true)
 
     try {
-      const response = await fetch('http://localhost:8001/v1/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      })
+      const result = await forgotPassword(email)
 
-      const data = await response.json()
-
-      if (response.ok) {
+      if (result.success) {
         setSubmitted(true)
       } else {
-        // Handle error response
-        if (data.error?.message) {
-          setError(data.error.message)
-        } else {
-          setError('Failed to send reset email. Please try again.')
-        }
+        setError(result.error || 'Failed to send reset email. Please try again.')
       }
     } catch (err) {
       console.error('Forgot password error:', err)
