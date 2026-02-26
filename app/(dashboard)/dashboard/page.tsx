@@ -11,21 +11,8 @@ import {
   type LeaderboardEntry,
   type RecentReview,
 } from "@/services/analytics-service";
+import { formatNumber, formatGrowth } from "@/lib/dashboard-utils";
 
-// ─── Formatter ────────────────────────────────────────────────────────────────
-
-function formatNumber(n: number | null): string {
-  if (n === null) return "—";
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return n.toLocaleString();
-}
-
-function formatGrowth(pct: number | null): string | undefined {
-  if (pct === null || pct === undefined) return undefined;
-  const sign = pct >= 0 ? "+" : "";
-  return `${sign}${pct}%`;
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
