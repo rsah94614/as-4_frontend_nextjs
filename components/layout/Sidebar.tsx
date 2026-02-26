@@ -159,6 +159,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               }`}
           >
 
+            <Settings className="w-5 h-5 text-gray-500" />
+            Settings
           </Link>
 
           {/* Logout with confirmation dialog */}
