@@ -1,101 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { LayoutGrid, Users, Trophy, TrendingUp } from "lucide-react";
-import DashboardCard from "@/components/features/dashboard/DashboardCard";
 import DashboardRecognitionSection from "@/components/features/dashboard/DashboardRecogntionSection";
 import DashboardLeaderboardSection from "@/components/features/dashboard/DashboardLeaderboardSection";
-import {
-  fetchDashboardSummary,
-  type DashboardSummaryResponse,
-  type LeaderboardEntry,
-  type RecentReview,
-} from "@/services/analytics-service";
-import { formatNumber, formatGrowth } from "@/lib/dashboard-utils";
+import DashboardStatsSection from "@/components/features/dashboard/DashboardStatsSection";
 
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardSummaryResponse | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      const result = await fetchDashboardSummary();
-      setData(result);
-      setLoading(false);
-    }
-    load();
-  }, []);
-
-  const stats = data?.platform_stats;
-
-  const cards = [
-    {
-      label: "Total Points:",
-      value: formatNumber(stats?.total_points.value ?? null),
-      icon: Users,
-      color: "bg-[#FFE69C]",
-      change: formatGrowth(stats?.total_points.growth_percent ?? null),
-      loading,
-    },
-    {
-      label: "Rewards Redeemed:",
-      value: formatNumber(stats?.rewards_redeemed.value ?? null),
-      icon: Trophy,
-      color: "bg-[#EED9FF]",
-      change: formatGrowth(stats?.rewards_redeemed.growth_percent ?? null),
-      loading,
-    },
-    {
-      label: "Reviews Received:",
-      value: formatNumber(stats?.reviews_received.value ?? null),
-      icon: LayoutGrid,
-      color: "bg-[#D1FFD7]",
-      change: formatGrowth(stats?.reviews_received.growth_percent ?? null),
-      loading,
-    },
-    {
-      label: "Active Users:",
-      value: formatNumber(stats?.active_users.value ?? null),
-      icon: TrendingUp,
-      color: "bg-[#DFDFFF]",
-      change: formatGrowth(stats?.active_users.growth_percent ?? null),
-      loading,
-    },
-  ];
 
   return (
     <div>
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {cards.map((card) => (
-          <DashboardCard
-            key={card.label}
-            label={card.label}
-            value={card.value}
-            icon={card.icon}
-            iconBgColor={card.color}
-            change={card.change}
-          />
-        ))}
-      </div>
+      <DashboardStatsSection />
+
 
       {/* Recent Recognitions & Leaderboard */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-8">
         {/* Recent Reviews – wider (3 of 5 cols) */}
-        <DashboardRecognitionSection
-          reviews={data?.recent_reviews ?? []}
-          loading={loading}
-        />
+        <DashboardRecognitionSection />
 
         {/* Leaderboard – narrower (2 of 5 cols) */}
-        <DashboardLeaderboardSection
-          entries={data?.leaderboard ?? []}
-          loading={loading}
-        />
+        <DashboardLeaderboardSection />
       </div>
     </div>
   );
