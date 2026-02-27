@@ -1,16 +1,61 @@
 "use client";
 
-import { Layers, TicketPercent } from "lucide-react";
+import { Layers } from "lucide-react";
 import { useRedeem } from "@/hooks/useRedeem";
 import WalletBanner from "@/components/features/redeem/WalletBanner";
 import RewardCard from "@/components/features/redeem/RewardCard";
 import RedeemDialog from "@/components/features/redeem/RedeemDialog";
-import StockBadge from "@/components/features/redeem/StockBadge";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function RedeemPage() {
   const redeem = useRedeem();
 
-  if (redeem.loading) return <div className="p-10">Loading...</div>;
+  if (redeem.loading)
+    return (
+      <div className="flex-1 w-full">
+        <div className="bg-white rounded-[36px] px-8 md:px-10 py-10 max-w-[1200px] mx-auto">
+          {/* Wallet Banner Skeleton */}
+          <div className="rounded-2xl bg-slate-50 p-6 mb-8">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-xl" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <Skeleton className="h-10 w-32 rounded-xl" />
+            </div>
+          </div>
+
+          {/* Category Pills Skeleton */}
+          <div className="flex gap-2 flex-wrap mb-8">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-20 rounded-full" />
+            ))}
+          </div>
+
+          {/* Products Header Skeleton */}
+          <div className="flex items-center justify-between mb-5">
+            <Skeleton className="h-7 w-28" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+
+          {/* Product Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-slate-100 p-4 space-y-3">
+                <Skeleton className="h-36 w-full rounded-xl" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+                <div className="flex justify-between items-center pt-2">
+                  <Skeleton className="h-5 w-20" />
+                  <Skeleton className="h-8 w-24 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   if (redeem.error) return <div className="p-10">{redeem.error}</div>;
 
   return (
@@ -47,50 +92,6 @@ export default function RedeemPage() {
               </button>
             ))}
           </div>
-        )}
-
-        {/* Coupons */}
-        {redeem.couponItems.length > 0 && (
-          <>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-[22px] font-semibold text-slate-800">
-                Coupons & Vouchers
-              </h2>
-              <span className="text-xs text-slate-400 font-medium">
-                {redeem.couponItems.length} available
-              </span>
-            </div>
-
-            <div className="flex gap-5 overflow-x-auto pb-2 mb-12">
-              {redeem.couponItems.map((coupon) => (
-                <div
-                  key={coupon.catalog_id}
-                  onClick={() =>
-                    coupon.stock_status !== "Out of Stock" &&
-                    redeem.availablePoints >= coupon.default_points &&
-                    redeem.openRedeem(coupon)
-                  }
-                  className="min-w-[230px] h-[200px] rounded-[28px] flex flex-col items-center justify-center gap-3 text-center px-6 relative overflow-hidden cursor-pointer"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
-                    border: "1px solid #fcd34d",
-                  }}
-                >
-                  <TicketPercent size={36} className="text-amber-600" />
-                  <div>
-                    <p className="font-bold text-amber-900 text-sm">
-                      {coupon.reward_name}
-                    </p>
-                    <p className="text-xs text-amber-700 mt-0.5">
-                      {coupon.default_points.toLocaleString()} pts
-                    </p>
-                  </div>
-                  <StockBadge status={coupon.stock_status} />
-                </div>
-              ))}
-            </div>
-          </>
         )}
 
         {/* Products */}
