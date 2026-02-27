@@ -125,7 +125,6 @@ export function useRedeem() {
     activeCategory,
     setActiveCategory,
     filteredItems,
-    couponItems,
     productItems,
     dialogState,
     dialogOpen,

@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { auth } from '@/services/auth-service'
 
 interface ProtectedRouteProps {
@@ -46,13 +46,35 @@ export default function ProtectedRoute({
     checkAuth()
   }, [router, redirectTo])
 
-  // Show loading spinner while checking authentication
+  // Show skeleton while checking authentication
   if (isChecking) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="mt-2 text-gray-600">Loading...</p>
+      <div className="min-h-screen flex bg-gray-100">
+        {/* Sidebar skeleton */}
+        <div className="hidden md:block w-64 bg-white border-r border-gray-200 p-4 space-y-4">
+          <Skeleton className="h-10 w-3/4" />
+          <div className="space-y-2 pt-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-full rounded-lg" />
+            ))}
+          </div>
+        </div>
+        {/* Main area */}
+        <div className="flex-1 flex flex-col">
+          {/* Navbar skeleton */}
+          <div className="h-16 bg-white border-b border-gray-200 px-6 flex items-center gap-4">
+            <Skeleton className="h-8 w-8 rounded-lg md:hidden" />
+            <Skeleton className="h-5 w-40" />
+            <div className="ml-auto flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-8 w-24 rounded-lg" />
+            </div>
+          </div>
+          {/* Content skeleton */}
+          <div className="flex-1 p-6">
+            <Skeleton className="h-8 w-48 mb-6" />
+            <Skeleton className="h-[60vh] w-full rounded-2xl" />
+          </div>
         </div>
       </div>
     )
