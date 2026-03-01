@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { Skeleton } from '@/components/ui/skeleton'
 import { auth } from '@/services/auth-service'
 
 interface ProtectedRouteProps {

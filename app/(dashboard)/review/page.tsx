@@ -1,1033 +1,780 @@
-"use client";
+"use client"
 
 /**
- * Review page — Redesigned to match the premium design language
- * used across dashboard, wallet, and redeem pages.
+ * Review Page — Employee-facing
  *
- * Two-column layout on desktop:
- *   Left:  Submit form
- *   Right: Monthly quota card + points reference + past reviews
+ * Covers all Recognition Service endpoints:
+ *   GET  /v1/review-categories  — category picker
+ *   GET  /v1/reviews            — list my reviews (given + received)
+ *   GET  /v1/reviews/{id}       — review detail (for edit pre-fill)
+ *   POST /v1/reviews            — create review
+ *   PUT  /v1/reviews/{id}       — edit own review
+ *
+ * Business rules surfaced in UI:
+ *   - Monthly quota = team size (backend-enforced, shown in header)
+ *   - Duplicate-pair guard (already reviewed this month → disabled)
+ *   - Self-review blocked
+ *   - Category required (DB-driven, not hardcoded)
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react"
+import axiosClient from "@/services/api-client"
 import {
-  Star,
-  Send,
-  MessageSquare,
-  Upload,
-  X,
-  Loader2,
-  CheckCircle2,
-  AlertTriangle,
-  ChevronDown,
-  Image as ImageIcon,
-  Video,
-  Award,
-  Users,
-  Calendar,
-  Sparkles,
-  RefreshCw,
-} from "lucide-react";
-import {
-  submitReview,
-  getPointsForRating,
-  fetchMonthlyReviewState,
-  RATING_LABELS,
-  RATING_POINTS_MAP,
-  MAX_REVIEWS_PER_MONTH,
-  listReviews,
-  type SubmitReviewResult,
-} from "@/services/review-orchestrator";
-import {
-  getTeamMembersForUI,
-  type TeamMember,
-} from "@/services/employee-service";
-import type { ReviewResponse } from "@/types/review";
+  Star, Send, Pencil, X, ChevronDown,
+  MessageSquare, Clock, ArrowLeft, Check,
+  AlertCircle, Loader2, Tag, Users, RotateCcw,
+  Image as ImageIcon, Video
+} from "lucide-react"
+import { uploadToStorage } from "@/services/cloudinary"
+import { getTeamMembersForUI, type TeamMember } from "@/services/employee-service"
+import { requireAuthenticatedUserId } from "@/lib/api-utils"
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-function Skeleton({ className = "" }: { className?: string }) {
-  return (
-    <div className={`animate-pulse bg-gray-200 rounded-xl ${className}`} />
-  );
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+const API = process.env.NEXT_PUBLIC_RECOGNITION_API_URL || "http://localhost:8005"
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface ReviewCategory {
+  category_id: string
+  category_code: string
+  category_name: string
+  multiplier: number
+  description?: string | null
+  is_active: boolean
 }
 
-// ─── StarRating ───────────────────────────────────────────────────────────────
+interface Review {
+  review_id: string
+  reviewer_id: string
+  receiver_id: string
+  rating: number
+  comment: string
+  image_url?: string | null
+  video_url?: string | null
+  review_at: string
+  category_id?: string | null
+  category_ids?: string[] | null
+  category_code?: string | null
+  category_codes?: string[] | null
+  raw_points?: number | null
+  category_tags?: { category_id: string; category_code: string; multiplier_snapshot: number }[] | null
+}
 
-function StarRating({
-  value,
-  onChange,
-  disabled,
-  size = 28,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  disabled?: boolean;
-  size?: number;
+type ViewMode = "list" | "compose" | "edit"
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const RATING_LABELS: Record<number, string> = {
+  1: "Poor", 2: "Below Average", 3: "Good", 4: "Great", 5: "Exceptional"
+}
+
+const RATING_COLORS: Record<number, string> = {
+  1: "text-red-500", 2: "text-orange-400", 3: "text-amber-500",
+  4: "text-green-600", 5: "text-indigo-600"
+}
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+}
+
+
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function StarPicker({ value, onChange, disabled }: {
+  value: number; onChange: (v: number) => void; disabled?: boolean
 }) {
-  const [hovered, setHovered] = useState(0);
-  const display = hovered || value;
-
+  const [hover, setHover] = useState(0)
   return (
-    <div className="flex gap-1.5" onMouseLeave={() => setHovered(0)}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          disabled={disabled}
-          onMouseEnter={() => !disabled && setHovered(star)}
-          onClick={() => !disabled && onChange(star)}
-          className={`transition-all duration-200 select-none
-            ${disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer hover:scale-125"}
-          `}
-          aria-label={`Rate ${star}`}
-        >
-          <Star
-            size={size}
-            className={`transition-all duration-200 ${display >= star
-              ? "text-amber-400 fill-amber-400 drop-shadow-sm"
-              : "text-slate-200 fill-slate-200"
-              }`}
-          />
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map(i => (
+        <button key={i} type="button" disabled={disabled}
+          onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(0)}
+          onClick={() => onChange(i)}
+          className="p-1.5 rounded-xl hover:bg-amber-50 transition-colors disabled:cursor-not-allowed">
+          <Star size={22}
+            className={`transition-transform duration-150
+              ${i <= (hover || value) ? "fill-amber-400 text-amber-400 scale-110" : "fill-gray-100 text-gray-200"}`} />
         </button>
       ))}
     </div>
-  );
+  )
 }
 
-// ─── PointsBadge ──────────────────────────────────────────────────────────────
-
-function PointsBadge({ rating }: { rating: number }) {
-  const pts = getPointsForRating(rating);
-  if (rating === 0) return null;
+function CategoryCard({
+  cat, selected, onClick, disabled
+}: { cat: ReviewCategory; selected: boolean; onClick: () => void; disabled?: boolean }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-sm font-semibold
-        transition-all duration-200
-        ${pts > 0
-          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-          : "bg-slate-100 text-slate-500 border border-slate-200"
-        }`}
+    <button type="button" onClick={onClick} disabled={disabled}
+      className={`relative flex flex-col gap-1.5 rounded-2xl border-2 px-4 py-3.5 text-left transition-all duration-200 w-full
+        ${disabled && !selected ? 'opacity-40 cursor-not-allowed' : ''}
+        ${selected
+          ? `border-indigo-500 bg-indigo-50/60 shadow-sm`
+          : `border-gray-100 bg-white hover:border-indigo-200 hover:shadow-sm`}`}
     >
-      <Award size={12} />
-      {pts > 0 ? `+${pts} pts` : "No points"}
-    </span>
-  );
-}
-
-// ─── TeamMemberSelector ───────────────────────────────────────────────────────
-
-function TeamMemberSelector({
-  value,
-  onChange,
-  teamMembers,
-  teamLeader,
-  reviewedSet,
-  disabled,
-}: {
-  value: string;
-  onChange: (id: string) => void;
-  teamMembers: TeamMember[];
-  teamLeader: TeamMember | null;
-  reviewedSet: Set<string>;
-  disabled: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  // Close on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const allMembers = [
-    ...(teamLeader ? [{ ...teamLeader, isManager: true }] : []),
-    ...teamMembers.map((m) => ({ ...m, isManager: false })),
-  ];
-
-  const selectedMember = allMembers.find((m) => m.id === value);
-
-  function getInitials(name: string) {
-    return name
-      .split(" ")
-      .map((w) => w[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase();
-  }
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => !disabled && setOpen(!open)}
-        className={`w-full flex items-center gap-3 rounded-2xl border bg-slate-50 px-4 py-3 text-left
-          transition-all duration-200 group
-          ${open ? "ring-2 ring-indigo-300 border-transparent" : "border-slate-200 hover:border-slate-300"}
-          ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-      >
-        {selectedMember ? (
-          <>
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0
-              ${selectedMember.isManager ? "bg-orange-100 text-orange-600" : "bg-indigo-100 text-indigo-600"}`}>
-              {getInitials(selectedMember.name)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-800 truncate">{selectedMember.name}</p>
-              <p className="text-xs text-slate-400 truncate">
-                {selectedMember.designation || (selectedMember.isManager ? "Manager" : "Team Member")}
-              </p>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
-              <Users size={16} className="text-slate-400" />
-            </div>
-            <span className="text-sm text-slate-400">Select a team member…</span>
-          </>
-        )}
-        <ChevronDown
-          size={16}
-          className={`text-slate-400 flex-shrink-0 transition-transform duration-200
-            ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      {open && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden max-h-[300px] overflow-y-auto">
-          {teamLeader && (
-            <>
-              <div className="px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50">
-                My Manager
-              </div>
-              <MemberOption
-                member={teamLeader}
-                isManager
-                reviewed={reviewedSet.has(teamLeader.id)}
-                selected={value === teamLeader.id}
-                onSelect={() => {
-                  if (!reviewedSet.has(teamLeader.id)) {
-                    onChange(teamLeader.id);
-                    setOpen(false);
-                  }
-                }}
-                getInitials={getInitials}
-              />
-            </>
-          )}
-          {teamMembers.length > 0 && (
-            <>
-              <div className="px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50">
-                My Team
-              </div>
-              {teamMembers.map((m) => (
-                <MemberOption
-                  key={m.id}
-                  member={m}
-                  isManager={false}
-                  reviewed={reviewedSet.has(m.id)}
-                  selected={value === m.id}
-                  onSelect={() => {
-                    if (!reviewedSet.has(m.id)) {
-                      onChange(m.id);
-                      setOpen(false);
-                    }
-                  }}
-                  getInitials={getInitials}
-                />
-              ))}
-            </>
-          )}
-          {allMembers.length === 0 && (
-            <div className="px-4 py-6 text-center text-sm text-slate-400">No team members found.</div>
-          )}
-        </div>
+      <span className={`text-sm font-semibold leading-snug ${selected ? "text-indigo-700" : "text-gray-800"}`}>
+        {cat.category_name}
+      </span>
+      {cat.description && (
+        <span className="text-[11px] text-gray-400 leading-snug line-clamp-1">{cat.description}</span>
       )}
-    </div>
-  );
-}
-
-function MemberOption({
-  member,
-  isManager,
-  reviewed,
-  selected,
-  onSelect,
-  getInitials,
-}: {
-  member: TeamMember;
-  isManager: boolean;
-  reviewed: boolean;
-  selected: boolean;
-  onSelect: () => void;
-  getInitials: (name: string) => string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      disabled={reviewed}
-      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors
-        ${reviewed ? "opacity-50 cursor-not-allowed bg-slate-50" : "hover:bg-indigo-50 cursor-pointer"}
-        ${selected ? "bg-indigo-50" : ""}`}
-    >
-      <div
-        className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0
-          ${isManager ? "bg-orange-100 text-orange-600" : "bg-indigo-100 text-indigo-600"}`}
-      >
-        {getInitials(member.name)}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-800 truncate">{member.name}</p>
-        <p className="text-xs text-slate-400 truncate">
-          {member.designation || (isManager ? "Manager" : "Team Member")}
-        </p>
-      </div>
-      {reviewed && (
-        <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex-shrink-0">
-          Reviewed
-        </span>
-      )}
-      {isManager && !reviewed && (
-        <span className="text-[10px] font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full flex-shrink-0">
-          Manager
+      {selected && (
+        <span className="absolute top-2.5 right-2.5 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center">
+          <Check size={11} className="text-white" strokeWidth={3} />
         </span>
       )}
     </button>
-  );
+  )
 }
 
-// ─── FileChip ─────────────────────────────────────────────────────────────────
-
-function FileChip({ file, onRemove }: { file: File; onRemove: () => void }) {
-  const isVideo = file.type.startsWith("video/");
-  return (
-    <div className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-sm group">
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-        ${isVideo ? "bg-purple-50" : "bg-blue-50"}`}>
-        {isVideo ? (
-          <Video size={14} className="text-purple-500" />
-        ) : (
-          <ImageIcon size={14} className="text-blue-500" />
-        )}
-      </div>
-      <span className="truncate max-w-[120px] text-slate-600 text-xs font-medium">{file.name}</span>
-      <button
-        type="button"
-        onClick={onRemove}
-        className="ml-auto text-slate-300 hover:text-red-500 transition-colors"
-      >
-        <X size={14} />
-      </button>
-    </div>
-  );
-}
-
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
-type ToastKind = "success" | "error" | "warning";
-interface ToastState {
-  kind: ToastKind;
-  title: string;
-  body?: string;
-}
-
-function Toast({ toast, onClose }: { toast: ToastState; onClose: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 5000);
-    return () => clearTimeout(t);
-  }, [onClose]);
-
-  const config: Record<ToastKind, { bg: string; icon: React.ReactNode }> = {
-    success: {
-      bg: "bg-emerald-600",
-      icon: <CheckCircle2 size={20} className="text-white" />,
-    },
-    error: {
-      bg: "bg-red-600",
-      icon: <AlertTriangle size={20} className="text-white" />,
-    },
-    warning: {
-      bg: "bg-amber-500",
-      icon: <AlertTriangle size={20} className="text-white" />,
-    },
-  };
+function ReviewCard({
+  review, myId, categories, onEdit
+}: { review: Review; myId: string; categories: ReviewCategory[]; onEdit: (r: Review) => void }) {
+  const isMine = review.reviewer_id === myId
+  const catNames = (review.category_ids ?? (review.category_id ? [review.category_id] : []))
+    .map(id => categories.find(c => c.category_id === id)?.category_name)
+    .filter(Boolean) as string[]
+  const catCodesFromResponse = review.category_codes ?? (review.category_code ? [review.category_code] : [])
+  const displayCats = catNames.length > 0 ? catNames : catCodesFromResponse
 
   return (
-    <div
-      className={`fixed bottom-6 right-6 z-50 rounded-2xl text-white px-5 py-4 shadow-2xl max-w-sm
-        animate-[slideUp_0.3s_ease-out] ${config[toast.kind].bg}`}
-    >
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex-shrink-0">{config[toast.kind].icon}</span>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm">{toast.title}</p>
-          {toast.body && (
-            <p className="text-xs opacity-80 mt-0.5">{toast.body}</p>
-          )}
-        </div>
-        <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100 flex-shrink-0">
-          <X size={14} />
-        </button>
-      </div>
-    </div>
-  );
-}
+    <div className={`group relative rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-200 overflow-hidden`}>
 
-// ─── ReviewCard ───────────────────────────────────────────────────────────────
-
-function ReviewCard({ review }: { review: ReviewResponse }) {
-  const pts = getPointsForRating(review.rating);
-  const [expanded, setExpanded] = useState(false);
-  const isLong = review.comment.length > 120;
-
-  return (
-    <div className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
-      {/* Gradient top band */}
-      <div className="h-1 w-full bg-gradient-to-r from-indigo-400 to-violet-500" />
-
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((s) => (
-              <Star
-                key={s}
-                size={14}
-                className={
-                  s <= review.rating
-                    ? "text-amber-400 fill-amber-400"
-                    : "text-slate-200 fill-slate-200"
-                }
-              />
+      <div className="px-5 py-4">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full
+              ${isMine ? "bg-indigo-100 text-indigo-700" : "bg-green-100 text-green-700"}`}>
+              {isMine ? "Given" : "Received"}
+            </span>
+            {displayCats.length > 0 && displayCats.map((name, i) => (
+              <span key={i} className="text-[10px] font-medium bg-white text-gray-500 border border-gray-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <Tag size={9} />{name}
+              </span>
             ))}
-            <span className="text-xs text-slate-400 ml-2">
-              {RATING_LABELS[review.rating]}
-            </span>
           </div>
-          <span className="text-[11px] text-slate-400 flex items-center gap-1">
-            <Calendar size={11} />
-            {new Date(review.review_at).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-            })}
+        </div>
+
+        {/* Stars */}
+        <div className="flex items-center gap-2 mb-2.5">
+          <div className="flex">
+            {[1, 2, 3, 4, 5].map(s => (
+              <Star key={s} size={14}
+                className={s <= review.rating ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"} />
+            ))}
+          </div>
+          <span className={`text-xs font-semibold ${RATING_COLORS[review.rating]}`}>
+            {RATING_LABELS[review.rating]}
           </span>
         </div>
 
-        <p className={`text-sm text-slate-600 leading-relaxed ${!expanded && isLong ? "line-clamp-2" : ""}`}>
-          {review.comment}
-        </p>
-        {isLong && (
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-xs text-indigo-500 font-medium mt-1 hover:underline"
-          >
-            {expanded ? "Show less" : "Read more"}
-          </button>
+        {/* Comment */}
+        <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{review.comment}</p>
+
+        {/* Media */}
+        {(review.image_url || review.video_url) && (
+          <div className="flex gap-3 mt-2.5">
+            {review.image_url && (
+              <a href={review.image_url} target="_blank" rel="noreferrer"
+                className="text-[11px] text-indigo-600 hover:underline flex items-center gap-1 font-medium">
+                <ImageIcon size={10} /> Image
+              </a>
+            )}
+            {review.video_url && (
+              <a href={review.video_url} target="_blank" rel="noreferrer"
+                className="text-[11px] text-indigo-600 hover:underline flex items-center gap-1 font-medium">
+                <Video size={10} /> Video
+              </a>
+            )}
+          </div>
         )}
 
-        <div className="flex items-center gap-2 mt-3">
-          {pts > 0 && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-violet-500 rounded-full px-2.5 py-0.5">
-              <Award size={10} />+{pts} pts
-            </span>
-          )}
-          {review.image_url && (
-            <a
-              href={review.image_url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] text-indigo-500 hover:underline"
-            >
-              <ImageIcon size={10} /> Image
-            </a>
-          )}
-          {review.video_url && (
-            <a
-              href={review.video_url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] text-indigo-500 hover:underline"
-            >
-              <Video size={10} /> Video
-            </a>
-          )}
+        {/* Footer */}
+        <div className="mt-3 pt-2.5 border-t border-gray-100">
+          <span className="text-[11px] text-gray-400 flex items-center gap-1">
+            <Clock size={10} />{fmtDate(review.review_at)}
+          </span>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-// ─── Success Card ─────────────────────────────────────────────────────────────
-
-function SuccessCard({
-  result,
-  onDismiss,
-}: {
-  result: SubmitReviewResult;
-  onDismiss: () => void;
+function Toast({ msg, kind, onClose }: {
+  msg: string; kind: "success" | "error" | "warning"; onClose: () => void
 }) {
+  useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t) }, [onClose])
+  const colors = {
+    success: "bg-green-600",
+    error: "bg-red-600",
+    warning: "bg-amber-500"
+  }[kind]
   return (
-    <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6 text-center">
-      <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
-        <CheckCircle2 size={28} className="text-emerald-500" />
-      </div>
-      <h3 className="text-lg font-bold text-slate-800 mb-1">Review Submitted!</h3>
-      <p className="text-sm text-slate-500 mb-4">Your recognition has been recorded.</p>
-
-      <div className="rounded-xl bg-white border border-slate-100 p-4 mb-4 text-left">
-        <div className="flex justify-between text-xs text-slate-500 mb-1.5">
-          <span>Points credited</span>
-          <span className="font-bold text-slate-800">
-            {result.walletCreditSuccess ? `+${result.pointsCredited}` : "—"}
-          </span>
-        </div>
-        <div className="flex justify-between text-xs text-slate-500">
-          <span>Reviews remaining</span>
-          <span className="font-bold text-slate-800">{result.reviewsRemaining}</span>
-        </div>
-        {!result.walletCreditSuccess && (
-          <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
-            <AlertTriangle size={12} />
-            Wallet credit pending — {result.walletCreditError}
-          </p>
-        )}
-      </div>
-
-      <button
-        onClick={onDismiss}
-        className="w-full rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white
-          hover:bg-emerald-700 active:scale-[0.98] transition-all"
-      >
-        Done
-      </button>
+    <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl text-white text-sm font-medium
+      shadow-lg flex items-center gap-3 animate-in slide-in-from-bottom-4 fade-in duration-300 ${colors}`}>
+      {msg}
+      <button onClick={onClose} className="hover:opacity-70"><X size={14} /></button>
     </div>
-  );
+  )
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ReviewPage() {
-  // ── Data state ──────────────────────────────────────────────────────────────
-  const [, setLoggedInUser] = useState<TeamMember | null>(null);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [teamLeader, setTeamLeader] = useState<TeamMember | null>(null);
-  const [pastReviews, setPastReviews] = useState<ReviewResponse[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
-  const [dataError, setDataError] = useState<string | null>(null);
 
-  // ── Form state ──────────────────────────────────────────────────────────────
-  const [receiverId, setReceiverId] = useState("");
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // ── Identity
+  const [myId] = useState<string>(() => {
+    try { return requireAuthenticatedUserId() } catch { return "" }
+  })
 
-  // ── Submission state ────────────────────────────────────────────────────────
-  const [submitting, setSubmitting] = useState(false);
-  const [lastResult, setLastResult] = useState<SubmitReviewResult | null>(null);
-  const [toast, setToast] = useState<ToastState | null>(null);
+  // ── Data
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [categories, setCategories] = useState<ReviewCategory[]>([])
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [teamLeader, setTeamLeader] = useState<TeamMember | null>(null)
+  const [totalReviews, setTotalReviews] = useState(0)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [loadingData, setLoadingData] = useState(true)
+  const [dataError, setDataError] = useState<string | null>(null)
 
-  // ── Monthly quota ───────────────────────────────────────────────────────────
-  const [reviewsUsed, setReviewsUsed] = useState(0);
-  const [reviewedSet, setReviewedSet] = useState<Set<string>>(new Set());
-  const [quotaLoading, setQuotaLoading] = useState(true);
+  // ── Navigation
+  const [view, setView] = useState<ViewMode>("compose")
+  const [editingReview, setEditingReview] = useState<Review | null>(null)
 
-  const refreshMonthlyState = useCallback(async () => {
-    setQuotaLoading(true);
+  // ── Form
+  const [receiverId, setReceiverId] = useState("")
+  const [receiverOpen, setReceiverOpen] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [categoryIds, setCategoryIds] = useState<string[]>([])
+  const [comment, setComment] = useState("")
+  const [files, setFiles] = useState<File[]>([])
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  // ── UI
+  const [submitting, setSubmitting] = useState(false)
+  const [toast, setToast] = useState<{ msg: string; kind: "success" | "error" | "warning" } | null>(null)
+  const [listTab, setListTab] = useState<"all" | "given" | "received">("all")
+
+  // ── Derived monthly stats
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
+  const givenThisMonth = reviews.filter(r =>
+    r.reviewer_id === myId && new Date(r.review_at) >= monthStart
+  ).length
+  const reviewedThisMonth = new Set(
+    reviews
+      .filter(r => r.reviewer_id === myId && new Date(r.review_at) >= monthStart)
+      .map(r => r.receiver_id)
+  )
+
+
+  // ── Load helpers ───────────────────────────────────────────────────────────
+
+  const loadReviews = useCallback(async (pg = 1) => {
     try {
-      const state = await fetchMonthlyReviewState();
-      setReviewsUsed(state.reviewsUsed);
-      setReviewedSet(state.reviewedReceiverIds);
+      const res = await axiosClient.get<{
+        data: Review[];
+        pagination: { total: number; total_pages: number }
+      }>(`${API}/v1/reviews?page=${pg}&page_size=20`)
+      setReviews(res.data.data)
+      setTotalReviews(res.data.pagination.total)
+      setTotalPages(res.data.pagination.total_pages)
+      setPage(pg)
     } catch {
-      // Non-fatal
-    } finally {
-      setQuotaLoading(false);
+      setDataError("Failed to load reviews. Check your connection.")
     }
-  }, []);
+  }, [])
 
-  // ── Load initial data ───────────────────────────────────────────────────────
   useEffect(() => {
-    async function load() {
-      setLoadingData(true);
-      setDataError(null);
+    async function init() {
+      setLoadingData(true)
       try {
-        const [teamData, reviewsData] = await Promise.allSettled([
+        const [catRes, teamRes] = await Promise.allSettled([
+          axiosClient.get<{ data: ReviewCategory[] }>(
+            `${API}/v1/review-categories?page=1&page_size=100&active_only=true`
+          ),
           getTeamMembersForUI(),
-          listReviews(1, 20),
-        ]);
-
-        if (teamData.status === "fulfilled") {
-          setLoggedInUser(teamData.value.loggedInUser);
-          setTeamMembers(teamData.value.teamMembers);
-          setTeamLeader(teamData.value.teamLeader);
-        } else {
-          setDataError("Failed to load team data. Please refresh.");
+        ])
+        if (catRes.status === "fulfilled") setCategories(catRes.value.data.data ?? [])
+        if (teamRes.status === "fulfilled") {
+          setTeamMembers(teamRes.value.teamMembers)
+          setTeamLeader(teamRes.value.teamLeader)
         }
-
-        if (reviewsData.status === "fulfilled") {
-          setPastReviews(reviewsData.value.data);
-        }
-
-        await refreshMonthlyState();
-      } catch {
-        setDataError("Something went wrong loading the page.");
+        await loadReviews(1)
       } finally {
-        setLoadingData(false);
+        setLoadingData(false)
       }
     }
-    load();
-  }, [refreshMonthlyState]);
+    init()
+  }, [loadReviews])
 
-  // ── File handling ───────────────────────────────────────────────────────────
-  const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(e.target.files ?? []);
-    const filtered = selected.filter(
-      (f) => f.type.startsWith("image/") || f.type.startsWith("video/")
-    );
-    setFiles((prev) => [...prev, ...filtered].slice(0, 4));
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
+  // ── Navigation helpers ─────────────────────────────────────────────────────
 
-  const removeFile = (idx: number) =>
-    setFiles((prev) => prev.filter((_, i) => i !== idx));
+  function openCompose() {
+    setReceiverId(""); setRating(0); setCategoryIds([]); setComment(""); setFiles([])
+    setEditingReview(null); setView("compose")
+  }
 
-  // ── Submit ──────────────────────────────────────────────────────────────────
+  function openEdit(r: Review) {
+    setReceiverId(r.receiver_id)
+    setRating(r.rating)
+    setCategoryIds(
+      r.category_ids
+      ?? (r.category_id ? [r.category_id] : [])
+    )
+    setComment(r.comment)
+    setFiles([])
+    setEditingReview(r)
+    setView("edit")
+  }
+
+  function backToList() { setView("list"); setEditingReview(null) }
+
+  // ── Derived form state ─────────────────────────────────────────────────────
+
+
+  const allReceivers = [
+    ...(teamLeader ? [{ ...teamLeader, isManager: true as const }] : []),
+    ...teamMembers.map(m => ({ ...m, isManager: false as const })),
+  ]
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
+
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    const freshState = await fetchMonthlyReviewState().catch(() => null);
-
-    if (!freshState?.canSubmit) {
-      setToast({
-        kind: "warning",
-        title: "Monthly limit reached",
-        body: `You can submit up to ${MAX_REVIEWS_PER_MONTH} reviews per month. Resets on the 1st.`,
-      });
-      if (freshState) {
-        setReviewsUsed(freshState.reviewsUsed);
-        setReviewedSet(freshState.reviewedReceiverIds);
-      }
-      return;
+    e.preventDefault()
+    if (view === "compose" && !receiverId) {
+      setToast({ msg: "Select who to review.", kind: "error" }); return
     }
-
-    if (!receiverId) {
-      setToast({ kind: "error", title: "Please select a team member to review." });
-      return;
+    if (categoryIds.length === 0) {
+      setToast({ msg: "Select at least one recognition category.", kind: "error" }); return
     }
-
-    if (freshState.reviewedReceiverIds.has(receiverId)) {
-      setToast({
-        kind: "warning",
-        title: "Already reviewed",
-        body: "You've already reviewed this person this month.",
-      });
-      setReviewedSet(freshState.reviewedReceiverIds);
-      return;
-    }
-
     if (rating === 0) {
-      setToast({ kind: "error", title: "Please select a star rating." });
-      return;
+      setToast({ msg: "Give a star rating.", kind: "error" }); return
     }
     if (comment.trim().length < 10) {
-      setToast({ kind: "error", title: "Comment must be at least 10 characters." });
-      return;
+      setToast({ msg: "Comment needs at least 10 characters.", kind: "error" }); return
     }
 
-    setSubmitting(true);
-    setLastResult(null);
-
+    setSubmitting(true)
     try {
-      const result = await submitReview({ receiverId, rating, comment, files });
-      setLastResult(result);
-      await refreshMonthlyState();
-      setPastReviews((prev) => [result.review, ...prev]);
+      // Upload attachments → Cloudinary URLs
+      let imageUrl: string | undefined, videoUrl: string | undefined
+      for (const f of files) {
+        const { url } = await uploadToStorage(f)
+        if (f.type.startsWith("image") && !imageUrl) imageUrl = url
+        if (f.type.startsWith("video") && !videoUrl) videoUrl = url
+      }
 
-      setRating(0);
-      setComment("");
-      setFiles([]);
-      setReceiverId("");
+      if (view === "edit" && editingReview) {
+        // PUT — only send changed fields
+        const patch: Record<string, unknown> = {}
+        if (rating !== editingReview.rating) patch.rating = rating
+        if (categoryIds.sort().join() !== (editingReview.category_ids ?? [editingReview.category_id]).filter(Boolean).sort().join()) patch.category_ids = categoryIds
+        if (comment.trim() !== editingReview.comment) patch.comment = comment.trim()
+        if (imageUrl) patch.image_url = imageUrl
+        if (videoUrl) patch.video_url = videoUrl
 
-      setToast({
-        kind: result.walletCreditSuccess ? "success" : "warning",
-        title: result.walletCreditSuccess
-          ? "Review submitted!"
-          : "Review saved, but wallet credit failed.",
-        body: result.walletCreditSuccess
-          ? result.pointsCredited > 0
-            ? `+${result.pointsCredited} points credited to their wallet.`
-            : "Review saved. No points for this rating."
-          : result.walletCreditError ?? "Please contact support.",
-      });
-    } catch (err) {
-      setToast({
-        kind: "error",
-        title: "Submission failed",
-        body: err instanceof Error ? err.message : "Unexpected error.",
-      });
+        if (Object.keys(patch).length === 0) {
+          setToast({ msg: "No changes to save.", kind: "warning" })
+          setSubmitting(false); return
+        }
+        await axiosClient.put(`${API}/v1/reviews/${editingReview.review_id}`, patch)
+        setToast({ msg: "Review updated. Points recalculated automatically.", kind: "success" })
+      } else {
+        // POST — all required fields
+        await axiosClient.post(`${API}/v1/reviews`, {
+          receiver_id: receiverId,
+          rating,
+          category_ids: categoryIds,
+          comment: comment.trim(),
+          ...(imageUrl && { image_url: imageUrl }),
+          ...(videoUrl && { video_url: videoUrl }),
+        })
+        setToast({ msg: "Review submitted! Points credited to their wallet. 🎉", kind: "success" })
+      }
+
+      await loadReviews(1)
+      backToList()
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })
+        ?.response?.data?.detail
+        ?? (err instanceof Error ? err.message : "Submission failed.")
+      setToast({ msg: detail, kind: "error" })
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
   }
 
-  // ─── Derived ───────────────────────────────────────────────────────────────
-  const limitReached = !quotaLoading && reviewsUsed >= MAX_REVIEWS_PER_MONTH;
-  const selectedAlreadyReviewed = !!receiverId && reviewedSet.has(receiverId);
-  const reviewsRemaining = MAX_REVIEWS_PER_MONTH - reviewsUsed;
-  const quotaPct = (reviewsUsed / MAX_REVIEWS_PER_MONTH) * 100;
+  // ── Filtered list ──────────────────────────────────────────────────────────
 
-  // ─── Loading state ─────────────────────────────────────────────────────────
-  if (loadingData) {
-    return (
-      <div className="bg-white rounded-2xl md:rounded-[36px] min-h-[80vh] shadow-sm">
-        <div className="p-6 md:p-10">
-          <Skeleton className="h-8 w-60 mb-2" />
-          <Skeleton className="h-4 w-96 mb-8" />
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            <div className="lg:col-span-3 space-y-4">
-              <Skeleton className="h-[420px] rounded-2xl" />
-            </div>
-            <div className="lg:col-span-2 space-y-4">
-              <Skeleton className="h-36 rounded-2xl" />
-              <Skeleton className="h-40 rounded-2xl" />
-              <Skeleton className="h-48 rounded-2xl" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const filteredReviews = reviews.filter(r => {
+    if (listTab === "given") return r.reviewer_id === myId
+    if (listTab === "received") return r.receiver_id === myId
+    return true
+  })
 
-  // ─── Error state ───────────────────────────────────────────────────────────
-  if (dataError) {
-    return (
-      <div className="bg-white rounded-2xl md:rounded-[36px] min-h-[60vh] flex items-center justify-center shadow-sm">
-        <div className="flex flex-col items-center gap-4 text-center max-w-sm">
-          <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center">
-            <AlertTriangle size={24} className="text-red-500" />
-          </div>
-          <p className="text-slate-700 font-medium">{dataError}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:underline"
-          >
-            <RefreshCw size={14} />
-            Try again
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-white rounded-2xl md:rounded-[36px] min-h-[80vh] shadow-sm">
-      <div className="p-6 md:p-10">
-        {/* Toast */}
-        {toast && <Toast toast={toast} onClose={() => setToast(null)} />}
+    <div className="flex-1 w-full">
+      <div className="bg-white rounded-[36px] px-8 md:px-10 py-10 max-w-[1200px] mx-auto">
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-              <Sparkles size={20} className="text-indigo-600" />
-            </div>
+        {/* ── Page header ──────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
+          <div className="flex items-center gap-3">
+            {view !== "list" && (
+              <button onClick={backToList}
+                className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition">
+                <ArrowLeft size={18} />
+              </button>
+            )}
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Recognise a Teammate</h1>
-              <p className="text-sm text-slate-400">
-                Submit a review to reward your colleagues with points.
+              <h1 className="text-[22px] font-semibold text-gray-900">
+                {view === "list" ? "Reviews" : view === "edit" ? "Edit Review" : "Write a Review"}
+              </h1>
+              <p className="text-sm text-gray-400 mt-0.5">
+                {view === "list"
+                  ? "Recognise colleagues · track your feedback"
+                  : view === "edit"
+                    ? "Update your review"
+                    : "Give honest, constructive feedback to a teammate"
+                }
               </p>
             </div>
           </div>
+          {view !== "compose" && view !== "edit" && (
+            <button onClick={openCompose}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm
+                    px-5 py-2.5 rounded-full shadow-sm transition-all">
+              <Pencil size={14} /> Write Review
+            </button>
+          )}
         </div>
 
-
-        {/* Two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* ── LEFT: Submit Form ─────────────────────────────────────────── */}
-          <div className="lg:col-span-3">
-            {/* Success result */}
-            {lastResult && (
-              <div className="mb-6">
-                <SuccessCard result={lastResult} onDismiss={() => setLastResult(null)} />
+        {/* ── Stats (list only) ─────────────────────────────────────── */}
+        {view === "list" && !loadingData && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            <div className="rounded-2xl p-6 bg-indigo-200/60 border border-indigo-200/40">
+              <p className="text-sm text-gray-500">Given This Month</p>
+              <h2 className="text-3xl font-semibold mt-2 text-gray-900">{givenThisMonth}</h2>
+              <div className="flex justify-between mt-4 text-sm text-gray-500">
+                <span>Unique people</span>
+                <span>{reviewedThisMonth.size}</span>
               </div>
-            )}
+            </div>
+            <div className="rounded-2xl p-6 bg-green-200/60 border border-green-200/40">
+              <p className="text-sm text-gray-500">Total Reviews</p>
+              <h2 className="text-3xl font-semibold mt-2 text-gray-900">{totalReviews}</h2>
+              <div className="flex justify-between mt-4 text-sm text-gray-500">
+                <span>Given &amp; received</span>
+              </div>
+            </div>
+          </div>
+        )}
 
-            <form
-              onSubmit={handleSubmit}
-              className={`rounded-3xl bg-white border border-slate-100 shadow-sm p-6 md:p-8 flex flex-col gap-6
-                  ${limitReached ? "opacity-60 pointer-events-none select-none" : ""}`}
-            >
-              {limitReached && (
-                <div className="rounded-2xl bg-red-50 border border-red-200 px-5 py-4 text-sm text-red-700 font-medium flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
-                    <AlertTriangle size={18} className="text-red-500" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">Monthly limit reached</p>
-                    <p className="text-xs text-red-500 mt-0.5">
-                      You&apos;ve used all {MAX_REVIEWS_PER_MONTH} reviews. Quota resets on the 1st.
-                    </p>
+        {/* ── COMPOSE / EDIT FORM ──────────────────────────────────── */}
+        {(view === "compose" || view === "edit") && (
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+            {/* ── Left: Form inputs ── */}
+            <div className="lg:col-span-3 space-y-5">
+
+              {/* Who to review (compose only) */}
+              {view === "compose" && (
+                <div className="rounded-2xl border border-gray-100 p-5">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Users size={15} className="text-indigo-600" /> Who are you reviewing?
+                    <span className="text-red-400 font-normal text-xs ml-auto">required</span>
+                  </label>
+                  <div className="relative">
+                    <button type="button"
+                      onClick={() => setReceiverOpen(o => !o)}
+                      className={`w-full flex items-center gap-3 rounded-xl border bg-gray-50 px-4 py-3 text-left transition-all
+                            ${receiverOpen ? "ring-2 ring-indigo-300 border-transparent" : "border-gray-200 hover:border-gray-300"}`}>
+                      {(() => {
+                        const m = allReceivers.find(x => x.id === receiverId)
+                        if (m) return (
+                          <>
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0
+                                  ${m.isManager ? "bg-orange-100 text-orange-600" : "bg-indigo-100 text-indigo-600"}`}>
+                              {m.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-800">{m.name}</p>
+                              <p className="text-xs text-gray-400">{m.designation ?? (m.isManager ? "Manager" : "Team Member")}</p>
+                            </div>
+                          </>
+                        )
+                        return (
+                          <>
+                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <Users size={14} className="text-gray-400" />
+                            </div>
+                            <span className="text-sm text-gray-400">Select a team member…</span>
+                          </>
+                        )
+                      })()}
+                      <ChevronDown size={16} className={`text-gray-400 ml-auto flex-shrink-0 transition-transform duration-200
+                            ${receiverOpen ? "rotate-180" : ""}`} />
+                    </button>
+
+                    {receiverOpen && (
+                      <div className="absolute z-40 top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden max-h-64 overflow-y-auto">
+                        {allReceivers.length === 0
+                          ? <p className="text-sm text-gray-400 p-5 text-center">No team members found.</p>
+                          : allReceivers.map(m => {
+                            const done = reviewedThisMonth.has(m.id)
+                            return (
+                              <button key={m.id} type="button" disabled={done}
+                                onClick={() => { setReceiverId(m.id); setReceiverOpen(false) }}
+                                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors
+                                      ${done ? "opacity-40 cursor-not-allowed bg-gray-50" : "hover:bg-indigo-50 cursor-pointer"}
+                                      ${receiverId === m.id ? "bg-indigo-50" : ""}`}>
+                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0
+                                      ${m.isManager ? "bg-orange-100 text-orange-600" : "bg-indigo-100 text-indigo-600"}`}>
+                                  {m.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-gray-800 truncate">{m.name}</p>
+                                  <p className="text-xs text-gray-400">{m.designation ?? (m.isManager ? "Manager" : "")}</p>
+                                </div>
+                                {done && (
+                                  <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                                    Reviewed
+                                  </span>
+                                )}
+                              </button>
+                            )
+                          })
+                        }
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
-              {/* Team member selector */}
-              <div>
-                <label className="text-sm font-semibold text-slate-700 block mb-2">
-                  Who are you reviewing?
+
+              {/* Star rating */}
+              <div className="rounded-2xl border border-gray-100 p-5">
+                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <Star size={15} className="text-amber-400" /> Star Rating
+                  <span className="text-red-400 font-normal text-xs ml-auto">required</span>
                 </label>
-                <TeamMemberSelector
-                  value={receiverId}
-                  onChange={setReceiverId}
-                  teamMembers={teamMembers}
-                  teamLeader={teamLeader}
-                  reviewedSet={reviewedSet}
-                  disabled={submitting || quotaLoading}
-                />
-                {selectedAlreadyReviewed && (
-                  <p className="mt-2 text-xs text-amber-600 font-medium flex items-center gap-1">
-                    <AlertTriangle size={12} /> You&apos;ve already reviewed this person this month.
-                  </p>
+                <StarPicker value={rating} onChange={setRating} disabled={submitting} />
+                {rating > 0 && (
+                  <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-50">
+                    <span className={`text-sm font-semibold ${RATING_COLORS[rating]}`}>{RATING_LABELS[rating]}</span>
+                  </div>
                 )}
               </div>
 
-              {/* Rating */}
-              <div>
-                <label className="text-sm font-semibold text-slate-700 block mb-3">
-                  Rating
+              {/* Category */}
+              <div className="rounded-2xl border border-gray-100 p-5">
+                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <Tag size={15} className="text-indigo-600" /> Recognition Category
+                  <span className="text-gray-400 font-normal text-xs ml-auto">
+                    {categoryIds.length}/5 selected
+                    <span className="text-red-400 ml-1">· min 1</span>
+                  </span>
                 </label>
-                <div className="flex items-center gap-4 flex-wrap">
-                  <StarRating value={rating} onChange={setRating} disabled={submitting} />
-                  {rating > 0 && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-slate-500">{RATING_LABELS[rating]}</span>
-                      <PointsBadge rating={rating} />
-                    </div>
-                  )}
-                </div>
-                {rating > 0 && getPointsForRating(rating) === 0 && (
-                  <p className="text-xs text-slate-400 mt-2">
-                    Ratings below 3 stars award no points.
-                  </p>
-                )}
+                {categories.length === 0
+                  ? <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 size={14} className="animate-spin" /> Loading categories…</div>
+                  : <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {categories.map(cat => {
+                      const isSelected = categoryIds.includes(cat.category_id)
+                      const atMax = categoryIds.length >= 5 && !isSelected
+                      return (
+                        <CategoryCard key={cat.category_id} cat={cat}
+                          selected={isSelected}
+                          disabled={atMax}
+                          onClick={() => {
+                            setCategoryIds(prev =>
+                              prev.includes(cat.category_id)
+                                ? prev.filter(id => id !== cat.category_id)
+                                : [...prev, cat.category_id]
+                            )
+                          }} />
+                      )
+                    })}
+                  </div>
+                }
               </div>
 
               {/* Comment */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-semibold text-slate-700">Comment</label>
-                  <span className="text-xs text-slate-400">
-                    {comment.trim().length}/2000
+              <div className="rounded-2xl border border-gray-100 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <MessageSquare size={15} className="text-indigo-600" /> Your Feedback
+                  </label>
+                  <span className={`text-xs tabular-nums ${comment.length > 1900 ? "text-red-500 font-semibold" : "text-gray-400"}`}>
+                    {comment.length}/2000
                   </span>
                 </div>
-                <textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  disabled={submitting}
-                  placeholder="Share specific feedback about this person's work… (min 10 chars)"
-                  rows={4}
-                  maxLength={2000}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm
-                    text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2
-                    focus:ring-indigo-300 focus:border-transparent resize-none transition-all"
-                />
+                <textarea value={comment} onChange={e => setComment(e.target.value)}
+                  disabled={submitting} rows={5} maxLength={2000}
+                  placeholder="Be specific — describe what they did, the impact it had, and why it matters. Min 10 characters."
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800
+                        placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-transparent
+                        resize-none transition-all" />
               </div>
 
-              {/* File attachments */}
-              <div>
-                <label className="text-sm font-semibold text-slate-700 block mb-2">
+              {/* Attachments */}
+              <div className="rounded-2xl border border-gray-100 p-5">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Attachments
-                  <span className="text-slate-400 font-normal ml-1">(optional)</span>
+                  <span className="font-normal text-gray-400 ml-2 text-xs">optional · image or video</span>
                 </label>
                 {files.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
                     {files.map((f, i) => (
-                      <FileChip key={i} file={f} onRemove={() => removeFile(i)} />
+                      <div key={i} className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-xs">
+                        {f.type.startsWith("video") ? <Video size={12} className="text-purple-500" /> : <ImageIcon size={12} className="text-blue-500" />}
+                        <span className="max-w-[120px] truncate text-gray-600">{f.name}</span>
+                        <button type="button" onClick={() => setFiles(fs => fs.filter((_, j) => j !== i))}>
+                          <X size={12} className="text-gray-400 hover:text-red-500" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
-                {files.length < 4 && (
+                {files.length < 2 && (
                   <>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*,video/*"
-                      multiple
-                      className="hidden"
-                      onChange={handleFileAdd}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={submitting}
-                      className="flex items-center gap-2 text-sm text-indigo-600 font-medium border border-dashed border-indigo-200 rounded-xl
-                        px-4 py-2.5 hover:bg-indigo-50 transition-colors"
-                    >
-                      <Upload size={14} />
-                      Add image or video
+                    <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden"
+                      onChange={e => {
+                        const picked = Array.from(e.target.files ?? [])
+                        setFiles(prev => [...prev, ...picked].slice(0, 2))
+                        if (fileRef.current) fileRef.current.value = ""
+                      }} />
+                    <button type="button" onClick={() => fileRef.current?.click()}
+                      className="text-sm text-indigo-600 font-medium border border-dashed border-indigo-200 rounded-xl px-4 py-2.5
+                            hover:bg-indigo-50 transition-colors">
+                      + Add file
                     </button>
                   </>
                 )}
               </div>
 
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={submitting || limitReached || selectedAlreadyReviewed || quotaLoading}
-                className="w-full rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold py-3.5 text-sm
-                  hover:from-indigo-700 hover:to-violet-700 active:scale-[0.98] transition-all shadow-sm
-                  disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Submitting…
-                  </>
-                ) : quotaLoading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Checking quota…
-                  </>
-                ) : (
-                  <>
-                    <Send size={16} />
-                    Submit Review
-                  </>
-                )}
+              {/* Submit button */}
+              <button type="submit" disabled={submitting}
+                className="w-full rounded-full bg-indigo-600 hover:bg-indigo-700
+                      text-white font-medium text-sm py-3.5 shadow-sm
+                      disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all">
+                {submitting
+                  ? <><Loader2 size={16} className="animate-spin" />{view === "edit" ? "Saving…" : "Submitting…"}</>
+                  : view === "edit"
+                    ? <><RotateCcw size={15} />Save Changes</>
+                    : <><Send size={15} />Submit Review</>
+                }
               </button>
-            </form>
-          </div>
-
-          {/* ── RIGHT: Quota + Points Ref + Past Reviews ──────────────────── */}
-          <div className="lg:col-span-2 flex flex-col gap-6">
-            {/* Monthly quota card */}
-            <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-100 p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-                  <MessageSquare size={16} className="text-indigo-600" />
-                </div>
-                <p className="text-sm font-semibold text-slate-700">Monthly Reviews</p>
-              </div>
-
-              {quotaLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-8 w-24" />
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-end justify-between mb-3">
-                    <div>
-                      <p className="text-3xl font-bold text-slate-800">
-                        {reviewsUsed}
-                        <span className="text-sm font-normal text-slate-400 ml-1">
-                          / {MAX_REVIEWS_PER_MONTH}
-                        </span>
-                      </p>
-                      <p className="text-xs text-slate-400 mt-0.5">used this month</p>
-                    </div>
-                    <span
-                      className={`text-xs font-bold px-3 py-1 rounded-full
-                        ${reviewsRemaining === 0
-                          ? "bg-red-100 text-red-600"
-                          : "bg-emerald-100 text-emerald-700"
-                        }`}
-                    >
-                      {reviewsRemaining === 0 ? "Limit reached" : `${reviewsRemaining} left`}
-                    </span>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div className="h-2 w-full bg-white rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700
-                        ${quotaPct >= 100 ? "bg-red-400" : quotaPct >= 80 ? "bg-amber-400" : "bg-indigo-500"}`}
-                      style={{ width: `${Math.min(quotaPct, 100)}%` }}
-                    />
-                  </div>
-                </>
-              )}
             </div>
 
-            {/* Points reference */}
-            <div className="rounded-2xl bg-slate-50 border border-slate-100 p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <Award size={16} className="text-amber-600" />
-                </div>
-                <p className="text-sm font-semibold text-slate-700">Points per Rating</p>
-              </div>
-
-              <div className="space-y-2">
-                {[5, 4, 3, 2, 1].map((star) => (
-                  <div
-                    key={star}
-                    className={`flex items-center justify-between rounded-xl px-3 py-2 transition-all
-                      ${rating === star ? "bg-indigo-50 border border-indigo-200" : "bg-white border border-slate-100"}`}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          size={12}
-                          className={
-                            s <= star
-                              ? "text-amber-400 fill-amber-400"
-                              : "text-slate-200 fill-slate-200"
-                          }
-                        />
-                      ))}
-                      <span className="text-xs text-slate-400 ml-1">{RATING_LABELS[star]}</span>
-                    </div>
-                    <span
-                      className={`text-xs font-bold ${RATING_POINTS_MAP[star] > 0 ? "text-emerald-600" : "text-slate-400"
-                        }`}
-                    >
-                      {RATING_POINTS_MAP[star] > 0 ? `+${RATING_POINTS_MAP[star]} pts` : "—"}
-                    </span>
-                  </div>
-                ))}
+            {/* ── Right: Guidelines ── */}
+            <div className="lg:col-span-2 space-y-4">
+              {/* Guidelines */}
+              <div className="rounded-2xl border border-amber-100 bg-amber-50 p-5">
+                <p className="text-[11px] font-bold text-amber-700 uppercase tracking-widest mb-2.5">Review Guidelines</p>
+                <ul className="space-y-1.5 text-xs text-amber-800">
+                  <li className="flex items-start gap-1.5"><Check size={11} className="mt-0.5 flex-shrink-0 text-amber-600" />Be specific about actions and their impact</li>
+                  <li className="flex items-start gap-1.5"><Check size={11} className="mt-0.5 flex-shrink-0 text-amber-600" />One review per teammate per month</li>
+                  <li className="flex items-start gap-1.5"><Check size={11} className="mt-0.5 flex-shrink-0 text-amber-600" />You cannot review yourself</li>
+                  <li className="flex items-start gap-1.5"><Check size={11} className="mt-0.5 flex-shrink-0 text-amber-600" />Recognition is credited automatically</li>
+                  <li className="flex items-start gap-1.5"><Check size={11} className="mt-0.5 flex-shrink-0 text-amber-600" />You can edit your own reviews anytime</li>
+                </ul>
               </div>
             </div>
+          </form>
+        )}
 
-            {/* Past reviews */}
-            {pastReviews.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <MessageSquare size={16} className="text-slate-500" />
-                  </div>
-                  <p className="text-sm font-semibold text-slate-700">Recent Reviews</p>
-                  <span className="text-xs text-slate-400 ml-auto">{pastReviews.length} total</span>
+        {/* ── LIST VIEW ──────────────────────────────────────────────── */}
+        {view === "list" && (
+          <>
+            {/* Tab bar */}
+            <div className="flex items-center gap-2 mb-6">
+              {(["all", "given", "received"] as const).map(tab => (
+                <button key={tab} onClick={() => setListTab(tab)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all capitalize
+                        ${listTab === tab
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Loading */}
+            {loadingData && (
+              <div className="flex justify-center py-24">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-300" />
+              </div>
+            )}
+
+            {/* Error */}
+            {!loadingData && dataError && (
+              <div className="flex flex-col items-center py-20 gap-3">
+                <AlertCircle className="w-10 h-10 text-red-300" />
+                <p className="text-gray-500 text-sm">{dataError}</p>
+                <button onClick={() => loadReviews(1)} className="text-sm text-indigo-500 underline">Retry</button>
+              </div>
+            )}
+
+            {/* Empty */}
+            {!loadingData && !dataError && filteredReviews.length === 0 && (
+              <div className="flex flex-col items-center py-20 gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                  <MessageSquare className="w-7 h-7 text-indigo-300" strokeWidth={1.5} />
                 </div>
-                <div className="flex flex-col gap-3 max-h-150 overflow-y-auto pr-1">
-                  {pastReviews.map((r) => (
-                    <ReviewCard key={r.review_id} review={r} />
+                <p className="text-gray-500 text-sm font-medium">
+                  {listTab === "given" ? "You haven't given any reviews yet."
+                    : listTab === "received" ? "You haven't received any reviews yet."
+                      : "No reviews yet."}
+                </p>
+                {listTab !== "received" && (
+                  <button onClick={openCompose}
+                    className="text-sm text-indigo-600 font-semibold bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition">
+                    Write your first review →
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Cards grid */}
+            {!loadingData && !dataError && filteredReviews.length > 0 && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredReviews.map(r => (
+                    <ReviewCard key={r.review_id} review={r} myId={myId}
+                      categories={categories} onEdit={openEdit} />
                   ))}
                 </div>
-              </div>
-            )}
 
-            {/* Empty state for reviews */}
-            {pastReviews.length === 0 && !loadingData && (
-              <div className="rounded-2xl bg-slate-50 border border-slate-100 p-8 text-center">
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
-                  <MessageSquare size={20} className="text-slate-400" strokeWidth={1.5} />
-                </div>
-                <p className="text-sm text-slate-400 font-medium">No reviews yet</p>
-                <p className="text-xs text-slate-400 mt-1">Your submitted reviews will appear here.</p>
-              </div>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-3 mt-4 pb-4">
+                    <button disabled={page <= 1} onClick={() => loadReviews(page - 1)}
+                      className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600
+                            hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                      ← Prev
+                    </button>
+                    <span className="text-sm text-gray-500 font-medium tabular-nums">
+                      {page} / {totalPages}
+                    </span>
+                    <button disabled={page >= totalPages} onClick={() => loadReviews(page + 1)}
+                      className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600
+                            hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                      Next →
+                    </button>
+                  </div>
+                )}
+              </>
             )}
-          </div>
-        </div >
-      </div >
-    </div >
-  );
+          </>
+        )}
+      </div>
+
+      {/* Toast notification */}
+      {toast && <Toast msg={toast.msg} kind={toast.kind} onClose={() => setToast(null)} />}
+    </div>
+  )
 }
