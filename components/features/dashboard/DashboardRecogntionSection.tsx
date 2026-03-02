@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import { useEffect, useState } from "react";
 import DashboardRecognitionCard from "./DashboardRecognitionCard";
-import type { RecentReview } from "@/services/analytics-service";
+import { fetchDashboardRecentReviews } from "@/services/analytics-service";
+import type { RecentReviewResponse } from "@/types/dashboard-types";
 
 const AVATAR_COLORS = [
     "bg-purple-500", "bg-blue-500", "bg-orange-500",
@@ -29,15 +30,20 @@ function formatTime(iso: string): string {
     return date.toLocaleDateString();
 }
 
-interface DashboardRecognitionSectionProps {
-    reviews: RecentReview[];
-    loading: boolean;
-}
+const DashboardRecognitionSection = () => {
+    const [reviews, setReviews] = useState<RecentReviewResponse[]>([]);
+    const [loading, setLoading] = useState(true);
 
-const DashboardRecognitionSection = ({
-    reviews,
-    loading,
-}: DashboardRecognitionSectionProps) => {
+    useEffect(() => {
+        async function load() {
+            setLoading(true);
+            const result = await fetchDashboardRecentReviews();
+            setReviews(result ?? []);
+            setLoading(false);
+        }
+        load();
+    }, []);
+
     const items = reviews.map((r, i) => ({
         id: r.review_id,
         from: r.reviewer_name,

@@ -1,8 +1,11 @@
 "use client";
 
-import React from "react";
+import { useEffect, useState } from "react";
 import DashboardLeaderboardCard from "./DashboardLeaderboardCard";
-import type { LeaderboardEntry } from "@/services/analytics-service";
+import { fetchDashboardLeaderboard } from "@/services/analytics-service";
+import type { LeaderboardEntryResponse } from "@/types/dashboard-types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const AVATAR_COLORS = [
     "bg-purple-500", "bg-blue-500", "bg-orange-500",
@@ -17,15 +20,45 @@ function userInitials(username: string): string {
     return username.slice(0, 2).toUpperCase();
 }
 
-interface DashboardLeaderboardSectionProps {
-    entries: LeaderboardEntry[];
-    loading: boolean;
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+function LeaderboardSkeleton() {
+    return (
+        <>
+            {Array.from({ length: 5 }).map((_, i) => (
+                <Card key={i} className="border border-[#d9d9d9] shadow-none rounded-3xl">
+                    <CardContent>
+                        <div className="flex items-center gap-3">
+                            <Skeleton className="h-4 w-4 shrink-0" />
+                            <Skeleton className="h-12 w-12 rounded-full shrink-0" />
+                            <div className="flex-1 space-y-2">
+                                <Skeleton className="h-4 w-28" />
+                                <Skeleton className="h-3 w-16" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </>
+    );
 }
 
-const DashboardLeaderboardSection = ({
-    entries,
-    loading,
-}: DashboardLeaderboardSectionProps) => {
+// ─── Component ────────────────────────────────────────────────────────────────
+
+const DashboardLeaderboardSection = () => {
+    const [entries, setEntries] = useState<LeaderboardEntryResponse[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function load() {
+            setLoading(true);
+            const result = await fetchDashboardLeaderboard();
+            setEntries(result ?? []);
+            setLoading(false);
+        }
+        load();
+    }, []);
+
     const mapped = entries.map((entry, i) => ({
         rank: entry.rank,
         name: entry.username,
@@ -42,13 +75,7 @@ const DashboardLeaderboardSection = ({
             </div>
 
             <div className="space-y-3">
-                {loading &&
-                    Array.from({ length: 5 }).map((_, i) => (
-                        <div
-                            key={i}
-                            className="h-16 rounded-3xl bg-slate-100 animate-pulse"
-                        />
-                    ))}
+                {loading && <LeaderboardSkeleton />}
 
                 {!loading && mapped.length === 0 && (
                     <p className="text-sm text-gray-400 text-center py-8">
