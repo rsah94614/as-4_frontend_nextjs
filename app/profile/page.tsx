@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/providers/AuthProvider";
 import { fetchWithAuth } from "@/services/auth-service";
-import Sidebar from "@/components/layout/Sidebar";
-import Navbar from "@/components/layout/Navbar";
 import ProtectedRoute from "@/components/features/auth/ProtectedRoute";
 import {
     User,
@@ -70,7 +68,6 @@ const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL;
 
 export default function ProfilePage() {
     const { user, isAuthenticated, loading: authLoading, logoutUser } = useAuth();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profile, setProfile] = useState<EmployeeDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

@@ -25,7 +25,7 @@ export default function LoginPage() {
   // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.push('/dashboard')
+      router.replace('/dashboard')
     }
   }, [authLoading, isAuthenticated, router])
 
@@ -35,33 +35,29 @@ export default function LoginPage() {
       return 'Email address is required'
     }
 
-    // Reject nonsense like just "@" or "a@b"
+    const trimmedEmail = email.trim()
+
+    // Basic email format check
     const strictSyntax = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!strictSyntax.test(email)) {
+    if (!strictSyntax.test(trimmedEmail)) {
       return 'Please enter a valid email address'
     }
 
-    // Check for @ symbol
-    if (!email.includes('@')) {
-      return 'Email must contain @ symbol'
-    }
+    // Extract domain
+    const domain = trimmedEmail.split('@')[1].toLowerCase()
 
-    // Reject incomplete emails like "user@"
-    const parts = email.split('@')
-    if (parts.length !== 2 || !parts[1]) {
-      return 'Please enter a complete email address'
-    }
+    // Company lock - reject public emails (optional)
+    const publicDomains = [
+      'gmail.com',
+      'yahoo.com',
+      'hotmail.com',
+      'outlook.com',
+      'aol.com'
+    ]
 
-    // Reject emails without domain like "user@gmail"
-    const domain = parts[1]
-    if (!domain.includes('.')) {
-      return 'Email must include a domain (e.g., user@gmail.com)'
-    }
+    const COMPANY_LOCK_ENABLED = false // Set true to enable
 
-    // Company lock - reject public emails (optional - can be toggled)
-    const publicDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com']
-    const COMPANY_LOCK_ENABLED = false // Set to true to enable company email requirement
-    if (COMPANY_LOCK_ENABLED && publicDomains.includes(domain.toLowerCase())) {
+    if (COMPANY_LOCK_ENABLED && publicDomains.includes(domain)) {
       return 'Please use your company email address'
     }
 
@@ -131,13 +127,10 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const error = await loginUser(email, password)
+      const error = await loginUser(email.trim(), password)
 
       if (error) {
         setErrors({ general: error })
-      } else {
-        // Redirect to dashboard on success
-        router.push('/dashboard')
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -168,6 +161,7 @@ export default function LoginPage() {
             width={500}
             height={500}
             className="object-contain w-full h-auto"
+            priority
           />
         </div>
 
@@ -239,7 +233,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
-                    tabIndex={-1}
+                    aria-label="Toggle password visibility"
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />

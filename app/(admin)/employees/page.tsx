@@ -10,6 +10,7 @@ import { fetchWithAuth } from "@/services/auth-service"
 import axiosClient from "@/services/api-client"
 import Navbar from "@/components/layout/Navbar"
 import Sidebar from "@/components/layout/Sidebar"
+import { isAxiosError } from "axios"
 
 // ─── Env vars ─────────────────────────────────────────────────────────────────
 const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || "http://localhost:8002"
@@ -120,22 +121,26 @@ function BulkImportModal({ onClose, onSuccess }: {
       const data = res.data
       setResult(data as BulkImportResult)
       if (data.succeeded > 0) onSuccess()
-    } catch (err: any) {
-      const data = err.response?.data
-      const detail = data?.detail
-      if (Array.isArray(detail)) {
-        setUploadError(
-          detail
-            .map((e: { msg?: string; loc?: string[] }) =>
-              [e.loc?.slice(1).join(" → "), e.msg].filter(Boolean).join(": ")
-            )
-            .join(" | ")
-        )
-      } else if (typeof detail === "string") {
-        setUploadError(detail)
-      } else {
-        setUploadError(err.message || "Upload failed")
+    } catch (err: unknown) {
+      let errorMessage = "Upload failed"
+      if (isAxiosError(err) && err.response) {
+        const data = err.response.data as { detail?: string | unknown[] }
+        const detail = data?.detail
+        if (Array.isArray(detail)) {
+          const arr = detail as Array<{ msg?: string; loc?: string[] }>
+          setUploadError(
+            arr
+              .map(e => [e.loc?.slice(1).join(" → "), e.msg].filter(Boolean).join(": "))
+              .join(" | ")
+          )
+          return
+        } else if (typeof detail === "string") {
+          setUploadError(detail)
+          return
+        }
       }
+      if (err instanceof Error) errorMessage = err.message
+      setUploadError(errorMessage)
     } finally {
       setUploading(false)
     }
@@ -155,7 +160,7 @@ function BulkImportModal({ onClose, onSuccess }: {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center">
               <FileSpreadsheet className="w-4 h-4 text-orange-600" />
@@ -186,7 +191,7 @@ function BulkImportModal({ onClose, onSuccess }: {
             </div>
             <button
               onClick={downloadTemplate}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-600 hover:border-orange-300 hover:text-orange-600 transition flex-shrink-0"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-600 hover:border-orange-300 hover:text-orange-600 transition shrink-0"
             >
               <Download className="w-3 h-3" /> Template
             </button>
@@ -219,7 +224,7 @@ function BulkImportModal({ onClose, onSuccess }: {
                     <CheckCircle2 className="w-5 h-5 text-green-600" />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-semibold text-black truncate max-w-[260px]">{file.name}</p>
+                    <p className="text-sm font-semibold text-black truncate max-w-265">{file.name}</p>
                     <p className="text-xs text-slate-400">{(file.size / 1024).toFixed(1)} KB · click to change</p>
                   </div>
                 </>
@@ -240,7 +245,7 @@ function BulkImportModal({ onClose, onSuccess }: {
           {/* Error banner */}
           {uploadError && (
             <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
               <p className="text-xs text-red-600">{uploadError}</p>
             </div>
           )}
@@ -270,12 +275,12 @@ function BulkImportModal({ onClose, onSuccess }: {
                     key={r.row}
                     className={`flex items-start gap-3 px-4 py-2.5 ${r.status === "error" ? "bg-red-50/50" : ""}`}
                   >
-                    <span className="text-[10px] font-bold text-slate-300 w-8 flex-shrink-0 pt-0.5">
+                    <span className="text-[10px] font-bold text-slate-300 w-8 shrink-0 pt-0.5">
                       R{r.row}
                     </span>
                     {r.status === "success"
-                      ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" />
-                      : <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
+                      ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
+                      : <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
                     }
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-black truncate">
@@ -294,7 +299,7 @@ function BulkImportModal({ onClose, onSuccess }: {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 flex items-center gap-3 flex-shrink-0">
+        <div className="px-6 py-4 border-t border-slate-100 flex items-center gap-3 shrink-0">
           {result ? (
             <>
               <button
@@ -428,9 +433,15 @@ function AddEmployeeModal({ onClose, onSuccess, allEmployees }: {
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          {error && (
+            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+              <p className="text-xs text-red-600">{error}</p>
+            </div>
+          )}
           {false && ( // Removed error block for loading since we're using derive logic
             <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
               <p className="text-xs text-red-600">Error loading data</p>
             </div>
           )}
@@ -641,7 +652,7 @@ function StatsPanel({ manager, members, statsMap, month, year }: {
           return (
             <div key={m.employee_id} className="bg-white border border-slate-100 rounded-xl p-3 space-y-2">
               <div className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${idx === 0 ? "bg-orange-100 text-orange-600" : "bg-slate-100 text-slate-500"}`}>
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 ${idx === 0 ? "bg-orange-100 text-orange-600" : "bg-slate-100 text-slate-500"}`}>
                   {m.username.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -649,7 +660,7 @@ function StatsPanel({ manager, members, statsMap, month, year }: {
                   <p className="text-[10px] text-slate-400 truncate">{m.designation_name || "—"}</p>
                 </div>
                 {idx === 0 && (
-                  <span className="text-[9px] font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full flex-shrink-0">Lead</span>
+                  <span className="text-[9px] font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full shrink-0">Lead</span>
                 )}
               </div>
               <div className="bg-slate-50 rounded-lg p-2">
@@ -675,19 +686,19 @@ function TeamCard({ manager, members, expanded, selected, onToggle, onSelect }: 
   return (
     <div className={`bg-white rounded-2xl border transition-all ${selected ? "border-orange-300 shadow-md" : "border-slate-100 shadow-sm"}`}>
       <div className="flex items-center gap-3 p-4 cursor-pointer" onClick={() => { onSelect(); onToggle() }}>
-        <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold shrink-0">
           {manager.username.charAt(0).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-bold text-black truncate">{manager.username}</p>
-            <span className="text-[10px] font-semibold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full flex-shrink-0">Manager</span>
+            <span className="text-[10px] font-semibold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full shrink-0">Manager</span>
           </div>
           <p className="text-xs text-slate-500 truncate">
             {manager.designation_name || "—"} · {manager.department_name || "—"}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <span className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full">
             <Users className="w-3 h-3" />{members.length}
           </span>
@@ -701,14 +712,14 @@ function TeamCard({ manager, members, expanded, selected, onToggle, onSelect }: 
             <p className="text-xs text-slate-400 text-center py-4">No direct reports</p>
           ) : members.map(emp => (
             <div key={emp.employee_id} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50/60 transition">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-bold shrink-0">
                 {emp.username.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-black truncate">{emp.username}</p>
                 <p className="text-xs text-slate-400 truncate">{emp.email}</p>
               </div>
-              <div className="text-right flex-shrink-0">
+              <div className="text-right shrink-0">
                 <p className="text-xs font-semibold text-black">{emp.designation_name || "—"}</p>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${emp.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-500"}`}>
                   {emp.is_active ? "Active" : "Inactive"}
@@ -852,7 +863,7 @@ export default function AdminTeamsPage() {
 
             {/* Calendar */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-3.5 flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
                 <Calendar className="w-4 h-4 text-slate-400" />
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Period</span>
               </div>
@@ -950,7 +961,7 @@ export default function AdminTeamsPage() {
               </div>
 
               {/* Right: stats panel */}
-              <div className="w-72 flex-shrink-0 sticky top-6 self-start bg-white rounded-2xl border border-slate-100 shadow-sm overflow-y-auto max-h-[calc(100vh-6rem)]">
+              <div className="w-72 shrink-0 sticky top-6 self-start bg-white rounded-2xl border border-slate-100 shadow-sm overflow-y-auto max-h-[calc(100vh-6rem)]">
                 <div className="p-4 border-b border-slate-100 flex items-center gap-2">
                   <Award className="w-4 h-4 text-orange-500" />
                   <span className="font-bold text-black text-sm">Team Stats</span>

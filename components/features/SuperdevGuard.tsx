@@ -27,17 +27,17 @@ export default function SuperdevGuard({
     useEffect(() => {
         // Gate 1: Environment check
         if (process.env.NODE_ENV === "production") {
-            setStatus("denied");
+            Promise.resolve().then(() => setStatus("denied"));
             return;
         }
 
         // Gate 2: RBAC check
         if (!isSuperDev()) {
-            setStatus("denied");
+            Promise.resolve().then(() => setStatus("denied"));
             return;
         }
 
-        setStatus("allowed");
+        Promise.resolve().then(() => setStatus("allowed"));
     }, []);
 
     // Redirect on denial

@@ -1,6 +1,7 @@
 // services/auth-service.ts - Authentication utility functions
 
 import axiosClient from './api-client'
+import { isAxiosError } from 'axios'
 
 /**
  * Storage keys for authentication tokens
@@ -151,7 +152,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
             url,
             method: options.method || 'GET',
             data: options.body ? JSON.parse(options.body as string) : undefined,
-            headers: options.headers as any,
+            headers: options.headers as Record<string, string>,
         });
 
         // Return a Fetch-compatible response shim so existing code doesn't break
@@ -163,15 +164,16 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
                 get: (name: string) => response.headers[name.toLowerCase()],
             },
         } as unknown as Response;
-    } catch (error: any) {
+    } catch (error: unknown) {
         // If it's an Axios error with a response
-        if (error.response) {
+        if (isAxiosError(error) && error.response) {
+            const response = error.response;
             return {
                 ok: false,
-                status: error.response.status,
-                json: async () => error.response.data,
+                status: response.status,
+                json: async () => response.data,
                 headers: {
-                    get: (name: string) => error.response.headers[name.toLowerCase()],
+                    get: (name: string) => response.headers[name.toLowerCase()],
                 },
             } as unknown as Response;
         }
@@ -195,10 +197,16 @@ export async function login(email: string, password: string) {
             data.expires_in
         )
         return { success: true, data }
-    } catch (error: any) {
+    } catch (error: unknown) {
+        let errorMessage = 'Failed'
+        if (isAxiosError(error) && error.response) {
+            errorMessage = error.response.data?.error?.message || error.response.data?.detail || errorMessage
+        } else if (error instanceof Error) {
+            errorMessage = error.message
+        }
         return {
             success: false,
-            error: error.response?.data?.error?.message || error.response?.data?.detail || 'Login failed'
+            error: errorMessage
         }
     }
 }
@@ -207,10 +215,16 @@ export async function forgotPassword(email: string) {
     try {
         const response = await axiosClient.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, { email })
         return { success: true, data: response.data }
-    } catch (error: any) {
+    } catch (error: unknown) {
+        let errorMessage = 'Failed to send reset email'
+        if (isAxiosError(error) && error.response) {
+            errorMessage = error.response.data?.error?.message || error.response.data?.detail || errorMessage
+        } else if (error instanceof Error) {
+            errorMessage = error.message
+        }
         return {
             success: false,
-            error: error.response?.data?.error?.message || error.response?.data?.detail || 'Failed to send reset email'
+            error: errorMessage
         }
     }
 }
@@ -222,10 +236,16 @@ export async function resetPassword(token: string, newPassword: string) {
             new_password: newPassword,
         })
         return { success: true, data: response.data }
-    } catch (error: any) {
+    } catch (error: unknown) {
+        let errorMessage = 'Failed to reset password'
+        if (isAxiosError(error) && error.response) {
+            errorMessage = error.response.data?.error?.message || error.response.data?.detail || errorMessage
+        } else if (error instanceof Error) {
+            errorMessage = error.message
+        }
         return {
             success: false,
-            error: error.response?.data?.error?.message || error.response?.data?.detail || 'Failed to reset password'
+            error: errorMessage
         }
     }
 }

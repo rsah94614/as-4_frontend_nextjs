@@ -68,37 +68,23 @@ export default function RedeemPage() {
           <WalletBanner wallet={redeem.wallet} />
 
           {/* Categories */}
-          {redeem.categories.length > 0 && (
-            <div className="flex gap-2 flex-wrap mb-8">
+          <div className="flex gap-2 flex-wrap mb-8">
+            {redeem.categories.map((category) => (
               <Button
-                variant={redeem.activeCategory === "ALL" ? "default" : "outline"}
+                key={category.category_id}
+                variant={redeem.activeCategory === category.category_id ? "default" : "outline"}
                 size="sm"
-                onClick={() => redeem.setActiveCategory("ALL")}
+                onClick={() => redeem.setActiveCategory(category.category_id)}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all
-                  ${redeem.activeCategory === "ALL"
+      ${redeem.activeCategory === category.category_id
                     ? "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-transparent"
                   }`}
               >
-                All
+                {category.category_name}
               </Button>
-              {redeem.categories.map((cat) => (
-                <Button
-                  key={cat.category_id}
-                  variant={redeem.activeCategory === cat.category_id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => redeem.setActiveCategory(cat.category_id)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all
-                    ${redeem.activeCategory === cat.category_id
-                      ? "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-transparent"
-                    }`}
-                >
-                  {cat.category_name}
-                </Button>
-              ))}
-            </div>
-          )}
+            ))}
+          </div>
 
           {/* Products */}
           {redeem.productItems.length > 0 && (

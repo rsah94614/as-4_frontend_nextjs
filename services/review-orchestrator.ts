@@ -16,7 +16,6 @@
  *       Wallet data lives only on the dedicated Wallet page.
  */
 
-import { auth } from "@/services/auth-service";
 import axiosClient from "@/services/api-client";
 import { uploadToStorage } from "@/services/cloudinary";
 import { extractApiError, validateReviewInput, requireAuthenticatedUserId, categorizeFileUrls } from "@/lib/api-utils";

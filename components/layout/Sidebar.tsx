@@ -53,8 +53,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    setIsSuper(isSuperDev());
+    Promise.resolve().then(() => {
+      setMounted(true);
+      setIsSuper(isSuperDev());
+    });
   }, [pathname]); // also depend on pathname so it has a chance to re-check if auth delayed
 
   return (

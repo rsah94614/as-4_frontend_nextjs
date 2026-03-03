@@ -1,10 +1,11 @@
 'use client';
 
-import { Search, Bell, Menu } from 'lucide-react';
+import { Search, Bell, Menu, Loader2 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { auth } from '@/services/auth-service';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
+import { notificationService, Notification } from '@/services/notification-service';
 
 interface NavbarProps {
     onMenuClick: () => void;
@@ -14,20 +15,59 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [user] = useState(() => auth.getUser());
     const [showNotifications, setShowNotifications] = useState(false);
-    const [hasUnread, setHasUnread] = useState(true); // Mocking initial unread state
-    const [prevPathname, setPrevPathname] = useState(usePathname());
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     const notificationRef = useRef<HTMLDivElement | null>(null);
     const pathname = usePathname();
     const router = useRouter();
 
-    // Reset unread when navigating to notifications page
-    if (pathname !== prevPathname) {
-        setPrevPathname(pathname);
-        if (pathname === '/notifications') {
-            setHasUnread(false);
+    // Fetch unread count
+    const fetchUnreadCount = async () => {
+        try {
+            const count = await notificationService.getUnreadCount();
+            setUnreadCount(count);
+        } catch (error) {
+            console.error('Failed to fetch unread count:', error);
         }
-    }
+    };
+
+    // Fetch notifications for dropdown
+    const fetchNotifications = async () => {
+        setIsLoading(true);
+        try {
+            const response = await notificationService.getNotifications(false, 5);
+            setNotifications(response.notifications);
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        try {
+            await notificationService.markAllRead();
+            setUnreadCount(0);
+        } catch (error) {
+            console.error('Failed to mark notifications as read:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchUnreadCount();
+        // Refresh unread count every 30 seconds
+        const interval = setInterval(fetchUnreadCount, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Reset unread count when navigating to notifications page
+    useEffect(() => {
+        if (pathname === '/notifications') {
+            setUnreadCount(0);
+        }
+    }, [pathname]);
 
     const initials = React.useMemo(() => {
         if (!user?.username) return '';
@@ -70,7 +110,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         };
     }, []);
 
-
     useEffect(() => {
         function handleResize() {
             if (window.innerWidth >= 1024 && pathname === '/notifications') {
@@ -88,6 +127,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
     const handleProfileClick = () => {
         router.push('/profile');
+    };
+
+    const formatTime = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     return (
@@ -127,39 +171,68 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                                     if (window.innerWidth < 1024) {
                                         router.push('/notifications');
                                     } else {
-                                        setShowNotifications((prev) => !prev);
-                                        setHasUnread(false); // Clear indicator when dropdown opens
+                                        const willShow = !showNotifications;
+                                        setShowNotifications(willShow);
+                                        if (willShow) {
+                                            fetchNotifications();
+                                            handleMarkAllRead();
+                                        }
                                     }
                                 }}
-                                className="w-10 h-10 rounded-full hover:bg-gray-100 transition-colors relative flex items-center justify-center"
+                                className="w-10 h-10 rounded-full hover:bg-gray-100 transition-colors relative flex items-center justify-center cursor-pointer"
                                 aria-label="Notifications"
                             >
                                 <Bell className="h-6 w-6 text-gray-900" />
-                                {hasUnread && (
-                                    <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white pointer-events-none" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border-2 border-white pointer-events-none flex items-center justify-center text-[10px] text-white font-bold">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
                                 )}
                             </button>
 
                             {/* Notification Dropdown */}
                             {showNotifications && (
-                                <div className="absolute right-0 top-14 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 hidden lg:block">
-                                    <div className="p-4 border-b font-semibold text-gray-800">
-                                        Notifications
+                                <div className="absolute right-0 top-14 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 hidden lg:block overflow-hidden">
+                                    <div className="p-4 border-b flex justify-between items-center">
+                                        <span className="font-semibold text-gray-800">Notifications</span>
+                                        {unreadCount > 0 && (
+                                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                                {unreadCount} New
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="max-h-96 overflow-y-auto">
-                                        <div className="p-4 hover:bg-gray-50 cursor-pointer">
-                                            🎉 You received a reward from HR
-                                        </div>
-                                        <div className="p-4 hover:bg-gray-50 cursor-pointer">
-                                            ⭐ Your nomination was approved
-                                        </div>
-                                        <div className="p-4 hover:bg-gray-50 cursor-pointer">
-                                            🏆 Top performer this month!
-                                        </div>
+                                        {isLoading ? (
+                                            <div className="p-8 flex flex-col items-center justify-center text-gray-500">
+                                                <Loader2 className="w-6 h-6 animate-spin mb-2" />
+                                                <p className="text-sm">Loading...</p>
+                                            </div>
+                                        ) : notifications.length > 0 ? (
+                                            notifications.map((notif) => (
+                                                <div
+                                                    key={notif.id}
+                                                    className={`p-4 hover:bg-gray-50 cursor-pointer border-b last:border-0 transition-colors ${!notif.read_at ? 'bg-blue-50/30' : ''}`}
+                                                >
+                                                    <p className="text-sm text-gray-800 leading-snug">{notif.message}</p>
+                                                    <p className="text-[11px] text-gray-400 mt-1">{formatTime(notif.created_at)}</p>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="p-8 text-center text-gray-500">
+                                                <Bell className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                                                <p className="text-sm">No notifications yet</p>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <div className="p-3 text-center text-blue-600 hover:bg-gray-50 cursor-pointer border-t">
+                                    <div
+                                        onClick={() => {
+                                            router.push('/notifications');
+                                            setShowNotifications(false);
+                                        }}
+                                        className="p-3 text-center text-sm font-medium text-blue-600 hover:bg-gray-50 cursor-pointer border-t transition-colors"
+                                    >
                                         View all
                                     </div>
                                 </div>
@@ -170,7 +243,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                         <div className="h-10 w-px bg-gray-300"></div>
 
 
-                        <button className="flex items-center gap-2 hover:opacity-80 transition-opacity pl-2"
+                        <button className="flex items-center gap-2 hover:opacity-80 transition-opacity pl-2 cursor-pointer"
                             onClick={handleProfileClick}
 
                         >

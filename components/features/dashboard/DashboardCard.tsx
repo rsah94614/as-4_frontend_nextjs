@@ -13,6 +13,8 @@ interface DashboardCardProps {
     label: string;
     icon: LucideIcon;
     stat?: StatValue;
+    value?: string;
+    change?: string;
     loading?: boolean;
     changeLabel?: string;
     className?: string;
@@ -23,13 +25,15 @@ export default function DashboardCard({
     label,
     icon: Icon,
     stat,
+    value: propValue,
+    change: propChange,
     loading = false,
     changeLabel = "from last month",
     className,
     iconBgColor,
 }: DashboardCardProps) {
-    const value = formatNumber(stat?.value ?? null);
-    const change = formatGrowth(stat?.growth_percent ?? null);
+    const value = propValue ?? formatNumber(stat?.value ?? null);
+    const change = propChange ?? formatGrowth(stat?.growth_percent ?? null);
 
     return (
         <Card className={cn("rounded-3xl border-0 shadow-none h-full", className)}>
