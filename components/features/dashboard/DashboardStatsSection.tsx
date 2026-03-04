@@ -1,4 +1,3 @@
-import { formatNumber, formatMonthComparison } from "@/lib/dashboard-utils";
 import { LayoutGrid, Users, Trophy, TrendingUp } from "lucide-react";
 import DashboardCard from "@/components/features/dashboard/DashboardCard";
 import { useEffect, useState } from "react";
@@ -31,6 +30,13 @@ function DashboardStatsSkeleton() {
     );
 }
 
+// Compute growth_percent from this_month / last_month for DashboardCard's stat prop
+function growthPct(thisMonth: number | null, lastMonth: number | null): number | null {
+    if (thisMonth === null || lastMonth === null) return null;
+    if (lastMonth === 0) return thisMonth > 0 ? 100 : 0;
+    return parseFloat((((thisMonth - lastMonth) / lastMonth) * 100).toFixed(0));
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function DashboardStatsSection() {
@@ -54,31 +60,39 @@ export default function DashboardStatsSection() {
     const cards = [
         {
             label: "Total Points:",
-            value: formatNumber(data?.total_points.value ?? null),
+            stat: {
+                value: data?.total_points.value ?? null,
+                growth_percent: growthPct(data?.total_points.this_month ?? null, data?.total_points.last_month ?? null),
+            },
             icon: Users,
             color: "bg-[#FFE69C]",
-            change: formatMonthComparison(data?.total_points.this_month ?? null, data?.total_points.last_month ?? null),
         },
         {
             label: "Rewards Redeemed:",
-            value: formatNumber(data?.rewards_redeemed.value ?? null),
+            stat: {
+                value: data?.rewards_redeemed.value ?? null,
+                growth_percent: growthPct(data?.rewards_redeemed.this_month ?? null, data?.rewards_redeemed.last_month ?? null),
+            },
             icon: Trophy,
             color: "bg-[#EED9FF]",
-            change: formatMonthComparison(data?.rewards_redeemed.this_month ?? null, data?.rewards_redeemed.last_month ?? null),
         },
         {
             label: "Reviews Received:",
-            value: formatNumber(data?.reviews_received.value ?? null),
+            stat: {
+                value: data?.reviews_received.value ?? null,
+                growth_percent: growthPct(data?.reviews_received.this_month ?? null, data?.reviews_received.last_month ?? null),
+            },
             icon: LayoutGrid,
             color: "bg-[#D1FFD7]",
-            change: formatMonthComparison(data?.reviews_received.this_month ?? null, data?.reviews_received.last_month ?? null),
         },
         {
             label: "Active Users:",
-            value: formatNumber(data?.active_users.value ?? null),
+            stat: {
+                value: data?.active_users.value ?? null,
+                growth_percent: growthPct(data?.active_users.this_month ?? null, data?.active_users.last_month ?? null),
+            },
             icon: TrendingUp,
             color: "bg-[#DFDFFF]",
-            change: formatMonthComparison(data?.active_users.this_month ?? null, data?.active_users.last_month ?? null),
         },
     ];
 
@@ -88,10 +102,9 @@ export default function DashboardStatsSection() {
                 <DashboardCard
                     key={card.label}
                     label={card.label}
-                    value={card.value}
+                    stat={card.stat}
                     icon={card.icon}
                     iconBgColor={card.color}
-                    change={card.change}
                 />
             ))}
         </div>

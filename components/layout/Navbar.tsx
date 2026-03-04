@@ -3,31 +3,94 @@
 import { Search, Bell, Menu } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { auth } from '@/services/auth-service';
-import { useRouter } from 'next/navigation';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { useNotifications } from '@/hooks/useNotifications';
+import type { NotificationType } from '@/types/notification-types';
 
 interface NavbarProps {
     onMenuClick: () => void;
+}
+
+// Emoji map for the dropdown previews
+const TYPE_ICON: Record<NotificationType, string> = {
+    REVIEW: "📋",
+    REWARD: "🏅",
+    SYSTEM: "⚙️",
+    CELEBRATION: "🎉",
+    ANNOUNCEMENT: "📣",
+};
+
+function formatRelativeTime(iso: string): string {
+    const diffMins = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000);
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
 }
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [user] = useState(() => auth.getUser());
     const [showNotifications, setShowNotifications] = useState(false);
-    const [hasUnread, setHasUnread] = useState(true); // Mocking initial unread state
-    const [prevPathname, setPrevPathname] = useState(usePathname());
 
     const notificationRef = useRef<HTMLDivElement | null>(null);
     const pathname = usePathname();
     const router = useRouter();
 
-    // Reset unread when navigating to notifications page
-    if (pathname !== prevPathname) {
-        setPrevPathname(pathname);
+    const { notifications, unreadCount, markAll, markOne } = useNotifications(10);
+    const hasUnread = unreadCount > 0;
+
+    // Close dropdown when navigating away
+    useEffect(() => {
+        setShowNotifications(false);
+    }, [pathname]);
+
+    // Mark all as read when the /notifications page is visited
+    useEffect(() => {
         if (pathname === '/notifications') {
-            setHasUnread(false);
+            markAll();
         }
-    }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pathname]);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                notificationRef.current &&
+                !notificationRef.current.contains(event.target as Node)
+            ) {
+                setShowNotifications(false);
+            }
+        }
+        if (showNotifications) {
+            document.addEventListener('pointerdown', handleClickOutside);
+        }
+        return () => document.removeEventListener('pointerdown', handleClickOutside);
+    }, [showNotifications]);
+
+    // Close dropdown if viewport goes below 1024px
+    useEffect(() => {
+        function handleResize() {
+            if (window.innerWidth < 1024) setShowNotifications(false);
+        }
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const handleBellClick = () => {
+        if (window.innerWidth < 1024) {
+            router.push('/notifications');
+        } else {
+            const opening = !showNotifications;
+            setShowNotifications(opening);
+            if (opening) {
+                // Mark all as read when dropdown opens
+                markAll();
+            }
+        }
+    };
 
     const initials = React.useMemo(() => {
         if (!user?.username) return '';
@@ -38,57 +101,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     }, [user]);
 
     const username = user?.username || '';
-
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (
-                notificationRef.current &&
-                !notificationRef.current.contains(event.target as Node)
-            ) {
-                setShowNotifications(false);
-            }
-        }
-
-        if (showNotifications) {
-            document.addEventListener('pointerdown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('pointerdown', handleClickOutside);
-        };
-    }, [showNotifications]);
-
-    useEffect(() => {
-        function handleResize() {
-            if (window.innerWidth < 1024) {
-                setShowNotifications(false);
-            }
-        }
-        window.addEventListener('resize', handleResize);
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
-    }, []);
-
-
-    useEffect(() => {
-        function handleResize() {
-            if (window.innerWidth >= 1024 && pathname === '/notifications') {
-                router.push('/'); // go back to main page
-                setShowNotifications(true); // open dropdown
-            }
-        }
-
-        window.addEventListener('resize', handleResize);
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
-    }, [pathname, router]);
-
-    const handleProfileClick = () => {
-        router.push('/profile');
-    };
+    const previewItems = notifications.slice(0, 5);
 
     return (
         <nav className="w-full pt-4 shrink-0">
@@ -119,18 +132,10 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                     </div>
 
                     <div className='flex flex-row gap-2'>
-                        {/* Right — notifications + profile */}
-
+                        {/* Bell + Dropdown */}
                         <div className="relative flex items-center gap-2 shrink-0" ref={notificationRef}>
                             <button
-                                onClick={() => {
-                                    if (window.innerWidth < 1024) {
-                                        router.push('/notifications');
-                                    } else {
-                                        setShowNotifications((prev) => !prev);
-                                        setHasUnread(false); // Clear indicator when dropdown opens
-                                    }
-                                }}
+                                onClick={handleBellClick}
                                 className="w-10 h-10 rounded-full hover:bg-gray-100 transition-colors relative flex items-center justify-center"
                                 aria-label="Notifications"
                             >
@@ -140,39 +145,75 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                                 )}
                             </button>
 
-                            {/* Notification Dropdown */}
+                            {/* Dropdown — desktop only */}
                             {showNotifications && (
-                                <div className="absolute right-0 top-14 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 hidden lg:block">
-                                    <div className="p-4 border-b font-semibold text-gray-800">
-                                        Notifications
+                                <div className="absolute right-0 top-14 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 hidden lg:flex flex-col overflow-hidden">
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                                        <span className="font-semibold text-gray-800 text-sm">Notifications</span>
+                                        {unreadCount > 0 && (
+                                            <span className="text-xs font-bold text-white bg-indigo-600 rounded-full px-2 py-0.5">
+                                                {unreadCount > 99 ? "99+" : unreadCount} unread
+                                            </span>
+                                        )}
                                     </div>
 
-                                    <div className="max-h-96 overflow-y-auto">
-                                        <div className="p-4 hover:bg-gray-50 cursor-pointer">
-                                            🎉 You received a reward from HR
-                                        </div>
-                                        <div className="p-4 hover:bg-gray-50 cursor-pointer">
-                                            ⭐ Your nomination was approved
-                                        </div>
-                                        <div className="p-4 hover:bg-gray-50 cursor-pointer">
-                                            🏆 Top performer this month!
-                                        </div>
+                                    {/* List */}
+                                    <div className="max-h-80 overflow-y-auto">
+                                        {previewItems.length === 0 ? (
+                                            <div className="py-10 text-center">
+                                                <p className="text-sm text-gray-400">No notifications yet.</p>
+                                            </div>
+                                        ) : (
+                                            previewItems.map((n) => (
+                                                <button
+                                                    key={n.notification_id}
+                                                    onClick={() => {
+                                                        if (!n.is_read) markOne(n.notification_id);
+                                                    }}
+                                                    className={`w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0
+                                                        ${!n.is_read ? "bg-indigo-50/50" : ""}`}
+                                                >
+                                                    <span className="text-lg leading-none pt-0.5 shrink-0">
+                                                        {TYPE_ICON[n.type] ?? "🔔"}
+                                                    </span>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className={`text-sm leading-snug truncate ${!n.is_read ? "font-semibold text-gray-800" : "text-gray-500"}`}>
+                                                            {n.title}
+                                                        </p>
+                                                        <p className="text-xs text-gray-400 mt-0.5">
+                                                            {formatRelativeTime(n.created_at)}
+                                                        </p>
+                                                    </div>
+                                                    {!n.is_read && (
+                                                        <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0 mt-1.5" />
+                                                    )}
+                                                </button>
+                                            ))
+                                        )}
                                     </div>
 
-                                    <div className="p-3 text-center text-blue-600 hover:bg-gray-50 cursor-pointer border-t">
-                                        View all
-                                    </div>
+                                    {/* Footer */}
+                                    <button
+                                        onClick={() => {
+                                            setShowNotifications(false);
+                                            router.push('/notifications');
+                                        }}
+                                        className="py-3 text-center text-sm font-semibold text-indigo-600 hover:bg-gray-50 border-t border-gray-100 transition-colors"
+                                    >
+                                        View all notifications
+                                    </button>
                                 </div>
                             )}
                         </div>
 
-                        {/* Bar between bell icon and profile button */}
-                        <div className="h-10 w-px bg-gray-300"></div>
+                        {/* Divider */}
+                        <div className="h-10 w-px bg-gray-300" />
 
-
-                        <button className="flex items-center gap-2 hover:opacity-80 transition-opacity pl-2"
-                            onClick={handleProfileClick}
-
+                        {/* Profile */}
+                        <button
+                            className="flex items-center gap-2 hover:opacity-80 transition-opacity pl-2"
+                            onClick={() => router.push('/profile')}
                         >
                             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-800 flex items-center justify-center shrink-0">
                                 <span className="text-white font-medium text-xs sm:text-sm">
@@ -188,6 +229,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                     </div>
                 </div>
             </div>
-        </nav >
+        </nav>
     );
 }
