@@ -127,8 +127,8 @@ export default function RedeemPage() {
                 ))}
               </div>
 
-              {/* Pagination Controls - only for ALL view */}
-              {redeem.activeCategory === "ALL" && redeem.pagination && redeem.pagination.total_pages > 1 && (
+              {/* Pagination Controls */}
+              {redeem.pagination && redeem.pagination.total_pages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-8">
                   <Button
                     variant="outline"

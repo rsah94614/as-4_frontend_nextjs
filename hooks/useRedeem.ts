@@ -105,11 +105,14 @@ export function useRedeem() {
 
   useEffect(() => { loadInitial(); }, [loadInitial]);
 
-  // When page changes (after initial load), fetch that page
+  // When page changes
   const goToPage = useCallback((page: number) => {
     setCurrentPage(page);
-    loadCatalog(page);
-  }, [loadCatalog]);
+    // Only fetch from server when viewing ALL (category filtering is client-side)
+    if (activeCategory === "ALL") {
+      loadCatalog(page);
+    }
+  }, [loadCatalog, activeCategory]);
 
   // When category changes: fetch all items for filtering, or go back to paginated
   const handleCategoryChange = useCallback((cat: string) => {
@@ -118,7 +121,6 @@ export function useRedeem() {
     if (cat === "ALL") {
       loadCatalog(1);
     } else {
-      // Fetch all pages so we can filter across them
       loadAllItems();
     }
   }, [loadCatalog, loadAllItems]);
@@ -137,9 +139,31 @@ export function useRedeem() {
       i.category?.category_code.toLowerCase().includes("voucher")
     ), [filteredItems]);
 
-  const productItems = useMemo(() =>
+  const allProductItems = useMemo(() =>
     filteredItems.filter((i) => !couponItems.includes(i)),
     [filteredItems, couponItems]);
+
+  // Client-side pagination for filtered category results
+  const filteredTotalPages = Math.ceil(allProductItems.length / PAGE_SIZE);
+
+  const productItems = useMemo(() => {
+    if (activeCategory === "ALL") return allProductItems;
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return allProductItems.slice(start, start + PAGE_SIZE);
+  }, [allProductItems, activeCategory, currentPage]);
+
+  // Unified pagination info for the UI
+  const activePagination = useMemo(() => {
+    if (activeCategory === "ALL") return pagination;
+    return {
+      current_page: currentPage,
+      per_page: PAGE_SIZE,
+      total: allProductItems.length,
+      total_pages: filteredTotalPages,
+      has_next: currentPage < filteredTotalPages,
+      has_previous: currentPage > 1,
+    };
+  }, [activeCategory, pagination, currentPage, allProductItems.length, filteredTotalPages]);
 
   const availablePoints = wallet?.available_points ?? 0;
 
@@ -198,7 +222,7 @@ export function useRedeem() {
     setActiveCategory: handleCategoryChange,
     filteredItems,
     productItems,
-    pagination,
+    pagination: activePagination,
     currentPage,
     goToPage,
     dialogState,
