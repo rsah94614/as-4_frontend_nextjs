@@ -14,20 +14,72 @@ import {
   WalletData,
   DialogState,
   RedemptionResponse,
+  PaginatedCatalogResponse,
 } from "@/types/redeem-types";
+
+const PAGE_SIZE = 20;
 
 export function useRedeem() {
   const [items, setItems] = useState<RewardItem[]>([]);
+  const [allItems, setAllItems] = useState<RewardItem[]>([]);
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginatedCatalogResponse["pagination"] | null>(null);
+
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [dialogState, setDialogState] = useState<DialogState | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const loadAll = useCallback(async () => {
+  // Fetch a single page of catalog
+  const loadCatalog = useCallback(async (page: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const catalogData = await fetchCatalog(page, PAGE_SIZE);
+      setItems(catalogData.data);
+      setPagination(catalogData.pagination);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load catalog");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch ALL pages and combine items (used for category filtering)
+  const loadAllItems = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Fetch first page to know total_pages
+      const firstPage = await fetchCatalog(1, PAGE_SIZE);
+      let combined = [...firstPage.data];
+
+      // Fetch remaining pages in parallel
+      if (firstPage.pagination.total_pages > 1) {
+        const remaining = await Promise.all(
+          Array.from(
+            { length: firstPage.pagination.total_pages - 1 },
+            (_, i) => fetchCatalog(i + 2, PAGE_SIZE)
+          )
+        );
+        for (const page of remaining) {
+          combined = [...combined, ...page.data];
+        }
+      }
+
+      setAllItems(combined);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load catalog");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadInitial = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -35,12 +87,13 @@ export function useRedeem() {
       if (!user?.employee_id) throw new Error("Not authenticated");
 
       const [catalogData, catsData, walletData] = await Promise.all([
-        fetchCatalog(),
+        fetchCatalog(1, PAGE_SIZE),
         fetchCategories(),
         fetchWallet(user.employee_id),
       ]);
 
-      setItems(catalogData);
+      setItems(catalogData.data);
+      setPagination(catalogData.pagination);
       setCategories(catsData);
       setWallet(walletData);
     } catch (e) {
@@ -50,12 +103,31 @@ export function useRedeem() {
     }
   }, []);
 
-  useEffect(() => { loadAll(); }, [loadAll]);
+  useEffect(() => { loadInitial(); }, [loadInitial]);
 
+  // When page changes (after initial load), fetch that page
+  const goToPage = useCallback((page: number) => {
+    setCurrentPage(page);
+    loadCatalog(page);
+  }, [loadCatalog]);
+
+  // When category changes: fetch all items for filtering, or go back to paginated
+  const handleCategoryChange = useCallback((cat: string) => {
+    setActiveCategory(cat);
+    setCurrentPage(1);
+    if (cat === "ALL") {
+      loadCatalog(1);
+    } else {
+      // Fetch all pages so we can filter across them
+      loadAllItems();
+    }
+  }, [loadCatalog, loadAllItems]);
+
+  // When ALL: use paginated items. When category: filter from allItems
   const filteredItems = useMemo(() => {
     if (activeCategory === "ALL") return items;
-    return items.filter((i) => i.category?.category_id === activeCategory);
-  }, [items, activeCategory]);
+    return allItems.filter((i) => i.category?.category_id === activeCategory);
+  }, [items, allItems, activeCategory]);
 
   const couponItems = useMemo(() =>
     filteredItems.filter((i) =>
@@ -85,10 +157,10 @@ export function useRedeem() {
     setWallet((prev) =>
       prev
         ? {
-            ...prev,
-            available_points: prev.available_points - ptsSpent,
-            redeemed_points: prev.redeemed_points + ptsSpent,
-          }
+          ...prev,
+          available_points: prev.available_points - ptsSpent,
+          redeemed_points: prev.redeemed_points + ptsSpent,
+        }
         : prev
     );
 
@@ -106,8 +178,8 @@ export function useRedeem() {
               newStock <= 0
                 ? "Out of Stock"
                 : newStock < 10
-                ? "Limited Stock"
-                : "In Stock",
+                  ? "Limited Stock"
+                  : "In Stock",
           };
         }
         return i;
@@ -123,14 +195,17 @@ export function useRedeem() {
     error,
     availablePoints,
     activeCategory,
-    setActiveCategory,
+    setActiveCategory: handleCategoryChange,
     filteredItems,
     productItems,
+    pagination,
+    currentPage,
+    goToPage,
     dialogState,
     dialogOpen,
     openRedeem,
     closeDialog,
     handleSuccess,
-    reload: loadAll,
+    reload: loadInitial,
   };
 }
