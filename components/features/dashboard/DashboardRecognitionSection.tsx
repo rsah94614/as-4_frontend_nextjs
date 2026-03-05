@@ -1,8 +1,6 @@
 "use client";
-
-import React from "react";
 import DashboardRecognitionCard from "./DashboardRecognitionCard";
-import type { RecentReview } from "@/services/analytics-service";
+import type { RecentReview } from "@/types/dashboard-types";
 
 const AVATAR_COLORS = [
     "bg-purple-500", "bg-blue-500", "bg-orange-500",
