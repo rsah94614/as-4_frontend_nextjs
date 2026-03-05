@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as XLSX from "xlsx";
 import AdminTeamsSection from "./AdminTeamsSection";
-import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "./AdminTeamDetailsection";
+import AdminTeamDetailSection, { AdminTeamDetailSkeleton} from "./AdminTeamDetailsection";
 import { fetchTeamReport } from "@/services/analytics-service";
 import type { TeamSummaryResponse, TeamReportResponse } from "@/types/dashboard-types";
 

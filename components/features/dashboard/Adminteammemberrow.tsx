@@ -1,6 +1,6 @@
 "use client";
 
-import { scoreColor } from "./AdminTeamReportcard";
+import { scoreColor } from "./AdminTeamReportCard"
 import type { TeamMemberReportResponse } from "@/types/dashboard-types";
 
 interface Props {
@@ -36,7 +36,9 @@ export default function AdminTeamMemberRow({ member, rank }: Props) {
 
       {/* Reviews */}
       <td className="py-3.5 px-4 text-right">
-        <p className="text-sm font-bold text-gray-900">{member.reviews_received}</p>
+        <p className="text-sm font-bold text-gray-900">
+          {member.reviews_received}
+        </p>
         <p className="text-xs text-gray-400 mt-0.5">
           {member.reviews_this_month} this month
         </p>
@@ -44,13 +46,17 @@ export default function AdminTeamMemberRow({ member, rank }: Props) {
 
       {/* Rewards */}
       <td className="py-3.5 px-4 text-right">
-        <p className="text-sm font-bold text-gray-900">{member.rewards_redeemed}</p>
+        <p className="text-sm font-bold text-gray-900">
+          {member.rewards_redeemed}
+        </p>
       </td>
 
       {/* Performance */}
       <td className="py-3.5 px-4 min-w-[180px]">
         <div className="flex items-center justify-between mb-1.5">
-          <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${colors.text} ${colors.bg} ${colors.border}`}>
+          <span
+            className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${colors.text} ${colors.bg} ${colors.border}`}
+          >
             {colors.label}
           </span>
           <span className={`text-xs font-mono font-bold ${colors.text}`}>
