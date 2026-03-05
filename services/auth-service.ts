@@ -1,6 +1,7 @@
 // services/auth-service.ts - Authentication utility functions
 
 import axiosClient from './api-client'
+import axios from 'axios'
 
 /**
  * Storage keys for authentication tokens
@@ -105,9 +106,13 @@ export const auth = {
         if (!refreshToken) return false
 
         try {
-            const response = await axiosClient.post(AUTH_ENDPOINTS.REFRESH, {
-                refresh_token: refreshToken
-            })
+            // Use plain axios (NOT axiosClient) to avoid triggering the 401
+            // response interceptor again, which would cause an infinite loop.
+            const response = await axios.post(
+                AUTH_ENDPOINTS.REFRESH,
+                { refresh_token: refreshToken },
+                { headers: { 'Content-Type': 'application/json' } }
+            )
 
             const data = response.data
             auth.setTokens(
@@ -151,7 +156,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
             url,
             method: options.method || 'GET',
             data: options.body ? JSON.parse(options.body as string) : undefined,
-            headers: options.headers as any,
+            headers: options.headers as Record<string, string>,
         });
 
         // Return a Fetch-compatible response shim so existing code doesn't break
@@ -163,15 +168,16 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
                 get: (name: string) => response.headers[name.toLowerCase()],
             },
         } as unknown as Response;
-    } catch (error: any) {
+    } catch (error: unknown) {
         // If it's an Axios error with a response
-        if (error.response) {
+        const axiosErr = error as { response?: { status: number; data: unknown; headers: Record<string, string> } };
+        if (axiosErr.response) {
             return {
                 ok: false,
-                status: error.response.status,
-                json: async () => error.response.data,
+                status: axiosErr.response.status,
+                json: async () => axiosErr.response!.data,
                 headers: {
-                    get: (name: string) => error.response.headers[name.toLowerCase()],
+                    get: (name: string) => axiosErr.response!.headers[name.toLowerCase()],
                 },
             } as unknown as Response;
         }
@@ -195,10 +201,11 @@ export async function login(email: string, password: string) {
             data.expires_in
         )
         return { success: true, data }
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const axiosErr = error as { response?: { data?: { error?: { message?: string }; detail?: string } } };
         return {
             success: false,
-            error: error.response?.data?.error?.message || error.response?.data?.detail || 'Login failed'
+            error: axiosErr.response?.data?.error?.message || axiosErr.response?.data?.detail || 'Login failed'
         }
     }
 }
@@ -207,10 +214,11 @@ export async function forgotPassword(email: string) {
     try {
         const response = await axiosClient.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, { email })
         return { success: true, data: response.data }
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const axiosErr = error as { response?: { data?: { error?: { message?: string }; detail?: string } } };
         return {
             success: false,
-            error: error.response?.data?.error?.message || error.response?.data?.detail || 'Failed to send reset email'
+            error: axiosErr.response?.data?.error?.message || axiosErr.response?.data?.detail || 'Failed to send reset email'
         }
     }
 }
@@ -222,10 +230,11 @@ export async function resetPassword(token: string, newPassword: string) {
             new_password: newPassword,
         })
         return { success: true, data: response.data }
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const axiosErr = error as { response?: { data?: { error?: { message?: string }; detail?: string } } };
         return {
             success: false,
-            error: error.response?.data?.error?.message || error.response?.data?.detail || 'Failed to reset password'
+            error: axiosErr.response?.data?.error?.message || axiosErr.response?.data?.detail || 'Failed to reset password'
         }
     }
 }

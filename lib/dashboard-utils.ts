@@ -7,11 +7,6 @@ export function formatNumber(n: number | null): string {
     return n.toLocaleString();
 }
 
-export function formatGrowth(pct: number | null): string | undefined {
-    if (pct === null || pct === undefined) return undefined;
-    const sign = pct >= 0 ? "+" : "";
-    return `${sign}${pct}%`;
-}
 
 export function formatMonthComparison(
     thisMonth: number | null,

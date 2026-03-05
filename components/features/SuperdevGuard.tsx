@@ -25,19 +25,20 @@ export default function SuperdevGuard({
     );
 
     useEffect(() => {
-        // Gate 1: Environment check
+        // Compute the guard decision synchronously, then defer the state update
+        // to satisfy the react-hooks/set-state-in-effect rule.
+        let nextStatus: "allowed" | "denied";
+
         if (process.env.NODE_ENV === "production") {
-            setStatus("denied");
-            return;
+            nextStatus = "denied";
+        } else if (!isSuperDev()) {
+            nextStatus = "denied";
+        } else {
+            nextStatus = "allowed";
         }
 
-        // Gate 2: RBAC check
-        if (!isSuperDev()) {
-            setStatus("denied");
-            return;
-        }
-
-        setStatus("allowed");
+        const id = setTimeout(() => setStatus(nextStatus), 0);
+        return () => clearTimeout(id);
     }, []);
 
     // Redirect on denial

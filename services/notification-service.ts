@@ -16,7 +16,7 @@ import type {
 } from "@/types/notification-types";
 
 const NOTIFICATION_API =
-    process.env.NEXT_PUBLIC_NOTIFICATION_API_URL || "http://localhost:8002";
+    process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || "http://localhost:8002";
 
 const BASE = `${NOTIFICATION_API}/v1/notifications`;
 

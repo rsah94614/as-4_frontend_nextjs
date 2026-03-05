@@ -2,17 +2,15 @@ import { type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatNumber, formatGrowth } from "@/lib/dashboard-utils";
+import { formatNumber, formatMonthComparison } from "@/lib/dashboard-utils";
+import { type Metric } from "@/types/dashboard-types";
 
-interface StatValue {
-    value: number | null;
-    growth_percent: number | null;
-}
+
 
 interface DashboardCardProps {
     label: string;
     icon: LucideIcon;
-    stat?: StatValue;
+    stat?: Metric;
     loading?: boolean;
     changeLabel?: string;
     className?: string;
@@ -29,7 +27,7 @@ export default function DashboardCard({
     iconBgColor,
 }: DashboardCardProps) {
     const value = formatNumber(stat?.value ?? null);
-    const change = formatGrowth(stat?.growth_percent ?? null);
+    const change = formatMonthComparison(stat?.this_month ?? null, stat?.last_month ?? null);
 
     return (
         <Card className={cn("rounded-3xl border-0 shadow-none h-full", className)}>
