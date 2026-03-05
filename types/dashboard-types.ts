@@ -1,4 +1,4 @@
-type Metric = {
+export type Metric = {
     value: number;
     this_month: number;
     last_month: number;

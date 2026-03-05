@@ -30,12 +30,6 @@ function DashboardStatsSkeleton() {
     );
 }
 
-// Compute growth_percent from this_month / last_month for DashboardCard's stat prop
-function growthPct(thisMonth: number | null, lastMonth: number | null): number | null {
-    if (thisMonth === null || lastMonth === null) return null;
-    if (lastMonth === 0) return thisMonth > 0 ? 100 : 0;
-    return parseFloat((((thisMonth - lastMonth) / lastMonth) * 100).toFixed(0));
-}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -60,39 +54,27 @@ export default function DashboardStatsSection() {
     const cards = [
         {
             label: "Total Points:",
-            stat: {
-                value: data?.total_points.value ?? null,
-                growth_percent: growthPct(data?.total_points.this_month ?? null, data?.total_points.last_month ?? null),
-            },
+            stat: data?.total_points,
             icon: Users,
             color: "bg-[#FFE69C]",
         },
         {
             label: "Rewards Redeemed:",
-            stat: {
-                value: data?.rewards_redeemed.value ?? null,
-                growth_percent: growthPct(data?.rewards_redeemed.this_month ?? null, data?.rewards_redeemed.last_month ?? null),
-            },
+            stat: data?.rewards_redeemed,
             icon: Trophy,
-            color: "bg-[#EED9FF]",
+            color: "bg-[#EED9FF]"
         },
         {
             label: "Reviews Received:",
-            stat: {
-                value: data?.reviews_received.value ?? null,
-                growth_percent: growthPct(data?.reviews_received.this_month ?? null, data?.reviews_received.last_month ?? null),
-            },
+            stat: data?.reviews_received,
             icon: LayoutGrid,
-            color: "bg-[#D1FFD7]",
+            color: "bg-[#D1FFD7]"
         },
         {
             label: "Active Users:",
-            stat: {
-                value: data?.active_users.value ?? null,
-                growth_percent: growthPct(data?.active_users.this_month ?? null, data?.active_users.last_month ?? null),
-            },
+            stat: data?.active_users,
             icon: TrendingUp,
-            color: "bg-[#DFDFFF]",
+            color: "bg-[#DFDFFF]"
         },
     ];
 
