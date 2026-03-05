@@ -20,3 +20,24 @@ export function formatMonthComparison(
     const sign = pct >= 0 ? "+" : "";
     return `${sign}${pct.toFixed(0)}%`;
 }
+
+
+export function userInitials(username: string): string {
+    const parts = username.split(/[._\s-]+/);
+    if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return username.slice(0, 2).toUpperCase();
+}
+
+export function formatTime(iso: string): string {
+    const date = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60_000);
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return date.toLocaleDateString();
+}
