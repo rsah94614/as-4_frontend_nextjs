@@ -1,7 +1,7 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import HistoryCard from "./HistoryCard";
+import HistoryListSkeleton from "./HistoryListSkeleton";
 import type { HistoryItem, PeriodFilter, TypeFilter } from "./types";
 
 interface HistoryListProps {
@@ -11,8 +11,6 @@ interface HistoryListProps {
     error: string | null;
     onRetry: () => void;
     onClearFilters: () => void;
-    selectedPeriod: PeriodFilter;
-    selectedType: TypeFilter;
 }
 
 export default function HistoryList({
@@ -26,11 +24,7 @@ export default function HistoryList({
     return (
         <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
             {/* Loading */}
-            {loading && (
-                <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-                </div>
-            )}
+            {loading && <HistoryListSkeleton />}
 
             {/* Error */}
             {!loading && error && (
