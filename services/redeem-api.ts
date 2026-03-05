@@ -1,6 +1,5 @@
 import { fetchWithAuth } from "@/services/auth-service";
 import {
-  RewardItem,
   CategoryInfo,
   WalletData,
   RedemptionResponse,
@@ -13,16 +12,15 @@ const REWARDS_API =
 const WALLET_API =
   process.env.NEXT_PUBLIC_WALLET_API_URL || "http://localhost:8004";
 
-export async function fetchCatalog(): Promise<RewardItem[]> {
+export async function fetchCatalog(page = 1, size = 20): Promise<PaginatedCatalogResponse> {
   const res = await fetchWithAuth(
-    `${REWARDS_API}/v1/rewards/catalog?active_only=true&page=1&size=100`
+    `${REWARDS_API}/v1/rewards/catalog?active_only=true&page=${page}&size=${size}`
   );
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || "Failed to load catalog");
   }
-  const data: PaginatedCatalogResponse = await res.json();
-  return data.data;
+  return res.json();
 }
 
 export async function fetchCategories(): Promise<CategoryInfo[]> {
