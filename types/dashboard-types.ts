@@ -4,6 +4,15 @@ export type Metric = {
     last_month: number;
 };
 
+export interface RecentReview {
+    review_id: string;
+    reviewer_name: string;
+    rating: number;
+    comment: string;
+    review_at: string;
+}
+
+
 export type PlatformStatsResponse = {
     total_points: Metric;
     rewards_redeemed: Metric;
