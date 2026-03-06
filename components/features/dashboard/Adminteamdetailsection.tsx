@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import AdminTeamMemberRow from "./Adminteammemberrow";
-import { scoreColor } from "./AdminTeamReportCard";
+import { scoreColor } from "./Adminteamreportcard";
 import type { TeamReportResponse } from "@/types/dashboard-types";
 import * as XLSX from "xlsx";
 import {

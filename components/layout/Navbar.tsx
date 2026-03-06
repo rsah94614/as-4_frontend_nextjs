@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Bell, Menu } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { auth } from '@/services/auth-service';
 import { useRouter, usePathname } from 'next/navigation';
@@ -30,7 +30,6 @@ function formatRelativeTime(iso: string): string {
 }
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
-    const [searchQuery, setSearchQuery] = useState('');
     const [user] = useState(() => auth.getUser());
     const [showNotifications, setShowNotifications] = useState(false);
 
@@ -38,21 +37,17 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     const pathname = usePathname();
     const router = useRouter();
 
-    const { notifications, unreadCount, markAll, markOne } = useNotifications(10);
+    const { notifications, unreadCount, markOne } = useNotifications(10);
     const hasUnread = unreadCount > 0;
 
     // Close dropdown when navigating away
     useEffect(() => {
-        setShowNotifications(false);
+        // Use a slight delay or next tick to avoid synchronous setState inside effect warning
+        const timer = setTimeout(() => setShowNotifications(false), 0);
+        return () => clearTimeout(timer);
     }, [pathname]);
 
-    // Mark all as read when the /notifications page is visited
-    useEffect(() => {
-        if (pathname === '/notifications') {
-            markAll();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pathname]);
+
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -83,12 +78,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         if (window.innerWidth < 1024) {
             router.push('/notifications');
         } else {
-            const opening = !showNotifications;
-            setShowNotifications(opening);
-            if (opening) {
-                // Mark all as read when dropdown opens
-                markAll();
-            }
+            setShowNotifications(!showNotifications);
         }
     };
 
@@ -139,7 +129,9 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                         >
                             <Bell className="h-6 w-6 text-gray-900" />
                             {hasUnread && (
-                                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white pointer-events-none" />
+                                <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-white pointer-events-none shadow-sm">
+                                    {unreadCount > 9 ? "9+" : unreadCount}
+                                </span>
                             )}
                         </button>
 
