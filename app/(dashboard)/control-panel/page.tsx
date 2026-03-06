@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Trophy, Building2, UserRound, Users, Tags, Star, ShieldAlert, Loader2 } from 'lucide-react';
+import { Trophy, Building2, UserRound, Users, Tags, Star, ShieldAlert, Loader2,Shield } from 'lucide-react';
 import { auth } from '@/services/auth-service';
 import { isAdminUser } from '@/lib/role-utils';
 
@@ -14,6 +14,7 @@ const categories = [
   { title: 'Employees', description: 'View and manage staff profiles and access.', href: '/employees', icon: Users, color: 'bg-purple-100 text-purple-600', accent: 'group-hover:border-purple-200' },
   { title: 'Reward Categories', description: 'Organise rewards into logical groupings.', href: '/reward-categories', icon: Tags, color: 'bg-red-100 text-red-600', accent: 'group-hover:border-red-200' },
   { title: 'Reviews', description: 'Monitor all peer reviews. Low ratings are flagged automatically.', href: '/reviews', icon: Star, color: 'bg-amber-100 text-amber-600', accent: 'group-hover:border-amber-200' },
+  { title: 'Roles', description: 'Manage roles, assignments and route-level permissions.', href: '/roles', icon: Shield, color: 'bg-indigo-100 text-indigo-600', accent: 'group-hover:border-indigo-200' },
 ];
 
 export default function ControlPanelHub() {

@@ -1,6 +1,6 @@
 "use client";
 
-import { scoreColor } from "./AdminTeamReportCard"
+import { scoreColor } from "./Adminteamreportcard";
 import type { TeamMemberReportResponse } from "@/types/dashboard-types";
 
 interface Props {

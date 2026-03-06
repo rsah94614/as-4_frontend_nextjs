@@ -3,7 +3,7 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import AdminTeamReportCard from "./AdminTeamReportCard"
+import AdminTeamReportCard from "./Adminteamreportcard";
 import type { TeamSummaryResponse } from "@/types/dashboard-types";
 
 type SortOption = "score" | "points" | "members" | "name";
