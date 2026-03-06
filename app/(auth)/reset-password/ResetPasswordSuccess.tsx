@@ -23,7 +23,7 @@ export default function ResetPasswordSuccess() {
             </h2>
 
             <p className="text-gray-600 mb-6">
-              Redirecting to login…
+              Redirecting to login...
             </p>
 
             <Link href="/login">

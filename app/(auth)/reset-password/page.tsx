@@ -6,7 +6,7 @@ export default function Page() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <p className="text-gray-500">Loading reset password…</p>
+          <p className="text-gray-500">Loading reset password...</p>
         </div>
       }
     >

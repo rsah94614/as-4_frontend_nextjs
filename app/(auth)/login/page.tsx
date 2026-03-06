@@ -41,43 +41,16 @@ export default function LoginPage() {
       return 'Please enter a valid email address'
     }
 
-    // Check for @ symbol
-    if (!email.includes('@')) {
-      return 'Email must contain @ symbol'
-    }
-
-    // Reject incomplete emails like "user@"
-    const parts = email.split('@')
-    if (parts.length !== 2 || !parts[1]) {
-      return 'Please enter a complete email address'
-    }
-
-    // Reject emails without domain like "user@gmail"
-    const domain = parts[1]
-    if (!domain.includes('.')) {
-      return 'Email must include a domain (e.g., user@gmail.com)'
-    }
-
-    // Company lock - reject public emails (optional - can be toggled)
-    const publicDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com']
-    const COMPANY_LOCK_ENABLED = false // Set to true to enable company email requirement
-    if (COMPANY_LOCK_ENABLED && publicDomains.includes(domain.toLowerCase())) {
-      return 'Please use your company email address'
-    }
-
     return null
   }
 
   // Password validation function
-  const validatePassword = (password: string): string | null => {
-    if (!password) {
-      return 'Password is required'
-    }
-
-    if (password.length < 8) {
-      return 'Password must be at least 8 characters'
-    }
-
+  const validatePassword = (password: string) => {
+    if (!password) return 'Password is required'
+    if (password.length < 8) return 'At least 8 characters required'
+    if (!/[A-Z]/.test(password)) return 'Must include uppercase letter'
+    if (!/[a-z]/.test(password)) return 'Must include lowercase letter'
+    if (!/[0-9]/.test(password)) return 'Must include a number'
     return null
   }
 
@@ -106,7 +79,7 @@ export default function LoginPage() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     // Mark all fields as touched
