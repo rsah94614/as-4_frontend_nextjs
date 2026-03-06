@@ -126,7 +126,7 @@ export default function ResetPasswordForm({
                 {state.loading ? (
                   <span className="flex gap-2 items-center">
                     <Loader2 className="animate-spin" />
-                    Resetting…
+                    Resetting...
                   </span>
                 ) : (
                   'Reset password'
