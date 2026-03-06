@@ -69,7 +69,7 @@ export default function ReviewComposeForm({
                 {view === "compose" && (
                     <Card className="rounded-2xl border border-gray-100 shadow-none py-0">
                         <CardContent className="p-5">
-                            <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                 <Users size={15} className="text-indigo-600" /> Who are you reviewing?
                                 <span className="text-red-400 font-normal text-xs ml-auto">required</span>
                             </label>
@@ -86,7 +86,7 @@ export default function ReviewComposeForm({
                 {/* Star rating */}
                 <Card className="rounded-2xl border border-gray-100 shadow-none py-0">
                     <CardContent className="p-5">
-                        <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                             <Star size={15} className="text-amber-400" /> Star Rating
                             <span className="text-red-400 font-normal text-xs ml-auto">required</span>
                         </label>
@@ -104,7 +104,7 @@ export default function ReviewComposeForm({
                 {/* Category */}
                 <Card className="rounded-2xl border border-gray-100 shadow-none py-0">
                     <CardContent className="p-5">
-                        <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                             <Tag size={15} className="text-indigo-600" /> Recognition Category
                             <span className="text-gray-400 font-normal text-xs ml-auto">
                                 {categoryIds.length}/5 selected
@@ -174,7 +174,7 @@ export default function ReviewComposeForm({
                                         ) : (
                                             <ImageIcon size={12} className="text-blue-500" />
                                         )}
-                                        <span className="max-w-[120px] truncate text-gray-600">{f.name}</span>
+                                        <span className="max-w-30 truncate text-gray-600">{f.name}</span>
                                         <button
                                             type="button"
                                             onClick={() => onFilesChange((fs) => fs.filter((_, j) => j !== i))}
@@ -251,10 +251,10 @@ export default function ReviewComposeForm({
                                 "One review per teammate per month",
                                 "You cannot review yourself",
                                 "Recognition is credited automatically",
-                                "You can edit your own reviews anytime",
+
                             ].map((text) => (
                                 <li key={text} className="flex items-start gap-1.5">
-                                    <Check size={11} className="mt-0.5 flex-shrink-0 text-amber-600" />
+                                    <Check size={11} className="mt-0.5 shrink-0 text-amber-600" />
                                     {text}
                                 </li>
                             ))}
