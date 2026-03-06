@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as XLSX from "xlsx";
 import AdminTeamsSection from "./Adminteamssection";
-import AdminTeamDetailSection, { AdminTeamDetailSkeleton} from "./Adminteamdetailsection";
+import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "./Adminteamdetailsection";
 import { fetchTeamReport } from "@/services/analytics-service";
 import type { TeamSummaryResponse, TeamReportResponse } from "@/types/dashboard-types";
 
@@ -34,8 +34,8 @@ async function fetchTeamsWithDetail(): Promise<{
             detail = body?.detail ?? body?.message ?? "";
         } catch { /* */ }
         return { data: null, error: detail || `HTTP ${res.status}` };
-    } catch (e: any) {
-        return { data: null, error: e?.message ?? "Unexpected error" };
+    } catch (e: unknown) {
+        return { data: null, error: e instanceof Error ? e.message : "Unexpected error" };
     }
 }
 
@@ -66,7 +66,7 @@ function TeamsErrorState({ onRetry }: { onRetry: () => void }) {
             <div className="space-y-1.5">
                 <p className="text-base font-bold text-gray-900">Something went wrong</p>
                 <p className="text-sm text-gray-500 max-w-xs">
-                    We couldn't load the team reports. Please check your connection and try again.
+                    We couldn&apos;t load the team reports. Please check your connection and try again.
                 </p>
             </div>
             <Button
@@ -82,14 +82,14 @@ function TeamsErrorState({ onRetry }: { onRetry: () => void }) {
 }
 
 export default function AdminDashboard() {
-    const [teams, setTeams]                   = useState<TeamSummaryResponse[]>([]);
-    const [selectedTeam, setSelectedTeam]     = useState<TeamReportResponse | null>(null);
-    const [loadingTeams, setLoadingTeams]     = useState(true);
-    const [loadingReport, setLoadingReport]   = useState(false);
-    const [teamsError, setTeamsError]         = useState<string | null>(null);
-    const [reportError, setReportError]       = useState<string | null>(null);
-    const [searchQuery, setSearchQuery]       = useState("");
-    const [sortBy, setSortBy]                 = useState<SortOption>("score");
+    const [teams, setTeams] = useState<TeamSummaryResponse[]>([]);
+    const [selectedTeam, setSelectedTeam] = useState<TeamReportResponse | null>(null);
+    const [loadingTeams, setLoadingTeams] = useState(true);
+    const [loadingReport, setLoadingReport] = useState(false);
+    const [teamsError, setTeamsError] = useState<string | null>(null);
+    const [reportError, setReportError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortBy, setSortBy] = useState<SortOption>("score");
     const [downloadingAll, setDownloadingAll] = useState(false);
 
     const loadTeams = useCallback(async () => {
@@ -112,8 +112,8 @@ export default function AdminDashboard() {
             const summaryRows = teams.map(t => [
                 t.department_name, t.total_members, t.total_points,
                 `${t.avg_performance_score}%`,
-                (t as any).total_reviews ?? "—",
-                (t as any).total_rewards ?? "—",
+                (t as TeamSummaryResponse & { total_reviews?: number }).total_reviews ?? "—",
+                (t as TeamSummaryResponse & { total_rewards?: number }).total_rewards ?? "—",
             ]);
             const summarySheet = XLSX.utils.aoa_to_sheet([summaryHeaders, ...summaryRows]);
             summarySheet["!cols"] = [{ wch: 24 }, { wch: 10 }, { wch: 14 }, { wch: 22 }, { wch: 18 }, { wch: 18 }];
@@ -142,7 +142,7 @@ export default function AdminDashboard() {
                 }
             });
             XLSX.writeFile(wb, `All_Team_Reports_${new Date().toISOString().slice(0, 10)}.xlsx`);
-        } catch (e: any) {
+        } catch {
             setTeamsError("Download failed. Please try again.");
         } finally {
             setDownloadingAll(false);
@@ -241,7 +241,7 @@ export default function AdminDashboard() {
                     <div className="space-y-1">
                         <p className="text-base font-bold text-gray-900">Something went wrong</p>
                         <p className="text-sm text-gray-500 max-w-xs">
-                            We couldn't load this team's report. Go back and try another team.
+                            We couldn&apos;t load this team&apos;s report. Go back and try another team.
                         </p>
                     </div>
                     <Button

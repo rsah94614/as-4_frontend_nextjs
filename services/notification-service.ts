@@ -1,24 +1,13 @@
 // services/notification-service.ts
-// Notification API service — fetches and mutates notifications.
-//
-// Endpoints (all prefixed /v1/notifications):
-//   GET    ""               → list notifications
-//   GET    "/unread-count"  → get unread count
-//   PUT    "/read-all"      → mark all as read
-//   PUT    "/{id}/read"     → mark one as read
+// Notification API service — refactored to use dedicated Axios client.
 
-import { fetchWithAuth } from "@/services/auth-service";
+import employeeApiClient from "@/services/employee-api-client";
 import type {
     Notification,
     NotificationListResponse,
-    UnreadCountResponse,
-    MarkAllReadResponse,
 } from "@/types/notification-types";
 
-const NOTIFICATION_API =
-    process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || "http://localhost:8002";
-
-const BASE = `${NOTIFICATION_API}/v1/notifications`;
+const BASE_URL = "/notifications";
 
 // ─── List ─────────────────────────────────────────────────────────────────────
 
@@ -26,43 +15,38 @@ export async function getNotifications(
     limit = 50,
     unreadOnly = false
 ): Promise<NotificationListResponse> {
-    const params = new URLSearchParams({
-        limit: String(limit),
-        unread_only: String(unreadOnly),
-    });
-    const res = await fetchWithAuth(`${BASE}?${params}`);
-    if (!res.ok) throw new Error(`Failed to fetch notifications (${res.status})`);
-    return res.json();
+    const params = {
+        limit,
+        unread_only: unreadOnly,
+    };
+    const res = await employeeApiClient.get(BASE_URL, { params });
+    return res.data;
 }
 
 // ─── Unread count ─────────────────────────────────────────────────────────────
 
 export async function getUnreadCount(): Promise<number> {
     try {
-        const res = await fetchWithAuth(`${BASE}/unread-count`);
-        if (!res.ok) return 0;
-        const data: UnreadCountResponse = await res.json();
-        return data.unread_count;
-    } catch {
-        return 0;
+        const res = await employeeApiClient.get(`${BASE_URL}/unread-count`);
+        return res.data.unread_count;
+    } catch (err) {
+        console.error("[NotificationService] getUnreadCount failed:", err);
+        return 0; // Return 0 to avoid breaking UI, but log error
     }
 }
 
 // ─── Mark one as read ─────────────────────────────────────────────────────────
 
 export async function markOneRead(notificationId: string): Promise<Notification> {
-    const res = await fetchWithAuth(`${BASE}/${notificationId}/read`, {
-        method: "PUT",
-    });
-    if (!res.ok) throw new Error(`Failed to mark notification as read (${res.status})`);
-    return res.json();
+    // Some backends require an empty body for PUT
+    const res = await employeeApiClient.put(`${BASE_URL}/${notificationId}/read`, {});
+    return res.data;
 }
 
 // ─── Mark all as read ────────────────────────────────────────────────────────
 
 export async function markAllRead(): Promise<number> {
-    const res = await fetchWithAuth(`${BASE}/read-all`, { method: "PUT" });
-    if (!res.ok) throw new Error(`Failed to mark all as read (${res.status})`);
-    const data: MarkAllReadResponse = await res.json();
-    return data.marked_read;
+    // Some backends require an empty body for PUT
+    const res = await employeeApiClient.put(`${BASE_URL}/read-all`, {});
+    return res.data.marked_read;
 }
