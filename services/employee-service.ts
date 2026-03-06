@@ -151,9 +151,13 @@ export const employeeService = {
 /**
  * Assembles the three pieces the review page needs, using only real endpoints:
  *
- *  loggedInUser  — auth.getUser().employee_id → GET /v1/employees/{myId}
- *  teamMembers   — GET /v1/employees?manager_id={myId}  (my direct reports)
- *  teamLeader    — GET /v1/employees/{manager_id}        (my manager)
+ *  loggedInUser  — GET /v1/employees/{myId}
+ *  teamLeader    — GET /v1/employees/{manager_id}   (my manager)
+ *  teamMembers   — GET /v1/employees?manager_id={manager_id}
+ *                  i.e. colleagues who share my manager, excluding myself.
+ *
+ *  If the logged-in user has no manager (they ARE a top-level manager),
+ *  fall back to fetching their own direct reports instead.
  */
 export async function getTeamMembersForUI(): Promise<{
     loggedInUser: TeamMember
@@ -163,27 +167,37 @@ export async function getTeamMembersForUI(): Promise<{
     // 1. Get current employee_id from the user stored in localStorage at login
     const myId = requireAuthenticatedUserId()
 
-    // 2. Fetch own full profile + direct reports in parallel
-    const [myDetail, teamRes] = await Promise.all([
-        employeeService.getEmployee(myId),
-        employeeService.listEmployees({ manager_id: myId, limit: 100 }),
-    ])
+    // 2. Fetch own full profile
+    const myDetail = await employeeService.getEmployee(myId)
 
-    // 3. Fetch manager if the profile has one
-    let teamLeader: TeamMember | null = null
-    if (myDetail.manager?.employee_id) {
-        try {
-            const mgr = await employeeService.getEmployee(myDetail.manager.employee_id)
-            teamLeader = detailToTeamMember(mgr)
-        } catch {
-            // Manager fetch failed — don't crash the page
-            teamLeader = null
+    const managerId = myDetail.manager?.employee_id
+
+    if (managerId) {
+        // 3a. Has a manager — fetch manager detail + all colleagues in parallel
+        const [teamLeaderDetail, colleaguesRes] = await Promise.all([
+            employeeService.getEmployee(managerId).catch(() => null),
+            employeeService.listEmployees({ manager_id: managerId, limit: 100 }),
+        ])
+
+        return {
+            loggedInUser: detailToTeamMember(myDetail),
+            // Exclude self from the reviewable list
+            teamMembers: colleaguesRes.data
+                .filter((e) => e.employee_id !== myId)
+                .map(listItemToTeamMember),
+            teamLeader: teamLeaderDetail ? detailToTeamMember(teamLeaderDetail) : null,
         }
-    }
+    } else {
+        // 3b. No manager — this user is a top-level manager; show their direct reports
+        const directReportsRes = await employeeService.listEmployees({
+            manager_id: myId,
+            limit: 100,
+        })
 
-    return {
-        loggedInUser: detailToTeamMember(myDetail),
-        teamMembers: teamRes.data.map(listItemToTeamMember),
-        teamLeader,
+        return {
+            loggedInUser: detailToTeamMember(myDetail),
+            teamMembers: directReportsRes.data.map(listItemToTeamMember),
+            teamLeader: null,
+        }
     }
 }

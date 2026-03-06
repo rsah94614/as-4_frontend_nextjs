@@ -83,8 +83,8 @@ export default function ForgotPasswordPage() {
                 <Image
                   src="/images/Logo.png"
                   alt="Logo"
-                  width={80}
-                  height={80}
+                  width={200}
+                  height={200}
                   className="rounded-2xl"
                 />
               </div>
