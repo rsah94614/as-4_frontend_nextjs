@@ -131,17 +131,15 @@ export function useRedeem() {
     return allItems.filter((i) => i.category?.category_id === activeCategory);
   }, [items, allItems, activeCategory]);
 
-  const couponItems = useMemo(() =>
+  const voucherItems = useMemo(() =>
     filteredItems.filter((i) =>
-      i.reward_code.toLowerCase().includes("coupon") ||
       i.reward_code.toLowerCase().includes("voucher") ||
-      i.category?.category_code.toLowerCase().includes("coupon") ||
       i.category?.category_code.toLowerCase().includes("voucher")
     ), [filteredItems]);
 
   const allProductItems = useMemo(() =>
-    filteredItems.filter((i) => !couponItems.includes(i)),
-    [filteredItems, couponItems]);
+    filteredItems.filter((i) => !voucherItems.includes(i)),
+    [filteredItems, voucherItems]);
 
   // Client-side pagination for filtered category results
   const filteredTotalPages = Math.ceil(allProductItems.length / PAGE_SIZE);

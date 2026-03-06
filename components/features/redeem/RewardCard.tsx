@@ -13,9 +13,8 @@ interface Props {
 export default function RewardCard({ item, canAfford, onRedeem }: Props) {
   const outOfStock = item.stock_status === "Out of Stock";
 
-  const isCoupon =
-    item.category?.category_code?.toLowerCase().includes("coupon") ||
-    item.reward_code?.toLowerCase().includes("coupon") ||
+  const isVoucher =
+    item.category?.category_code?.toLowerCase().includes("voucher") ||
     item.reward_code?.toLowerCase().includes("voucher");
 
   const disabled = outOfStock || !canAfford;
@@ -31,7 +30,7 @@ export default function RewardCard({ item, canAfford, onRedeem }: Props) {
     >
       <div
         className={`h-2 w-full ${
-          isCoupon
+          isVoucher
             ? "bg-gradient-to-r from-amber-400 to-orange-400"
             : "bg-gradient-to-r from-indigo-400 to-violet-500"
         }`}
@@ -41,10 +40,10 @@ export default function RewardCard({ item, canAfford, onRedeem }: Props) {
         <div className="flex items-start justify-between mb-3">
           <div
             className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
-              isCoupon ? "bg-amber-50" : "bg-indigo-50"
+              isVoucher ? "bg-amber-50" : "bg-indigo-50"
             }`}
           >
-            {isCoupon ? (
+            {isVoucher ? (
               <TicketPercent size={22} className="text-amber-500" />
             ) : (
               <Package size={22} className="text-indigo-500" />
