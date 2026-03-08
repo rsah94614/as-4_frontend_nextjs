@@ -35,7 +35,7 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
                         <Badge
                             variant="secondary"
                             className={`text-[10px] font-bold uppercase tracking-wider rounded-full
-                ${isMine ? "bg-indigo-100 text-indigo-700" : "bg-green-100 text-green-700"}`}
+                ${isMine ? "bg-purple-100 text-purple-700" : "bg-green-100 text-green-700"}`}
                         >
                             {isMine ? "Given" : "Received"}
                         </Badge>
@@ -85,7 +85,7 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
                                 href={review.image_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[11px] text-indigo-600 hover:underline flex items-center gap-1 font-medium"
+                                className="text-[11px] text-purple-700 hover:underline flex items-center gap-1 font-medium"
                             >
                                 <ImageIcon size={10} /> Image
                             </a>
@@ -95,7 +95,7 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
                                 href={review.video_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[11px] text-indigo-600 hover:underline flex items-center gap-1 font-medium"
+                                className="text-[11px] text-purple-700 hover:underline flex items-center gap-1 font-medium"
                             >
                                 <Video size={10} /> Video
                             </a>

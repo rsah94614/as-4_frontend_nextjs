@@ -105,7 +105,7 @@ const KPI_CONFIG = [
     label: "Members",
     icon: Users,
     bg: "bg-[#DFDFFF]",
-    iconColor: "text-indigo-600",
+    iconColor: "text-purple-700",
   },
   {
     key: "total_points" as const,
@@ -183,10 +183,10 @@ function MemberPointsChart({ report }: Props) {
                 fontSize: 12,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
               }}
-              formatter={(value: number | string | undefined) =>
+              formatter={(value) =>
                 typeof value === "number"
                   ? value.toLocaleString()
-                  : (value ?? "0")
+                  : String(value ?? "0")
               }
             />
             <Legend
@@ -251,9 +251,9 @@ function MemberScoreChart({ report }: Props) {
                 fontSize: 12,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
               }}
-              formatter={(value: number | string | undefined, _name, props) => {
-                const score = value ?? 0;
-                const label = props?.payload?.label ?? "";
+              formatter={(value, _name, props) => {
+                const score = typeof value === "number" ? value : Number(value) || 0;
+                const label = (props as { payload?: { label?: string } })?.payload?.label ?? "";
                 return [`${score} — ${label}`, "Score"];
               }}
             />

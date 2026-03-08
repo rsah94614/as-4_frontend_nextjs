@@ -13,18 +13,18 @@ export default function WalletBanner({ wallet }: Props) {
   const availablePoints = wallet.available_points;
 
   return (
-    <div className="flex items-center justify-between rounded-2xl bg-indigo-50 border border-indigo-100 px-6 py-4 mb-10">
+    <div className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-purple-50 to-fuchsia-50 border border-purple-100 px-6 py-4 mb-10">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-          <Coins size={20} className="text-indigo-600" />
+        <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+          <Coins size={20} className="text-purple-700" />
         </div>
         <div>
-          <p className="text-xs text-indigo-500 font-medium">
+          <p className="text-xs text-purple-600 font-medium">
             Available Balance
           </p>
-          <p className="text-2xl font-bold text-indigo-800 leading-none">
+          <p className="text-2xl font-bold text-purple-800 leading-none">
             {availablePoints.toLocaleString()}
-            <span className="text-sm font-normal text-indigo-400 ml-1.5">
+            <span className="text-sm font-normal text-purple-400 ml-1.5">
               pts
             </span>
           </p>

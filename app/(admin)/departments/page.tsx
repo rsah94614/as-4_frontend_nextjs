@@ -24,7 +24,7 @@ function apiError(err: unknown, fallback: string): string {
 }
 
 const inputCls =
-    "w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-300 outline-none text-sm bg-white text-black placeholder:text-slate-400";
+    "w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-purple-300 outline-none text-sm bg-white text-black placeholder:text-slate-400";
 
 function Field({
     label, hint, children,
@@ -221,7 +221,7 @@ export default function DepartmentsPage() {
                                 onChange={e => setSearchInput(e.target.value)}
                                 onKeyDown={e => { if (e.key === "Enter") { setSearch(searchInput); setPage(1); } }}
                                 placeholder="Search by name or code..."
-                                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-black focus:outline-none focus:ring-2 focus:ring-orange-300 bg-white"
+                                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-black focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white"
                             />
                         </div>
                         <button
@@ -240,7 +240,7 @@ export default function DepartmentsPage() {
                         )}
                         <button
                             onClick={loadDepartments}
-                            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-orange-500 hover:border-orange-300 transition ml-auto"
+                            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-purple-600 hover:border-purple-300 transition ml-auto"
                         >
                             <RefreshCw className="w-4 h-4" />
                         </button>
@@ -284,7 +284,7 @@ export default function DepartmentsPage() {
                                         <tr key={dept.department_id} className="hover:bg-slate-50/60 transition">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                                    <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
                                                         {dept.department_name.charAt(0).toUpperCase()}
                                                     </div>
                                                     <span className="font-semibold text-black">{dept.department_name}</span>
@@ -307,7 +307,7 @@ export default function DepartmentsPage() {
                                             <td className="p-4">
                                                 {dept.manager ? (
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-[10px] font-bold">
+                                                        <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-bold">
                                                             {dept.manager.username.charAt(0).toUpperCase()}
                                                         </div>
                                                         <span className="text-xs text-slate-700 font-medium">{dept.manager.username}</span>
@@ -327,7 +327,7 @@ export default function DepartmentsPage() {
                                             <td className="p-4 text-right">
                                                 <button
                                                     onClick={() => openEdit(dept)}
-                                                    className="text-sm font-semibold text-black underline hover:text-orange-500 transition"
+                                                    className="text-sm font-semibold text-black underline hover:text-purple-600 transition"
                                                 >
                                                     Edit
                                                 </button>

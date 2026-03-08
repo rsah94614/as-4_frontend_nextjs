@@ -12,7 +12,7 @@ const categories = [
   { title: 'Departments', description: 'Configure organisational department structures.', href: '/departments', icon: Building2, color: 'bg-blue-100 text-blue-600', accent: 'group-hover:border-blue-200' },
   { title: 'Designations', description: 'Manage employee job titles and hierarchy levels.', href: '/designations', icon: UserRound, color: 'bg-green-100 text-green-600', accent: 'group-hover:border-green-200' },
   { title: 'Employees', description: 'View and manage staff profiles and access.', href: '/employees', icon: Users, color: 'bg-purple-100 text-purple-600', accent: 'group-hover:border-purple-200' },
-  { title: 'Reward Categories', description: 'Organise rewards into logical groupings.', href: '/reward-categories', icon: Tags, color: 'bg-red-100 text-red-600', accent: 'group-hover:border-red-200' },
+  { title: 'Reward Categories', description: 'Organise rewards into logical groupings.', href: '/reward-categories', icon: Tags, color: 'bg-fuchsia-100 text-fuchsia-600', accent: 'group-hover:border-fuchsia-200' },
   { title: 'Reviews', description: 'Monitor all peer reviews. Low ratings are flagged automatically.', href: '/reviews', icon: Star, color: 'bg-amber-100 text-amber-600', accent: 'group-hover:border-amber-200' },
   { title: 'Roles', description: 'Manage roles, assignments and route-level permissions.', href: '/roles', icon: Shield, color: 'bg-indigo-100 text-indigo-600', accent: 'group-hover:border-indigo-200' },
   { title: 'Audit Logs', description: 'Track and review all system activity and admin actions.', href: '/audit-logs', icon: ClipboardList, color: 'bg-teal-100 text-teal-600', accent: 'group-hover:border-teal-200' },
@@ -35,7 +35,7 @@ export default function ControlPanelHub() {
   if (!user) {
     return (
       <div className="flex items-center justify-center py-32">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
       </div>
     );
   }
@@ -54,7 +54,7 @@ export default function ControlPanelHub() {
           </p>
           <Link
             href="/dashboard"
-            className="inline-block mt-2 px-5 py-2.5 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition"
+            className="inline-block mt-2 px-5 py-2.5 rounded-xl bg-purple-700 text-white text-sm font-semibold hover:bg-purple-800 transition"
           >
             Go to Dashboard
           </Link>
@@ -72,7 +72,7 @@ export default function ControlPanelHub() {
       </div>
 
       {/* Admin badge */}
-      <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-sm font-semibold">
+      <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-sm font-semibold">
         <ShieldAlert className="w-4 h-4" />
         Admin Access
       </div>

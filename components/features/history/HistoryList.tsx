@@ -32,7 +32,7 @@ export default function HistoryList({
                     <p className="text-sm text-red-500">{error}</p>
                     <button
                         onClick={onRetry}
-                        className="mt-3 text-sm text-indigo-600 hover:underline"
+                        className="mt-3 text-sm text-purple-700 hover:underline"
                     >
                         Try again
                     </button>
@@ -54,7 +54,7 @@ export default function HistoryList({
                     </p>
                     <button
                         onClick={onClearFilters}
-                        className="mt-3 text-sm text-indigo-600 hover:underline"
+                        className="mt-3 text-sm text-purple-700 hover:underline"
                     >
                         Clear filters
                     </button>

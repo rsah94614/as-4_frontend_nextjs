@@ -38,7 +38,7 @@ export default function ReviewStatsSection({
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-            <Card className="rounded-2xl border-0 shadow-none bg-indigo-200/60 border-indigo-200/40">
+            <Card className="rounded-2xl border-0 shadow-none bg-purple-200/60 border-purple-200/40">
                 <CardContent className="p-6">
                     <p className="text-sm text-gray-500">Given This Month</p>
                     <h2 className="text-3xl font-semibold mt-2 text-gray-900">{givenThisMonth}</h2>
