@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Trophy, Building2, UserRound, Users, Tags, Star, ShieldAlert, Loader2,Shield } from 'lucide-react';
+import { Trophy, Building2, UserRound, Users, Tags, Star, ShieldAlert, Loader2, Shield, ClipboardList, TrendingUp, Activity } from 'lucide-react';
 import { auth } from '@/services/auth-service';
 import { isAdminUser } from '@/lib/role-utils';
 
@@ -14,7 +14,10 @@ const categories = [
   { title: 'Employees', description: 'View and manage staff profiles and access.', href: '/employees', icon: Users, color: 'bg-purple-100 text-purple-600', accent: 'group-hover:border-purple-200' },
   { title: 'Reward Categories', description: 'Organise rewards into logical groupings.', href: '/reward-categories', icon: Tags, color: 'bg-fuchsia-100 text-fuchsia-600', accent: 'group-hover:border-fuchsia-200' },
   { title: 'Reviews', description: 'Monitor all peer reviews. Low ratings are flagged automatically.', href: '/reviews', icon: Star, color: 'bg-amber-100 text-amber-600', accent: 'group-hover:border-amber-200' },
-  { title: 'Roles', description: 'Manage roles, assignments and route-level permissions.', href: '/roles', icon: Shield, color: 'bg-purple-100 text-purple-600', accent: 'group-hover:border-purple-200' },
+  { title: 'Roles', description: 'Manage roles, assignments and route-level permissions.', href: '/roles', icon: Shield, color: 'bg-indigo-100 text-indigo-600', accent: 'group-hover:border-indigo-200' },
+  { title: 'Audit Logs', description: 'Track and review all system activity and admin actions.', href: '/audit-logs', icon: ClipboardList, color: 'bg-teal-100 text-teal-600', accent: 'group-hover:border-teal-200' },
+  { title: 'Seasonal Multipliers', description: 'Configure point multipliers for seasonal reward campaigns.', href: '/seasonal-multipliers', icon: TrendingUp, color: 'bg-pink-100 text-pink-600', accent: 'group-hover:border-pink-200' },
+  { title: 'Statuses', description: 'Define and manage employee and reward status types.', href: '/statuses', icon: Activity, color: 'bg-cyan-100 text-cyan-600', accent: 'group-hover:border-cyan-200' },
 ];
 
 export default function ControlPanelHub() {
