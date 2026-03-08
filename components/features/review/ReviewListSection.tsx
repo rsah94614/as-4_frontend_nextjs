@@ -52,7 +52,7 @@ export default function ReviewListSection({
                         className={cn(
                             "rounded-full capitalize",
                             listTab === tab
-                                ? "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
+                                ? "bg-purple-700 text-white shadow-sm hover:bg-purple-800"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                         )}
                     >
@@ -73,7 +73,7 @@ export default function ReviewListSection({
                 <div className="flex flex-col items-center py-20 gap-3">
                     <AlertCircle className="w-10 h-10 text-red-300" />
                     <p className="text-gray-500 text-sm">{dataError}</p>
-                    <button onClick={() => onLoadReviews(1)} className="text-sm text-indigo-500 underline">
+                    <button onClick={() => onLoadReviews(1)} className="text-sm text-purple-600 underline">
                         Retry
                     </button>
                 </div>
@@ -82,8 +82,8 @@ export default function ReviewListSection({
             {/* Empty */}
             {!loadingData && !dataError && filteredReviews.length === 0 && (
                 <div className="flex flex-col items-center py-20 gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center">
-                        <MessageSquare className="w-7 h-7 text-indigo-300" strokeWidth={1.5} />
+                    <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center">
+                        <MessageSquare className="w-7 h-7 text-purple-300" strokeWidth={1.5} />
                     </div>
                     <p className="text-gray-500 text-sm font-medium">
                         {listTab === "given"
@@ -96,7 +96,7 @@ export default function ReviewListSection({
                         <Button
                             variant="ghost"
                             onClick={onCompose}
-                            className="text-sm text-indigo-600 font-semibold bg-indigo-50 hover:bg-indigo-100 rounded-xl"
+                            className="text-sm text-purple-700 font-semibold bg-purple-50 hover:bg-purple-100 rounded-xl"
                         >
                             Write your first review →
                         </Button>

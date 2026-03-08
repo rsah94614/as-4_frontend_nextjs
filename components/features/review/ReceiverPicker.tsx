@@ -32,7 +32,7 @@ export default function ReceiverPicker({
                 className={cn(
                     "w-full flex items-center gap-3 rounded-xl border bg-gray-50 px-4 py-3 text-left transition-all",
                     open
-                        ? "ring-2 ring-indigo-300 border-transparent"
+                        ? "ring-2 ring-purple-300 border-transparent"
                         : "border-gray-200 hover:border-gray-300"
                 )}
             >
@@ -42,8 +42,8 @@ export default function ReceiverPicker({
                             className={cn(
                                 "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0",
                                 selected.isManager
-                                    ? "bg-orange-100 text-orange-600"
-                                    : "bg-indigo-100 text-indigo-600"
+                                    ? "bg-purple-200 text-purple-700"
+                                    : "bg-purple-100 text-purple-700"
                             )}
                         >
                             {selected.name.charAt(0).toUpperCase()}
@@ -92,16 +92,16 @@ export default function ReceiverPicker({
                                         "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors",
                                         done
                                             ? "opacity-40 cursor-not-allowed bg-gray-50"
-                                            : "hover:bg-indigo-50 cursor-pointer",
-                                        receiverId === m.id && "bg-indigo-50"
+                                            : "hover:bg-purple-50 cursor-pointer",
+                                        receiverId === m.id && "bg-purple-50"
                                     )}
                                 >
                                     <div
                                         className={cn(
                                             "w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0",
                                             m.isManager
-                                                ? "bg-orange-100 text-orange-600"
-                                                : "bg-indigo-100 text-indigo-600"
+                                                ? "bg-purple-200 text-purple-700"
+                                                : "bg-purple-100 text-purple-700"
                                         )}
                                     >
                                         {m.name.charAt(0).toUpperCase()}

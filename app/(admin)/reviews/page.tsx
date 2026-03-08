@@ -59,7 +59,7 @@ function CalendarStrip({ month, year, onChange }: {
       <div className="flex items-center gap-1 flex-wrap">
         {MONTHS.map((m, i) => (
           <button key={m} onClick={() => onChange(i, year)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${i === month ? "bg-orange-500 text-white shadow" : "text-slate-500 hover:bg-slate-100"
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${i === month ? "bg-purple-700 text-white shadow" : "text-slate-500 hover:bg-slate-100"
               }`}>
             {m}
           </button>
@@ -147,13 +147,13 @@ function MemberSection({ member, reviews, employees, isManager }: {
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition text-left ${flagged > 0 ? "bg-red-50" : "bg-slate-50"
           } hover:brightness-95`}
       >
-        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${isManager ? "bg-orange-100 text-orange-600" : "bg-slate-200 text-slate-600"
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${isManager ? "bg-purple-100 text-purple-700" : "bg-slate-200 text-slate-600"
           }`}>
           {member.username.charAt(0).toUpperCase()}
         </div>
         <span className="text-xs font-bold text-black flex-1 text-left">{member.username}</span>
         {isManager && (
-          <span className="text-[9px] font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full flex-shrink-0">
+          <span className="text-[9px] font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
             Manager
           </span>
         )}
@@ -202,13 +202,13 @@ function TeamSection({ manager, members, reviews, employees, expanded, onToggle 
     <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${flaggedCount > 0 ? "border-red-100" : "border-slate-100"
       }`}>
       <button onClick={onToggle} className="w-full flex items-center gap-3 p-4 hover:bg-slate-50/50 transition text-left">
-        <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold flex-shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold flex-shrink-0">
           {manager.username.charAt(0).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-bold text-black truncate">{manager.username}</p>
-            <span className="text-[10px] font-semibold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full flex-shrink-0">
+            <span className="text-[10px] font-semibold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full flex-shrink-0">
               Manager
             </span>
           </div>
@@ -453,7 +453,7 @@ export default function AdminReviewsPage() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search team or member..."
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-black focus:outline-none focus:ring-2 focus:ring-orange-300 bg-white"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-black focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white"
               />
             </div>
             {(search || showFlagged) && (
@@ -478,7 +478,7 @@ export default function AdminReviewsPage() {
             </button>
             <button
               onClick={fetchData}
-              className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-orange-500 hover:border-orange-300 transition ml-auto"
+              className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-purple-600 hover:border-purple-300 transition ml-auto"
             >
               <RefreshCw className="w-4 h-4" />
             </button>
@@ -493,7 +493,7 @@ export default function AdminReviewsPage() {
             ) : error ? (
               <div className="flex flex-col items-center justify-center py-24 gap-3">
                 <p className="text-slate-500 text-sm">{error}</p>
-                <button onClick={fetchData} className="text-sm text-orange-500 underline">
+                <button onClick={fetchData} className="text-sm text-purple-600 underline">
                   Try again
                 </button>
               </div>

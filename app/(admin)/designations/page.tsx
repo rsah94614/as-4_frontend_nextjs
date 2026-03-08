@@ -23,7 +23,7 @@ function apiError(err: unknown, fallback: string): string {
 }
 
 const inputCls =
-    "w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-300 outline-none text-sm bg-white text-black placeholder:text-slate-400";
+    "w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-purple-300 outline-none text-sm bg-white text-black placeholder:text-slate-400";
 
 function Field({
     label, hint, children,
@@ -242,7 +242,7 @@ export default function DesignationsPage() {
                                 onChange={e => setSearchInput(e.target.value)}
                                 onKeyDown={e => e.key === "Enter" && setSearch(searchInput)}
                                 placeholder="Search by name or code..."
-                                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-black focus:outline-none focus:ring-2 focus:ring-orange-300 bg-white"
+                                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-black focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white"
                             />
                         </div>
                         <button
@@ -261,7 +261,7 @@ export default function DesignationsPage() {
                         )}
                         <button
                             onClick={loadDesignations}
-                            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-orange-500 hover:border-orange-300 transition ml-auto"
+                            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-purple-600 hover:border-purple-300 transition ml-auto"
                         >
                             <RefreshCw className="w-4 h-4" />
                         </button>
@@ -304,7 +304,7 @@ export default function DesignationsPage() {
                                         <tr key={desig.designation_id} className="hover:bg-slate-50/60 transition">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                                    <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
                                                         {desig.designation_name.charAt(0).toUpperCase()}
                                                     </div>
                                                     <span className="font-semibold text-black">{desig.designation_name}</span>
@@ -329,7 +329,7 @@ export default function DesignationsPage() {
                                             <td className="p-4 text-right">
                                                 <button
                                                     onClick={() => openEdit(desig)}
-                                                    className="text-sm font-semibold text-black underline hover:text-orange-500 transition"
+                                                    className="text-sm font-semibold text-black underline hover:text-purple-600 transition"
                                                 >
                                                     Edit
                                                 </button>

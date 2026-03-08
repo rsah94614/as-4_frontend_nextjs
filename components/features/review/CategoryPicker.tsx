@@ -33,14 +33,14 @@ function CategoryCard({
                 "relative flex flex-col gap-1.5 rounded-2xl border-2 px-4 py-3.5 text-left transition-all duration-200 w-full",
                 disabled && !selected && "opacity-40 cursor-not-allowed",
                 selected
-                    ? "border-indigo-500 bg-indigo-50/60 shadow-sm"
-                    : "border-gray-100 bg-white hover:border-indigo-200 hover:shadow-sm"
+                    ? "border-purple-500 bg-purple-50/60 shadow-sm"
+                    : "border-gray-100 bg-white hover:border-purple-200 hover:shadow-sm"
             )}
         >
             <span
                 className={cn(
                     "text-sm font-semibold leading-snug",
-                    selected ? "text-indigo-700" : "text-gray-800"
+                    selected ? "text-purple-700" : "text-gray-800"
                 )}
             >
                 {cat.category_name}
@@ -53,7 +53,7 @@ function CategoryCard({
             )}
 
             {selected && (
-                <span className="absolute top-2.5 right-2.5 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center">
+                <span className="absolute top-2.5 right-2.5 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
                     <Check size={11} className="text-white" strokeWidth={3} />
                 </span>
             )}

@@ -25,14 +25,14 @@ export default function RewardCard({ item, canAfford, onRedeem }: Props) {
         ${
           disabled
             ? "opacity-60 cursor-not-allowed border-slate-100"
-            : "cursor-pointer hover:shadow-lg hover:-translate-y-0.5 hover:border-indigo-200 border-slate-100 shadow-sm"
+            : "cursor-pointer hover:shadow-lg hover:-translate-y-0.5 hover:border-purple-200 border-slate-100 shadow-sm"
         }`}
     >
       <div
         className={`h-2 w-full ${
           isVoucher
-            ? "bg-gradient-to-r from-amber-400 to-orange-400"
-            : "bg-gradient-to-r from-indigo-400 to-violet-500"
+            ? "bg-gradient-to-r from-fuchsia-500 to-purple-600"
+            : "bg-gradient-to-r from-purple-700 to-fuchsia-600"
         }`}
       />
 
@@ -40,13 +40,13 @@ export default function RewardCard({ item, canAfford, onRedeem }: Props) {
         <div className="flex items-start justify-between mb-3">
           <div
             className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
-              isVoucher ? "bg-amber-50" : "bg-indigo-50"
+              isVoucher ? "bg-fuchsia-50" : "bg-purple-50"
             }`}
           >
             {isVoucher ? (
-              <TicketPercent size={22} className="text-amber-500" />
+              <TicketPercent size={22} className="text-fuchsia-600" />
             ) : (
-              <Package size={22} className="text-indigo-500" />
+              <Package size={22} className="text-purple-600" />
             )}
           </div>
           <StockBadge status={item.stock_status} />
@@ -94,7 +94,7 @@ export default function RewardCard({ item, canAfford, onRedeem }: Props) {
               className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
                 disabled
                   ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                  : "bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95"
+                  : "bg-gradient-to-r from-purple-700 to-fuchsia-600 text-white hover:from-purple-800 hover:to-fuchsia-700 active:scale-95"
               }`}
             >
               {outOfStock

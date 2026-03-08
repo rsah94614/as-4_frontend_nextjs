@@ -77,7 +77,7 @@ export default function RedeemPage() {
                 onClick={() => redeem.setActiveCategory("ALL")}
                 className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all
                   ${redeem.activeCategory === "ALL"
-                    ? "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
+                    ? "bg-gradient-to-r from-purple-700 to-fuchsia-600 text-white shadow-sm hover:from-purple-800 hover:to-fuchsia-700"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-transparent"
                   }`}
               >
@@ -91,7 +91,7 @@ export default function RedeemPage() {
                   onClick={() => redeem.setActiveCategory(cat.category_id)}
                   className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all
                     ${redeem.activeCategory === cat.category_id
-                      ? "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
+                      ? "bg-gradient-to-r from-purple-700 to-fuchsia-600 text-white shadow-sm hover:from-purple-800 hover:to-fuchsia-700"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200 border-transparent"
                     }`}
                 >
@@ -172,7 +172,7 @@ export default function RedeemPage() {
                           onClick={() => redeem.goToPage(p)}
                           className={`rounded-lg min-w-[36px] px-2 py-1.5 text-sm font-medium transition-all
                             ${p === current
-                              ? "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
+                              ? "bg-purple-700 text-white shadow-sm hover:bg-purple-800"
                               : "text-slate-600 hover:bg-slate-100 border-slate-200"
                             }`}
                         >

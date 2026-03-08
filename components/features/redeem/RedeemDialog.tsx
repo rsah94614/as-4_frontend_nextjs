@@ -73,8 +73,8 @@ function RedeemDialogBody({
       <>
         <div className="px-7 pt-7 pb-5">
           <DialogHeader className="flex-row items-start gap-4 mb-5">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0">
-              <ShoppingBag size={22} className="text-indigo-600" />
+            <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center shrink-0">
+              <ShoppingBag size={22} className="text-purple-700" />
             </div>
             <div className="flex-1 text-left">
               <DialogTitle className="text-lg font-bold text-slate-800">
@@ -148,7 +148,7 @@ function RedeemDialogBody({
           </Button>
           <Button
             onClick={handleConfirm}
-            className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] transition-all"
+            className="flex-1 rounded-xl bg-gradient-to-r from-purple-700 to-fuchsia-600 hover:from-purple-800 hover:to-fuchsia-700 active:scale-[0.98] transition-all"
           >
             Confirm
           </Button>
@@ -161,7 +161,7 @@ function RedeemDialogBody({
   if (phase === "loading") {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-7">
-        <Loader2 size={36} className="text-indigo-500 animate-spin mb-4" />
+        <Loader2 size={36} className="text-purple-600 animate-spin mb-4" />
         <p className="text-sm text-slate-500 font-medium">
           Processing redemption…
         </p>

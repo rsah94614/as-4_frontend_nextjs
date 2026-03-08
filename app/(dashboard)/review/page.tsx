@@ -54,7 +54,7 @@ export default function ReviewPage() {
           {state.view === "list" && (
             <Button
               onClick={state.openCompose}
-              className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm
+              className="rounded-full bg-purple-700 hover:bg-purple-800 text-white font-medium text-sm
                 px-5 py-2.5 h-auto shadow-sm"
             >
               <Pencil size={14} /> Write Review

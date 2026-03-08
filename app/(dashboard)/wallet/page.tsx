@@ -147,12 +147,12 @@ function StatCard({
   value: string | number;
   sub?: string;
   subValue?: string | number;
-  variant?: "white" | "green" | "indigo";
+  variant?: "white" | "green" | "purple";
 }) {
   const bg = {
     white: "bg-white border border-gray-100 shadow-sm",
     green: "bg-green-200/60 border border-green-200/40",
-    indigo: "bg-indigo-200/60 border border-indigo-200/40",
+    purple: "bg-purple-200/60 border border-purple-200/40",
   }[variant];
 
   return (
@@ -183,7 +183,7 @@ function MonthYearCard({
   yearPoints: number;
 }) {
   return (
-    <div className="rounded-2xl p-6 bg-indigo-200/60 border border-indigo-200/40">
+    <div className="rounded-2xl p-6 bg-purple-200/60 border border-purple-200/40">
       <div className="flex flex-col gap-4 text-sm text-gray-700">
         <div>
           <p>This month</p>
@@ -210,12 +210,12 @@ function TransactionRow({ txn }: { txn: Transaction }) {
       <div className="flex items-center gap-3 min-w-0">
         <div
           className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
-            ${isCredit ? "bg-green-100" : "bg-red-50"}`}
+            ${isCredit ? "bg-green-100" : "bg-fuchsia-50"}`}
         >
           {isCredit ? (
             <Gift size={15} className="text-green-600" />
           ) : (
-            <Ticket size={15} className="text-red-500" />
+            <Ticket size={15} className="text-fuchsia-600" />
           )}
         </div>
 
@@ -236,7 +236,7 @@ function TransactionRow({ txn }: { txn: Transaction }) {
 
       <div className="flex flex-col items-end flex-shrink-0 ml-4">
         <p
-          className={`text-sm font-semibold ${isCredit ? "text-green-600" : "text-red-500"
+          className={`text-sm font-semibold ${isCredit ? "text-green-600" : "text-fuchsia-600"
             }`}
         >
           {isCredit ? "+" : "-"}
@@ -445,7 +445,7 @@ export default function Wallet() {
               }
             }}
             disabled={loadingTxns || !wallet}
-            className="flex items-center gap-1.5 text-sm text-indigo-600 hover:underline
+            className="flex items-center gap-1.5 text-sm text-purple-700 hover:underline
               disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <RefreshCw

@@ -168,15 +168,15 @@ export default function AdminDashboard() {
             {/* ── Header ── */}
             <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-orange-100">
-                        <ShieldCheck className="w-5 h-5 text-orange-600" />
+                    <div className="p-2 rounded-xl bg-purple-100">
+                        <ShieldCheck className="w-5 h-5 text-purple-700" />
                     </div>
                     <div>
                         <div className="flex items-center gap-2.5">
                             <h1 className="text-2xl font-bold tracking-tight text-gray-900">
                                 {selectedTeam ? selectedTeam.department_name : "Admin Dashboard"}
                             </h1>
-                            <Badge variant="outline" className="border-orange-300 text-orange-600 bg-orange-50 font-bold text-[11px] tracking-widest uppercase px-2.5">
+                            <Badge variant="outline" className="border-purple-300 text-purple-700 bg-purple-50 font-bold text-[11px] tracking-widest uppercase px-2.5">
                                 Admin
                             </Badge>
                         </div>

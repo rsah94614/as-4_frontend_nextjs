@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { fetchWithAuth } from "@/services/auth-service";
+import { Tags } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 
@@ -73,9 +74,9 @@ function Btn({ children, onClick, variant = "primary", disabled = false, style =
   variant?: "primary" | "ghost" | "outline"; disabled?: boolean; style?: React.CSSProperties;
 }) {
   const variants = {
-    primary: { background: "#6366f1", color: "#fff", border: "none" },
+    primary: { background: "#7c3aed", color: "#fff", border: "none" },
     ghost: { background: "#f8fafc", color: "#475569", border: "1.5px solid #e2e8f0" },
-    outline: { background: "transparent", color: "#6366f1", border: "1.5px solid #6366f1" },
+    outline: { background: "transparent", color: "#7c3aed", border: "1.5px solid #7c3aed" },
   };
   return (
     <button onClick={onClick} disabled={disabled} style={{
@@ -238,7 +239,7 @@ export default function CategoriesPage() {
           <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "0 32px" }}>
             <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 36, height: 36, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>🗂️</div>
+                <div style={{ width: 36, height: 36, background: "linear-gradient(135deg,#7c3aed,#a855f7)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}><Tags size={18} color="#fff" /></div>
                 <div>
                   <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#0f172a" }}>Reward Categories</h1>
                   <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>Manage reward category groups</p>
@@ -253,7 +254,7 @@ export default function CategoriesPage() {
             {!loading && categories.length > 0 && (
               <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
                 {[
-                  { label: "Total", value: categories.length, color: "#6366f1", bg: "#eff6ff" },
+                  { label: "Total", value: categories.length, color: "#7c3aed", bg: "#f5f3ff" },
                   { label: "Active", value: activeCount, color: "#059669", bg: "#d1fae5" },
                   { label: "Inactive", value: categories.length - activeCount, color: "#dc2626", bg: "#fee2e2" },
                 ].map(s => (

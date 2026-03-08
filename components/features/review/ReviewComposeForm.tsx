@@ -70,7 +70,7 @@ export default function ReviewComposeForm({
                     <Card className="rounded-2xl border border-gray-100 shadow-none py-0">
                         <CardContent className="p-5">
                             <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <Users size={15} className="text-indigo-600" /> Who are you reviewing?
+                                <Users size={15} className="text-purple-700" /> Who are you reviewing?
                                 <span className="text-red-400 font-normal text-xs ml-auto">required</span>
                             </label>
                             <ReceiverPicker
@@ -105,7 +105,7 @@ export default function ReviewComposeForm({
                 <Card className="rounded-2xl border border-gray-100 shadow-none py-0">
                     <CardContent className="p-5">
                         <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <Tag size={15} className="text-indigo-600" /> Recognition Category
+                            <Tag size={15} className="text-purple-700" /> Recognition Category
                             <span className="text-gray-400 font-normal text-xs ml-auto">
                                 {categoryIds.length}/5 selected
                                 <span className="text-red-400 ml-1">· min 1</span>
@@ -131,7 +131,7 @@ export default function ReviewComposeForm({
                     <CardContent className="p-5">
                         <div className="flex items-center justify-between mb-3">
                             <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                <MessageSquare size={15} className="text-indigo-600" /> Your Feedback
+                                <MessageSquare size={15} className="text-purple-700" /> Your Feedback
                             </label>
                             <span
                                 className={`text-xs tabular-nums ${comment.length > 1900 ? "text-red-500 font-semibold" : "text-gray-400"
@@ -148,7 +148,7 @@ export default function ReviewComposeForm({
                             maxLength={2000}
                             placeholder="Be specific — describe what they did, the impact it had, and why it matters. Min 10 characters."
                             className="rounded-xl border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800
-                placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-300 focus:border-transparent
+                placeholder:text-gray-400 focus:ring-2 focus:ring-purple-300 focus:border-transparent
                 resize-none"
                         />
                     </CardContent>
@@ -202,8 +202,8 @@ export default function ReviewComposeForm({
                                 <button
                                     type="button"
                                     onClick={() => fileRef.current?.click()}
-                                    className="text-sm text-indigo-600 font-medium border border-dashed border-indigo-200 rounded-xl px-4 py-2.5
-                    hover:bg-indigo-50 transition-colors"
+                                    className="text-sm text-purple-700 font-medium border border-dashed border-purple-200 rounded-xl px-4 py-2.5
+                    hover:bg-purple-50 transition-colors"
                                 >
                                     + Add file
                                 </button>
@@ -216,7 +216,7 @@ export default function ReviewComposeForm({
                 <Button
                     type="submit"
                     disabled={submitting}
-                    className="w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm py-3.5 h-auto
+                    className="w-full rounded-full bg-purple-700 hover:bg-purple-800 text-white font-medium text-sm py-3.5 h-auto
             shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {submitting ? (
@@ -240,12 +240,12 @@ export default function ReviewComposeForm({
 
             {/* ── Right: Guidelines ── */}
             <div className="lg:col-span-2 space-y-4">
-                <Card className="rounded-2xl border border-amber-100 bg-amber-50 shadow-none py-0">
+                <Card className="rounded-2xl border border-purple-100 bg-purple-50 shadow-none py-0">
                     <CardContent className="p-5">
-                        <p className="text-[11px] font-bold text-amber-700 uppercase tracking-widest mb-2.5">
+                        <p className="text-[11px] font-bold text-purple-700 uppercase tracking-widest mb-2.5">
                             Review Guidelines
                         </p>
-                        <ul className="space-y-1.5 text-xs text-amber-800">
+                        <ul className="space-y-1.5 text-xs text-purple-800">
                             {[
                                 "Be specific about actions and their impact",
                                 "One review per teammate per month",
@@ -254,7 +254,7 @@ export default function ReviewComposeForm({
 
                             ].map((text) => (
                                 <li key={text} className="flex items-start gap-1.5">
-                                    <Check size={11} className="mt-0.5 shrink-0 text-amber-600" />
+                                    <Check size={11} className="mt-0.5 shrink-0 text-purple-600" />
                                     {text}
                                 </li>
                             ))}

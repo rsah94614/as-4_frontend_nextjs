@@ -7,8 +7,8 @@ interface ProfileWalletProps {
 
 export default function ProfileWallet({ wallet }: ProfileWalletProps) {
     const stats = [
-        { label: "Available", value: wallet.available_points, color: "text-indigo-600" },
-        { label: "Redeemed", value: wallet.redeemed_points, color: "text-red-500" },
+        { label: "Available", value: wallet.available_points, color: "text-purple-700" },
+        { label: "Redeemed", value: wallet.redeemed_points, color: "text-fuchsia-600" },
         { label: "Total Earned", value: wallet.total_earned_points, color: "text-green-600" },
     ];
 

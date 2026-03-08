@@ -306,7 +306,7 @@ function AssignmentsSection({ toast }: { toast: (msg: string, t?: ToastType) => 
               <Label>Role <span className="text-red-500">*</span></Label>
               <div className="relative">
                 <select value={form.role_id} onChange={(e) => setForm((f) => ({ ...f, role_id: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-gray-900">
+                  className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-purple-400">
                   <option value="">Select a role...</option>
                   {roles.map((r) => <option key={r.role_id} value={r.role_id}>{r.role_name} ({r.role_code})</option>)}
                 </select>
@@ -434,7 +434,7 @@ function RoutePermissionsSection({ toast }: { toast: (msg: string, t?: ToastType
               onClick={() => { setSelectedRoleId(role.role_id); setRouteSearch(""); }}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-medium transition-all
                 ${isSelected
-                  ? "bg-gray-900 text-white border-gray-900 shadow-sm"
+                  ? "bg-purple-700 text-white border-purple-700 shadow-sm"
                   : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:text-gray-900"}`}
             >
               <Shield className="w-3.5 h-3.5" />
@@ -470,7 +470,7 @@ function RoutePermissionsSection({ toast }: { toast: (msg: string, t?: ToastType
                   placeholder="Filter routes..."
                   value={routeSearch}
                   onChange={(e) => setRouteSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
                 />
               </div>
             </div>
@@ -512,7 +512,7 @@ function RoutePermissionsSection({ toast }: { toast: (msg: string, t?: ToastType
                   placeholder="Search routes to add..."
                   value={routeSearch}
                   onChange={(e) => setRouteSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
                 />
               </div>
             </div>
@@ -576,7 +576,7 @@ export default function RolesPage() {
             {/* Header */}
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-1">
-                <Shield className="w-5 h-5 text-gray-700" />
+                <Shield className="w-5 h-5 text-purple-700" />
                 <h1 className="text-xl font-semibold text-gray-900">
                   Roles & Permissions
                 </h1>
