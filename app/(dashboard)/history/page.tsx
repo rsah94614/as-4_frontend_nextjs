@@ -51,8 +51,6 @@ export default function HistoryPage() {
                     error={error}
                     onRetry={retry}
                     onClearFilters={clearFilters}
-                    selectedPeriod={selectedPeriod}
-                    selectedType={selectedType}
                 />
 
                 {!loading && !error && (

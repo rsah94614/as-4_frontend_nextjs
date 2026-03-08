@@ -11,7 +11,10 @@ export default function DashboardPage() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    setIsAdmin(isAdminUser());
+    // Make update async to avoid cascading render warning
+    Promise.resolve().then(() => {
+      setIsAdmin(isAdminUser());
+    });
   }, []);
 
   if (isAdmin) {

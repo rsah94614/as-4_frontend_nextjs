@@ -24,7 +24,6 @@ import {
   Clock,
   Wallet,
   SlidersHorizontal,
-  Settings,
   LogOut,
   X,
   Bug,
@@ -91,8 +90,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <Image
             src="/logo.svg"
             alt="Abhaar Logo"
-            width={80}
-            height={80}
+            width={200}
+            height={200}
             priority
           />
         </div>
@@ -152,20 +151,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Bottom section */}
         <div className="px-4 pb-6 mt-auto space-y-1 shrink-0">
-          <Link
-            href="/settings"
-            onClick={onClose}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors
-              ${pathname.startsWith("/settings")
-                ? "bg-orange-100 text-orange-700"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-              }`}
-          >
-
-            <Settings className="w-5 h-5 text-gray-500" />
-            Settings
-          </Link>
-
           {/* Logout with confirmation dialog */}
           <Dialog>
             <DialogTrigger asChild>
