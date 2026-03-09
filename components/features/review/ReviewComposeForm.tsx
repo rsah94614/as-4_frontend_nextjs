@@ -1,18 +1,31 @@
 "use client"
 
+import { useMemo } from "react"
 import {
     Star, Users, Tag, MessageSquare, Loader2,
     Send, RotateCcw, Check, X, Image as ImageIcon, Video,
+    TrendingUp, Award, BarChart3, Clock,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Skeleton } from "@/components/ui/skeleton"
 import StarPicker from "./StarPicker"
 import CategoryPicker from "./CategoryPicker"
 import ReceiverPicker from "./ReceiverPicker"
-import type { ReviewCategory, ViewMode } from "@/types/review-types"
+import type { Review, ReviewCategory, ViewMode } from "@/types/review-types"
 import type { TeamMember } from "@/services/employee-service"
-import { RATING_LABELS, RATING_COLORS } from "@/lib/review-utils"
+import { RATING_LABELS, RATING_COLORS, fmtDate } from "@/lib/review-utils"
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Return the max multiplier allowed for a given star rating */
+function maxMultiplierForRating(rating: number): number {
+    if (rating <= 0) return Infinity   // no rating yet → show all
+    if (rating <= 2) return 1.0        // low rating → low-multiplier categories
+    if (rating <= 3) return 1.5        // mid rating → mid-multiplier categories
+    return Infinity                    // 4-5 stars → all categories
+}
 
 // ─── Review Compose Form ──────────────────────────────────────────────────────
 
@@ -40,6 +53,14 @@ interface ReviewComposeFormProps {
     // Submit
     submitting: boolean
     onSubmit: (e: React.FormEvent) => void
+    // Stats
+    givenThisMonth: number
+    uniquePeopleCount: number
+    totalReviews: number
+    loadingStats?: boolean
+    // Reviews for scrollable comments
+    reviews: Review[]
+    myId: string
 }
 
 export default function ReviewComposeForm({
@@ -60,7 +81,42 @@ export default function ReviewComposeForm({
     fileRef,
     submitting,
     onSubmit,
+    givenThisMonth,
+    uniquePeopleCount,
+    totalReviews,
+    loadingStats,
+    reviews,
+    myId,
 }: ReviewComposeFormProps) {
+
+    // ── Filter categories based on star rating ──
+    const filteredCategories = useMemo(() => {
+        const maxMul = maxMultiplierForRating(rating)
+        const filtered = categories.filter((c) => c.multiplier <= maxMul)
+        // If filtering removes everything (all categories have higher multipliers),
+        // fall back to showing all categories
+        return filtered.length > 0 ? filtered : categories
+    }, [categories, rating])
+
+    const handleRatingChange = (newRating: number) => {
+        onRatingChange(newRating)
+        // Deselect any categories that will no longer be visible
+        const maxMul = maxMultiplierForRating(newRating)
+        const filtered = categories.filter((c) => c.multiplier <= maxMul)
+        const validSet = filtered.length > 0
+            ? new Set(filtered.map((c) => c.category_id))
+            : new Set(categories.map((c) => c.category_id))
+
+        onCategoryIdsChange((prev) => prev.filter((id) => validSet.has(id)))
+    }
+
+    // ── My given reviews for scrollable comments ──
+    const myGivenReviews = useMemo(() => {
+        return reviews
+            .filter((r) => r.reviewer_id === myId)
+            .sort((a, b) => new Date(b.review_at).getTime() - new Date(a.review_at).getTime())
+    }, [reviews, myId])
+
     return (
         <form onSubmit={onSubmit} className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             {/* ── Left: Form inputs ── */}
@@ -71,7 +127,7 @@ export default function ReviewComposeForm({
                         <CardContent className="p-5">
                             <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                 <Users size={15} className="text-purple-700" /> Who are you reviewing?
-                                <span className="text-red-400 font-normal text-xs ml-auto">required</span>
+                                <span className="text-red-500 font-bold text-sm ml-1">*</span>
                             </label>
                             <ReceiverPicker
                                 allReceivers={allReceivers}
@@ -84,20 +140,21 @@ export default function ReviewComposeForm({
                 )}
 
                 {/* Star rating */}
-                <Card className="rounded-2xl border border-gray-100 shadow-none py-0">
+                <Card className="rounded-2xl border border-gray-100 shadow-none py-0 group/stars">
                     <CardContent className="p-5">
                         <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                             <Star size={15} className="text-amber-400" /> Star Rating
-                            <span className="text-red-400 font-normal text-xs ml-auto">required</span>
+                            <span className="text-red-500 font-bold text-sm ml-1">*</span>
                         </label>
-                        <StarPicker value={rating} onChange={onRatingChange} disabled={submitting} />
-                        {rating > 0 && (
-                            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-50">
-                                <span className={`text-sm font-semibold ${RATING_COLORS[rating]}`}>
-                                    {RATING_LABELS[rating]}
-                                </span>
-                            </div>
-                        )}
+                        <StarPicker value={rating} onChange={handleRatingChange} disabled={submitting} />
+                        <div className={`flex items-center gap-3 mt-3 pt-3 border-t transition-opacity duration-200 ${rating > 0
+                            ? "border-gray-50 opacity-100"
+                            : "border-transparent opacity-0 group-hover/stars:opacity-50"
+                            }`}>
+                            <span className={`text-sm font-semibold ${rating > 0 ? RATING_COLORS[rating] : "text-gray-400"}`}>
+                                {rating > 0 ? RATING_LABELS[rating] : "\u00A0"}
+                            </span>
+                        </div>
                     </CardContent>
                 </Card>
 
@@ -106,9 +163,9 @@ export default function ReviewComposeForm({
                     <CardContent className="p-5">
                         <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                             <Tag size={15} className="text-purple-700" /> Recognition Category
+                            <span className="text-red-500 font-bold text-sm ml-1">*</span>
                             <span className="text-gray-400 font-normal text-xs ml-auto">
                                 {categoryIds.length}/5 selected
-                                <span className="text-red-400 ml-1">· min 1</span>
                             </span>
                         </label>
                         {categories.length === 0 ? (
@@ -117,7 +174,7 @@ export default function ReviewComposeForm({
                             </div>
                         ) : (
                             <CategoryPicker
-                                categories={categories}
+                                categories={filteredCategories}
                                 selectedIds={categoryIds}
                                 onChange={onCategoryIdsChange}
                                 disabled={submitting}
@@ -238,8 +295,9 @@ export default function ReviewComposeForm({
                 </Button>
             </div>
 
-            {/* ── Right: Guidelines ── */}
+            {/* ── Right: Guidelines + Stats + Recent Comments ── */}
             <div className="lg:col-span-2 space-y-4">
+                {/* Review Guidelines */}
                 <Card className="rounded-2xl border border-purple-100 bg-purple-50 shadow-none py-0">
                     <CardContent className="p-5">
                         <p className="text-[11px] font-bold text-purple-700 uppercase tracking-widest mb-2.5">
@@ -251,7 +309,6 @@ export default function ReviewComposeForm({
                                 "One review per teammate per month",
                                 "You cannot review yourself",
                                 "Recognition is credited automatically",
-
                             ].map((text) => (
                                 <li key={text} className="flex items-start gap-1.5">
                                     <Check size={11} className="mt-0.5 shrink-0 text-purple-600" />
@@ -259,6 +316,145 @@ export default function ReviewComposeForm({
                                 </li>
                             ))}
                         </ul>
+                    </CardContent>
+                </Card>
+
+                {/* ── Your Review Activity Stats ── */}
+                <Card className="rounded-2xl border border-gray-100 shadow-none py-0 overflow-hidden">
+                    <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 px-5 py-4">
+                        <p className="text-[11px] font-bold text-purple-200 uppercase tracking-widest flex items-center gap-1.5">
+                            <BarChart3 size={12} />
+                            Your Review Activity
+                        </p>
+                    </div>
+
+                    <CardContent className="p-0">
+                        {loadingStats ? (
+                            <div className="p-5 space-y-4">
+                                {[0, 1, 2].map((i) => (
+                                    <div key={i} className="flex items-center justify-between">
+                                        <Skeleton className="h-4 w-28" />
+                                        <Skeleton className="h-6 w-10" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-gray-50">
+                                {/* Given This Month */}
+                                <div className="flex items-center justify-between px-5 py-3.5 group hover:bg-purple-50/50 transition-colors">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                                            <TrendingUp size={14} className="text-purple-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-medium text-gray-700">Given This Month</p>
+                                            <p className="text-[10px] text-gray-400">Reviews submitted</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xl font-bold text-gray-900 tabular-nums">
+                                        {givenThisMonth}
+                                    </span>
+                                </div>
+
+                                {/* Unique People */}
+                                <div className="flex items-center justify-between px-5 py-3.5 group hover:bg-blue-50/50 transition-colors">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                                            <Users size={14} className="text-blue-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-medium text-gray-700">Unique People</p>
+                                            <p className="text-[10px] text-gray-400">Reviewed this month</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xl font-bold text-gray-900 tabular-nums">
+                                        {uniquePeopleCount}
+                                    </span>
+                                </div>
+
+                                {/* Total Reviews */}
+                                <div className="flex items-center justify-between px-5 py-3.5 group hover:bg-green-50/50 transition-colors">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                                            <Award size={14} className="text-green-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-medium text-gray-700">Total Reviews</p>
+                                            <p className="text-[10px] text-gray-400">Given &amp; received</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xl font-bold text-gray-900 tabular-nums">
+                                        {totalReviews}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* ── Recent Comments (scrollable) ── */}
+                <Card className="rounded-2xl border border-gray-100 shadow-none py-0 overflow-hidden">
+                    <div className="bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 px-5 py-4">
+                        <p className="text-[11px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1.5">
+                            <MessageSquare size={12} />
+                            Your Recent Reviews
+                        </p>
+                    </div>
+
+                    <CardContent className="p-0">
+                        {loadingStats ? (
+                            <div className="p-5 space-y-4">
+                                {[0, 1, 2].map((i) => (
+                                    <div key={i} className="space-y-2">
+                                        <Skeleton className="h-3 w-full" />
+                                        <Skeleton className="h-3 w-3/4" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : myGivenReviews.length === 0 ? (
+                            <div className="px-5 py-8 text-center">
+                                <MessageSquare size={24} className="text-gray-200 mx-auto mb-2" />
+                                <p className="text-xs text-gray-400">No reviews given yet</p>
+                            </div>
+                        ) : (
+                            <div className="max-h-[280px] overflow-y-auto divide-y divide-gray-50 custom-scrollbar">
+                                {myGivenReviews.map((r) => (
+                                    <div
+                                        key={r.review_id}
+                                        className="px-5 py-3.5 hover:bg-gray-50/50 transition-colors"
+                                    >
+                                        {/* Stars + Date */}
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <div className="flex items-center gap-0.5">
+                                                {[1, 2, 3, 4, 5].map((s) => (
+                                                    <Star
+                                                        key={s}
+                                                        size={10}
+                                                        className={
+                                                            s <= r.rating
+                                                                ? "fill-amber-400 text-amber-400"
+                                                                : "fill-gray-200 text-gray-200"
+                                                        }
+                                                    />
+                                                ))}
+                                                <span className={`text-[10px] font-semibold ml-1.5 ${RATING_COLORS[r.rating]}`}>
+                                                    {RATING_LABELS[r.rating]}
+                                                </span>
+                                            </div>
+                                            <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                                                <Clock size={9} />
+                                                {fmtDate(r.review_at)}
+                                            </span>
+                                        </div>
+
+                                        {/* Comment preview */}
+                                        <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">
+                                            {r.comment}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
