@@ -11,6 +11,7 @@ interface CategoryPickerProps {
     selectedIds: string[]
     onChange: React.Dispatch<React.SetStateAction<string[]>>
     disabled?: boolean
+    maxSelectable?: number
 }
 
 function CategoryCard({
@@ -66,6 +67,7 @@ export default function CategoryPicker({
     selectedIds,
     onChange,
     disabled,
+    maxSelectable = 5,
 }: CategoryPickerProps) {
     function toggleCategory(id: string) {
         onChange((prev) =>
@@ -79,7 +81,7 @@ export default function CategoryPicker({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {categories.map((cat) => {
                 const isSelected = selectedIds.includes(cat.category_id)
-                const atMax = selectedIds.length >= 5 && !isSelected
+                const atMax = selectedIds.length >= maxSelectable && !isSelected
                 return (
                     <CategoryCard
                         key={cat.category_id}
