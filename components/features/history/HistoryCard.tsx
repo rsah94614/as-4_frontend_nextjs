@@ -6,13 +6,18 @@ import type { HistoryItem } from "./types";
 
 interface HistoryCardProps {
     item: HistoryItem;
+    onClick?: (item: HistoryItem) => void;
 }
 
-export default function HistoryCard({ item }: HistoryCardProps) {
+export default function HistoryCard({ item, onClick }: HistoryCardProps) {
     const isRedemption = !!item.reward_catalog;
 
     return (
-        <div className="bg-white rounded-xl border p-3 sm:p-5 flex items-center justify-between gap-3">
+        <button
+            type="button"
+            onClick={() => onClick?.(item)}
+            className="w-full bg-white rounded-xl border p-3 sm:p-5 flex items-center justify-between gap-3 text-left hover:border-gray-300 hover:shadow-sm transition-all group cursor-pointer"
+        >
             <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                 {isRedemption ? (
                     <ArrowUpRight className="w-5 h-5 text-fuchsia-600 shrink-0" />
@@ -21,7 +26,7 @@ export default function HistoryCard({ item }: HistoryCardProps) {
                 )}
 
                 <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-gray-700 truncate sm:whitespace-normal">
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 truncate sm:whitespace-normal group-hover:text-gray-900 transition-colors">
                         {getMessage(item)}
                     </p>
 
@@ -45,6 +50,6 @@ export default function HistoryCard({ item }: HistoryCardProps) {
             >
                 {isRedemption ? `-${item.points}` : `+${item.points}`}
             </span>
-        </div>
+        </button>
     );
 }

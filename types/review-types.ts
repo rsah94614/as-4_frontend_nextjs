@@ -30,11 +30,19 @@ export interface Review {
     }[] | null
 }
 
-export type ViewMode = "list" | "compose" | "edit"
+export type ViewMode = "list" | "compose" | "edit" | "submitted"
 
 export type ToastKind = "success" | "error" | "warning"
 
 export interface ToastState {
     msg: string
     kind: ToastKind
+}
+
+export interface SubmittedReviewData {
+    receiverName: string
+    rating: number
+    categoryNames: string[]
+    comment: string
+    submittedAt: string
 }

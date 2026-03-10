@@ -11,65 +11,14 @@
 // and Bearer token handling.
 
 import orgApiClient from "./org-api-client";
-import type { PaginationMeta } from "@/types/pagination";
-
-// ─────────────────────────────────────────────
-// Types (mirror schemas.py in Organization Service)
-// ─────────────────────────────────────────────
-
-export interface DepartmentType {
-    department_type_id: string;
-    type_name: string;
-    type_code: string;
-}
-
-export interface DepartmentTypeNested {
-    type_name: string;
-    type_code: string;
-}
-
-export interface ManagerBrief {
-    employee_id: string;
-    username: string;
-    email?: string;
-}
-
-export interface Department {
-    department_id: string;
-    department_name: string;
-    department_code: string;
-    department_type: DepartmentTypeNested | null;
-    manager: ManagerBrief | null;
-    is_active: boolean;
-    created_at: string;
-}
-
-export interface DepartmentDetail extends Department {
-    employee_count: number;
-    updated_at: string | null;
-}
-
-
-
-export interface DepartmentListResponse {
-    data: Department[];
-    pagination: PaginationMeta;
-}
-
-export interface CreateDepartmentPayload {
-    department_name: string;
-    department_code: string;
-    department_type_id: string;
-    manager_id?: string;
-}
-
-export interface UpdateDepartmentPayload {
-    department_name?: string;
-    department_code?: string;
-    department_type_id?: string;
-    manager_id?: string;
-    is_active?: boolean;
-}
+import {
+    DepartmentType,
+    Department,
+    DepartmentDetail,
+    DepartmentListResponse,
+    CreateDepartmentPayload,
+    UpdateDepartmentPayload
+} from "@/types/department-types";
 
 // ─────────────────────────────────────────────
 // Service
