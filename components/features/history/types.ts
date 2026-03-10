@@ -3,12 +3,18 @@ export interface RewardCatalog {
     reward_code: string;
 }
 
+export interface GrantedByEmployee {
+    username: string;
+    email?: string;
+}
+
 export interface HistoryItem {
     history_id: string;
     points: number;
     comment?: string;
     granted_at: string;
     reward_catalog?: RewardCatalog;
+    employees_reward_history_granted_byToemployees?: GrantedByEmployee;
 }
 
 export interface PaginatedHistoryResponse {
