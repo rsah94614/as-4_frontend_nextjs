@@ -17,6 +17,10 @@ import {
     LeaderboardEntryResponse,
     TeamSummaryResponse,
     TeamReportResponse,
+    ParticipationResponse,
+    RecognitionTrendResponse,
+    PaginatedUserRecognition,
+    PaginatedTeamRecognition,
 } from "@/types/dashboard-types";
 
 // All requests go through Next.js proxy — no direct microservice URLs in browser
@@ -77,6 +81,30 @@ export async function fetchDashboardLeaderboard(): Promise<LeaderboardEntryRespo
 
 export async function fetchTeamsSummary(): Promise<TeamSummaryResponse[] | null> {
     return get<TeamSummaryResponse[]>(`${PROXY}/analytics/v1/dashboard/teams`);
+}
+
+export async function fetchRecognitionUsers(
+    range: "week" | "month" | "quarter" | "year",
+    page = 1,
+    limit = 100,
+): Promise<PaginatedUserRecognition | null> {
+    return get<PaginatedUserRecognition>(`${PROXY}/analytics/v1/dashboard/recognition/users?range=${range}&page=${page}&limit=${limit}`);
+}
+
+export async function fetchRecognitionTeams(
+    range: "week" | "month" | "quarter" | "year",
+    page = 1,
+    limit = 50,
+): Promise<PaginatedTeamRecognition | null> {
+    return get<PaginatedTeamRecognition>(`${PROXY}/analytics/v1/dashboard/recognition/teams?range=${range}&page=${page}&limit=${limit}`);
+}
+
+export async function fetchRecognitionTrend(range: "3m" | "6m" | "1y"): Promise<RecognitionTrendResponse | null> {
+    return get<RecognitionTrendResponse>(`${PROXY}/analytics/v1/dashboard/recognition-trend?range=${range}`);
+}
+
+export async function fetchParticipation(): Promise<ParticipationResponse | null> {
+    return get<ParticipationResponse>(`${PROXY}/analytics/v1/dashboard/participation`);
 }
 
 export async function fetchTeamReport(departmentId: string): Promise<TeamReportResponse | null> {

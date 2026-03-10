@@ -98,4 +98,6 @@ export default function AdminTeamReportCard({ team, onClick }: Props) {
       </CardContent>
     </Card>
   );
+  
 }
+

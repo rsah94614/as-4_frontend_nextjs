@@ -47,6 +47,85 @@ export type LeaderboardEntryResponse = {
 };
 
 
+// ── Admin — Recognition Overview ─────────────────────────────────────────────
+
+export type UserRecognition = {
+    employee_id: string;
+    username: string;
+    department: string;
+    given: number;
+    received: number;
+};
+
+export type TeamRecognition = {
+    department_id: string;
+    name: string;
+    given: number;
+    received: number;
+    members: number;
+};
+
+export type PaginatedUserRecognition = {
+    items: UserRecognition[];
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+};
+
+export type PaginatedTeamRecognition = {
+    items: TeamRecognition[];
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+};
+
+
+// ── Admin — Recognition Trend ─────────────────────────────────────────────────
+
+export type TrendPoint = {
+    label: string;
+    given: number;
+    received: number;
+};
+
+export type RecognitionTrendResponse = {
+    data: TrendPoint[];
+};
+
+
+// ── Admin — Participation ─────────────────────────────────────────────────────
+
+export type ParticipationSlice = {
+    name: string;
+    value: number;
+};
+
+export type ParticipationStats = {
+    total_employees: number;
+    active_participants: number;
+    non_participants: number;
+    participation_rate: number;
+    avg_reviews_per_employee: number;
+    avg_reviews_last_month: number;
+};
+
+export type ParticipationDeptEntry = {
+    department_id: string;
+    name: string;
+    rate: number;
+    active: number;
+    total: number;
+};
+
+export type ParticipationResponse = {
+    pie: ParticipationSlice[];
+    stats: ParticipationStats;
+    by_department: ParticipationDeptEntry[];
+};
+
+
 // ── Admin — Team Reports ──────────────────────────────────────────────────────
 
 export type TeamSummaryResponse = {
