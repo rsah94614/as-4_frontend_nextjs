@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { auth } from "@/services/auth-service";
 import {
   fetchCatalog,
@@ -25,6 +25,7 @@ export function useRedeem() {
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [categoryLoading, setCategoryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,6 +34,10 @@ export function useRedeem() {
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [dialogState, setDialogState] = useState<DialogState | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Cache: avoid re-fetching all items when switching between categories
+  const allItemsCacheRef = useRef<RewardItem[] | null>(null);
+  const fetchInProgressRef = useRef(false);
 
   // Fetch a single page of catalog
   const loadCatalog = useCallback(async (page: number) => {
@@ -49,16 +54,24 @@ export function useRedeem() {
     }
   }, []);
 
-  // Fetch ALL pages and combine items (used for category filtering)
+  // Fetch ALL pages and combine items (used for category filtering) — with caching
   const loadAllItems = useCallback(async () => {
-    setLoading(true);
+    // Return cached if available
+    if (allItemsCacheRef.current) {
+      setAllItems(allItemsCacheRef.current);
+      return;
+    }
+
+    // Prevent concurrent fetches
+    if (fetchInProgressRef.current) return;
+    fetchInProgressRef.current = true;
+
+    setCategoryLoading(true);
     setError(null);
     try {
-      // Fetch first page to know total_pages
       const firstPage = await fetchCatalog(1, PAGE_SIZE);
       let combined = [...firstPage.data];
 
-      // Fetch remaining pages in parallel
       if (firstPage.pagination.total_pages > 1) {
         const remaining = await Promise.all(
           Array.from(
@@ -71,11 +84,13 @@ export function useRedeem() {
         }
       }
 
+      allItemsCacheRef.current = combined;
       setAllItems(combined);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load catalog");
     } finally {
-      setLoading(false);
+      setCategoryLoading(false);
+      fetchInProgressRef.current = false;
     }
   }, []);
 
@@ -108,13 +123,12 @@ export function useRedeem() {
   // When page changes
   const goToPage = useCallback((page: number) => {
     setCurrentPage(page);
-    // Only fetch from server when viewing ALL (category filtering is client-side)
     if (activeCategory === "ALL") {
       loadCatalog(page);
     }
   }, [loadCatalog, activeCategory]);
 
-  // When category changes: fetch all items for filtering, or go back to paginated
+  // When category changes: use cache or fetch, don't show full-page loading
   const handleCategoryChange = useCallback((cat: string) => {
     setActiveCategory(cat);
     setCurrentPage(1);
@@ -176,6 +190,9 @@ export function useRedeem() {
   }
 
   function handleSuccess(result: RedemptionResponse, ptsSpent: number) {
+    // Invalidate the cache so next category switch gets fresh stock data
+    allItemsCacheRef.current = null;
+
     setWallet((prev) =>
       prev
         ? {
@@ -214,6 +231,7 @@ export function useRedeem() {
     categories,
     wallet,
     loading,
+    categoryLoading,
     error,
     availablePoints,
     activeCategory,
