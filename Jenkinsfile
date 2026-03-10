@@ -140,12 +140,14 @@ pipeline {
                     timeout(time: 3, unit: 'MINUTES') { 
                         waitUntil {
                             script {
-                                def r = sh(script: "curl -s -o /dev/null -w '%{http_code}' https://${TARGET_EC2_HOST}/ || true", returnStdout: true).trim()
-                                if (r != "200") {
+                                def r = sh(script: "curl -sL -o /dev/null -w '%{http_code}' https://${TARGET_EC2_HOST}/ || true", returnStdout: true).trim()
+                                if (r == "200" || r == "308") {
+                                    echo "Frontend is reachable! HTTP Code: ${r}"
+                                    return true
+                                } else {
                                     echo "Still waiting for Frontend... HTTP Code: ${r}"
-                                    sleep 5
+                                    return false
                                 }
-                                return (r == "200")
                             }
                         }
                     }
