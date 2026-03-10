@@ -5,6 +5,8 @@ import { useHistoryData } from "@/components/features/history/useHistoryData";
 import HistoryFilterBar from "@/components/features/history/HistoryFilterBar";
 import HistoryList from "@/components/features/history/HistoryList";
 import HistoryPagination from "@/components/features/history/HistoryPagination";
+import TransactionDetailModal from "@/components/features/history/TransactionDetailModal";
+import type { HistoryItem } from "@/components/features/history/types";
 
 export default function HistoryPage() {
     const {
@@ -18,6 +20,7 @@ export default function HistoryPage() {
 
     const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
     const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
 
     function closeDropdowns() {
         setPeriodDropdownOpen(false);
@@ -51,6 +54,7 @@ export default function HistoryPage() {
                     error={error}
                     onRetry={retry}
                     onClearFilters={clearFilters}
+                    onItemClick={setSelectedItem}
                 />
 
                 {!loading && !error && (
@@ -62,6 +66,12 @@ export default function HistoryPage() {
                     />
                 )}
             </div>
+
+            <TransactionDetailModal
+                item={selectedItem}
+                open={!!selectedItem}
+                onClose={() => setSelectedItem(null)}
+            />
         </div>
     );
 }
