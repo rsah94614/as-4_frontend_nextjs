@@ -5,7 +5,7 @@ import axiosClient from "@/services/api-client"
 import { uploadToStorage } from "@/services/cloudinary"
 import { getTeamMembersForUI, type TeamMember } from "@/services/employee-service"
 import { requireAuthenticatedUserId } from "@/lib/api-utils"
-import type { Review, ReviewCategory, ViewMode, ToastState } from "@/types/review-types"
+import type { Review, ReviewCategory, ViewMode, ToastState, SubmittedReviewData } from "@/types/review-types"
 import { API } from "@/lib/review-utils"
 
 // ─── Hook Return Type ─────────────────────────────────────────────────────────
@@ -46,6 +46,10 @@ export interface ReviewPageState {
     // Toast
     toast: ToastState | null
     setToast: (t: ToastState | null) => void
+
+    // Submitted
+    submittedData: SubmittedReviewData | null
+    startNewReview: () => void
 
     // List
     listTab: "all" | "given" | "received"
@@ -100,6 +104,7 @@ export function useReviewPage(): ReviewPageState {
     const [submitting, setSubmitting] = useState(false)
     const [toast, setToast] = useState<ToastState | null>(null)
     const [listTab, setListTab] = useState<"all" | "given" | "received">("all")
+    const [submittedData, setSubmittedData] = useState<SubmittedReviewData | null>(null)
 
     // ── Derived monthly stats
     const monthStart = new Date()
@@ -163,7 +168,12 @@ export function useReviewPage(): ReviewPageState {
         setComment("")
         setFiles([])
         setEditingReview(null)
+        setSubmittedData(null)
         setView("compose")
+    }
+
+    function startNewReview() {
+        openCompose()
     }
 
     function openEdit(r: Review) {
@@ -239,6 +249,17 @@ export function useReviewPage(): ReviewPageState {
                 await axiosClient.put(`${API}/v1/reviews/${editingReview.review_id}`, patch)
                 setToast({ msg: "Review updated. Points recalculated automatically.", kind: "success" })
             } else {
+                // Find receiver name for the success screen
+                const receiverMember = allReceivers.find((m) => m.id === receiverId)
+                const receiverName = receiverMember
+                    ? receiverMember.name
+                    : "Team Member"
+
+                // Get selected category names
+                const selectedCatNames = categories
+                    .filter((c) => categoryIds.includes(c.category_id))
+                    .map((c) => c.category_name)
+
                 await axiosClient.post(`${API}/v1/reviews`, {
                     receiver_id: receiverId,
                     rating,
@@ -248,10 +269,24 @@ export function useReviewPage(): ReviewPageState {
                     ...(videoUrl && { video_url: videoUrl }),
                 })
                 setToast({ msg: "Review submitted! Points credited to their wallet. 🎉", kind: "success" })
+
+                // Store submitted data for success screen
+                setSubmittedData({
+                    receiverName,
+                    rating,
+                    categoryNames: selectedCatNames,
+                    comment: comment.trim(),
+                    submittedAt: new Date().toISOString(),
+                })
             }
 
             await loadReviews(1)
-            backToList()
+            // Show submitted success state instead of navigating to list
+            if (view === "compose") {
+                setView("submitted")
+            } else {
+                backToList()
+            }
         } catch (err: unknown) {
             const detail =
                 (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
@@ -307,5 +342,7 @@ export function useReviewPage(): ReviewPageState {
         backToList,
         handleSubmit,
         loadReviews,
+        submittedData,
+        startNewReview,
     }
 }
