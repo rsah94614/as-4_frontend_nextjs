@@ -35,9 +35,9 @@ export interface CreateRolePayload {
 }
 
 export const rolesApi = {
-    listRoles:   (): Promise<Role[]>  => request("/v1/roles"),
-    createRole:  (body: CreateRolePayload): Promise<Role> =>
-        request("/v1/roles", { method: "POST", body }),
+  // roles-client.ts
+  listRoles: (): Promise<Role[]> => request("/list"),
+  createRole: (body: CreateRolePayload): Promise<Role> => request("/create", { method: "POST", body }),
 };
 
 // ── Employee Roles ─────────────────────────────────────────────────────────
@@ -57,11 +57,11 @@ export interface AssignRolePayload {
 
 export const employeeRolesApi = {
     listEmployeeRoles: (): Promise<EmployeeRole[]> =>
-        request("/v1/roles/employees"),
+        request("/employees"),
     assignRole: (body: AssignRolePayload): Promise<EmployeeRole> =>
-        request("/v1/roles/assign", { method: "POST", body }),
+        request("/assign", { method: "POST", body }),
     revokeRole: (body: AssignRolePayload): Promise<EmployeeRole> =>
-        request("/v1/roles/revoke", { method: "POST", body }),
+        request("/revoke", { method: "POST", body }),
 };
 
 // ── Route Permissions ──────────────────────────────────────────────────────
@@ -78,9 +78,9 @@ export interface RoutePermissionPayload {
 
 export const routePermissionsApi = {
     listRoutePermissions: (): Promise<RoutePermission[]> =>
-        request("/v1/route-permissions"),
+        request("/route-permissions"),
     addRoutePermission: (body: RoutePermissionPayload): Promise<RoutePermission> =>
-        request("/v1/route-permissions", { method: "POST", body }),
+        request("/route-permissions", { method: "POST", body }),
     removeRoutePermission: (body: RoutePermissionPayload): Promise<RoutePermission> =>
-        request("/v1/route-permissions", { method: "PATCH", body }),
+        request("/route-permissions", { method: "PATCH", body }),
 };

@@ -39,15 +39,9 @@ export default function StatusesPage() {
       if (filterType) params.entity_type = filterType;
       const res = await orgApiClient.get<Status[]>("/statuses", { params });
       setStatuses(Array.isArray(res.data) ? res.data : []);
-    } catch (e: unknown) {
-      const status = (e as { response?: { status?: number } })?.response?.status;
-      showFlash(
-        status === 401
-          ? "Your session expired. Please log in again."
-          : "Could not load statuses. Please refresh.",
-        "error"
-      );
-    } finally {
+   } catch (e: unknown) {
+     showFlash(apiError(e, "Could not load statuses. Please refresh."), "error");
+} finally {
       setLoading(false);
     }
   }, [filterType]);
@@ -71,11 +65,9 @@ export default function StatusesPage() {
       setShowCreate(false);
       showFlash("Status created successfully.");
       fetchStatuses();
-    } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response
-        ?.data?.detail;
-      showFlash(detail ?? "Could not create status. Please try again.", "error");
-    } finally {
+   } catch (e: unknown) {
+     showFlash(apiError(e, "Could not create status. Please try again."), "error");
+} finally {
       setSaving(false);
     }
   };
@@ -93,11 +85,9 @@ export default function StatusesPage() {
       setEditId(null);
       showFlash("Status updated successfully.");
       fetchStatuses();
-    } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response
-        ?.data?.detail;
-      showFlash(detail ?? "Could not update status. Please try again.", "error");
-    } finally {
+   } catch (e: unknown) {
+     showFlash(apiError(e, "Could not update status. Please try again."), "error");
+     } finally {
       setSaving(false);
     }
   };
