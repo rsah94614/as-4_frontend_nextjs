@@ -1,5 +1,4 @@
 "use client";
-
 import { scoreColor } from "./AdminTeamReportCard";
 import type { TeamMemberReportResponse } from "@/types/dashboard-types";
 
