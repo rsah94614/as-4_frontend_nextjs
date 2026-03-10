@@ -195,9 +195,9 @@ export default function SeasonalMultipliersPage() {
       if (filterQuarter) params.quarter = filterQuarter;
       const res = await orgApiClient.get<Multiplier[]>("/seasonal-multipliers", { params });
       setMultipliers(Array.isArray(res.data) ? res.data : []);
-    } catch (e: any) {
-      showFlash(e?.response?.status === 401 ? "Your session expired. Please log in again." : "Could not load multipliers. Please refresh.", "error");
-    } finally {
+    } catch (e: unknown) {
+      showFlash(apiError(e, "Could not load multipliers. Please refresh."), "error");
+} finally {
       setLoading(false);
     }
   }, [filterQuarter]);
@@ -223,9 +223,9 @@ export default function SeasonalMultipliersPage() {
       setForm(emptyForm);
       showFlash("Multiplier created successfully.");
       fetchMultipliers();
-    } catch (e: any) {
-      showFlash(e?.response?.data?.detail ?? "Could not create multiplier. Dates may overlap with an existing entry.", "error");
-    } finally {
+    } catch (e: unknown) {
+      showFlash(apiError(e, "Could not create multiplier. Dates may overlap with an existing entry."), "error");
+} finally {
       setSaving(false);
     }
   };
@@ -248,9 +248,9 @@ export default function SeasonalMultipliersPage() {
       setEditId(null);
       showFlash("Multiplier updated successfully.");
       fetchMultipliers();
-    } catch (e: any) {
-      showFlash(e?.response?.data?.detail ?? "Could not update. Check for overlapping date ranges.", "error");
-    } finally {
+    } catch (e: unknown) {
+      showFlash(apiError(e, "Could not update. Check for overlapping date ranges."), "error");
+} finally {
       setSaving(false);
     }
   };
@@ -261,10 +261,9 @@ export default function SeasonalMultipliersPage() {
       setDeleteTarget(null);
       showFlash("Multiplier deleted.");
       fetchMultipliers();
-    } catch (e: any) {
-      setDeleteTarget(null);
-      showFlash(e?.response?.data?.detail ?? "Only upcoming multipliers can be deleted.", "error");
-    }
+   } catch (e: unknown) {
+     setDeleteTarget(null);
+     showFlash(apiError(e, "Only upcoming multipliers can be deleted."), "error");}
   };
 
   const visibleQuarters = (filterQuarter ? [filterQuarter] : QUARTERS) as Quarter[];

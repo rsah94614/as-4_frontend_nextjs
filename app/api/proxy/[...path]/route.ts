@@ -40,9 +40,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 const SERVICE_MAP: Record<string, string> = {
     auth:        (process.env.AUTH_SERVICE_URL        || "http://localhost:8001") + "/v1/auth",
-    roles:       (process.env.ROLES_SERVICE_URL       || "http://localhost:8002") + "/v1/roles",
+    roles: (process.env.ROLES_SERVICE_URL || "http://localhost:8002"),
     employees:   (process.env.EMPLOYEES_SERVICE_URL   || "http://localhost:8003") + "/v1/employees",
-    wallet:      (process.env.WALLET_SERVICE_URL      || "http://localhost:8004") + "/v1/wallets",
+    wallet: (process.env.WALLET_SERVICE_URL || "http://localhost:8004"),
     recognition: (process.env.RECOGNITION_SERVICE_URL || "http://localhost:8005"),
     rewards:     (process.env.REWARDS_SERVICE_URL     || "http://localhost:8006") + "/v1/rewards",
     org:         (process.env.ORG_SERVICE_URL         || "http://localhost:8007") + "/v1/organizations",
@@ -77,14 +77,12 @@ async function proxyRequest(
         ? await req.text()
         : undefined;
 
-    return fetch(url.toString(), {
-        method:  req.method,
-        headers,
-        body,
-        // Keep-alive so server-side connections to microservices are reused
-        // @ts-expect-error — Node 18+ fetch supports this
-        keepalive: true,
-    });
+  return fetch(url.toString(), {
+      method:  req.method,
+      headers,
+      body,
+      keepalive: true,
+  });
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────

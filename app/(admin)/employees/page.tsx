@@ -6,15 +6,14 @@ import {
   Users, ChevronDown, ChevronUp, Star, Award, Calendar, Filter, X,
   Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Download, Plus
 } from "lucide-react"
-import { fetchWithAuth } from "@/services/auth-service"
-import axiosClient from "@/services/api-client"
+import { createAuthenticatedClient, extractApiError } from "@/lib/api-utils"
 import Navbar from "@/components/layout/Navbar"
 import Sidebar from "@/components/layout/Sidebar"
 
-// ─── Env vars ─────────────────────────────────────────────────────────────────
-const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || "http://localhost:8002"
-const RECOGNITION_API = process.env.NEXT_PUBLIC_RECOGNITION_API_URL || "http://localhost:8005"
-const AUTH_API = process.env.NEXT_PUBLIC_AUTH_API_URL || "http://localhost:8001"
+// ─── Proxy clients ────────────────────────────────────────────────────────────
+const employeeClient    = createAuthenticatedClient("/api/proxy/employees")
+const recognitionClient = createAuthenticatedClient("/api/proxy/recognition")
+const authClient        = createAuthenticatedClient("/api/proxy/auth")
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Employee {
@@ -112,18 +111,18 @@ function BulkImportModal({ onClose, onSuccess }: {
     try {
       const formData = new FormData()
       formData.append("file", file)
-      const res = await axiosClient.post(`${AUTH_API}/v1/auth/bulk-import`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      // FIX: was axiosClient.post(`${AUTH_API}/v1/auth/bulk-import`, ...)
+      // Now routes through proxy. Note: override Content-Type so axios sets
+      // multipart boundary correctly for FormData.
+      const res = await authClient.post("/bulk-import", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       })
       const data = res.data
       setResult(data as BulkImportResult)
       if (data.succeeded > 0) onSuccess()
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string | { msg?: string; loc?: string[] }[] } }; message?: string }
-      const data = axiosErr.response?.data
-      const detail = data?.detail
+      const detail = axiosErr.response?.data?.detail
       if (Array.isArray(detail)) {
         setUploadError(
           detail
@@ -135,7 +134,7 @@ function BulkImportModal({ onClose, onSuccess }: {
       } else if (typeof detail === "string") {
         setUploadError(detail)
       } else {
-        setUploadError(axiosErr.message || "Upload failed")
+        setUploadError(extractApiError(err, "Upload failed"))
       }
     } finally {
       setUploading(false)
@@ -193,7 +192,7 @@ function BulkImportModal({ onClose, onSuccess }: {
             </button>
           </div>
 
-          {/* Drop zone — hidden once results are shown */}
+          {/* Drop zone */}
           {!result && (
             <div
               onDragOver={e => { e.preventDefault(); setDragOver(true) }}
@@ -249,7 +248,6 @@ function BulkImportModal({ onClose, onSuccess }: {
           {/* Results */}
           {result && (
             <div className="space-y-3">
-              {/* Summary pills */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="px-3 py-1.5 rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
                   Total <span className="text-black">{result.total}</span>
@@ -263,8 +261,6 @@ function BulkImportModal({ onClose, onSuccess }: {
                   </span>
                 )}
               </div>
-
-              {/* Per-row list */}
               <div className="border border-slate-100 rounded-xl divide-y divide-slate-50 max-h-56 overflow-y-auto">
                 {result.results.map(r => (
                   <div
@@ -298,25 +294,16 @@ function BulkImportModal({ onClose, onSuccess }: {
         <div className="px-6 py-4 border-t border-slate-100 flex items-center gap-3 flex-shrink-0">
           {result ? (
             <>
-              <button
-                onClick={reset}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
-              >
+              <button onClick={reset} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
                 Import Another
               </button>
-              <button
-                onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl bg-purple-700 text-white text-sm font-semibold hover:bg-purple-800 transition"
-              >
+              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-purple-700 text-white text-sm font-semibold hover:bg-purple-800 transition">
                 Done
               </button>
             </>
           ) : (
             <>
-              <button
-                onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
-              >
+              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
                 Cancel
               </button>
               <button
@@ -352,11 +339,8 @@ function AddEmployeeModal({ onClose, onSuccess, allEmployees }: {
     manager_id: "",
   })
   const [submitting, setSubmitting] = useState(false)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState<string | null>(null)
 
-  // Workaround: Derive designations and departments from allEmployees 
-  // because the Organization Service (port 8007) is missing/broken.
   const designations = useMemo(() => {
     const map = new Map<string, { id: string, name: string }>()
     allEmployees.forEach(emp => {
@@ -382,25 +366,20 @@ function AddEmployeeModal({ onClose, onSuccess, allEmployees }: {
     setSubmitting(true)
     setError(null)
     try {
-      const res = await fetchWithAuth(`${AUTH_API}/v1/auth/signup`, {
-        method: "POST",
-        body: JSON.stringify({
-          username: form.username,
-          email: form.email,
-          password: form.password,
-          designation_id: form.designation_id,
-          department_id: form.department_id,
-          manager_id: form.manager_id || null,
-        }),
+      // FIX: was fetchWithAuth(`${AUTH_API}/v1/auth/signup`, ...)
+      // Now routes through proxy: /api/proxy/auth/signup
+      await authClient.post("/signup", {
+        username: form.username,
+        email: form.email,
+        password: form.password,
+        designation_id: form.designation_id,
+        department_id: form.department_id,
+        manager_id: form.manager_id || null,
       })
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.detail || "Failed to add employee")
-      }
       onSuccess()
       onClose()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to add employee")
+    } catch (err: unknown) {
+      setError(extractApiError(err, "Failed to add employee"))
     } finally {
       setSubmitting(false)
     }
@@ -430,10 +409,10 @@ function AddEmployeeModal({ onClose, onSuccess, allEmployees }: {
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          {false && ( // Removed error block for loading since we're using derive logic
+          {error && (
             <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
               <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-red-600">Error loading data</p>
+              <p className="text-xs text-red-600">{error}</p>
             </div>
           )}
 
@@ -519,10 +498,7 @@ function AddEmployeeModal({ onClose, onSuccess, allEmployees }: {
         </div>
 
         <div className="px-6 py-4 border-t border-slate-100 flex items-center gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
-          >
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
             Cancel
           </button>
           <button
@@ -745,12 +721,14 @@ export default function AdminTeamsPage() {
     const all: Employee[] = []
     let page = 1
     while (true) {
-      const res = await fetchWithAuth(`${EMPLOYEE_API}/v1/employees?limit=${PAGE_SIZE}&page=${page}`)
-      if (!res.ok) throw new Error(`Failed to fetch employees (${res.status})`)
-      const data = await res.json()
-      const rows: Employee[] = data.data ?? []
+      // FIX: was fetchWithAuth(`${EMPLOYEE_API}/v1/employees?...`) — direct call + wrong path
+      // Employee list route is /list, not /. Now uses proxy client.
+      const res = await employeeClient.get<{ data: Employee[]; pagination: { total_pages: number } }>(
+        `/list?limit=${PAGE_SIZE}&page=${page}`
+      )
+      const rows = res.data.data ?? []
       all.push(...rows)
-      if (page >= (data.pagination?.total_pages ?? 1)) break
+      if (page >= (res.data.pagination?.total_pages ?? 1)) break
       page++
     }
     return all
@@ -761,13 +739,20 @@ export default function AdminTeamsPage() {
     const all: Review[] = []
     let page = 1
     while (true) {
-      const res = await fetchWithAuth(`${RECOGNITION_API}/v1/reviews?page=${page}&page_size=${PAGE_SIZE}`)
-      if (!res.ok) { console.warn(`Reviews fetch returned ${res.status}`); break }
-      const data = await res.json()
-      const rows: Review[] = data.data ?? []
-      all.push(...rows)
-      if (page >= (data.pagination?.total_pages ?? 1)) break
-      page++
+      try {
+        // FIX: was fetchWithAuth(`${RECOGNITION_API}/v1/reviews?...`) — direct call
+        // Now uses proxy client.
+        const res = await recognitionClient.get<{ data: Review[]; pagination: { total_pages: number } }>(
+          `/reviews?page=${page}&page_size=${PAGE_SIZE}`
+        )
+        const rows = res.data.data ?? []
+        all.push(...rows)
+        if (page >= (res.data.pagination?.total_pages ?? 1)) break
+        page++
+      } catch (e) {
+        console.warn("Reviews fetch failed:", e)
+        break
+      }
     }
     return all
   }
@@ -892,7 +877,6 @@ export default function AdminTeamsPage() {
                 </button>
               )}
 
-              {/* Bulk Import + Refresh — pinned to the right */}
               <div className="flex items-center gap-2 ml-auto">
                 <button
                   onClick={() => setAddModalOpen(true)}
@@ -971,7 +955,6 @@ export default function AdminTeamsPage() {
         </main>
       </div>
 
-      {/* Bulk Import Modal */}
       {bulkModalOpen && (
         <BulkImportModal
           onClose={() => setBulkModalOpen(false)}
@@ -979,7 +962,6 @@ export default function AdminTeamsPage() {
         />
       )}
 
-      {/* Add Employee Modal */}
       {addModalOpen && (
         <AddEmployeeModal
           onClose={() => setAddModalOpen(false)}

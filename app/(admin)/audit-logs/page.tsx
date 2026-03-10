@@ -200,8 +200,8 @@ export default function AuditLogsPage() {
       const res = await orgApiClient.get<{ data: AuditLog[]; pagination: Pagination }>("/audit-logs", { params });
       setLogs(res.data.data ?? []);
       setPagination(res.data.pagination ?? null);
-    } catch (e: any) {
-      const s = e?.response?.status;
+     } catch (e: unknown) {
+        const s = (e as { response?: { status?: number } })?.response?.status;
       setError(s === 401
         ? "Your session has expired. Please log in again."
         : "Could not load audit logs. Please check that the service is running."

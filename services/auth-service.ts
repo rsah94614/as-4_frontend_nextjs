@@ -1,7 +1,6 @@
 // services/auth-service.ts - Authentication utility functions
 
 import axiosClient from './api-client'
-import axios from 'axios'
 
 /**
  * Storage keys for authentication tokens

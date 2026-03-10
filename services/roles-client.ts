@@ -35,9 +35,9 @@ export interface CreateRolePayload {
 }
 
 export const rolesApi = {
-    listRoles:   (): Promise<Role[]>  => request(""),
-    createRole:  (body: CreateRolePayload): Promise<Role> =>
-        request("", { method: "POST", body }),
+  // roles-client.ts
+  listRoles: (): Promise<Role[]> => request("/list"),
+  createRole: (body: CreateRolePayload): Promise<Role> => request("/create", { method: "POST", body }),
 };
 
 // ── Employee Roles ─────────────────────────────────────────────────────────

@@ -1,25 +1,23 @@
 "use client";
 
 /**
- * Wallet page — replaces mock data with live API calls.
+ * Wallet page — live API calls via Next.js proxy.
  *
- * Endpoints used (wallet service at NEXT_PUBLIC_WALLET_API_URL = http://localhost:8004):
- *   GET /v1/wallets/employees/{employee_id}   → WalletResponse
- *   GET /v1/wallets/{wallet_id}/points-summary → { points_this_month, points_this_year }
- *   GET /v1/transactions?wallet_id=&page=&limit= → TransactionListResponse
- *
- * Auth token is read from localStorage via auth.getAccessToken().
- * No backend files were modified.
+ * Endpoints (via /api/proxy/wallet → http://localhost:8004/v1/wallets):
+ *   GET /employees/{employee_id}        → WalletResponse
+ *   GET /{wallet_id}/points-summary     → PointsSummary
+ *   GET /transactions?wallet_id=...     → TransactionListResponse
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { Gift, Ticket, RefreshCw, ChevronLeft, ChevronRight, ArrowDownCircle } from "lucide-react";
-import { auth, fetchWithAuth } from "@/services/auth-service";
+import { createAuthenticatedClient } from "@/lib/api-utils";
+import { auth } from "@/services/auth-service";
+import { extractApiError } from "@/lib/api-utils";
 
-// ─── Env ──────────────────────────────────────────────────────────────────────
+// ─── Proxy client ─────────────────────────────────────────────────────────────
 
-const WALLET_API =
-  process.env.NEXT_PUBLIC_WALLET_API_URL || "http://localhost:8004";
+const walletClient = createAuthenticatedClient("/api/proxy/wallet");
 
 // ─── Exact API response types (mirrors backend schemas.py) ───────────────────
 
@@ -73,28 +71,24 @@ interface TransactionListResponse {
   transactions: Transaction[];
 }
 
-// ─── Fetchers ─────────────────────────────────────────────────────────────────
+// ─── Fetchers — all go through /api/proxy/wallet ─────────────────────────────
 
 async function fetchWallet(employeeId: string): Promise<WalletData> {
-  const res = await fetchWithAuth(
-    `${WALLET_API}/v1/wallets/employees/${employeeId}`
-  );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to load wallet");
+  try {
+    const res = await walletClient.get<WalletData>(`/employees/${employeeId}`);
+    return res.data;
+  } catch (error: unknown) {
+    throw new Error(extractApiError(error, "Failed to load wallet"));
   }
-  return res.json();
 }
 
 async function fetchPointsSummary(walletId: string): Promise<PointsSummary> {
-  const res = await fetchWithAuth(
-    `${WALLET_API}/v1/wallets/${walletId}/points-summary`
-  );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to load points summary");
+  try {
+    const res = await walletClient.get<PointsSummary>(`/${walletId}/points-summary`);
+    return res.data;
+  } catch (error: unknown) {
+    throw new Error(extractApiError(error, "Failed to load points summary"));
   }
-  return res.json();
 }
 
 async function fetchTransactions(
@@ -102,19 +96,19 @@ async function fetchTransactions(
   page: number,
   limit: number
 ): Promise<TransactionListResponse> {
-  const params = new URLSearchParams({
-    wallet_id: walletId,
-    page: String(page),
-    limit: String(limit),
-  });
-  const res = await fetchWithAuth(
-    `${WALLET_API}/v1/transactions?${params.toString()}`
-  );
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to load transactions");
+  try {
+    const params = new URLSearchParams({
+      wallet_id: walletId,
+      page: String(page),
+      limit: String(limit),
+    });
+    const res = await walletClient.get<TransactionListResponse>(
+      `/transactions?${params.toString()}`
+    );
+    return res.data;
+  } catch (error: unknown) {
+    throw new Error(extractApiError(error, "Failed to load transactions"));
   }
-  return res.json();
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -236,17 +230,19 @@ function TransactionRow({ txn }: { txn: Transaction }) {
 
       <div className="flex flex-col items-end flex-shrink-0 ml-4">
         <p
-          className={`text-sm font-semibold ${isCredit ? "text-green-600" : "text-fuchsia-600"
-            }`}
+          className={`text-sm font-semibold ${
+            isCredit ? "text-green-600" : "text-fuchsia-600"
+          }`}
         >
           {isCredit ? "+" : "-"}
           {txn.amount.toLocaleString()}
         </p>
         <span
           className={`text-[10px] px-2 py-0.5 rounded-full mt-1 font-medium
-            ${txn.status.code === "SUCCESS"
-              ? "bg-green-100 text-green-700"
-              : txn.status.code === "FAILED"
+            ${
+              txn.status.code === "SUCCESS"
+                ? "bg-green-100 text-green-700"
+                : txn.status.code === "FAILED"
                 ? "bg-red-100 text-red-600"
                 : "bg-amber-100 text-amber-700"
             }`}
@@ -259,11 +255,7 @@ function TransactionRow({ txn }: { txn: Transaction }) {
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse bg-gray-200 rounded-xl ${className}`}
-    />
-  );
+  return <div className={`animate-pulse bg-gray-200 rounded-xl ${className}`} />;
 }
 
 function ErrorBanner({
@@ -318,7 +310,6 @@ export default function Wallet() {
       const walletData = await fetchWallet(user.employee_id);
       setWallet(walletData);
 
-      // Fetch points summary in parallel now we have wallet_id
       const sumData = await fetchPointsSummary(walletData.wallet_id);
       setSummary(sumData);
     } catch (e) {
@@ -370,7 +361,6 @@ export default function Wallet() {
     const next = txnPage + dir;
     if (next < 1 || next > totalPages) return;
     setTxnPage(next);
-    // scroll transactions section into view smoothly
     document
       .getElementById("txn-section")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -383,8 +373,6 @@ export default function Wallet() {
 
       {/* ── Top Stats Row ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        {/* Lifetime / Total earned */}
         {loadingWallet ? (
           <>
             <Skeleton className="h-36" />
@@ -404,20 +392,17 @@ export default function Wallet() {
               subValue={wallet.redeemed_points}
               variant="white"
             />
-
             <StatCard
               label="Redeemable"
               value={wallet.available_points}
               variant="green"
             />
-
             <MonthYearCard
               monthPoints={summary?.points_this_month ?? 0}
               yearPoints={summary?.points_this_year ?? 0}
             />
           </>
         ) : null}
-
       </div>
 
       {/* ── Recent Transactions ───────────────────────────────────────────── */}
@@ -437,7 +422,6 @@ export default function Wallet() {
             )}
           </div>
 
-          {/* Refresh */}
           <button
             onClick={() => {
               if (wallet?.wallet_id) {
@@ -456,7 +440,6 @@ export default function Wallet() {
           </button>
         </div>
 
-        {/* Transaction error */}
         {txnError && (
           <div className="mb-4">
             <ErrorBanner
@@ -468,7 +451,6 @@ export default function Wallet() {
           </div>
         )}
 
-        {/* Transaction list */}
         <div className="flex flex-col gap-4">
           {loadingTxns ? (
             Array.from({ length: 5 }).map((_, i) => (
@@ -486,7 +468,6 @@ export default function Wallet() {
           )}
         </div>
 
-        {/* Pagination */}
         {!loadingTxns && txnData && txnData.total > TXN_PAGE_SIZE && (
           <div className="flex items-center justify-between mt-6 pt-5 border-t border-gray-100">
             <button
@@ -500,9 +481,7 @@ export default function Wallet() {
             </button>
 
             <span className="text-sm text-gray-400">
-              Page{" "}
-              <b className="text-gray-700">{txnPage}</b>{" "}
-              of{" "}
+              Page <b className="text-gray-700">{txnPage}</b> of{" "}
               <b className="text-gray-700">{totalPages}</b>
             </span>
 

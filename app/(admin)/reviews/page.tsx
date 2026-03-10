@@ -6,14 +6,13 @@ import {
   Loader2, Flag, Star, X, ChevronDown, ChevronUp,
   MessageSquare, TrendingUp, Calendar
 } from "lucide-react"
-import { fetchWithAuth } from "@/services/auth-service"
+import { createAuthenticatedClient } from "@/lib/api-utils"
 import Navbar from "@/components/layout/Navbar"
 import Sidebar from "@/components/layout/Sidebar"
 
-// ─── Env vars ─────────────────────────────────────────────────────────────────
-// FIX: Employee service runs on 8002, not 8003
-const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || "http://localhost:8002"
-const RECOGNITION_API = process.env.NEXT_PUBLIC_RECOGNITION_API_URL || "http://localhost:8005"
+// ─── Proxy clients ────────────────────────────────────────────────────────────
+const employeeClient    = createAuthenticatedClient("/api/proxy/employees")
+const recognitionClient = createAuthenticatedClient("/api/proxy/recognition")
 
 const FLAG_RATING = 2
 
@@ -133,7 +132,6 @@ function MemberSection({ member, reviews, employees, isManager }: {
   member: Employee; reviews: Review[]; employees: Employee[]; isManager: boolean
 }) {
   const [open, setOpen] = useState(false)
-  // FIX: reviews where this member is the RECEIVER (not reviewer)
   const memberReviews = reviews.filter(r => r.receiver_id === member.employee_id)
   if (memberReviews.length === 0) return null
 
@@ -186,7 +184,6 @@ function TeamSection({ manager, members, reviews, employees, expanded, onToggle 
   manager: Employee; members: Employee[]; reviews: Review[]
   employees: Employee[]; expanded: boolean; onToggle: () => void
 }) {
-  // FIX: Count reviews for all team members (manager + reports) as RECEIVERS
   const teamIds = useMemo(
     () => new Set([manager.employee_id, ...members.map(m => m.employee_id)]),
     [manager.employee_id, members]
@@ -272,23 +269,19 @@ export default function AdminReviewsPage() {
   const [month, setMonth] = useState(new Date().getMonth())
   const [year, setYear] = useState(new Date().getFullYear())
 
-  // ── Paginated fetchers — backend caps both services at le=100 ─────────────
-  // Employee service: param is `limit` (max 100)
-  // Recognition service: param is `page_size` (max 100)
-
   async function fetchAllEmployees(): Promise<Employee[]> {
     const PAGE_SIZE = 100
     const all: Employee[] = []
     let page = 1
     while (true) {
-      const res = await fetchWithAuth(
-        `${EMPLOYEE_API}/v1/employees?limit=${PAGE_SIZE}&page=${page}`
+      // FIX: was fetchWithAuth(`${EMPLOYEE_API}/v1/employees?...`) — direct call + wrong path
+      // Employee list route is /list. Now uses proxy client.
+      const res = await employeeClient.get<{ data: Employee[]; pagination: { total_pages: number } }>(
+        `/list?limit=${PAGE_SIZE}&page=${page}`
       )
-      if (!res.ok) throw new Error(`Failed to fetch employees (${res.status})`)
-      const data = await res.json()
-      const rows: Employee[] = data.data ?? []
+      const rows = res.data.data ?? []
       all.push(...rows)
-      if (page >= (data.pagination?.total_pages ?? 1)) break
+      if (page >= (res.data.pagination?.total_pages ?? 1)) break
       page++
     }
     return all
@@ -299,18 +292,20 @@ export default function AdminReviewsPage() {
     const all: Review[] = []
     let page = 1
     while (true) {
-      const res = await fetchWithAuth(
-        `${RECOGNITION_API}/v1/reviews?page=${page}&page_size=${PAGE_SIZE}`
-      )
-      if (!res.ok) {
-        console.warn(`Reviews fetch returned ${res.status}`)
+      try {
+        // FIX: was fetchWithAuth(`${RECOGNITION_API}/v1/reviews?...`) — direct call
+        // Now uses proxy client.
+        const res = await recognitionClient.get<{ data: Review[]; pagination: { total_pages: number } }>(
+          `/reviews?page=${page}&page_size=${PAGE_SIZE}`
+        )
+        const rows = res.data.data ?? []
+        all.push(...rows)
+        if (page >= (res.data.pagination?.total_pages ?? 1)) break
+        page++
+      } catch (e) {
+        console.warn("Reviews fetch failed:", e)
         break
       }
-      const data = await res.json()
-      const rows: Review[] = data.data ?? []
-      all.push(...rows)
-      if (page >= (data.pagination?.total_pages ?? 1)) break
-      page++
     }
     return all
   }
@@ -319,12 +314,9 @@ export default function AdminReviewsPage() {
     setLoading(true)
     setError(null)
     try {
-      const [employees, reviews] = await Promise.all([
-        fetchAllEmployees(),
-        fetchAllReviews(),
-      ])
-      setEmployees(employees)
-      setAllReviews(reviews)
+      const [emps, revs] = await Promise.all([fetchAllEmployees(), fetchAllReviews()])
+      setEmployees(emps)
+      setAllReviews(revs)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Something went wrong")
     } finally {
@@ -334,8 +326,6 @@ export default function AdminReviewsPage() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  // ── Filter reviews by selected month/year (memoised) ──────────────────────
-  // FIX: wrap in useMemo so derived arrays are stable references
   const reviews = useMemo(() =>
     allReviews.filter(r => {
       const d = new Date(r.review_at)
@@ -344,9 +334,6 @@ export default function AdminReviewsPage() {
     [allReviews, month, year]
   )
 
-  // ── Build team structure (memoised) ───────────────────────────────────────
-  // FIX: derive managers from employees whose employee_id appears as someone
-  // else's manager_id — stable with useMemo
   const { managers, getTeam } = useMemo(() => {
     const managersSet = new Set(
       employees.map(e => e.manager_id).filter((id): id is string => !!id)
@@ -356,15 +343,12 @@ export default function AdminReviewsPage() {
     return { managers: mgrs, getTeam: get }
   }, [employees])
 
-  // ── Summary stats ──────────────────────────────────────────────────────────
   const totalReviews = reviews.length
   const flaggedTotal = reviews.filter(r => r.rating <= FLAG_RATING).length
   const overallAvg = totalReviews > 0
     ? reviews.reduce((s, r) => s + r.rating, 0) / totalReviews
     : 0
 
-  // ── Filtered managers (memoised) ──────────────────────────────────────────
-  // FIX: useMemo prevents re-running expensive filter on every render
   const filteredManagers = useMemo(() => {
     const term = search.toLowerCase()
     return managers.filter(m => {

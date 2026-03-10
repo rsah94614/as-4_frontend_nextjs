@@ -187,9 +187,9 @@ export default function StatusesPage() {
       if (filterType) params.entity_type = filterType;
       const res = await orgApiClient.get<Status[]>("/statuses", { params });
       setStatuses(Array.isArray(res.data) ? res.data : []);
-    } catch (e: any) {
-      showFlash(e?.response?.status === 401 ? "Your session expired. Please log in again." : "Could not load statuses. Please refresh.", "error");
-    } finally {
+   } catch (e: unknown) {
+     showFlash(apiError(e, "Could not load statuses. Please refresh."), "error");
+} finally {
       setLoading(false);
     }
   }, [filterType]);
@@ -206,9 +206,9 @@ export default function StatusesPage() {
       setForm({ status_code: "", status_name: "", description: "", entity_type: "EMPLOYEE" });
       showFlash("Status created successfully.");
       fetchStatuses();
-    } catch (e: any) {
-      showFlash(e?.response?.data?.detail ?? "Could not create status. Please try again.", "error");
-    } finally {
+   } catch (e: unknown) {
+     showFlash(apiError(e, "Could not create status. Please try again."), "error");
+} finally {
       setSaving(false);
     }
   };
@@ -226,9 +226,9 @@ export default function StatusesPage() {
       setEditId(null);
       showFlash("Status updated successfully.");
       fetchStatuses();
-    } catch (e: any) {
-      showFlash(e?.response?.data?.detail ?? "Could not update status. Please try again.", "error");
-    } finally {
+   } catch (e: unknown) {
+     showFlash(apiError(e, "Could not update status. Please try again."), "error");
+     } finally {
       setSaving(false);
     }
   };
