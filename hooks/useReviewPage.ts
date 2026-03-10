@@ -85,6 +85,7 @@ export function useReviewPage(): ReviewPageState {
     const [submitting, setSubmitting] = useState(false)
     const [toast, setToast] = useState<ToastState | null>(null)
     const [listTab, setListTab] = useState<"all" | "given" | "received">("all")
+    const [submittedData, setSubmittedData] = useState<SubmittedReviewData | null>(null)
 
     const monthStart = new Date()
     monthStart.setDate(1)
@@ -149,7 +150,12 @@ export function useReviewPage(): ReviewPageState {
         setComment("")
         setFiles([])
         setEditingReview(null)
+        setSubmittedData(null)
         setView("compose")
+    }
+
+    function startNewReview() {
+        openCompose()
     }
 
     function openEdit(r: Review) {
@@ -234,10 +240,24 @@ export function useReviewPage(): ReviewPageState {
                     ...(videoUrl && { video_url: videoUrl }),
                 })
                 setToast({ msg: "Review submitted! Points credited to their wallet. 🎉", kind: "success" })
+
+                // Store submitted data for success screen
+                setSubmittedData({
+                    receiverName,
+                    rating,
+                    categoryNames: selectedCatNames,
+                    comment: comment.trim(),
+                    submittedAt: new Date().toISOString(),
+                })
             }
 
             await loadReviews(1)
-            backToList()
+            // Show submitted success state instead of navigating to list
+            if (view === "compose") {
+                setView("submitted")
+            } else {
+                backToList()
+            }
         } catch (err: unknown) {
             const detail =
                 (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
@@ -292,5 +312,7 @@ export function useReviewPage(): ReviewPageState {
         backToList,
         handleSubmit,
         loadReviews,
+        submittedData,
+        startNewReview,
     }
 }

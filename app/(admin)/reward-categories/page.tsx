@@ -1,380 +1,191 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
-import { fetchWithAuth } from "@/services/auth-service";
-import { Tags } from "lucide-react";
+
+import React, { useState } from "react";
+import { Tags, Search, RefreshCw, X, Filter, BarChart3, Plus, ArrowUpRight } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
+import { useRewardCategories } from "@/hooks/useRewardCategories";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface Category {
-  category_id: string;
-  category_name: string;
-  category_code: string;
-  description?: string;
-  is_active: boolean;
-  created_at: string;
-}
+// Modular Components
+import { RewardStats } from "@/components/features/admin/rewards/UIHelpers";
+import { CategoryModal } from "@/components/features/admin/rewards/CategoryModal";
+import { CategoryTable } from "@/components/features/admin/rewards/CategoryTable";
 
-const API = process.env.NEXT_PUBLIC_REWARDS_API_URL ?? "http://localhost:8006";
-
-// ─── Primitives ───────────────────────────────────────────────────────────────
-function Badge({ active }: { active: boolean }) {
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 10px",
-      borderRadius: 20, fontSize: 11, fontWeight: 600, letterSpacing: "0.05em",
-      background: active ? "#d1fae5" : "#fee2e2",
-      color: active ? "#065f46" : "#991b1b",
-    }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: active ? "#10b981" : "#ef4444", display: "inline-block" }} />
-      {active ? "ACTIVE" : "INACTIVE"}
-    </span>
-  );
-}
-
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div style={{
-      position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", backdropFilter: "blur(4px)",
-      display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 24,
-    }} onClick={onClose}>
-      <div style={{
-        background: "#fff", borderRadius: 16, width: "100%", maxWidth: 520,
-        boxShadow: "0 25px 60px -10px rgba(0,0,0,0.25)", maxHeight: "90vh", overflowY: "auto",
-      }} onClick={e => e.stopPropagation()}>
-        <div style={{ padding: "24px 28px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#0f172a" }}>{title}</h2>
-          <button onClick={onClose} style={{
-            border: "none", background: "#f1f5f9", borderRadius: 8, width: 32, height: 32,
-            cursor: "pointer", fontSize: 18, color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center",
-          }}>×</button>
-        </div>
-        <div style={{ padding: 28 }}>{children}</div>
-      </div>
-    </div>
-  );
-}
-
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "9px 12px", border: "1.5px solid #e2e8f0",
-  borderRadius: 8, fontSize: 14, color: "#0f172a", outline: "none",
-  boxSizing: "border-box", fontFamily: "inherit",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "block", fontSize: 12, fontWeight: 600, color: "#475569", marginBottom: 5, letterSpacing: "0.05em",
-};
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div style={{ marginBottom: 16 }}><label style={labelStyle}>{label}</label>{children}</div>;
-}
-
-function Btn({ children, onClick, variant = "primary", disabled = false, style = {} }: {
-  children: React.ReactNode; onClick?: () => void;
-  variant?: "primary" | "ghost" | "outline"; disabled?: boolean; style?: React.CSSProperties;
-}) {
-  const variants = {
-    primary: { background: "#7c3aed", color: "#fff", border: "none" },
-    ghost: { background: "#f8fafc", color: "#475569", border: "1.5px solid #e2e8f0" },
-    outline: { background: "transparent", color: "#7c3aed", border: "1.5px solid #7c3aed" },
-  };
-  return (
-    <button onClick={onClick} disabled={disabled} style={{
-      padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-      cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.6 : 1,
-      display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "inherit",
-      ...variants[variant], ...style,
-    }}>{children}</button>
-  );
-}
-
-// ─── Category Form (Create / Edit) ────────────────────────────────────────────
-function CategoryForm({ category, onSave, onClose }: {
-  category?: Category; onSave: () => void; onClose: () => void;
-}) {
-  const isEdit = !!category;
-  const [form, setForm] = useState({
-    category_name: category?.category_name ?? "",
-    category_code: category?.category_code ?? "",
-    description: category?.description ?? "",
-    is_active: category?.is_active ?? true,
-  });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  const set = (k: string) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) =>
-    setForm(f => ({
-      ...f,
-      [k]: e.target.type === "checkbox" ? (e.target as HTMLInputElement).checked : e.target.value,
-    }));
-
-  const submit = async () => {
-    setSaving(true); setError("");
-    try {
-      const url = isEdit
-        ? `${API}/v1/rewards/categories/${category!.category_id}`
-        : `${API}/v1/rewards/categories`;
-      const method = isEdit ? "PATCH" : "POST";
-      const body = isEdit
-        ? { category_name: form.category_name, description: form.description, is_active: form.is_active }
-        : { category_name: form.category_name, category_code: form.category_code, description: form.description };
-
-      const r = await fetchWithAuth(url, { method, body: JSON.stringify(body) });
-      if (!r.ok) {
-        const d = await r.json();
-        throw new Error(Array.isArray(d.detail) ? d.detail.map((e: { msg?: string }) => e.msg).join(", ") : d.detail ?? "Request failed");
-      }
-      onSave();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Request failed");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <>
-      {!isEdit && (
-        <Field label="CATEGORY CODE">
-          <input style={inputStyle} value={form.category_code} onChange={set("category_code")} placeholder="e.g. CAT-GIFT" />
-        </Field>
-      )}
-      <Field label="CATEGORY NAME">
-        <input style={inputStyle} value={form.category_name} onChange={set("category_name")} placeholder="e.g. Gift Cards" />
-      </Field>
-      <Field label="DESCRIPTION">
-        <textarea
-          style={{ ...inputStyle, minHeight: 80, resize: "vertical" }}
-          value={form.description}
-          onChange={set("description")}
-          placeholder="Optional description…"
-        />
-      </Field>
-      {isEdit && (
-        <Field label="STATUS">
-          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-            <input type="checkbox" checked={form.is_active} onChange={set("is_active")} style={{ width: 16, height: 16 }} />
-            <span style={{ fontSize: 14, color: "#475569" }}>Active</span>
-          </label>
-        </Field>
-      )}
-      {error && <p style={{ color: "#ef4444", fontSize: 13, margin: "0 0 12px" }}>{error}</p>}
-      <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-        <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
-        <Btn onClick={submit} disabled={saving}>
-          {saving ? "Saving…" : isEdit ? "Update Category" : "Create Category"}
-        </Btn>
-      </div>
-    </>
-  );
-}
-
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
-function SkeletonRow() {
-  return (
-    <tr>
-      <style>{`@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}`}</style>
-      {[40, 20, 50, 15, 15].map((w, i) => (
-        <td key={i} style={{ padding: "14px 16px" }}>
-          <div style={{
-            height: 13, width: `${w}%`, borderRadius: 6,
-            background: "linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%)",
-            backgroundSize: "800px 100%", animation: "shimmer 1.4s infinite",
-          }} />
-        </td>
-      ))}
-    </tr>
-  );
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-  const [activeOnly, setActiveOnly] = useState(false);
-  const [modal, setModal] = useState<null | "create" | "edit">(null);
-  const [selected, setSelected] = useState<Category | undefined>();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const load = useCallback(async () => {
-    setLoading(true); setError("");
-    try {
-      const r = await fetchWithAuth(`${API}/v1/rewards/categories?active_only=${activeOnly}`);
-      if (r.ok) {
-        setCategories(await r.json());
-      } else {
-        setError("Failed to load categories. Check your connection or permissions.");
-      }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "An unexpected error occurred.");
-    } finally {
-      setLoading(false);
-    }
-  }, [activeOnly]);
-
-  useEffect(() => { load(); }, [load]);
-
-  const filtered = categories.filter(c =>
-    c.category_name.toLowerCase().includes(search.toLowerCase()) ||
-    c.category_code.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const close = () => { setModal(null); setSelected(undefined); };
-  const saved = () => { close(); load(); };
-
-  const activeCount = categories.filter(c => c.is_active).length;
+  const {
+    categories,
+    filtered,
+    loading,
+    error,
+    search,
+    setSearch,
+    activeOnly,
+    setActiveOnly,
+    activeCount,
+    modal,
+    selected,
+    openCreate,
+    openEdit,
+    closeModal,
+    handleSaved,
+    refresh
+  } = useRewardCategories();
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="flex-1 overflow-y-auto p-6">
-          {/* Header */}
-          <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "0 32px" }}>
-            <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 36, height: 36, background: "linear-gradient(135deg,#7c3aed,#a855f7)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}><Tags size={18} color="#fff" /></div>
+        <main className="flex-1 overflow-y-auto p-8 lg:p-12 space-y-10 scroll-smooth">
+          {/* Top Header Section */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-slate-100 animate-in fade-in slide-in-from-top-4 duration-700">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 rounded-[24px] flex items-center justify-center shadow-2xl shadow-purple-200 group hover:rotate-6 transition-transform duration-500">
+                  <Tags className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+                </div>
                 <div>
-                  <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#0f172a" }}>Reward Categories</h1>
-                  <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>Manage reward category groups</p>
+                  <h1 className="text-5xl font-black tracking-tighter text-slate-900 leading-none">
+                    Reward <span className="text-purple-600">Categories</span>
+                  </h1>
+                  <p className="text-[11px] font-black text-slate-400 mt-2 uppercase tracking-[0.4em] flex items-center gap-2">
+                    <BarChart3 className="w-3 h-3" /> System Configuration Module
+                  </p>
                 </div>
               </div>
-              <Btn onClick={() => setModal("create")}>＋ New Category</Btn>
             </div>
+
+            <Button
+              onClick={openCreate}
+              className="h-16 px-10 bg-black text-white rounded-[24px] text-xs font-black tracking-widest shadow-2xl shadow-slate-300 hover:bg-slate-800 transition-all hover:-translate-y-1 hover:shadow-purple-200 active:scale-95 group uppercase flex items-center gap-3 overflow-hidden border-none"
+            >
+              <Plus className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+              Build New Category
+              <ArrowUpRight className="w-4 h-4 translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
+            </Button>
           </div>
 
-          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px" }}>
-            {/* Stats Bar */}
+          {/* Stats Bar Container */}
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
             {!loading && categories.length > 0 && (
-              <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
-                {[
-                  { label: "Total", value: categories.length, color: "#7c3aed", bg: "#f5f3ff" },
-                  { label: "Active", value: activeCount, color: "#059669", bg: "#d1fae5" },
-                  { label: "Inactive", value: categories.length - activeCount, color: "#dc2626", bg: "#fee2e2" },
-                ].map(s => (
-                  <div key={s.label} style={{
-                    background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 12, padding: "12px 20px",
-                    display: "flex", alignItems: "center", gap: 12,
-                  }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: s.color }} />
-                    <span style={{ fontSize: 13, color: "#64748b" }}>{s.label}</span>
-                    <span style={{ fontSize: 18, fontWeight: 700, color: "#0f172a" }}>{s.value}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Toolbar */}
-            <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-              <input
-                placeholder="Search by name or code…"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                style={{ ...inputStyle, maxWidth: 280, flex: "1 1 200px" }}
+              <RewardStats
+                total={categories.length}
+                active={activeCount}
+                inactive={categories.length - activeCount}
               />
-              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#475569", cursor: "pointer", userSelect: "none" }}>
-                <input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)} style={{ width: 15, height: 15 }} />
-                Active only
-              </label>
-              <span style={{ marginLeft: "auto", fontSize: 13, color: "#94a3b8" }}>
-                {filtered.length} {filtered.length === 1 ? "category" : "categories"}
-              </span>
+            )}
+          </div>
+
+          {/* Error Banner with Premium Styling */}
+          {error && !loading && (
+            <div className="bg-red-50 border-2 border-red-100/50 rounded-[32px] p-6 flex items-center justify-between gap-6 shadow-xl shadow-red-100/20 border-l-[12px] border-l-red-600 animate-in shake-in duration-500">
+              <div className="flex items-center gap-4 text-red-700">
+                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                  <X className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-extrabold text-lg tracking-tight">System Interrupt</p>
+                  <p className="text-xs font-bold uppercase tracking-widest opacity-80">{error}</p>
+                </div>
+              </div>
+              <Button
+                onClick={refresh}
+                className="h-14 px-8 bg-red-600 text-white rounded-2xl text-[10px] font-black tracking-widest hover:bg-red-700 transition-all shadow-lg active:scale-95 border-none"
+              >
+                RE-INITIALIZE SYNC
+              </Button>
+            </div>
+          )}
+
+          {/* Interactive Filtering Toolbar */}
+          <div className="flex flex-col lg:flex-row items-center gap-6 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
+            <div className="relative w-full lg:max-w-md group">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-purple-600 group-focus-within:scale-110 transition-all pointer-events-none z-10" />
+              <Input
+                placeholder="Identify Category by Name or Logic Code..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full h-16 pl-16 pr-8 rounded-[24px] border-2 border-slate-100 bg-white text-sm font-black text-slate-800 placeholder:text-slate-300 focus-visible:ring-purple-50 focus-visible:border-purple-300 transition-all shadow-sm group-hover:border-slate-200"
+              />
             </div>
 
-            {/* Error Banner */}
-            {error && !loading && (
-              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "12px 18px", marginBottom: 20, color: "#991b1b", fontSize: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span>⚠️ {error}</span>
-                <Btn variant="ghost" onClick={load} style={{ padding: "4px 12px", fontSize: 12 }}>Retry</Btn>
-              </div>
-            )}
+            <div className="flex items-center gap-4 w-full lg:w-auto">
+              <label className="flex items-center gap-3 px-8 py-5 bg-white border-2 border-slate-100 rounded-[24px] cursor-pointer select-none hover:border-purple-300 transition-all group shadow-sm">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={activeOnly}
+                    onChange={(e) => setActiveOnly(e.target.checked)}
+                    className="peer h-6 w-11 cursor-pointer appearance-none rounded-full bg-slate-200 transition-all focus:outline-none checked:bg-green-500 group-hover:scale-105"
+                  />
+                  <div className="absolute left-1 h-4 w-4 transform rounded-full bg-white transition-transform peer-checked:translate-x-5" />
+                </div>
+                <span className="text-[10px] font-black text-slate-400 group-hover:text-slate-800 uppercase tracking-widest transition-colors flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5" /> Filter Active
+                </span>
+              </label>
 
-            {/* Table */}
-            <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ borderBottom: "1.5px solid #e2e8f0", background: "#f8fafc" }}>
-                    {["Category", "Code", "Description", "Status", "Created", ""].map((h, i) => (
-                      <th key={i} style={{
-                        padding: "11px 16px", textAlign: "left", fontSize: 11, fontWeight: 700,
-                        color: "#64748b", letterSpacing: "0.07em", textTransform: "uppercase",
-                      }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
-                  ) : filtered.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} style={{ padding: 60, textAlign: "center", color: "#94a3b8" }}>
-                        <div style={{ fontSize: 36, marginBottom: 10 }}>🗂️</div>
-                        <p style={{ margin: 0, fontWeight: 600, color: "#64748b" }}>No categories found</p>
-                        <p style={{ margin: "4px 0 16px", fontSize: 13 }}>Try a different search or create a new category</p>
-                        <Btn onClick={() => setModal("create")}>＋ New Category</Btn>
-                      </td>
-                    </tr>
-                  ) : (
-                    filtered.map((cat, idx) => (
-                      <tr key={cat.category_id} style={{
-                        borderBottom: idx < filtered.length - 1 ? "1px solid #f1f5f9" : "none",
-                        transition: "background 0.15s",
-                      }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "#fafbff")}
-                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                      >
-                        <td style={{ padding: "14px 16px" }}>
-                          <span style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>{cat.category_name}</span>
-                        </td>
-                        <td style={{ padding: "14px 16px" }}>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: "#7c3aed", background: "#ede9fe", padding: "2px 8px", borderRadius: 6 }}>
-                            {cat.category_code}
-                          </span>
-                        </td>
-                        <td style={{ padding: "14px 16px", maxWidth: 300 }}>
-                          <span style={{ fontSize: 13, color: "#64748b", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                            {cat.description || <span style={{ color: "#cbd5e1", fontStyle: "italic" }}>No description</span>}
-                          </span>
-                        </td>
-                        <td style={{ padding: "14px 16px" }}>
-                          <Badge active={cat.is_active} />
-                        </td>
-                        <td style={{ padding: "14px 16px", fontSize: 13, color: "#94a3b8", whiteSpace: "nowrap" }}>
-                          {new Date(cat.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                        </td>
-                        <td style={{ padding: "14px 16px", textAlign: "right" }}>
-                          <Btn variant="ghost" onClick={() => { setSelected(cat); setModal("edit"); }} style={{ padding: "5px 12px", fontSize: 12 }}>
-                            ✏️ Edit
-                          </Btn>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+              {(search || activeOnly) && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setSearch("");
+                    setActiveOnly(false);
+                  }}
+                  className="h-16 w-16 p-0 rounded-[24px] bg-slate-100 text-slate-500 hover:bg-black hover:text-white transition-all shadow-sm active:scale-90 group border-2 border-transparent hover:shadow-xl"
+                >
+                  <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+                </Button>
+              )}
+            </div>
+
+            <div className="ml-auto flex items-center gap-4">
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-black text-purple-600 bg-purple-50 px-3 py-1 rounded-lg uppercase tracking-[0.2em] mb-1">
+                  GRID QUANTITY
+                </span>
+                <span className="text-xl font-black text-slate-800 tracking-tighter">
+                  {filtered.length} <span className="text-[10px] text-slate-300 uppercase tracking-widest">CATEGORIES LOADED</span>
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                onClick={refresh}
+                className="h-16 w-16 p-0 bg-white border-2 border-slate-100 rounded-[24px] text-slate-400 hover:text-purple-600 hover:border-purple-300 hover:shadow-xl transition-all active:scale-95 group shadow-sm active:rotate-180 duration-700"
+              >
+                <RefreshCw className="w-5 h-5" />
+              </Button>
             </div>
           </div>
 
-          {/* Modals */}
-          {modal === "create" && (
-            <Modal title="Create New Category" onClose={close}>
-              <CategoryForm onSave={saved} onClose={close} />
-            </Modal>
-          )}
-          {modal === "edit" && selected && (
-            <Modal title="Edit Category" onClose={close}>
-              <CategoryForm category={selected} onSave={saved} onClose={close} />
-            </Modal>
-          )}
+          {/* Central Grid System */}
+          <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
+            <CategoryTable
+              categories={filtered}
+              loading={loading}
+              onEdit={openEdit}
+              openCreate={openCreate}
+            />
+          </div>
 
+          <div className="h-20" /> {/* Bottom Spacing */}
         </main>
+
+        {/* Modal Logic */}
+        {modal && (
+          <CategoryModal
+            isOpen={!!modal}
+            category={selected}
+            onClose={closeModal}
+            onSave={handleSaved}
+          />
+        )}
       </div>
     </div>
-  )
-};
+  );
+}

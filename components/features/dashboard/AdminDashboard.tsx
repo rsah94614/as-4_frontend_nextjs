@@ -11,7 +11,10 @@ import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "./Adminteamdeta
 import { fetchTeamReport, fetchTeamsSummary } from "@/services/analytics-service";
 import type { TeamSummaryResponse, TeamReportResponse } from "@/types/dashboard-types";
 
-type SortOption = "score" | "points" | "members" | "name";
+import AdminParticipationSection from "./AdminParticipationSection";
+import AdminRecognitionTrendSection from "./AdminRecognitionTrendSection";
+import AdminRecognitionSection from "./AdminRecognitionSection";
+import AdminTeamReportsSection from "./AdminTeamReportsSection";
 
 // ─── Teams loading skeleton ───────────────────────────────────────────────────
 function TeamsLoadingSkeleton() {
@@ -143,38 +146,6 @@ export default function AdminDashboard() {
 
     return (
         <div className="space-y-6">
-            {/* ── Header ── */}
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-purple-100">
-                        <ShieldCheck className="w-5 h-5 text-purple-700" />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2.5">
-                            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                                {selectedTeam ? selectedTeam.department_name : "Admin Dashboard"}
-                            </h1>
-                            <Badge variant="outline" className="border-purple-300 text-purple-700 bg-purple-50 font-bold text-[11px] tracking-widest uppercase px-2.5">
-                                Admin
-                            </Badge>
-                        </div>
-                        {/* Breadcrumb */}
-                        <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5 font-medium">
-                            <button
-                                onClick={handleBack}
-                                className={`transition-colors ${selectedTeam ? "hover:text-gray-700 cursor-pointer" : "cursor-default"}`}
-                            >
-                                Team Reports
-                            </button>
-                            {selectedTeam && (
-                                <>
-                                    <ChevronRight className="w-3 h-3" />
-                                    <span className="text-gray-700 font-semibold">{selectedTeam.department_name}</span>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
 
                 <div className="flex items-center gap-2">
                     {showBack && (

@@ -111,23 +111,6 @@ async function fetchTransactions(
   }
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatCard({
@@ -395,7 +378,6 @@ export default function Wallet() {
             <StatCard
               label="Redeemable"
               value={wallet.available_points}
-              variant="green"
             />
             <MonthYearCard
               monthPoints={summary?.points_this_month ?? 0}
@@ -429,15 +411,14 @@ export default function Wallet() {
               }
             }}
             disabled={loadingTxns || !wallet}
-            className="flex items-center gap-1.5 text-sm text-purple-700 hover:underline
-              disabled:opacity-40 disabled:cursor-not-allowed"
+            className="text-indigo-600 bg-indigo-50 border-indigo-100 hover:bg-indigo-100 hover:text-indigo-700 shadow-sm transition-all"
           >
             <RefreshCw
-              size={13}
-              className={loadingTxns ? "animate-spin" : ""}
+              size={14}
+              className={`mr-2 ${loadingTxns ? "animate-spin" : ""}`}
             />
             Refresh
-          </button>
+          </Button>
         </div>
 
         {txnError && (
@@ -484,16 +465,28 @@ export default function Wallet() {
               Page <b className="text-gray-700">{txnPage}</b> of{" "}
               <b className="text-gray-700">{totalPages}</b>
             </span>
-
-            <button
-              onClick={() => handlePageChange(1)}
-              disabled={txnPage >= totalPages}
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800
-                disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-              <ChevronRight size={16} />
-            </button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(-1)}
+                disabled={txnPage === 1}
+                className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-sm"
+              >
+                <ChevronLeft size={16} className="mr-1" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(1)}
+                disabled={txnPage >= totalPages}
+                className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-sm"
+              >
+                Next
+                <ChevronRight size={16} className="ml-1" />
+              </Button>
+            </div>
           </div>
         )}
       </div>

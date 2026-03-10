@@ -21,10 +21,12 @@ export default function ReviewPage() {
         {/* ── Page header ── */}
         <div className="mb-8">
           <h1 className="text-[22px] font-semibold text-gray-900">
-            Write a Review
+            {state.view === "submitted" ? "Review Submitted" : "Write a Review"}
           </h1>
           <p className="text-sm text-gray-400 mt-0.5">
-            Give honest, constructive feedback to a teammate
+            {state.view === "submitted"
+              ? "Your feedback has been recorded and points credited"
+              : "Give honest, constructive feedback to a teammate"}
           </p>
         </div>
 
@@ -53,6 +55,8 @@ export default function ReviewPage() {
           loadingStats={state.loadingData}
           reviews={state.reviews}
           myId={state.myId}
+          submittedData={state.submittedData}
+          onStartNew={state.startNewReview}
         />
       </div>
 

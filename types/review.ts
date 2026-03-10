@@ -9,7 +9,7 @@
 export interface ReviewCreateRequest {
     receiver_id: string; // UUID
     rating: number; // 1-5
-    comment: string; // 10-2000 chars
+    comment: string; // 10-100 chars
     image_url?: string | null;
     video_url?: string | null;
 }
@@ -19,7 +19,7 @@ export interface ReviewCreateRequest {
 // -------------------------
 export interface ReviewUpdateRequest {
     rating?: number; // 1-5
-    comment?: string; // 10-2000 chars
+    comment?: string; // 10-100 chars
     image_url?: string | null;
     video_url?: string | null;
 }
