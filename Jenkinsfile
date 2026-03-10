@@ -19,12 +19,12 @@ pipeline {
 
         // --- Frontend API Routing Variables ---
         NEXT_PUBLIC_API_URL = "https://test.aabhar.top/v1/auth"
-        NEXT_PUBLIC_RECOGNITION_API_URL = "https://test.aabhar.top/v1/recognition"
+        NEXT_PUBLIC_RECOGNITION_API_URL = "https://test.aabhar.top/v1/recognitions"
         NEXT_PUBLIC_EMPLOYEE_API_URL = "https://test.aabhar.top/v1/employees"
-        NEXT_PUBLIC_WALLET_API_URL = "https://test.aabhar.top/v1/wallet"
+        NEXT_PUBLIC_WALLET_API_URL = "https://test.aabhar.top/v1/wallets"
         NEXT_PUBLIC_REWARDS_API_URL = "https://test.aabhar.top/v1/rewards"
-        NEXT_PUBLIC_ANALYTICS_API_URL = "https://test.aabhar.top/v1/dashboard"
-        NEXT_PUBLIC_ORG_API_URL = "https://test.aabhar.top/v1/org"
+        NEXT_PUBLIC_ANALYTICS_API_URL = "https://test.aabhar.top/v1/analytics"
+        NEXT_PUBLIC_ORG_API_URL = "https://test.aabhar.top/v1/organizations"
         NEXT_PUBLIC_ROLES_API_URL = "https://test.aabhar.top/v1/roles"
     }
 
@@ -37,8 +37,9 @@ pipeline {
     stages {
         stage('Checkout Source') {
             steps {
-                echo "Fetching code for branch: ${TARGET_BRANCH}"
-                git branch: "${TARGET_BRANCH}", url: "${REPO_URL}"
+                echo "Fetching code for branch: ${TARGET_BRANCH} using GitHub PAT..."
+                // Added credentialsId here to authenticate with GitHub
+                git branch: "${TARGET_BRANCH}", credentialsId: 'github-frontend-creds', url: "${REPO_URL}"
             }
         }
 
@@ -47,7 +48,6 @@ pipeline {
             parallel {
                 stage('Secrets Scan (Gitleaks)') {
                     steps {
-                        // Mirrors backend gitleaks stage
                         sh 'gitleaks detect --source . --report-format json --report-path gitleaks-report.json --exit-code 0 || true'
                     }
                 }
@@ -113,7 +113,6 @@ pipeline {
             when { branch 'pipeline-branch' }
             steps {
                 script {
-                    // Assuming you have 'frontend-ec2-ssh-key' configured in Jenkins
                     sshagent(credentials: ['frontend-ec2-ssh-key']) {
                         sh """
                         ssh -o StrictHostKeyChecking=no ubuntu@${TARGET_EC2_HOST} "
@@ -138,11 +137,9 @@ pipeline {
                     echo "🚀 Application deployed successfully. Traffic handled by Nginx." 
                     echo "⏳ Waiting for Next.js SSR to boot..."
                     
-                    // Active Health Check Observation
                     timeout(time: 3, unit: 'MINUTES') { 
                         waitUntil {
                             script {
-                                // Pinging the frontend domain directly to ensure Nginx and Docker are responding
                                 def r = sh(script: "curl -s -o /dev/null -w '%{http_code}' https://${TARGET_EC2_HOST}/ || true", returnStdout: true).trim()
                                 if (r != "200") {
                                     echo "Still waiting for Frontend... HTTP Code: ${r}"
@@ -160,7 +157,6 @@ pipeline {
 
     post {
         always {
-            // Archives Trivy and Gitleaks reports
             archiveArtifacts artifacts: '**/*.json', allowEmptyArchive: true
             
             echo "Running deep cleanup to free up Jenkins disk space..."
