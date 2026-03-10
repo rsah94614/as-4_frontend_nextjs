@@ -1,20 +1,22 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import axiosClient from "@/services/api-client"
+import { createAuthenticatedClient } from "@/lib/api-utils"
 import { uploadToStorage } from "@/services/cloudinary"
 import { getTeamMembersForUI, type TeamMember } from "@/services/employee-service"
 import { requireAuthenticatedUserId } from "@/lib/api-utils"
 import type { Review, ReviewCategory, ViewMode, ToastState } from "@/types/review-types"
-import { API } from "@/lib/review-utils"
+
+// FIX: Use proxy client instead of direct API URL.
+// Previously used axiosClient (baseURL=/api/proxy/auth) with `${API}/v1/reviews`
+// which resolved to http://localhost:8005/v1/reviews — bypassing the proxy entirely.
+// Now uses recognitionClient (baseURL=/api/proxy/recognition) with relative paths.
+const recognitionClient = createAuthenticatedClient("/api/proxy/recognition")
 
 // ─── Hook Return Type ─────────────────────────────────────────────────────────
 
 export interface ReviewPageState {
-    // Identity
     myId: string
-
-    // Data
     reviews: Review[]
     categories: ReviewCategory[]
     teamMembers: TeamMember[]
@@ -24,12 +26,8 @@ export interface ReviewPageState {
     totalPages: number
     loadingData: boolean
     dataError: string | null
-
-    // Navigation
     view: ViewMode
     editingReview: Review | null
-
-    // Form
     receiverId: string
     setReceiverId: (id: string) => void
     rating: number
@@ -42,22 +40,14 @@ export interface ReviewPageState {
     setFiles: React.Dispatch<React.SetStateAction<File[]>>
     fileRef: React.RefObject<HTMLInputElement | null>
     submitting: boolean
-
-    // Toast
     toast: ToastState | null
     setToast: (t: ToastState | null) => void
-
-    // List
     listTab: "all" | "given" | "received"
     setListTab: (tab: "all" | "given" | "received") => void
-
-    // Derived
     givenThisMonth: number
     reviewedThisMonth: Set<string>
     filteredReviews: Review[]
     allReceivers: (TeamMember & { isManager: boolean })[]
-
-    // Actions
     openCompose: () => void
     openEdit: (r: Review) => void
     backToList: () => void
@@ -68,12 +58,10 @@ export interface ReviewPageState {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useReviewPage(): ReviewPageState {
-    // ── Identity
     const [myId] = useState<string>(() => {
         try { return requireAuthenticatedUserId() } catch { return "" }
     })
 
-    // ── Data
     const [reviews, setReviews] = useState<Review[]>([])
     const [categories, setCategories] = useState<ReviewCategory[]>([])
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
@@ -84,11 +72,9 @@ export function useReviewPage(): ReviewPageState {
     const [loadingData, setLoadingData] = useState(true)
     const [dataError, setDataError] = useState<string | null>(null)
 
-    // ── Navigation
     const [view, setView] = useState<ViewMode>("compose")
     const [editingReview, setEditingReview] = useState<Review | null>(null)
 
-    // ── Form
     const [receiverId, setReceiverId] = useState("")
     const [rating, setRating] = useState(0)
     const [categoryIds, setCategoryIds] = useState<string[]>([])
@@ -96,12 +82,10 @@ export function useReviewPage(): ReviewPageState {
     const [files, setFiles] = useState<File[]>([])
     const fileRef = useRef<HTMLInputElement>(null)
 
-    // ── UI
     const [submitting, setSubmitting] = useState(false)
     const [toast, setToast] = useState<ToastState | null>(null)
     const [listTab, setListTab] = useState<"all" | "given" | "received">("all")
 
-    // ── Derived monthly stats
     const monthStart = new Date()
     monthStart.setDate(1)
     monthStart.setHours(0, 0, 0, 0)
@@ -116,13 +100,15 @@ export function useReviewPage(): ReviewPageState {
             .map((r) => r.receiver_id)
     )
 
-    // ── Load helpers
     const loadReviews = useCallback(async (pg = 1) => {
         try {
-            const res = await axiosClient.get<{
+            // FIX: was `${API}/v1/reviews?...` → direct call to localhost:8005
+            // Now: relative path on recognitionClient (baseURL=/api/proxy/recognition)
+            // → /api/proxy/recognition/reviews?... → proxied correctly
+            const res = await recognitionClient.get<{
                 data: Review[]
                 pagination: { total: number; total_pages: number }
-            }>(`${API}/v1/reviews?page=${pg}&page_size=20`)
+            }>(`/reviews?page=${pg}&page_size=20`)
             setReviews(res.data.data)
             setTotalReviews(res.data.pagination.total)
             setTotalPages(res.data.pagination.total_pages)
@@ -137,8 +123,9 @@ export function useReviewPage(): ReviewPageState {
             setLoadingData(true)
             try {
                 const [catRes, teamRes] = await Promise.allSettled([
-                    axiosClient.get<{ data: ReviewCategory[] }>(
-                        `${API}/v1/review-categories?page=1&page_size=100&active_only=true`
+                    // FIX: was `${API}/v1/review-categories?...` → direct call
+                    recognitionClient.get<{ data: ReviewCategory[] }>(
+                        `/review-categories?page=1&page_size=100&active_only=true`
                     ),
                     getTeamMembersForUI(),
                 ])
@@ -155,7 +142,6 @@ export function useReviewPage(): ReviewPageState {
         init()
     }, [loadReviews])
 
-    // ── Navigation helpers
     function openCompose() {
         setReceiverId("")
         setRating(0)
@@ -181,13 +167,11 @@ export function useReviewPage(): ReviewPageState {
         setEditingReview(null)
     }
 
-    // ── Derived form state
     const allReceivers = [
         ...(teamLeader ? [{ ...teamLeader, isManager: true as const }] : []),
         ...teamMembers.map((m) => ({ ...m, isManager: false as const })),
     ]
 
-    // ── Submit
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         if (view === "compose" && !receiverId) {
@@ -236,10 +220,12 @@ export function useReviewPage(): ReviewPageState {
                     setSubmitting(false)
                     return
                 }
-                await axiosClient.put(`${API}/v1/reviews/${editingReview.review_id}`, patch)
+                // FIX: was `${API}/v1/reviews/${id}` → now relative path
+                await recognitionClient.put(`/reviews/${editingReview.review_id}`, patch)
                 setToast({ msg: "Review updated. Points recalculated automatically.", kind: "success" })
             } else {
-                await axiosClient.post(`${API}/v1/reviews`, {
+                // FIX: was `${API}/v1/reviews` → now relative path
+                await recognitionClient.post(`/reviews`, {
                     receiver_id: receiverId,
                     rating,
                     category_ids: categoryIds,
@@ -262,7 +248,6 @@ export function useReviewPage(): ReviewPageState {
         }
     }
 
-    // ── Filtered list
     const filteredReviews = reviews.filter((r) => {
         if (listTab === "given") return r.reviewer_id === myId
         if (listTab === "received") return r.receiver_id === myId

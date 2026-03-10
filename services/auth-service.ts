@@ -15,25 +15,22 @@ const STORAGE_KEYS = {
 
 /**
  * API configuration
+ * Auth endpoints route through the Next.js proxy — no direct port in browser.
+ * axiosClient base is already /api/proxy/auth — these are relative paths only.
  */
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
-
 export const AUTH_ENDPOINTS = {
-    LOGIN: `${API_URL}/v1/auth/login`,
-    LOGOUT: `${API_URL}/v1/auth/logout`,
-    REFRESH: `${API_URL}/v1/auth/refresh`,
-    VALIDATE: `${API_URL}/v1/auth/validate`,
-    FORGOT_PASSWORD: `${API_URL}/v1/auth/forgot-password`,
-    RESET_PASSWORD: `${API_URL}/v1/auth/reset-password`,
+    LOGIN:           '/login',
+    LOGOUT:          '/logout',
+    REFRESH:         '/refresh',
+    VALIDATE:        '/validate',
+    FORGOT_PASSWORD: '/forgot-password',
+    RESET_PASSWORD:  '/reset-password',
 } as const
 
 /**
  * Token management functions
  */
 export const auth = {
-    /**
-     * Store authentication tokens and user data
-     */
     setTokens: (accessToken: string, refreshToken: string, user: Record<string, unknown>, expiresIn: number) => {
         if (typeof window === 'undefined') return
 
@@ -45,56 +42,35 @@ export const auth = {
         localStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRES_AT, expiresAt.toString())
     },
 
-    /**
-     * Get access token
-     */
     getAccessToken: (): string | null => {
         if (typeof window === 'undefined') return null
         return localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)
     },
 
-    /**
-     * Get refresh token
-     */
     getRefreshToken: (): string | null => {
         if (typeof window === 'undefined') return null
         return localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
     },
 
-    /**
-     * Get stored user data
-     */
     getUser: () => {
         if (typeof window === 'undefined') return null
         const userStr = localStorage.getItem(STORAGE_KEYS.USER)
         return userStr ? JSON.parse(userStr) : null
     },
 
-    /**
-     * Check if token is expired
-     */
     isTokenExpired: (): boolean => {
         if (typeof window === 'undefined') return true
-
         const expiresAt = localStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRES_AT)
         if (!expiresAt) return true
-
         return Date.now() >= parseInt(expiresAt)
     },
 
-    /**
-     * Check if user is authenticated
-     */
     isAuthenticated: (): boolean => {
         return !!auth.getAccessToken() && !auth.isTokenExpired()
     },
 
-    /**
-     * Clear all authentication data
-     */
     clearTokens: () => {
         if (typeof window === 'undefined') return
-
         localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN)
         localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
         localStorage.removeItem(STORAGE_KEYS.USER)
@@ -106,12 +82,20 @@ export const auth = {
         if (!refreshToken) return false
 
         try {
-            // Use plain axios (NOT axiosClient) to avoid triggering the 401
-            // response interceptor again, which would cause an infinite loop.
-            const response = await axios.post(
+            // FIX: Use axiosClient (NOT bare axios) so the request routes through
+            // the Next.js proxy at /api/proxy/auth/refresh.
+            //
+            // Previously this used bare axios.post(AUTH_ENDPOINTS.REFRESH, ...)
+            // which resolved '/refresh' as a relative URL against the current
+            // page origin (e.g. http://localhost:3000/refresh) — bypassing the
+            // proxy entirely. The request would 404, refreshed = false, tokens
+            // would be cleared, and the user got redirected to /login mid-session.
+            //
+            // axiosClient has baseURL = /api/proxy/auth, so this correctly
+            // becomes /api/proxy/auth/refresh → proxied to the auth microservice.
+            const response = await axiosClient.post(
                 AUTH_ENDPOINTS.REFRESH,
                 { refresh_token: refreshToken },
-                { headers: { 'Content-Type': 'application/json' } }
             )
 
             const data = response.data
@@ -145,13 +129,12 @@ export const auth = {
         auth.clearTokens()
     },
 }
+
 /**
- * Make authenticated API request - now using Axios internally for 
- * consistency and to trigger Developer Logger interceptors.
+ * Make authenticated API request — Axios-backed for interceptor support.
  */
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
     try {
-        // Map Fetch options to Axios config
         const response = await axiosClient({
             url,
             method: options.method || 'GET',
@@ -159,7 +142,6 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
             headers: options.headers as Record<string, string>,
         });
 
-        // Return a Fetch-compatible response shim so existing code doesn't break
         return {
             ok: true,
             status: response.status,
@@ -169,7 +151,6 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
             },
         } as unknown as Response;
     } catch (error: unknown) {
-        // If it's an Axios error with a response
         const axiosErr = error as { response?: { status: number; data: unknown; headers: Record<string, string> } };
         if (axiosErr.response) {
             return {
@@ -181,7 +162,6 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
                 },
             } as unknown as Response;
         }
-        // Network errors or other issues
         throw error;
     }
 }
@@ -239,9 +219,6 @@ export async function resetPassword(token: string, newPassword: string) {
     }
 }
 
-/**
- * TypeScript types
- */
 export interface User {
     employee_id: string
     username: string

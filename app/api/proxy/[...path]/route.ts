@@ -24,21 +24,14 @@
  *
  * SERVICE MAP (add new services here as you scale)
  * ─────────────────────────────────────────────────
- *   /api/proxy/auth/**          → http://localhost:8001/**
- *   /api/proxy/roles/**         → http://localhost:8002/**
- *   /api/proxy/employees/**     → http://localhost:8003/**
- *   /api/proxy/wallet/**        → http://localhost:8004/**
- *   /api/proxy/recognition/**   → http://localhost:8005/**
- *   /api/proxy/rewards/**       → http://localhost:8006/**
- *   /api/proxy/org/**           → http://localhost:8007/**
- *   /api/proxy/analytics/**     → http://localhost:8008/**
- *
- * DASHBOARD PARALLEL FETCH
- * ─────────────────────────
- * Use /api/proxy/dashboard to fetch all 4 dashboard endpoints in a
- * single browser request (server fans them out in parallel):
- *   GET /api/proxy/dashboard
- *   → returns { platformStats, recentReviews, leaderboard, teams }
+ *   /api/proxy/auth/**          → http://localhost:8001/v1/auth/**
+ *   /api/proxy/roles/**         → http://localhost:8002/v1/roles/**
+ *   /api/proxy/employees/**     → http://localhost:8003/v1/employees/**
+ *   /api/proxy/wallet/**        → http://localhost:8004/v1/wallets/**
+ *   /api/proxy/recognition/**   → http://localhost:8005/v1/recognitions/**  (root_path used by auth middleware for route matching)
+ *   /api/proxy/rewards/**       → http://localhost:8006/v1/rewards/**
+ *   /api/proxy/org/**           → http://localhost:8007/v1/organizations/**
+ *   /api/proxy/analytics/**     → http://localhost:8008/v1/analytics/**
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -46,14 +39,14 @@ import { NextRequest, NextResponse } from "next/server";
 // ─── Service registry ─────────────────────────────────────────────────────────
 
 const SERVICE_MAP: Record<string, string> = {
-    auth:        process.env.AUTH_SERVICE_URL        || "http://localhost:8001",
-    roles:       process.env.ROLES_SERVICE_URL       || "http://localhost:8002",
-    employees:   process.env.EMPLOYEES_SERVICE_URL   || "http://localhost:8003",
-    wallet:      process.env.WALLET_SERVICE_URL      || "http://localhost:8004",
-    recognition: process.env.RECOGNITION_SERVICE_URL || "http://localhost:8005",
-    rewards:     process.env.REWARDS_SERVICE_URL     || "http://localhost:8006",
-    org:         process.env.ORG_SERVICE_URL         || "http://localhost:8007",
-    analytics:   process.env.ANALYTICS_SERVICE_URL  || "http://localhost:8008",
+    auth:        (process.env.AUTH_SERVICE_URL        || "http://localhost:8001") + "/v1/auth",
+    roles:       (process.env.ROLES_SERVICE_URL       || "http://localhost:8002") + "/v1/roles",
+    employees:   (process.env.EMPLOYEES_SERVICE_URL   || "http://localhost:8003") + "/v1/employees",
+    wallet:      (process.env.WALLET_SERVICE_URL      || "http://localhost:8004") + "/v1/wallets",
+    recognition: (process.env.RECOGNITION_SERVICE_URL || "http://localhost:8005"),
+    rewards:     (process.env.REWARDS_SERVICE_URL     || "http://localhost:8006") + "/v1/rewards",
+    org:         (process.env.ORG_SERVICE_URL         || "http://localhost:8007") + "/v1/organizations",
+    analytics:   (process.env.ANALYTICS_SERVICE_URL  || "http://localhost:8008") + "/v1/analytics",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -70,6 +63,9 @@ async function proxyRequest(
 ): Promise<Response> {
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
+        // FIX: Forward the Accept header so microservices that do content
+        // negotiation don't fall back to an unexpected format.
+        "Accept": "application/json",
     };
     if (token) headers["Authorization"] = `Bearer ${token}`;
 
@@ -126,9 +122,6 @@ async function handleProxy(req: NextRequest, pathSegments: string[]): Promise<Ne
     const token = extractToken(req);
 
     // ── Special case: dashboard aggregate ────────────────────────────────────
-    // GET /api/proxy/dashboard → fans out to all 4 analytics endpoints in
-    // parallel and returns a single merged JSON response.
-    // Saves 3 round-trips + 3 CORS preflights vs calling them individually.
     if (service === "dashboard" && req.method === "GET") {
         return handleDashboardAggregate(token);
     }
@@ -142,14 +135,39 @@ async function handleProxy(req: NextRequest, pathSegments: string[]): Promise<Ne
         );
     }
 
-    const targetPath = "/" + rest.join("/");
+    const targetPath = rest.length > 0 ? "/" + rest.join("/") : "";
     const targetUrl  = `${baseUrl}${targetPath}`;
 
     try {
         const upstream = await proxyRequest(targetUrl, req, token);
-        const data     = await upstream.json().catch(() => null);
 
-        return NextResponse.json(data, { status: upstream.status });
+        // FIX: Forward the upstream status faithfully. Previously this always
+        // called upstream.json() and re-wrapped in NextResponse.json(), which:
+        //   1. Swallowed non-JSON error bodies (e.g. HTML 502 pages from nginx)
+        //   2. Lost the upstream Content-Type for non-JSON responses
+        //   3. Caused a crash if the body was empty (e.g. 204 No Content)
+        //
+        // Now we check Content-Type and handle empty bodies gracefully.
+        const contentType = upstream.headers.get("content-type") ?? "";
+        const status      = upstream.status;
+
+        // 204 No Content — body must be empty
+        if (status === 204) {
+            return new NextResponse(null, { status: 204 });
+        }
+
+        if (contentType.includes("application/json")) {
+            const data = await upstream.json().catch(() => null);
+            return NextResponse.json(data, { status });
+        }
+
+        // Non-JSON upstream response (e.g. plain text error from a gateway)
+        const text = await upstream.text().catch(() => "");
+        return new NextResponse(text, {
+            status,
+            headers: { "Content-Type": contentType || "text/plain" },
+        });
+
     } catch (err) {
         console.error(`[proxy] ${service}${targetPath} failed:`, err);
         return NextResponse.json(
@@ -160,27 +178,56 @@ async function handleProxy(req: NextRequest, pathSegments: string[]): Promise<Ne
 }
 
 // ─── Dashboard aggregate ──────────────────────────────────────────────────────
+// Fans out to all 4 analytics endpoints in parallel.
+// Each is individually error-isolated — one failing endpoint does NOT cause
+// the entire dashboard to return 502. The failed panel gets null and the
+// rest render normally.
 
 async function handleDashboardAggregate(token: string | null): Promise<NextResponse> {
     const analyticsBase = SERVICE_MAP.analytics;
 
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
+        "Accept":       "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
 
-    // Fire all 4 in parallel — total latency = slowest individual call
-    const [platformStats, recentReviews, leaderboard, teams] = await Promise.allSettled([
-        fetch(`${analyticsBase}/v1/dashboard/platform-stats`,  { headers }).then(r => r.json()),
-        fetch(`${analyticsBase}/v1/dashboard/recent-reviews`,  { headers }).then(r => r.json()),
-        fetch(`${analyticsBase}/v1/dashboard/leaderboard`,     { headers }).then(r => r.json()),
-        fetch(`${analyticsBase}/v1/dashboard/teams`,           { headers }).then(r => r.json()),
+    // FIX: Each fetch is individually wrapped so a single failing endpoint
+    // doesn't reject the whole Promise.allSettled isn't needed — we catch
+    // per-request. This also gives us the HTTP status of each so we can
+    // distinguish "service down (network error)" from "403 Forbidden", etc.
+    async function safeFetch(url: string): Promise<unknown> {
+        try {
+            const res = await fetch(url, { headers });
+            if (!res.ok) {
+                // Upstream returned an error status — log it and return null
+                // so the dashboard panel shows a graceful empty state rather
+                // than a 502 cascade.
+                const body = await res.text().catch(() => "");
+                console.error(`[proxy/dashboard] ${url} → ${res.status}: ${body}`);
+                return null;
+            }
+            return await res.json();
+        } catch (err) {
+            // Network error — service is down
+            console.error(`[proxy/dashboard] ${url} unreachable:`, err);
+            return null;
+        }
+    }
+
+    const [platformStats, recentReviews, leaderboard, teams] = await Promise.all([
+        safeFetch(`${analyticsBase}/dashboard/platform-stats`),
+        safeFetch(`${analyticsBase}/dashboard/recent-reviews`),
+        safeFetch(`${analyticsBase}/dashboard/leaderboard`),
+        safeFetch(`${analyticsBase}/dashboard/teams`),
     ]);
 
+    // Always return 200 — individual nulls signal to the UI which panels
+    // failed, without making the whole page error out.
     return NextResponse.json({
-        platformStats:  platformStats.status  === "fulfilled" ? platformStats.value  : null,
-        recentReviews:  recentReviews.status  === "fulfilled" ? recentReviews.value  : null,
-        leaderboard:    leaderboard.status    === "fulfilled" ? leaderboard.value    : null,
-        teams:          teams.status          === "fulfilled" ? teams.value          : null,
+        platformStats,
+        recentReviews,
+        leaderboard,
+        teams,
     });
 }

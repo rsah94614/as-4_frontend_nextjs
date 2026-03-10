@@ -1,17 +1,8 @@
-/**
- * services/analytics-service.ts
- *
- * All dashboard data now fetched through the Next.js proxy (/api/proxy/*).
- * Benefits vs direct microservice calls:
- *  - Same-origin request → no CORS preflight
- *  - Token stays server-side
- *  - Single TCP connection from browser
- *
- * fetchAllDashboardData() fetches all 4 panels in ONE browser request
- * by hitting /api/proxy/dashboard which fans them out in parallel server-side.
- */
+// services/analytics-service.ts
+// All requests routed through Next.js proxy — no direct microservice URL in browser.
 
-import {
+import { createAuthenticatedClient } from "@/lib/api-utils";
+import type {
     PlatformStatsResponse,
     RecentReviewResponse,
     LeaderboardEntryResponse,
@@ -19,30 +10,49 @@ import {
     TeamReportResponse,
 } from "@/types/dashboard-types";
 
-// All requests go through Next.js proxy — no direct microservice URLs in browser
-const PROXY = "/api/proxy";
+const analyticsClient = createAuthenticatedClient("/api/proxy/analytics");
 
-async function get<T>(path: string): Promise<T | null> {
+// ── Individual fetchers (used by pages that need only one panel) ──────────────
+
+export async function fetchDashboardPlatformStats(): Promise<PlatformStatsResponse | null> {
     try {
-        const res = await fetch(path, {
-            headers: {
-                Authorization: `Bearer ${
-                    typeof window !== "undefined"
-                        ? (localStorage.getItem("access_token") ?? "")
-                        : ""
-                }`,
-            },
-            // Next.js fetch cache — revalidate every 30s for dashboard data
-            next: { revalidate: 30 },
-        });
-        if (!res.ok) return null;
-        return res.json();
-    } catch {
-        return null;
-    }
+        const res = await analyticsClient.get<PlatformStatsResponse>("/dashboard/platform-stats");
+        return res.data;
+    } catch { return null; }
 }
 
-// ─── Aggregate fetch — ONE browser request for the entire dashboard ───────────
+export async function fetchDashboardRecentReviews(): Promise<RecentReviewResponse[] | null> {
+    try {
+        const res = await analyticsClient.get<RecentReviewResponse[]>("/dashboard/recent-reviews");
+        return res.data;
+    } catch { return null; }
+}
+
+export async function fetchDashboardLeaderboard(): Promise<LeaderboardEntryResponse[] | null> {
+    try {
+        const res = await analyticsClient.get<LeaderboardEntryResponse[]>("/dashboard/leaderboard");
+        return res.data;
+    } catch { return null; }
+}
+
+export async function fetchTeamsSummary(): Promise<TeamSummaryResponse[] | null> {
+    try {
+        // Current — correct path
+        const res = await analyticsClient.get<TeamSummaryResponse[]>("/dashboard/teams");
+        return res.data;
+    } catch { return null; }
+}
+
+export async function fetchTeamReport(departmentId: string): Promise<TeamReportResponse | null> {
+    try {
+        const res = await analyticsClient.get<TeamReportResponse>(`/dashboard/teams/${departmentId}`);
+        return res.data;
+    } catch { return null; }
+}
+
+// ── Aggregate fetch — for the main dashboard page ────────────────────────────
+// Hits /api/proxy/dashboard which fans out all 4 endpoints in parallel server-side.
+// Reduces 4 browser round trips to 1.
 
 export interface DashboardData {
     platformStats:  PlatformStatsResponse | null;
@@ -51,34 +61,23 @@ export interface DashboardData {
     teams:          TeamSummaryResponse[] | null;
 }
 
-/**
- * Fetches all 4 dashboard panels in a single browser → Next.js request.
- * The proxy fans them out to the analytics service in parallel server-side.
- * Use this instead of calling the 4 individual functions below on the dashboard page.
- */
 export async function fetchAllDashboardData(): Promise<DashboardData> {
-    const data = await get<DashboardData>(`${PROXY}/dashboard`);
-    return data ?? { platformStats: null, recentReviews: null, leaderboard: null, teams: null };
-}
-
-// ─── Individual fetches (kept for pages that need only one panel) ─────────────
-
-export async function fetchDashboardPlatformStats(): Promise<PlatformStatsResponse | null> {
-    return get<PlatformStatsResponse>(`${PROXY}/analytics/v1/dashboard/platform-stats`);
-}
-
-export async function fetchDashboardRecentReviews(): Promise<RecentReviewResponse[] | null> {
-    return get<RecentReviewResponse[]>(`${PROXY}/analytics/v1/dashboard/recent-reviews`);
-}
-
-export async function fetchDashboardLeaderboard(): Promise<LeaderboardEntryResponse[] | null> {
-    return get<LeaderboardEntryResponse[]>(`${PROXY}/analytics/v1/dashboard/leaderboard`);
-}
-
-export async function fetchTeamsSummary(): Promise<TeamSummaryResponse[] | null> {
-    return get<TeamSummaryResponse[]>(`${PROXY}/analytics/v1/dashboard/teams`);
-}
-
-export async function fetchTeamReport(departmentId: string): Promise<TeamReportResponse | null> {
-    return get<TeamReportResponse>(`${PROXY}/analytics/v1/dashboard/teams/${departmentId}`);
+    try {
+        const res = await analyticsClient.get<DashboardData>("/dashboard/all");
+        return res.data;
+    } catch {
+        // Fallback: fire individually in parallel if aggregate route unavailable
+        const [platformStats, recentReviews, leaderboard, teams] = await Promise.allSettled([
+            fetchDashboardPlatformStats(),
+            fetchDashboardRecentReviews(),
+            fetchDashboardLeaderboard(),
+            fetchTeamsSummary(),
+        ]);
+        return {
+            platformStats: platformStats.status === "fulfilled" ? platformStats.value : null,
+            recentReviews: recentReviews.status === "fulfilled" ? recentReviews.value : null,
+            leaderboard:   leaderboard.status   === "fulfilled" ? leaderboard.value   : null,
+            teams:         teams.status         === "fulfilled" ? teams.value         : null,
+        };
+    }
 }

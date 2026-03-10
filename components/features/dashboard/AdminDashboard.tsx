@@ -8,36 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import * as XLSX from "xlsx";
 import AdminTeamsSection from "./Adminteamssection";
 import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "./Adminteamdetailsection";
-import { fetchTeamReport } from "@/services/analytics-service";
+import { fetchTeamReport, fetchTeamsSummary } from "@/services/analytics-service";
 import type { TeamSummaryResponse, TeamReportResponse } from "@/types/dashboard-types";
 
 type SortOption = "score" | "points" | "members" | "name";
-
-const ANALYTICS_API =
-    process.env.NEXT_PUBLIC_ANALYTICS_API_URL || "http://localhost:8008";
-
-async function fetchTeamsWithDetail(): Promise<{
-    data: TeamSummaryResponse[] | null;
-    error: string | null;
-}> {
-    const url = `${ANALYTICS_API}/v1/dashboard/teams`;
-    try {
-        const { fetchWithAuth } = await import("@/services/auth-service");
-        const res = await fetchWithAuth(url);
-        if (res.ok) {
-            const data = await res.json();
-            return { data: Array.isArray(data) ? data : data?.teams ?? [], error: null };
-        }
-        let detail = "";
-        try {
-            const body = await res.json();
-            detail = body?.detail ?? body?.message ?? "";
-        } catch { /* */ }
-        return { data: null, error: detail || `HTTP ${res.status}` };
-    } catch (e: unknown) {
-        return { data: null, error: e instanceof Error ? e.message : "Unexpected error" };
-    }
-}
 
 // ─── Teams loading skeleton ───────────────────────────────────────────────────
 function TeamsLoadingSkeleton() {
@@ -95,9 +69,13 @@ export default function AdminDashboard() {
     const loadTeams = useCallback(async () => {
         setLoadingTeams(true);
         setTeamsError(null);
-        const { data, error: err } = await fetchTeamsWithDetail();
-        if (data) setTeams(data);
-        else setTeamsError(err);
+        try {
+            const data = await fetchTeamsSummary();
+            if (data) setTeams(data);
+            else setTeamsError("No data returned");
+        } catch (e: unknown) {
+            setTeamsError(e instanceof Error ? e.message : "Unexpected error");
+        }
         setLoadingTeams(false);
     }, []);
 
@@ -199,7 +177,6 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* ── Bold back button ── */}
                     {showBack && (
                         <Button
                             size="sm"
@@ -211,7 +188,6 @@ export default function AdminDashboard() {
                         </Button>
                     )}
 
-                    {/* Download All */}
                     {!selectedTeam && !loadingReport && !loadingTeams && !teamsError && teams.length > 0 && (
                         <Button
                             size="sm"
@@ -229,10 +205,8 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            {/* ── Divider ── */}
             <div className="h-px bg-gray-100" />
 
-            {/* ── Report error ── */}
             {reportError && !loadingReport && (
                 <div className="flex flex-col items-center justify-center py-16 gap-5 text-center">
                     <div className="p-4 rounded-xl bg-red-50 border border-red-200">
@@ -255,7 +229,6 @@ export default function AdminDashboard() {
                 </div>
             )}
 
-            {/* ── Teams list ── */}
             {!selectedTeam && !loadingReport && !reportError && (
                 <>
                     {loadingTeams && <TeamsLoadingSkeleton />}
