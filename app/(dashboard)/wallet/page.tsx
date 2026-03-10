@@ -13,65 +13,18 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { Gift, Ticket, RefreshCw, ChevronLeft, ChevronRight, ArrowDownCircle } from "lucide-react";
+import { RefreshCw, ChevronLeft, ChevronRight, ArrowDownCircle } from "lucide-react";
 import { auth, fetchWithAuth } from "@/services/auth-service";
+import { Button } from "@/components/ui/button";
+
+import { WalletData, PointsSummary, TransactionListResponse } from "@/components/features/wallet/types";
+import { StatCard, MonthYearCard } from "@/components/features/wallet/WalletStats";
+import { TransactionRow } from "@/components/features/wallet/TransactionRow";
 
 // ─── Env ──────────────────────────────────────────────────────────────────────
 
 const WALLET_API =
   process.env.NEXT_PUBLIC_WALLET_API_URL || "http://localhost:8004";
-
-// ─── Exact API response types (mirrors backend schemas.py) ───────────────────
-
-interface WalletData {
-  wallet_id: string;
-  employee_id: string;
-  available_points: number;
-  redeemed_points: number;
-  total_earned_points: number;
-  version?: number;
-}
-
-interface PointsSummary {
-  wallet_id: string;
-  points_this_month: number;
-  points_this_year: number;
-}
-
-interface TransactionStatus {
-  status_id: string;
-  code: string;
-  name: string;
-}
-
-interface TransactionType {
-  type_id: string;
-  code: string;
-  name: string;
-  is_credit: boolean;
-}
-
-interface Transaction {
-  transaction_id: string;
-  wallet_id: string;
-  amount: number;
-  status: TransactionStatus;
-  transaction_type: TransactionType;
-  reference_number: string;
-  description: string | null;
-  transaction_at: string;
-  created_at: string;
-  updated_at: string;
-  created_by: string | null;
-  updated_by: string | null;
-}
-
-interface TransactionListResponse {
-  page: number;
-  limit: number;
-  total: number;
-  transactions: Transaction[];
-}
 
 // ─── Fetchers ─────────────────────────────────────────────────────────────────
 
@@ -117,146 +70,7 @@ async function fetchTransactions(
   return res.json();
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  sub,
-  subValue,
-  variant = "white",
-}: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  subValue?: string | number;
-  variant?: "white" | "green" | "purple";
-}) {
-  const bg = {
-    white: "bg-white border border-gray-100 shadow-sm",
-    green: "bg-green-200/60 border border-green-200/40",
-    purple: "bg-purple-200/60 border border-purple-200/40",
-  }[variant];
-
-  return (
-    <div className={`rounded-2xl p-6 ${bg}`}>
-      <p className="text-sm text-gray-500">{label}</p>
-      <h2 className="text-3xl font-semibold mt-2 text-gray-900">
-        {typeof value === "number" ? value.toLocaleString() : value}
-      </h2>
-      {sub && (
-        <div className="flex justify-between mt-4 text-sm text-gray-500">
-          <span>{sub}</span>
-          <span>
-            {typeof subValue === "number"
-              ? subValue.toLocaleString()
-              : subValue}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MonthYearCard({
-  monthPoints,
-  yearPoints,
-}: {
-  monthPoints: number;
-  yearPoints: number;
-}) {
-  return (
-    <div className="rounded-2xl p-6 bg-purple-200/60 border border-purple-200/40">
-      <div className="flex flex-col gap-4 text-sm text-gray-700">
-        <div>
-          <p>This month</p>
-          <p className="text-xl font-semibold text-gray-900">
-            {monthPoints.toLocaleString()}
-          </p>
-        </div>
-        <div>
-          <p>This year</p>
-          <p className="text-xl font-semibold text-gray-900">
-            {yearPoints.toLocaleString()}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TransactionRow({ txn }: { txn: Transaction }) {
-  const isCredit = txn.transaction_type.is_credit;
-
-  return (
-    <div className="flex justify-between items-center bg-gray-50 border border-gray-100 rounded-xl px-5 py-4 group hover:border-gray-200 transition-colors">
-      <div className="flex items-center gap-3 min-w-0">
-        <div
-          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
-            ${isCredit ? "bg-green-100" : "bg-fuchsia-50"}`}
-        >
-          {isCredit ? (
-            <Gift size={15} className="text-green-600" />
-          ) : (
-            <Ticket size={15} className="text-fuchsia-600" />
-          )}
-        </div>
-
-        <div className="min-w-0">
-          <p className="text-sm text-gray-800 truncate">
-            {txn.description || txn.transaction_type.name}
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {formatDate(txn.transaction_at)} · {formatTime(txn.transaction_at)}
-            {txn.reference_number && (
-              <span className="ml-2 font-mono opacity-60">
-                #{txn.reference_number.slice(0, 16)}
-              </span>
-            )}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-col items-end flex-shrink-0 ml-4">
-        <p
-          className={`text-sm font-semibold ${isCredit ? "text-green-600" : "text-fuchsia-600"
-            }`}
-        >
-          {isCredit ? "+" : "-"}
-          {txn.amount.toLocaleString()}
-        </p>
-        <span
-          className={`text-[10px] px-2 py-0.5 rounded-full mt-1 font-medium
-            ${txn.status.code === "SUCCESS"
-              ? "bg-green-100 text-green-700"
-              : txn.status.code === "FAILED"
-                ? "bg-red-100 text-red-600"
-                : "bg-amber-100 text-amber-700"
-            }`}
-        >
-          {txn.status.name}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 function Skeleton({ className = "" }: { className?: string }) {
   return (
@@ -408,7 +222,6 @@ export default function Wallet() {
             <StatCard
               label="Redeemable"
               value={wallet.available_points}
-              variant="green"
             />
 
             <MonthYearCard
@@ -438,22 +251,23 @@ export default function Wallet() {
           </div>
 
           {/* Refresh */}
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => {
               if (wallet?.wallet_id) {
                 loadTransactions(wallet.wallet_id, txnPage);
               }
             }}
             disabled={loadingTxns || !wallet}
-            className="flex items-center gap-1.5 text-sm text-purple-700 hover:underline
-              disabled:opacity-40 disabled:cursor-not-allowed"
+            className="text-indigo-600 bg-indigo-50 border-indigo-100 hover:bg-indigo-100 hover:text-indigo-700 shadow-sm transition-all"
           >
             <RefreshCw
-              size={13}
-              className={loadingTxns ? "animate-spin" : ""}
+              size={14}
+              className={`mr-2 ${loadingTxns ? "animate-spin" : ""}`}
             />
             Refresh
-          </button>
+          </Button>
         </div>
 
         {/* Transaction error */}
@@ -488,33 +302,32 @@ export default function Wallet() {
 
         {/* Pagination */}
         {!loadingTxns && txnData && txnData.total > TXN_PAGE_SIZE && (
-          <div className="flex items-center justify-between mt-6 pt-5 border-t border-gray-100">
-            <button
-              onClick={() => handlePageChange(-1)}
-              disabled={txnPage === 1}
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800
-                disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft size={16} />
-              Previous
-            </button>
-
-            <span className="text-sm text-gray-400">
-              Page{" "}
-              <b className="text-gray-700">{txnPage}</b>{" "}
-              of{" "}
-              <b className="text-gray-700">{totalPages}</b>
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-8 pt-6 border-t border-gray-100 gap-4">
+            <span className="text-xs font-bold text-gray-400 tracking-widest uppercase">
+              Page {txnPage} of {totalPages}
             </span>
-
-            <button
-              onClick={() => handlePageChange(1)}
-              disabled={txnPage >= totalPages}
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800
-                disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-              <ChevronRight size={16} />
-            </button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(-1)}
+                disabled={txnPage === 1}
+                className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-sm"
+              >
+                <ChevronLeft size={16} className="mr-1" />
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(1)}
+                disabled={txnPage >= totalPages}
+                className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-sm"
+              >
+                Next
+                <ChevronRight size={16} className="ml-1" />
+              </Button>
+            </div>
           </div>
         )}
       </div>
