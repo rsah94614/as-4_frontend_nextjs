@@ -3,141 +3,119 @@
 //   GET /v1/employees          → paginated list (supports manager_id filter)
 //   GET /v1/employees/{id}     → single employee detail
 //
-// Uses auth.getUser() to get the current employee_id from localStorage
-// (stored at login via auth.setTokens) — no extra /me request needed.
+// All requests routed through Next.js proxy (/api/proxy/employees/*)
+// — no direct microservice URL exposed to the browser.
 
-import axiosClient from './api-client'
+import { createAuthenticatedClient } from '@/lib/api-utils'
 import { extractApiError, requireAuthenticatedUserId } from '@/lib/api-utils'
 
-const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || 'http://localhost:8003'
+const employeesClient = createAuthenticatedClient('/api/proxy/employees')
 
-const ENDPOINTS = {
-    LIST: `${EMPLOYEE_API}/v1/employees`,
-    GET: (id: string) => `${EMPLOYEE_API}/v1/employees/${id}`,
-} as const
 
 // ─── Types matching backend schemas.py ───────────────────────────────────────
 
-/** Matches EmployeeListItem from schemas.py */
 export interface Employee {
-    employee_id: string
-    username: string
-    email: string
+    employee_id:     string
+    username:        string
+    email:           string
     designation_id?: string
     designation_name?: string
-    department_id?: string
+    department_id?:  string
     department_name?: string
-    manager_id?: string
-    manager_name?: string
-    status_id?: string
-    status_name?: string
-    is_active: boolean
+    manager_id?:     string
+    manager_name?:   string
+    status_id?:      string
+    status_name?:    string
+    is_active:       boolean
     date_of_joining: string
-    created_at: string
-    updated_at?: string
+    created_at:      string
+    updated_at?:     string
 }
 
-/** Matches EmployeeDetailResponse from schemas.py */
 export interface EmployeeDetail {
-    employee_id: string
-    username: string
-    email: string
-    is_active: boolean
+    employee_id:     string
+    username:        string
+    email:           string
+    is_active:       boolean
     date_of_joining: string
     designation?: {
-        designation_id: string
+        designation_id:   string
         designation_name: string
         designation_code: string
-        level: number
+        level:            number
     }
     department?: {
-        department_id: string
+        department_id:   string
         department_name: string
         department_code: string
     }
     manager?: {
         employee_id: string
-        username: string
-        email: string
+        username:    string
+        email:       string
     }
     status?: {
-        status_id: string
+        status_id:   string
         status_code: string
         status_name: string
     }
     roles?: { role_id: string; role_name: string; role_code: string }[]
-    created_at: string
+    created_at:  string
     updated_at?: string
 }
 
-/** Shape used by UI components (ReviewCard, header, etc.) */
 export interface TeamMember {
-    id: string
-    name: string   // mapped from username
-    email?: string
+    id:           string
+    name:         string
+    email?:       string
     designation?: string
 }
 
 // ─── Converters ──────────────────────────────────────────────────────────────
 
 export function detailToTeamMember(e: EmployeeDetail): TeamMember {
-    return {
-        id: e.employee_id,
-        name: e.username,
-        email: e.email,
-        designation: e.designation?.designation_name,
-    }
+    return { id: e.employee_id, name: e.username, email: e.email, designation: e.designation?.designation_name }
 }
 
 export function listItemToTeamMember(e: Employee): TeamMember {
-    return {
-        id: e.employee_id,
-        name: e.username,
-        email: e.email,
-        designation: e.designation_name,
-    }
+    return { id: e.employee_id, name: e.username, email: e.email, designation: e.designation_name }
 }
 
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 export const employeeService = {
-    /** Fetch a single employee detail by ID */
     async getEmployee(id: string): Promise<EmployeeDetail> {
         try {
-            const res = await axiosClient.get<EmployeeDetail>(ENDPOINTS.GET(id));
+            const res = await employeesClient.get<EmployeeDetail>(`/v1/employees/${id}`);
             return res.data;
         } catch (error: unknown) {
             throw new Error(extractApiError(error, 'Failed to fetch employee'));
         }
     },
 
-    /**
-     * List employees with optional filters.
-     * Passing manager_id fetches all direct reports of that manager.
-     */
     async listEmployees(params?: {
-        page?: number
-        limit?: number
-        manager_id?: string
+        page?:        number
+        limit?:       number
+        manager_id?:  string
         department_id?: string
-        is_active?: boolean
-        search?: string
-        sort_by?: string
-        sort_order?: string
+        is_active?:   boolean
+        search?:      string
+        sort_by?:     string
+        sort_order?:  string
     }): Promise<{ data: Employee[]; pagination: Record<string, unknown> }> {
         const q = new URLSearchParams()
-        if (params?.page) q.set('page', String(params.page))
-        if (params?.limit) q.set('limit', String(params.limit))
-        if (params?.manager_id) q.set('manager_id', params.manager_id)
+        if (params?.page)          q.set('page',          String(params.page))
+        if (params?.limit)         q.set('limit',         String(params.limit))
+        if (params?.manager_id)    q.set('manager_id',    params.manager_id)
         if (params?.department_id) q.set('department_id', params.department_id)
         if (params?.is_active != null) q.set('is_active', String(params.is_active))
-        if (params?.search) q.set('search', params.search)
-        if (params?.sort_by) q.set('sort_by', params.sort_by)
-        if (params?.sort_order) q.set('sort_order', params.sort_order)
+        if (params?.search)        q.set('search',        params.search)
+        if (params?.sort_by)       q.set('sort_by',       params.sort_by)
+        if (params?.sort_order)    q.set('sort_order',    params.sort_order)
 
         try {
-            const res = await axiosClient.get<{ data: Employee[]; pagination: Record<string, unknown> }>(
-                `${ENDPOINTS.LIST}?${q.toString()}`
+            const res = await employeesClient.get<{ data: Employee[]; pagination: Record<string, unknown> }>(
+                `/v1/employees?${q.toString()}`
             );
             return res.data;
         } catch (error: unknown) {
@@ -148,32 +126,17 @@ export const employeeService = {
 
 // ─── Main helper used by page.tsx ────────────────────────────────────────────
 
-/**
- * Assembles the three pieces the review page needs, using only real endpoints:
- *
- *  loggedInUser  — GET /v1/employees/{myId}
- *  teamLeader    — GET /v1/employees/{manager_id}   (my manager)
- *  teamMembers   — GET /v1/employees?manager_id={manager_id}
- *                  i.e. colleagues who share my manager, excluding myself.
- *
- *  If the logged-in user has no manager (they ARE a top-level manager),
- *  fall back to fetching their own direct reports instead.
- */
 export async function getTeamMembersForUI(): Promise<{
     loggedInUser: TeamMember
-    teamMembers: TeamMember[]
-    teamLeader: TeamMember | null
+    teamMembers:  TeamMember[]
+    teamLeader:   TeamMember | null
 }> {
-    // 1. Get current employee_id from the user stored in localStorage at login
-    const myId = requireAuthenticatedUserId()
-
-    // 2. Fetch own full profile
+    const myId     = requireAuthenticatedUserId()
     const myDetail = await employeeService.getEmployee(myId)
-
     const managerId = myDetail.manager?.employee_id
 
     if (managerId) {
-        // 3a. Has a manager — fetch manager detail + all colleagues in parallel
+        // Fetch manager + colleagues in parallel
         const [teamLeaderDetail, colleaguesRes] = await Promise.all([
             employeeService.getEmployee(managerId).catch(() => null),
             employeeService.listEmployees({ manager_id: managerId, limit: 100 }),
@@ -181,23 +144,17 @@ export async function getTeamMembersForUI(): Promise<{
 
         return {
             loggedInUser: detailToTeamMember(myDetail),
-            // Exclude self from the reviewable list
-            teamMembers: colleaguesRes.data
+            teamMembers:  colleaguesRes.data
                 .filter((e) => e.employee_id !== myId)
                 .map(listItemToTeamMember),
             teamLeader: teamLeaderDetail ? detailToTeamMember(teamLeaderDetail) : null,
         }
     } else {
-        // 3b. No manager — this user is a top-level manager; show their direct reports
-        const directReportsRes = await employeeService.listEmployees({
-            manager_id: myId,
-            limit: 100,
-        })
-
+        const directReportsRes = await employeeService.listEmployees({ manager_id: myId, limit: 100 })
         return {
             loggedInUser: detailToTeamMember(myDetail),
-            teamMembers: directReportsRes.data.map(listItemToTeamMember),
-            teamLeader: null,
+            teamMembers:  directReportsRes.data.map(listItemToTeamMember),
+            teamLeader:   null,
         }
     }
 }

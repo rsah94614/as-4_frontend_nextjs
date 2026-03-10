@@ -1,6 +1,6 @@
 import { createAuthenticatedClient } from "@/lib/api-utils";
 
-// Hardcoded to guarantee the /v1 prefix is applied
-const employeeApiClient = createAuthenticatedClient("http://localhost:8003/v1");
+// Routes through Next.js proxy — no direct microservice URL in browser
+const employeeApiClient = createAuthenticatedClient("/api/proxy/employees/v1");
 
 export default employeeApiClient;
