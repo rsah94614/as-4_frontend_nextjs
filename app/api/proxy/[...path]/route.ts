@@ -86,7 +86,6 @@ async function proxyRequest(
         headers,
         body,
         // Keep-alive so server-side connections to microservices are reused
-        // @ts-expect-error — Node 18+ fetch supports this
         keepalive: true,
     });
 }

@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import AdminTeamReportCard from "./Adminteamreportcard";
+import AdminTeamReportCard from "./AdminTeamReportCard";
 import type { TeamSummaryResponse } from "@/types/dashboard-types";
 
 type SortOption = "score" | "points" | "members" | "name";

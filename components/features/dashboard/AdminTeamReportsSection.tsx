@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import * as XLSX from "xlsx";
-import AdminTeamsSection from "./Adminteamssection";
+import AdminTeamsSection from "./AdminTeamsSection";
 import { fetchTeamReport } from "@/services/analytics-service";
 import type { TeamSummaryResponse } from "@/types/dashboard-types";
 

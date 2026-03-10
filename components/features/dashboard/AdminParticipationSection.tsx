@@ -154,7 +154,7 @@ export default function AdminParticipationSection() {
                                         ))}
                                     </Pie>
                                     <Tooltip
-                                        formatter={(v: number) => [`${v}%`, ""]}
+                                        formatter={(v: number | undefined) => [`${v ?? 0}%`, ""]}
                                         contentStyle={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #e5e7eb" }}
                                     />
                                 </PieChart>

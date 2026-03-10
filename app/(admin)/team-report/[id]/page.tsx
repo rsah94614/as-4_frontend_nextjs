@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "@/components/features/dashboard/Adminteamdetailsection";
+import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "@/components/features/dashboard/AdminTeamDetailSection";
 import { fetchTeamReport } from "@/services/analytics-service";
 import type { TeamReportResponse } from "@/types/dashboard-types";
 

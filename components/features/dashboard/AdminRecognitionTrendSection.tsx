@@ -25,6 +25,7 @@ const RANGES: { value: Range; label: string }[] = [
 function TrendSkeleton() {
     return (
         <Card>
+            
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <Skeleton className="h-4 w-40 rounded-lg" />
