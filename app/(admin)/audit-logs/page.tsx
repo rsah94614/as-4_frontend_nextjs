@@ -297,9 +297,11 @@ export default function AuditLogsPage() {
                 onChange={e => setStaged(p => ({ ...p, operationType: e.target.value as OperationType | "" }))}
                 className={`${inputCls} bg-white`}>
                 <option value="">All actions</option>
-                <option value="INSERT">Created (INSERT)</option>
-                <option value="UPDATE">Updated (UPDATE)</option>
-                <option value="DELETE">Deleted (DELETE)</option>
+                {OPERATION_TYPES.map(op => (
+                  <option key={op} value={op}>
+                    {OP_META[op].label} ({op})
+                  </option>
+                ))}
               </select>
             </div>
             <div>

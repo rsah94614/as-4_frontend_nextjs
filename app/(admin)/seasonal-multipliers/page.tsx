@@ -6,7 +6,7 @@ import {
   AlertCircle, Info, HelpCircle, Zap, Clock, Archive
 } from "lucide-react";
 import orgApiClient from "@/services/org-api-client";
-
+import { extractApiError } from "@/lib/api-utils";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 const QUARTERS = [1, 2, 3, 4] as const;
@@ -196,7 +196,7 @@ export default function SeasonalMultipliersPage() {
       const res = await orgApiClient.get<Multiplier[]>("/seasonal-multipliers", { params });
       setMultipliers(Array.isArray(res.data) ? res.data : []);
     } catch (e: unknown) {
-      showFlash(apiError(e, "Could not load multipliers. Please refresh."), "error");
+     showFlash(extractApiError(e, "Could not load multipliers. Please refresh."), "error");
 } finally {
       setLoading(false);
     }
@@ -224,7 +224,7 @@ export default function SeasonalMultipliersPage() {
       showFlash("Multiplier created successfully.");
       fetchMultipliers();
     } catch (e: unknown) {
-      showFlash(apiError(e, "Could not create multiplier. Dates may overlap with an existing entry."), "error");
+      showFlash(extractApiError(e, "Could not create multiplier. Dates may overlap with an existing entry."), "error");
 } finally {
       setSaving(false);
     }
@@ -249,7 +249,7 @@ export default function SeasonalMultipliersPage() {
       showFlash("Multiplier updated successfully.");
       fetchMultipliers();
     } catch (e: unknown) {
-      showFlash(apiError(e, "Could not update. Check for overlapping date ranges."), "error");
+      showFlash(extractApiError(e, "Could not update. Check for overlapping date ranges."), "error");
 } finally {
       setSaving(false);
     }
@@ -263,7 +263,7 @@ export default function SeasonalMultipliersPage() {
       fetchMultipliers();
    } catch (e: unknown) {
      setDeleteTarget(null);
-     showFlash(apiError(e, "Only upcoming multipliers can be deleted."), "error");}
+     showFlash(extractApiError(e, "Only upcoming multipliers can be deleted."), "error");}
   };
 
   const visibleQuarters = (filterQuarter ? [filterQuarter] : QUARTERS) as Quarter[];

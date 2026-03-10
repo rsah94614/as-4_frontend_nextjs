@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Tag, Plus, Edit2, Loader2, X, Check, AlertCircle, Info, HelpCircle } from "lucide-react";
 import orgApiClient from "@/services/org-api-client";
-
+import { extractApiError } from "@/lib/api-utils";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 const ENTITY_TYPES = ["EMPLOYEE", "REVIEW", "TRANSACTION", "REWARD"] as const;
@@ -188,7 +188,7 @@ export default function StatusesPage() {
       const res = await orgApiClient.get<Status[]>("/statuses", { params });
       setStatuses(Array.isArray(res.data) ? res.data : []);
    } catch (e: unknown) {
-     showFlash(apiError(e, "Could not load statuses. Please refresh."), "error");
+     showFlash(extractApiError(e, "Could not load statuses. Please refresh."), "error");
 } finally {
       setLoading(false);
     }
@@ -207,7 +207,7 @@ export default function StatusesPage() {
       showFlash("Status created successfully.");
       fetchStatuses();
    } catch (e: unknown) {
-     showFlash(apiError(e, "Could not create status. Please try again."), "error");
+     showFlash(extractApiError(e, "Could not create status. Please try again."), "error");
 } finally {
       setSaving(false);
     }
@@ -227,7 +227,7 @@ export default function StatusesPage() {
       showFlash("Status updated successfully.");
       fetchStatuses();
    } catch (e: unknown) {
-     showFlash(apiError(e, "Could not update status. Please try again."), "error");
+     showFlash(extractApiError(e, "Could not update status. Please try again."), "error");
      } finally {
       setSaving(false);
     }
