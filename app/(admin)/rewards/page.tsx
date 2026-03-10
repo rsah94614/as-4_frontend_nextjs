@@ -8,40 +8,10 @@ import {
 import { fetchWithAuth } from "@/services/auth-service";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
+import type { RewardCategory as Category, AdminRewardItem as RewardItem, PaginationMeta } from "@/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface Category {
-  category_id: string;
-  category_name: string;
-  category_code: string;
-  description?: string;
-  is_active: boolean;
-  created_at: string;
-}
-
-interface RewardItem {
-  catalog_id: string;
-  reward_name: string;
-  reward_code: string;
-  description?: string;
-  default_points: number;
-  min_points: number;
-  max_points: number;
-  is_active: boolean;
-  created_at: string;
-  stock_status: string;
-  available_stock: number;
-  category?: { category_id: string; category_name: string; category_code: string };
-}
-
-interface Pagination {
-  current_page: number;
-  per_page: number;
-  total: number;
-  total_pages: number;
-  has_next: boolean;
-  has_previous: boolean;
-}
+type Pagination = PaginationMeta;
 
 const API = process.env.NEXT_PUBLIC_REWARDS_API_URL ?? "http://localhost:8006";
 

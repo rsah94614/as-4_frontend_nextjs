@@ -5,7 +5,7 @@ import employeeApiClient from "@/services/employee-api-client";
 import type {
     Notification,
     NotificationListResponse,
-} from "@/types/notification-types";
+} from "@/types";
 
 const BASE_URL = "/notifications";
 

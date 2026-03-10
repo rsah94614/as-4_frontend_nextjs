@@ -3,7 +3,7 @@
 import { Loader2, AlertCircle, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ReviewCard from "./ReviewCard"
-import type { Review, ReviewCategory } from "@/types/review-types"
+import type { Review, ReviewCategory } from "@/types"
 import { cn } from "@/lib/utils"
 
 // ─── Review List Section ──────────────────────────────────────────────────────

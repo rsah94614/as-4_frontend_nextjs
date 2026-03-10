@@ -19,8 +19,8 @@ import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import {
   rolesApi, employeeRolesApi, routePermissionsApi,
-  type Role, type EmployeeRole, type RoutePermission,
 } from "@/services/roles-client";
+import type { Role, EmployeeRole, RoutePermission } from "@/types";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 

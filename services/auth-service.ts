@@ -2,6 +2,7 @@
 
 import axiosClient from './api-client'
 import axios from 'axios'
+import type { LoginResponse } from "@/types";
 
 /**
  * Storage keys for authentication tokens
@@ -186,7 +187,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
     }
 }
 
-export async function login(email: string, password: string) {
+export async function login(email: string, password: string): Promise<{ success: true; data: LoginResponse } | { success: false; error: string }> {
     try {
         const response = await axiosClient.post(AUTH_ENDPOINTS.LOGIN, {
             username: email,
@@ -239,21 +240,4 @@ export async function resetPassword(token: string, newPassword: string) {
     }
 }
 
-/**
- * TypeScript types
- */
-export interface User {
-    employee_id: string
-    username: string
-    email: string
-    designation_id: string | null
-    department_id: string | null
-}
-
-export interface LoginResponse {
-    access_token: string
-    refresh_token: string
-    token_type: string
-    expires_in: number
-    employee: User
-}
+export type { User, LoginResponse } from "@/types";

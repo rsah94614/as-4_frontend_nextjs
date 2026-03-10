@@ -7,33 +7,12 @@ import {
   ArrowUpCircle, PencilLine, Trash2
 } from "lucide-react";
 import orgApiClient from "@/services/org-api-client";
+import type { AuditLog, AuditPagination, OperationType } from "@/types";
+import { AUDIT_OPERATION_TYPES } from "@/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-const OPERATION_TYPES = ["INSERT", "UPDATE", "DELETE"] as const;
-type OperationType = (typeof OPERATION_TYPES)[number];
-
-interface AuditLog {
-  audit_id: string;
-  table_name: string;
-  record_id: string;
-  operation_type: string;
-  old_values: Record<string, unknown> | null;
-  new_values: Record<string, unknown> | null;
-  performed_by: string;
-  performed_at: string;
-  ip_address?: string;
-  user_agent?: string;
-}
-
-interface Pagination {
-  current_page: number;
-  per_page: number;
-  total: number;
-  total_pages: number;
-  has_next: boolean;
-  has_previous: boolean;
-}
+const OPERATION_TYPES = AUDIT_OPERATION_TYPES;
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
@@ -54,6 +33,17 @@ const OP_META: Record<OperationType, { pill: string; icon: React.ReactNode; labe
     label: "Deleted",
   },
 };
+
+type ApiError = {
+  response?: {
+    status?: number;
+  };
+};
+
+function getErrorStatus(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null) return undefined;
+  return (error as ApiError).response?.status;
+}
 
 // ─── Shared components ────────────────────────────────────────────────────────
 
@@ -167,7 +157,7 @@ function SkeletonCard({ index }: { index: number }) {
 
 export default function AuditLogsPage() {
   const [logs, setLogs]             = useState<AuditLog[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [pagination, setPagination] = useState<AuditPagination | null>(null);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
@@ -197,11 +187,11 @@ export default function AuditLogsPage() {
       if (startDate)     params.start_date     = new Date(startDate).toISOString();
       if (endDate)       params.end_date       = new Date(endDate).toISOString();
 
-      const res = await orgApiClient.get<{ data: AuditLog[]; pagination: Pagination }>("/audit-logs", { params });
+      const res = await orgApiClient.get<{ data: AuditLog[]; pagination: AuditPagination }>("/audit-logs", { params });
       setLogs(res.data.data ?? []);
       setPagination(res.data.pagination ?? null);
-    } catch (e: any) {
-      const s = e?.response?.status;
+    } catch (e: unknown) {
+      const s = getErrorStatus(e);
       setError(s === 401
         ? "Your session has expired. Please log in again."
         : "Could not load audit logs. Please check that the service is running."
@@ -297,9 +287,11 @@ export default function AuditLogsPage() {
                 onChange={e => setStaged(p => ({ ...p, operationType: e.target.value as OperationType | "" }))}
                 className={`${inputCls} bg-white`}>
                 <option value="">All actions</option>
-                <option value="INSERT">Created (INSERT)</option>
-                <option value="UPDATE">Updated (UPDATE)</option>
-                <option value="DELETE">Deleted (DELETE)</option>
+                {OPERATION_TYPES.map((op) => (
+                  <option key={op} value={op}>
+                    {op === "INSERT" ? "Created" : op === "UPDATE" ? "Updated" : "Deleted"} ({op})
+                  </option>
+                ))}
               </select>
             </div>
             <div>

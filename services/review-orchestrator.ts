@@ -19,7 +19,13 @@
 import axiosClient from "@/services/api-client";
 import { uploadToStorage } from "@/services/cloudinary";
 import { extractApiError, validateReviewInput, requireAuthenticatedUserId, categorizeFileUrls } from "@/lib/api-utils";
-import type { ReviewResponse, PaginatedReviewResponse } from "@/types/review";
+import type {
+    ReviewResponse,
+    PaginatedReviewResponse,
+    MonthlyReviewState,
+    SubmitReviewParams,
+    SubmitReviewResult,
+} from "@/types";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -50,17 +56,6 @@ function currentMonthStart(): string {
 }
 
 // ─── Monthly state — fetched from the backend ─────────────────────────────────
-
-export interface MonthlyReviewState {
-    /** How many reviews the current user has given this calendar month */
-    reviewsUsed: number;
-    /** receiverIds the user has already reviewed this month */
-    reviewedReceiverIds: Set<string>;
-    /** Computed: how many slots remain */
-    reviewsRemaining: number;
-    /** Computed: whether the user may submit another review */
-    canSubmit: boolean;
-}
 
 /**
  * Fetches all reviews the current user has **given** this calendar month
@@ -178,20 +173,6 @@ export const RATING_LABELS: Record<number, string> = {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface SubmitReviewParams {
-    receiverId: string;
-    rating: number;
-    comment: string;
-    files?: File[];
-}
-
-export interface SubmitReviewResult {
-    review: ReviewResponse;
-    pointsCredited: number;
-    reviewsRemaining: number;
-    walletCreditSuccess: boolean;
-    walletCreditError?: string;
-}
 
 // ─── Core orchestrator ────────────────────────────────────────────────────────
 

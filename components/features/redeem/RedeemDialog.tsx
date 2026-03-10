@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { redeemReward } from "@/services/redeem-api";
-import { DialogState, RedemptionResponse } from "@/types/redeem-types";
+import type { DialogState, RedemptionResponse } from "@/types";
 
 type Phase = "confirm" | "loading" | "success" | "error";
 

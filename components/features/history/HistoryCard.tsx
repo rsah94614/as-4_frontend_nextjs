@@ -2,7 +2,7 @@
 
 import { ArrowUpRight, TrendingUp } from "lucide-react";
 import { getMessage } from "./history-utils";
-import type { HistoryItem } from "./types";
+import type { HistoryItem } from "@/types";
 
 interface HistoryCardProps {
     item: HistoryItem;

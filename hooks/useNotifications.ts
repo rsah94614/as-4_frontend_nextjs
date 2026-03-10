@@ -2,19 +2,9 @@
 
 import { useEffect, useCallback, useRef } from "react";
 import { useNotificationStore } from "@/lib/notification-store";
-import type { Notification } from "@/types/notification-types";
+import type { UseNotificationsReturn } from "@/types";
 
 const POLL_INTERVAL_MS = 30_000;
-
-export interface UseNotificationsReturn {
-    notifications: Notification[];
-    unreadCount: number;
-    loading: boolean;
-    error: string | null;
-    markOne: (id: string) => Promise<void>;
-    markAll: () => Promise<void>;
-    reload: () => Promise<void>;
-}
 
 export function useNotifications(limit = 50): UseNotificationsReturn {
     const {

@@ -6,21 +6,12 @@ import {
   AlertCircle, Info, HelpCircle, Zap, Clock, Archive
 } from "lucide-react";
 import orgApiClient from "@/services/org-api-client";
+import type { Quarter, SeasonalMultiplier } from "@/types";
+import { SEASONAL_QUARTERS } from "@/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-const QUARTERS = [1, 2, 3, 4] as const;
-type Quarter = (typeof QUARTERS)[number];
-
-interface Multiplier {
-  seasonal_multiplier_id: string;
-  quarter: Quarter;
-  label: string;
-  multiplier: string;
-  effective_from?: string;
-  effective_to?: string;
-  created_at: string;
-}
+const QUARTERS = SEASONAL_QUARTERS;
 
 const emptyForm = {
   quarter: 1 as Quarter,
@@ -41,9 +32,29 @@ const Q_META: Record<Quarter, { label: string; months: string; pill: string; hea
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+type ApiError = {
+  response?: {
+    status?: number;
+    data?: {
+      detail?: string;
+    };
+  };
+};
+
+function getErrorStatus(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null) return undefined;
+  return (error as ApiError).response?.status;
+}
+
+function getErrorDetail(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null) return undefined;
+  const detail = (error as ApiError).response?.data?.detail;
+  return typeof detail === "string" ? detail : undefined;
+}
+
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
-function getStatus(m: Multiplier): "active" | "upcoming" | "past" | "undated" {
+function getStatus(m: SeasonalMultiplier): "active" | "upcoming" | "past" | "undated" {
   if (!m.effective_from || !m.effective_to) return "undated";
   const t = todayStr();
   if (m.effective_from <= t && t <= m.effective_to) return "active";
@@ -51,7 +62,7 @@ function getStatus(m: Multiplier): "active" | "upcoming" | "past" | "undated" {
   return "past";
 }
 
-function StatusBadge({ m }: { m: Multiplier }) {
+function StatusBadge({ m }: { m: SeasonalMultiplier }) {
   const s = getStatus(m);
   if (s === "active")   return <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg"><Zap className="w-3 h-3" />Active now</span>;
   if (s === "upcoming") return <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg"><Clock className="w-3 h-3" />Upcoming</span>;
@@ -172,7 +183,7 @@ function SkeletonSection({ index }: { index: number }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SeasonalMultipliersPage() {
-  const [multipliers, setMultipliers]     = useState<Multiplier[]>([]);
+  const [multipliers, setMultipliers]     = useState<SeasonalMultiplier[]>([]);
   const [loading, setLoading]             = useState(true);
   const [flash, setFlash]                 = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const [filterQuarter, setFilterQuarter] = useState<Quarter | 0>(0);
@@ -181,7 +192,7 @@ export default function SeasonalMultipliersPage() {
   const [editId, setEditId]               = useState<string | null>(null);
   const [editForm, setEditForm]           = useState({ label: "", multiplier: "", effective_from: "", effective_to: "" });
   const [saving, setSaving]               = useState(false);
-  const [deleteTarget, setDeleteTarget]   = useState<Multiplier | null>(null);
+  const [deleteTarget, setDeleteTarget]   = useState<SeasonalMultiplier | null>(null);
 
   const showFlash = (msg: string, type: "success" | "error" = "success") => {
     setFlash({ type, msg });
@@ -193,10 +204,10 @@ export default function SeasonalMultipliersPage() {
     try {
       const params: Record<string, string | number> = {};
       if (filterQuarter) params.quarter = filterQuarter;
-      const res = await orgApiClient.get<Multiplier[]>("/seasonal-multipliers", { params });
+      const res = await orgApiClient.get<SeasonalMultiplier[]>("/seasonal-multipliers", { params });
       setMultipliers(Array.isArray(res.data) ? res.data : []);
-    } catch (e: any) {
-      showFlash(e?.response?.status === 401 ? "Your session expired. Please log in again." : "Could not load multipliers. Please refresh.", "error");
+    } catch (e: unknown) {
+      showFlash(getErrorStatus(e) === 401 ? "Your session expired. Please log in again." : "Could not load multipliers. Please refresh.", "error");
     } finally {
       setLoading(false);
     }
@@ -223,14 +234,14 @@ export default function SeasonalMultipliersPage() {
       setForm(emptyForm);
       showFlash("Multiplier created successfully.");
       fetchMultipliers();
-    } catch (e: any) {
-      showFlash(e?.response?.data?.detail ?? "Could not create multiplier. Dates may overlap with an existing entry.", "error");
+    } catch (e: unknown) {
+      showFlash(getErrorDetail(e) ?? "Could not create multiplier. Dates may overlap with an existing entry.", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  const startEdit = (m: Multiplier) => {
+  const startEdit = (m: SeasonalMultiplier) => {
     setEditId(m.seasonal_multiplier_id);
     setEditForm({ label: m.label, multiplier: m.multiplier, effective_from: m.effective_from ?? "", effective_to: m.effective_to ?? "" });
   };
@@ -248,8 +259,8 @@ export default function SeasonalMultipliersPage() {
       setEditId(null);
       showFlash("Multiplier updated successfully.");
       fetchMultipliers();
-    } catch (e: any) {
-      showFlash(e?.response?.data?.detail ?? "Could not update. Check for overlapping date ranges.", "error");
+    } catch (e: unknown) {
+      showFlash(getErrorDetail(e) ?? "Could not update. Check for overlapping date ranges.", "error");
     } finally {
       setSaving(false);
     }
@@ -261,14 +272,14 @@ export default function SeasonalMultipliersPage() {
       setDeleteTarget(null);
       showFlash("Multiplier deleted.");
       fetchMultipliers();
-    } catch (e: any) {
+    } catch (e: unknown) {
       setDeleteTarget(null);
-      showFlash(e?.response?.data?.detail ?? "Only upcoming multipliers can be deleted.", "error");
+      showFlash(getErrorDetail(e) ?? "Only upcoming multipliers can be deleted.", "error");
     }
   };
 
   const visibleQuarters = (filterQuarter ? [filterQuarter] : QUARTERS) as Quarter[];
-  const grouped = Object.fromEntries(QUARTERS.map(q => [q, multipliers.filter(m => m.quarter === q)])) as Record<Quarter, Multiplier[]>;
+  const grouped = Object.fromEntries(QUARTERS.map(q => [q, multipliers.filter(m => m.quarter === q)])) as Record<Quarter, SeasonalMultiplier[]>;
   const activeCount = multipliers.filter(m => getStatus(m) === "active").length;
 
   return (

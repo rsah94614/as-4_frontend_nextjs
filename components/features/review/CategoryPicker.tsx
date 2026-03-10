@@ -1,7 +1,7 @@
 "use client"
 
 import { Check } from "lucide-react"
-import type { ReviewCategory } from "@/types/review-types"
+import type { ReviewCategory } from "@/types"
 import { cn } from "@/lib/utils"
 
 // ─── Category Picker ──────────────────────────────────────────────────────────

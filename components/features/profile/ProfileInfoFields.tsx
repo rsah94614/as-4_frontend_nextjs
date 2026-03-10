@@ -7,7 +7,7 @@ import {
     CalendarDays,
     UserCheck,
 } from "lucide-react";
-import type { EmployeeDetail } from "@/types/profile-types";
+import type { ProfileEmployeeDetail as EmployeeDetail } from "@/types";
 
 interface ProfileInfoFieldsProps {
     profile: EmployeeDetail;

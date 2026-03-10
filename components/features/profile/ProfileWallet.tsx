@@ -1,5 +1,5 @@
 import { Wallet } from "lucide-react";
-import type { WalletInfo } from "@/types/profile-types";
+import type { ProfileWalletInfo as WalletInfo } from "@/types";
 
 interface ProfileWalletProps {
     wallet: WalletInfo;

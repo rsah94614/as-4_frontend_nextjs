@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { auth } from '@/services/auth-service';
 import { useRouter, usePathname } from 'next/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
-import type { NotificationType } from '@/types/notification-types';
+import type { NotificationType } from '@/types';
 
 interface NavbarProps {
     onMenuClick: () => void;

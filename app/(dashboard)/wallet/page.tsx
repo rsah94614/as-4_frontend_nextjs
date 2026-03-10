@@ -15,6 +15,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Gift, Ticket, RefreshCw, ChevronLeft, ChevronRight, ArrowDownCircle } from "lucide-react";
 import { auth, fetchWithAuth } from "@/services/auth-service";
+import type {
+  WalletRecord as WalletData,
+  PointsSummary,
+  Transaction,
+  TransactionListResponse,
+} from "@/types";
 
 // ─── Env ──────────────────────────────────────────────────────────────────────
 
@@ -22,56 +28,6 @@ const WALLET_API =
   process.env.NEXT_PUBLIC_WALLET_API_URL || "http://localhost:8004";
 
 // ─── Exact API response types (mirrors backend schemas.py) ───────────────────
-
-interface WalletData {
-  wallet_id: string;
-  employee_id: string;
-  available_points: number;
-  redeemed_points: number;
-  total_earned_points: number;
-  version?: number;
-}
-
-interface PointsSummary {
-  wallet_id: string;
-  points_this_month: number;
-  points_this_year: number;
-}
-
-interface TransactionStatus {
-  status_id: string;
-  code: string;
-  name: string;
-}
-
-interface TransactionType {
-  type_id: string;
-  code: string;
-  name: string;
-  is_credit: boolean;
-}
-
-interface Transaction {
-  transaction_id: string;
-  wallet_id: string;
-  amount: number;
-  status: TransactionStatus;
-  transaction_type: TransactionType;
-  reference_number: string;
-  description: string | null;
-  transaction_at: string;
-  created_at: string;
-  updated_at: string;
-  created_by: string | null;
-  updated_by: string | null;
-}
-
-interface TransactionListResponse {
-  page: number;
-  limit: number;
-  total: number;
-  transactions: Transaction[];
-}
 
 // ─── Fetchers ─────────────────────────────────────────────────────────────────
 

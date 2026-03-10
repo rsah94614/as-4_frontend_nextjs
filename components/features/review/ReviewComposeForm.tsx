@@ -450,7 +450,7 @@ export default function ReviewComposeForm({
 
                 {/* ── Your Review Activity Stats ── */}
                 <Card className="rounded-2xl border border-gray-100 shadow-none py-0 overflow-hidden">
-                    <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 px-5 py-4">
+                    <div className="bg-linear-to-br from-purple-600 via-purple-700 to-indigo-800 px-5 py-4">
                         <p className="text-[11px] font-bold text-purple-200 uppercase tracking-widest flex items-center gap-1.5">
                             <BarChart3 size={12} />
                             Your Review Activity
@@ -523,7 +523,7 @@ export default function ReviewComposeForm({
 
                 {/* ── Recent Comments (scrollable) ── */}
                 <Card className="rounded-2xl border border-gray-100 shadow-none py-0 overflow-hidden">
-                    <div className="bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 px-5 py-4">
+                    <div className="bg-linear-to-br from-gray-700 via-gray-800 to-gray-900 px-5 py-4">
                         <p className="text-[11px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1.5">
                             <MessageSquare size={12} />
                             Your Recent Reviews

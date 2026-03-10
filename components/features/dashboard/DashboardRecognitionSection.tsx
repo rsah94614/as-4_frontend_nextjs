@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import DashboardRecognitionCard from "./DashboardRecognitionCard";
 import { fetchDashboardRecentReviews } from "@/services/analytics-service";
 import { userInitials, formatTime } from "@/lib/dashboard-utils";
-import type { RecentReviewResponse } from "@/types/dashboard-types";
+import type { RecentReviewResponse } from "@/types";
 
 const AVATAR_COLORS = [
     "bg-purple-500", "bg-blue-500", "bg-orange-500",

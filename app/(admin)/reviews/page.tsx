@@ -9,6 +9,7 @@ import {
 import { fetchWithAuth } from "@/services/auth-service"
 import Navbar from "@/components/layout/Navbar"
 import Sidebar from "@/components/layout/Sidebar"
+import type { Employee, ReviewResponse as Review } from "@/types"
 
 // ─── Env vars ─────────────────────────────────────────────────────────────────
 // FIX: Employee service runs on 8002, not 8003
@@ -18,32 +19,6 @@ const RECOGNITION_API = process.env.NEXT_PUBLIC_RECOGNITION_API_URL || "http://l
 const FLAG_RATING = 2
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface Employee {
-  employee_id: string
-  username: string
-  email: string
-  designation_name?: string
-  department_name?: string
-  manager_id?: string
-  is_active: boolean
-}
-
-interface Review {
-  review_id: string
-  reviewer_id: string
-  receiver_id: string
-  rating: number
-  comment: string
-  image_url?: string | null
-  video_url?: string | null
-  status_id: string
-  review_at: string
-  created_at: string
-  created_by: string
-  updated_at: string
-  updated_by: string
-}
-
 // ─── Calendar Strip ───────────────────────────────────────────────────────────
 function CalendarStrip({ month, year, onChange }: {
   month: number; year: number; onChange: (m: number, y: number) => void

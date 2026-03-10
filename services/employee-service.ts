@@ -8,6 +8,7 @@
 
 import axiosClient from './api-client'
 import { extractApiError, requireAuthenticatedUserId } from '@/lib/api-utils'
+import type { Employee, EmployeeDetail, TeamMember } from '@/types'
 
 const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || 'http://localhost:8003'
 
@@ -19,64 +20,13 @@ const ENDPOINTS = {
 // ─── Types matching backend schemas.py ───────────────────────────────────────
 
 /** Matches EmployeeListItem from schemas.py */
-export interface Employee {
-    employee_id: string
-    username: string
-    email: string
-    designation_id?: string
-    designation_name?: string
-    department_id?: string
-    department_name?: string
-    manager_id?: string
-    manager_name?: string
-    status_id?: string
-    status_name?: string
-    is_active: boolean
-    date_of_joining: string
-    created_at: string
-    updated_at?: string
-}
+ 
 
 /** Matches EmployeeDetailResponse from schemas.py */
-export interface EmployeeDetail {
-    employee_id: string
-    username: string
-    email: string
-    is_active: boolean
-    date_of_joining: string
-    designation?: {
-        designation_id: string
-        designation_name: string
-        designation_code: string
-        level: number
-    }
-    department?: {
-        department_id: string
-        department_name: string
-        department_code: string
-    }
-    manager?: {
-        employee_id: string
-        username: string
-        email: string
-    }
-    status?: {
-        status_id: string
-        status_code: string
-        status_name: string
-    }
-    roles?: { role_id: string; role_name: string; role_code: string }[]
-    created_at: string
-    updated_at?: string
-}
+
 
 /** Shape used by UI components (ReviewCard, header, etc.) */
-export interface TeamMember {
-    id: string
-    name: string   // mapped from username
-    email?: string
-    designation?: string
-}
+
 
 // ─── Converters ──────────────────────────────────────────────────────────────
 
@@ -201,3 +151,5 @@ export async function getTeamMembersForUI(): Promise<{
         }
     }
 }
+
+export type { Employee, EmployeeDetail, TeamMember } from "@/types";

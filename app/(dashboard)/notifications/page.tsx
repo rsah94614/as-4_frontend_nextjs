@@ -2,7 +2,7 @@
 
 import { Bell, CheckCheck, RefreshCw } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
-import type { Notification, NotificationType } from "@/types/notification-types";
+import type { Notification, NotificationType } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

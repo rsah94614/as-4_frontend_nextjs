@@ -9,7 +9,7 @@ import type {
     PaginatedHistoryResponse,
     PeriodFilter,
     TypeFilter,
-} from "./types";
+} from "@/types";
 
 const REWARDS_API = process.env.NEXT_PUBLIC_REWARDS_API_URL;
 

@@ -1,5 +1,5 @@
 "use client";
-import { scoreColor } from "./AdminTeamReportCard";
+import { scoreColor } from "./Adminteamreportcard";
 import type { TeamMemberReportResponse } from "@/types/dashboard-types";
 
 interface Props {
@@ -51,7 +51,7 @@ export default function AdminTeamMemberRow({ member, rank }: Props) {
       </td>
 
       {/* Performance */}
-      <td className="py-3.5 px-4 min-w-[180px]">
+      <td className="py-3.5 px-4 min-w-45">
         <div className="flex items-center justify-between mb-1.5">
           <span
             className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${colors.text} ${colors.bg} ${colors.border}`}

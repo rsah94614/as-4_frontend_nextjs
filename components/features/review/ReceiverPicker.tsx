@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { Users, ChevronDown, Search, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import type { TeamMember } from "@/services/employee-service"
+import type { TeamMember } from "@/types"
 
 // ─── Receiver Picker (with search) ────────────────────────────────────────────
 

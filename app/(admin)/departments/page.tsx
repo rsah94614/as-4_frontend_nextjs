@@ -7,11 +7,8 @@ import {
 } from "lucide-react";
 import {
     departmentService,
-    type Department,
-    type DepartmentDetail,
-    type DepartmentType,
 } from "@/services/department-service";
-import type { PaginationMeta } from "@/types/pagination";
+import type { Department, DepartmentDetail, DepartmentType, PaginationMeta } from "@/types";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 

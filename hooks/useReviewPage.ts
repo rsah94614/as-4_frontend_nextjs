@@ -3,73 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import axiosClient from "@/services/api-client"
 import { uploadToStorage } from "@/services/cloudinary"
-import { getTeamMembersForUI, type TeamMember } from "@/services/employee-service"
+import { getTeamMembersForUI } from "@/services/employee-service"
 import { requireAuthenticatedUserId } from "@/lib/api-utils"
-import type { Review, ReviewCategory, ViewMode, ToastState, SubmittedReviewData } from "@/types/review-types"
+import type { Review, ReviewCategory, TeamMember, ViewMode, ToastState, ReviewPageState, SubmittedReviewData } from "@/types"
 import { API } from "@/lib/review-utils"
 
 // ─── Hook Return Type ─────────────────────────────────────────────────────────
-
-export interface ReviewPageState {
-    // Identity
-    myId: string
-
-    // Data
-    reviews: Review[]
-    categories: ReviewCategory[]
-    teamMembers: TeamMember[]
-    teamLeader: TeamMember | null
-    totalReviews: number
-    page: number
-    totalPages: number
-    loadingData: boolean
-    dataError: string | null
-
-    // Navigation
-    view: ViewMode
-    editingReview: Review | null
-
-    // Form
-    receiverId: string
-    setReceiverId: (id: string) => void
-    rating: number
-    setRating: (r: number) => void
-    categoryIds: string[]
-    setCategoryIds: React.Dispatch<React.SetStateAction<string[]>>
-    comment: string
-    setComment: (c: string) => void
-    files: File[]
-    setFiles: React.Dispatch<React.SetStateAction<File[]>>
-    fileRef: React.RefObject<HTMLInputElement | null>
-    submitting: boolean
-
-    // Toast
-    toast: ToastState | null
-    setToast: (t: ToastState | null) => void
-
-    // Submitted
-    submittedData: SubmittedReviewData | null
-    startNewReview: () => void
-
-    // List
-    listTab: "all" | "given" | "received"
-    setListTab: (tab: "all" | "given" | "received") => void
-
-    // Derived
-    givenThisMonth: number
-    reviewedThisMonth: Set<string>
-    filteredReviews: Review[]
-    allReceivers: (TeamMember & { isManager: boolean })[]
-
-    // Actions
-    openCompose: () => void
-    openEdit: (r: Review) => void
-    backToList: () => void
-    handleSubmit: (e: React.FormEvent) => Promise<void>
-    loadReviews: (pg?: number) => Promise<void>
-}
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useReviewPage(): ReviewPageState {
     // ── Identity
@@ -346,3 +285,4 @@ export function useReviewPage(): ReviewPageState {
         startNewReview,
     }
 }
+

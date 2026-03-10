@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Coins } from "lucide-react";
-import { WalletData } from "@/types/redeem-types";
+import type { WalletData } from "@/types";
 
 interface Props {
   wallet: WalletData | null;

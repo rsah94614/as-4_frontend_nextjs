@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { TicketPercent } from "lucide-react";
-import { RewardItem } from "@/types/redeem-types";
+import type { RewardItem } from "@/types";
 
 interface RewardDialogProps {
   open: boolean;

@@ -1,4 +1,4 @@
-import type { HistoryItem, PeriodFilter, TypeFilter } from "./types";
+import type { HistoryItem, PeriodFilter, TypeFilter } from "@/types";
 
 /** Returns true if the item matches the chosen period filter */
 export function matchesPeriod(item: HistoryItem, period: PeriodFilter): boolean {

@@ -5,7 +5,7 @@ import {
     LeaderboardEntryResponse,
     TeamSummaryResponse,
     TeamReportResponse,
-} from "@/types/dashboard-types";
+} from "@/types";
 
 // ── Your analytics service runs on port 8008 (see main.py: uvicorn port=8008)
 const ANALYTICS_API =

@@ -7,7 +7,7 @@ import {
     markOneRead,
     markAllRead,
 } from "@/services/notification-service";
-import type { Notification } from "@/types/notification-types";
+import type { Notification } from "@/types";
 
 /**
  * State Management for Notifications

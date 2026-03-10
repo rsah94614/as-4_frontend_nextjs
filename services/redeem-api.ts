@@ -6,7 +6,7 @@ import {
   WalletData,
   RedemptionResponse,
   PaginatedCatalogResponse,
-} from "../types/redeem-types";
+} from "@/types";
 
 export async function fetchCatalog(page = 1, size = 20): Promise<PaginatedCatalogResponse> {
   try {

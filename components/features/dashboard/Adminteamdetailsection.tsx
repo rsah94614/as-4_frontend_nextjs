@@ -11,8 +11,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import AdminTeamMemberRow from "./AdminTeamMemberRow";
-import { scoreColor } from "./AdminTeamReportCard";
+import AdminTeamMemberRow from "./Adminteammemberrow";
+import { scoreColor } from "./Adminteamreportcard";
 import type { TeamReportResponse } from "@/types/dashboard-types";
 import * as XLSX from "xlsx";
 import {
@@ -439,7 +439,7 @@ export function AdminTeamDetailSkeleton() {
             <CardContent className="px-5 pt-5 pb-4">
               <Skeleton className="h-4 w-44 rounded-md mb-5" />
               {/* Simulated bar chart */}
-              <div className="flex items-end gap-1.5 h-[220px]">
+              <div className="flex items-end gap-1.5 h-55">
                 {[55, 80, 40, 95, 65, 50, 85, 35, 70, 60, 75, 45].map(
                   (h, j) => (
                     <div

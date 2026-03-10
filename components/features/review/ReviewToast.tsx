@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { X } from "lucide-react"
-import type { ToastKind } from "@/types/review-types"
+import type { ToastKind } from "@/types"
 
 // ─── Toast Notification ───────────────────────────────────────────────────────
 

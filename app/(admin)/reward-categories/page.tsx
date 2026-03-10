@@ -4,17 +4,9 @@ import { fetchWithAuth } from "@/services/auth-service";
 import { Tags } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
+import type { RewardCategory as Category } from "@/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface Category {
-  category_id: string;
-  category_name: string;
-  category_code: string;
-  description?: string;
-  is_active: boolean;
-  created_at: string;
-}
-
 const API = process.env.NEXT_PUBLIC_REWARDS_API_URL ?? "http://localhost:8006";
 
 // ─── Primitives ───────────────────────────────────────────────────────────────

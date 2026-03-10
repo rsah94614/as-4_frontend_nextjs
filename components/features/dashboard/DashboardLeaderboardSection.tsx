@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import DashboardLeaderboardCard from "./DashboardLeaderboardCard";
 import { fetchDashboardLeaderboard } from "@/services/analytics-service";
-import type { LeaderboardEntryResponse } from "@/types/dashboard-types";
+import type { LeaderboardEntryResponse } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 

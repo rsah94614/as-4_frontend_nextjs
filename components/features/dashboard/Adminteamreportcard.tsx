@@ -3,7 +3,7 @@
 import { Users, TrendingUp, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { TeamSummaryResponse } from "@/types/dashboard-types";
+import type { TeamSummaryResponse } from "@/types";
 
 export function scoreColor(score: number) {
   if (score >= 75) return { text: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", bar: "bg-emerald-500", label: "Excellent" };

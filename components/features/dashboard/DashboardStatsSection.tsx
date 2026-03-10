@@ -1,7 +1,7 @@
 import { LayoutGrid, Users, Trophy, TrendingUp } from "lucide-react";
 import DashboardCard from "@/components/features/dashboard/DashboardCard";
 import { useEffect, useState } from "react";
-import { PlatformStatsResponse } from "@/types/dashboard-types";
+import type { PlatformStatsResponse } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 

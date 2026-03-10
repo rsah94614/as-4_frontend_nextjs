@@ -1,4 +1,12 @@
 // services/roles-api-client.ts
+import type {
+  Role,
+  CreateRolePayload,
+  EmployeeRole,
+  AssignRolePayload,
+  RoutePermission,
+  RoutePermissionPayload,
+} from "@/types";
 
 const ROLES_BASE_URL = process.env.NEXT_PUBLIC_ROLES_API_URL || "http://localhost:8002";
 
@@ -25,20 +33,6 @@ async function fetchWithAuth(path: string, options: RequestInit = {}) {
 
 // ── Roles ──────────────────────────────────────────────────────────────────
 
-export interface Role {
-  role_id: string;
-  role_name: string;
-  role_code: string;
-  description?: string | null;
-  created_at?: string;
-}
-
-export interface CreateRolePayload {
-  role_name: string;
-  role_code: string;
-  description?: string;
-}
-
 export const rolesApi = {
   listRoles: (): Promise<Role[]> => fetchWithAuth("/v1/roles"),
 
@@ -47,19 +41,6 @@ export const rolesApi = {
 };
 
 // ── Employee Roles ─────────────────────────────────────────────────────────
-
-export interface EmployeeRole {
-  employee_role_id: string;
-  assigned_at: string;
-  is_active: boolean;
-  employee: { id: string; username: string; email: string };
-  role: { id: string; name: string; code: string };
-}
-
-export interface AssignRolePayload {
-  employee_id: string;
-  role_id: string;
-}
 
 export const employeeRolesApi = {
   listEmployeeRoles: (): Promise<EmployeeRole[]> =>
@@ -73,16 +54,6 @@ export const employeeRolesApi = {
 };
 
 // ── Route Permissions ──────────────────────────────────────────────────────
-
-export interface RoutePermission {
-  route_key: string;
-  roles: { role_id: string; role_code: string; role_name: string }[];
-}
-
-export interface RoutePermissionPayload {
-  route_key: string;
-  role_id: string;
-}
 
 export const routePermissionsApi = {
   listRoutePermissions: (): Promise<RoutePermission[]> =>
@@ -100,3 +71,12 @@ export const routePermissionsApi = {
       body: JSON.stringify(body),
     }),
 };
+
+export type {
+  Role,
+  CreateRolePayload,
+  EmployeeRole,
+  AssignRolePayload,
+  RoutePermission,
+  RoutePermissionPayload,
+} from "@/types";

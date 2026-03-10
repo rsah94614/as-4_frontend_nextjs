@@ -3,7 +3,7 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import AdminTeamReportCard from "./AdminTeamReportCard";
+import AdminTeamReportCard from "./Adminteamreportcard"
 import type { TeamSummaryResponse } from "@/types/dashboard-types";
 
 type SortOption = "score" | "points" | "members" | "name";
@@ -67,9 +67,10 @@ export default function AdminTeamsSection({
               key={opt.value}
               onClick={() => onSortChange(opt.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150
-                ${sortBy === opt.value
-                  ? "bg-white text-gray-900 shadow-sm border border-[#e0e0e0]"
-                  : "text-gray-400 hover:text-gray-600"
+                ${
+                  sortBy === opt.value
+                    ? "bg-white text-gray-900 shadow-sm border border-[#e0e0e0]"
+                    : "text-gray-400 hover:text-gray-600"
                 }`}
             >
               {opt.label}

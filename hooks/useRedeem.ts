@@ -8,14 +8,14 @@ import {
   fetchWallet,
 } from "@/services/redeem-api";
 
-import {
+import type {
   RewardItem,
   CategoryInfo,
   WalletData,
   DialogState,
   RedemptionResponse,
   PaginatedCatalogResponse,
-} from "@/types/redeem-types";
+} from "@/types";
 
 const PAGE_SIZE = 20;
 

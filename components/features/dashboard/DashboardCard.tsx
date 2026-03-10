@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber, formatMonthComparison } from "@/lib/dashboard-utils";
-import { type Metric } from "@/types/dashboard-types";
+import { type Metric } from "@/types";
 
 
 

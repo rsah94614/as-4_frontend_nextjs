@@ -3,7 +3,7 @@
 import { Star, Tag, Clock, Image as ImageIcon, Video } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import type { Review, ReviewCategory } from "@/types/review-types"
+import type { Review, ReviewCategory } from "@/types"
 import { RATING_LABELS, RATING_COLORS, fmtDate } from "@/lib/review-utils"
 
 // ─── Review Card ──────────────────────────────────────────────────────────────

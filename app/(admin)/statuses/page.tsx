@@ -3,25 +3,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { Tag, Plus, Edit2, Loader2, X, Check, AlertCircle, Info, HelpCircle } from "lucide-react";
 import orgApiClient from "@/services/org-api-client";
+import type { AdminStatus, StatusEntityType } from "@/types";
+import { STATUS_ENTITY_TYPES } from "@/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-const ENTITY_TYPES = ["EMPLOYEE", "REVIEW", "TRANSACTION", "REWARD"] as const;
-type EntityType = (typeof ENTITY_TYPES)[number];
-
-interface Status {
-  status_id: string;
-  status_code: string;
-  status_name: string;
-  description?: string;
-  entity_type: string;
-  created_at: string;
-  updated_at?: string;
-}
+const ENTITY_TYPES = STATUS_ENTITY_TYPES;
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
-const ENTITY_META: Record<EntityType, {
+const ENTITY_META: Record<StatusEntityType, {
   label: string;
   description: string;
   pill: string;
@@ -58,6 +49,26 @@ const ENTITY_META: Record<EntityType, {
     dot: "bg-emerald-400", ring: "ring-emerald-200",
   },
 };
+
+type ApiError = {
+  response?: {
+    status?: number;
+    data?: {
+      detail?: string;
+    };
+  };
+};
+
+function getErrorStatus(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null) return undefined;
+  return (error as ApiError).response?.status;
+}
+
+function getErrorDetail(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null) return undefined;
+  const detail = (error as ApiError).response?.data?.detail;
+  return typeof detail === "string" ? detail : undefined;
+}
 
 // ─── Shared components ────────────────────────────────────────────────────────
 
@@ -165,13 +176,13 @@ function SkeletonSection({ index }: { index: number }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StatusesPage() {
-  const [statuses, setStatuses]     = useState<Status[]>([]);
+  const [statuses, setStatuses]     = useState<AdminStatus[]>([]);
   const [loading, setLoading]       = useState(true);
-  const [filterType, setFilterType] = useState<EntityType | "">("");
+  const [filterType, setFilterType] = useState<StatusEntityType | "">("");
   const [showCreate, setShowCreate] = useState(false);
   const [editId, setEditId]         = useState<string | null>(null);
   const [editForm, setEditForm]     = useState({ status_name: "", description: "" });
-  const [form, setForm]             = useState({ status_code: "", status_name: "", description: "", entity_type: "EMPLOYEE" as EntityType });
+  const [form, setForm]             = useState({ status_code: "", status_name: "", description: "", entity_type: "EMPLOYEE" as StatusEntityType });
   const [saving, setSaving]         = useState(false);
   const [flash, setFlash]           = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
@@ -185,10 +196,10 @@ export default function StatusesPage() {
     try {
       const params: Record<string, string> = {};
       if (filterType) params.entity_type = filterType;
-      const res = await orgApiClient.get<Status[]>("/statuses", { params });
+      const res = await orgApiClient.get<AdminStatus[]>("/statuses", { params });
       setStatuses(Array.isArray(res.data) ? res.data : []);
-    } catch (e: any) {
-      showFlash(e?.response?.status === 401 ? "Your session expired. Please log in again." : "Could not load statuses. Please refresh.", "error");
+    } catch (e: unknown) {
+      showFlash(getErrorStatus(e) === 401 ? "Your session expired. Please log in again." : "Could not load statuses. Please refresh.", "error");
     } finally {
       setLoading(false);
     }
@@ -206,14 +217,14 @@ export default function StatusesPage() {
       setForm({ status_code: "", status_name: "", description: "", entity_type: "EMPLOYEE" });
       showFlash("Status created successfully.");
       fetchStatuses();
-    } catch (e: any) {
-      showFlash(e?.response?.data?.detail ?? "Could not create status. Please try again.", "error");
+    } catch (e: unknown) {
+      showFlash(getErrorDetail(e) ?? "Could not create status. Please try again.", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  const startEdit = (s: Status) => {
+  const startEdit = (s: AdminStatus) => {
     setEditId(s.status_id);
     setEditForm({ status_name: s.status_name, description: s.description ?? "" });
   };
@@ -226,17 +237,17 @@ export default function StatusesPage() {
       setEditId(null);
       showFlash("Status updated successfully.");
       fetchStatuses();
-    } catch (e: any) {
-      showFlash(e?.response?.data?.detail ?? "Could not update status. Please try again.", "error");
+    } catch (e: unknown) {
+      showFlash(getErrorDetail(e) ?? "Could not update status. Please try again.", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  const visibleTypes = (filterType ? [filterType] : ENTITY_TYPES) as EntityType[];
+  const visibleTypes = (filterType ? [filterType] : ENTITY_TYPES) as StatusEntityType[];
   const grouped = Object.fromEntries(
     ENTITY_TYPES.map(t => [t, statuses.filter(s => s.entity_type === t)])
-  ) as Record<EntityType, Status[]>;
+  ) as Record<StatusEntityType, AdminStatus[]>;
   const totalCount = statuses.length;
 
   return (
@@ -273,13 +284,13 @@ export default function StatusesPage() {
       {/* ── Filter pills ── */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">Filter:</span>
-        {(["", ...ENTITY_TYPES] as (EntityType | "")[]).map(t => {
-          const meta = t ? ENTITY_META[t as EntityType] : null;
+        {(["", ...ENTITY_TYPES] as (StatusEntityType | "")[]).map(t => {
+          const meta = t ? ENTITY_META[t as StatusEntityType] : null;
           const active = filterType === t;
           return (
             <button
               key={t || "all"}
-              onClick={() => setFilterType(t as EntityType | "")}
+              onClick={() => setFilterType(t as StatusEntityType | "")}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                 active
                   ? meta ? `${meta.pill} border-current shadow-sm` : "bg-gray-900 text-white border-gray-900"
@@ -456,7 +467,7 @@ export default function StatusesPage() {
               hint="Which area of the system will this status be used for?"
             >
               <select value={form.entity_type}
-                onChange={e => setForm(p => ({ ...p, entity_type: e.target.value as EntityType }))}
+                onChange={e => setForm(p => ({ ...p, entity_type: e.target.value as StatusEntityType }))}
                 className={inputCls}>
                 {ENTITY_TYPES.map(t => <option key={t} value={t}>{ENTITY_META[t].label}</option>)}
               </select>

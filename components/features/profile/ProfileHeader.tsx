@@ -1,4 +1,4 @@
-import type { EmployeeDetail } from "@/types/profile-types";
+import type { ProfileEmployeeDetail as EmployeeDetail } from "@/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 

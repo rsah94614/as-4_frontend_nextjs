@@ -10,7 +10,7 @@ import ProfileHeader from "@/components/features/profile/ProfileHeader";
 import ProfileWallet from "@/components/features/profile/ProfileWallet";
 import ProfileInfoFields from "@/components/features/profile/ProfileInfoFields";
 import { ArrowLeft } from "lucide-react";
-import type { EmployeeDetail } from "@/types/profile-types";
+import type { ProfileEmployeeDetail as EmployeeDetail } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 

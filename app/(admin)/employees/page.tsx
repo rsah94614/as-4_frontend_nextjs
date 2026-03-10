@@ -10,6 +10,7 @@ import { fetchWithAuth } from "@/services/auth-service"
 import axiosClient from "@/services/api-client"
 import Navbar from "@/components/layout/Navbar"
 import Sidebar from "@/components/layout/Sidebar"
+import type { Employee, Review, MemberStats, BulkImportResult } from "@/types"
 
 // ─── Env vars ─────────────────────────────────────────────────────────────────
 const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || "http://localhost:8002"
@@ -17,49 +18,6 @@ const RECOGNITION_API = process.env.NEXT_PUBLIC_RECOGNITION_API_URL || "http://l
 const AUTH_API = process.env.NEXT_PUBLIC_AUTH_API_URL || "http://localhost:8001"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface Employee {
-  employee_id: string
-  username: string
-  email: string
-  designation_id?: string
-  designation_name?: string
-  department_id?: string
-  department_name?: string
-  manager_id?: string
-  is_active: boolean
-  date_of_joining: string
-}
-
-interface Review {
-  review_id: string
-  reviewer_id: string
-  receiver_id: string
-  rating: number
-  comment: string
-  review_at: string
-}
-
-interface MemberStats {
-  avg_rating: number
-  review_count: number
-}
-
-interface BulkRowResult {
-  row: number
-  username?: string
-  email?: string
-  status: "success" | "error"
-  error?: string
-  employee_id?: string
-}
-
-interface BulkImportResult {
-  total: number
-  succeeded: number
-  failed: number
-  results: BulkRowResult[]
-}
-
 // ─── Bulk Import Modal ────────────────────────────────────────────────────────
 function BulkImportModal({ onClose, onSuccess }: {
   onClose: () => void

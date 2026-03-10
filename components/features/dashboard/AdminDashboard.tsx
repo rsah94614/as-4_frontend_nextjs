@@ -6,12 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as XLSX from "xlsx";
-import AdminTeamsSection from "./AdminTeamsSection";
-import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "./AdminTeamDetailSection";
+import AdminTeamsSection from "./Adminteamssection";
+import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "./Adminteamdetailsection";
 import { fetchTeamReport } from "@/services/analytics-service";
-import type { TeamSummaryResponse, TeamReportResponse } from "@/types/dashboard-types";
-
-type SortOption = "score" | "points" | "members" | "name";
+import type { TeamSummaryResponse, TeamReportResponse, TeamSortOption } from "@/types";
 
 const ANALYTICS_API =
     process.env.NEXT_PUBLIC_ANALYTICS_API_URL || "http://localhost:8008";
@@ -89,7 +87,7 @@ export default function AdminDashboard() {
     const [teamsError, setTeamsError] = useState<string | null>(null);
     const [reportError, setReportError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [sortBy, setSortBy] = useState<SortOption>("score");
+    const [sortBy, setSortBy] = useState<TeamSortOption>("score");
     const [downloadingAll, setDownloadingAll] = useState(false);
 
     const loadTeams = useCallback(async () => {

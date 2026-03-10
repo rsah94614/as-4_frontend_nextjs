@@ -17,7 +17,7 @@ import type {
     ReviewUpdateRequest,
     ReviewResponse,
     PaginatedReviewResponse,
-} from '@/types/review'
+} from '@/types'
 
 export type {
     ReviewCreateRequest,
