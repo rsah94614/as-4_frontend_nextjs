@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import AdminTeamReportCard from "./Adminteamreportcard";
@@ -22,7 +23,6 @@ interface Props {
   sortBy: SortOption;
   onSearchChange: (val: string) => void;
   onSortChange: (val: SortOption) => void;
-  onTeamClick: (departmentId: string) => void;
 }
 
 export default function AdminTeamsSection({
@@ -32,8 +32,8 @@ export default function AdminTeamsSection({
   sortBy,
   onSearchChange,
   onSortChange,
-  onTeamClick,
 }: Props) {
+  const router = useRouter();
   const filtered = teams
     .filter((t) =>
       t.department_name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -97,7 +97,7 @@ export default function AdminTeamsSection({
             <AdminTeamReportCard
               key={team.department_id}
               team={team}
-              onClick={() => onTeamClick(team.department_id)}
+              onClick={() => router.push(`/team-report/${team.department_id}`)}
             />
           ))}
           {filtered.length === 0 && (

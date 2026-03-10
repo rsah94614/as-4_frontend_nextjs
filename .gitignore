@@ -47,3 +47,6 @@ next-env.d.ts
 #ignore
 .package-lock.json
 
+CLAUDE.md
+
+.vscode/settings.json
