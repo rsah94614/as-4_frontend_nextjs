@@ -5,12 +5,9 @@ import { createAuthenticatedClient } from "@/lib/api-utils"
 import { uploadToStorage } from "@/services/cloudinary"
 import { getTeamMembersForUI, type TeamMember } from "@/services/employee-service"
 import { requireAuthenticatedUserId } from "@/lib/api-utils"
-import type { Review, ReviewCategory, ViewMode, ToastState } from "@/types/review-types"
+import type { Review, ReviewCategory, ViewMode, ToastState, SubmittedReviewData } from "@/types/review-types"
 
 // FIX: Use proxy client instead of direct API URL.
-// Previously used axiosClient (baseURL=/api/proxy/auth) with `${API}/v1/reviews`
-// which resolved to http://localhost:8005/v1/reviews — bypassing the proxy entirely.
-// Now uses recognitionClient (baseURL=/api/proxy/recognition) with relative paths.
 const recognitionClient = createAuthenticatedClient("/api/proxy/recognition")
 
 // ─── Hook Return Type ─────────────────────────────────────────────────────────
@@ -53,6 +50,8 @@ export interface ReviewPageState {
     backToList: () => void
     handleSubmit: (e: React.FormEvent) => Promise<void>
     loadReviews: (pg?: number) => Promise<void>
+    submittedData: SubmittedReviewData | null  // FIX: was missing from interface
+    startNewReview: () => void                 // FIX: was missing from interface
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -85,6 +84,7 @@ export function useReviewPage(): ReviewPageState {
     const [submitting, setSubmitting] = useState(false)
     const [toast, setToast] = useState<ToastState | null>(null)
     const [listTab, setListTab] = useState<"all" | "given" | "received">("all")
+    const [submittedData, setSubmittedData] = useState<SubmittedReviewData | null>(null)
 
     const monthStart = new Date()
     monthStart.setDate(1)
@@ -102,9 +102,6 @@ export function useReviewPage(): ReviewPageState {
 
     const loadReviews = useCallback(async (pg = 1) => {
         try {
-            // FIX: was `${API}/v1/reviews?...` → direct call to localhost:8005
-            // Now: relative path on recognitionClient (baseURL=/api/proxy/recognition)
-            // → /api/proxy/recognition/reviews?... → proxied correctly
             const res = await recognitionClient.get<{
                 data: Review[]
                 pagination: { total: number; total_pages: number }
@@ -123,7 +120,6 @@ export function useReviewPage(): ReviewPageState {
             setLoadingData(true)
             try {
                 const [catRes, teamRes] = await Promise.allSettled([
-                    // FIX: was `${API}/v1/review-categories?...` → direct call
                     recognitionClient.get<{ data: ReviewCategory[] }>(
                         `/review-categories?page=1&page_size=100&active_only=true`
                     ),
@@ -149,7 +145,12 @@ export function useReviewPage(): ReviewPageState {
         setComment("")
         setFiles([])
         setEditingReview(null)
+        setSubmittedData(null)
         setView("compose")
+    }
+
+    function startNewReview() {
+        openCompose()
     }
 
     function openEdit(r: Review) {
@@ -220,11 +221,9 @@ export function useReviewPage(): ReviewPageState {
                     setSubmitting(false)
                     return
                 }
-                // FIX: was `${API}/v1/reviews/${id}` → now relative path
                 await recognitionClient.put(`/reviews/${editingReview.review_id}`, patch)
                 setToast({ msg: "Review updated. Points recalculated automatically.", kind: "success" })
             } else {
-                // FIX: was `${API}/v1/reviews` → now relative path
                 await recognitionClient.post(`/reviews`, {
                     receiver_id: receiverId,
                     rating,
@@ -234,10 +233,30 @@ export function useReviewPage(): ReviewPageState {
                     ...(videoUrl && { video_url: videoUrl }),
                 })
                 setToast({ msg: "Review submitted! Points credited to their wallet. 🎉", kind: "success" })
+
+                // FIX: derive receiverName and selectedCatNames from current state
+                // before clearing form — these were referenced but never defined
+                const receiverName =
+                    allReceivers.find((r) => r.id === receiverId)?.name ?? "Team Member"
+                const selectedCatNames = categoryIds
+                    .map((id) => categories.find((c) => c.category_id === id)?.category_name)
+                    .filter((n): n is string => !!n)
+
+                setSubmittedData({
+                    receiverName,
+                    rating,
+                    categoryNames: selectedCatNames,
+                    comment: comment.trim(),
+                    submittedAt: new Date().toISOString(),
+                })
             }
 
             await loadReviews(1)
-            backToList()
+            if (view === "compose") {
+                setView("submitted")
+            } else {
+                backToList()
+            }
         } catch (err: unknown) {
             const detail =
                 (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
@@ -292,5 +311,7 @@ export function useReviewPage(): ReviewPageState {
         backToList,
         handleSubmit,
         loadReviews,
+        submittedData,
+        startNewReview,
     }
 }

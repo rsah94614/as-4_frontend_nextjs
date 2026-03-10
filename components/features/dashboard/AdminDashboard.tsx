@@ -1,17 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { ShieldCheck, ChevronRight, Download, Loader2, AlertTriangle, RefreshCw, ArrowLeft } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Download, Loader2, AlertTriangle, RefreshCw, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as XLSX from "xlsx";
-import AdminTeamsSection from "./Adminteamssection";
-import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "./Adminteamdetailsection";
+import AdminTeamsSection from "./AdminTeamsSection";
+import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "./AdminTeamDetailSection";
 import { fetchTeamReport, fetchTeamsSummary } from "@/services/analytics-service";
 import type { TeamSummaryResponse, TeamReportResponse } from "@/types/dashboard-types";
 
-type SortOption = "score" | "points" | "members" | "name";
+type SortOption = "score" | "members" | "points" | "name";
 
 // ─── Teams loading skeleton ───────────────────────────────────────────────────
 function TeamsLoadingSkeleton() {
@@ -59,7 +58,7 @@ export default function AdminDashboard() {
     const [teams, setTeams] = useState<TeamSummaryResponse[]>([]);
     const [selectedTeam, setSelectedTeam] = useState<TeamReportResponse | null>(null);
     const [loadingTeams, setLoadingTeams] = useState(true);
-    const [loadingReport, setLoadingReport] = useState(false);
+    const [loadingReport] = useState(false);
     const [teamsError, setTeamsError] = useState<string | null>(null);
     const [reportError, setReportError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -127,82 +126,39 @@ export default function AdminDashboard() {
         }
     }, [teams]);
 
-    const openTeam = useCallback(async (departmentId: string) => {
-        setLoadingReport(true);
-        setSelectedTeam(null);
-        setReportError(null);
-        const result = await fetchTeamReport(departmentId);
-        if (result) setSelectedTeam(result);
-        else setReportError("Could not load this team's report. Please try again.");
-        setLoadingReport(false);
-    }, []);
-
     const handleBack = () => { setSelectedTeam(null); setReportError(null); };
 
     const showBack = !!(selectedTeam || reportError || loadingReport);
 
     return (
         <div className="space-y-6">
-            {/* ── Header ── */}
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-purple-100">
-                        <ShieldCheck className="w-5 h-5 text-purple-700" />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2.5">
-                            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                                {selectedTeam ? selectedTeam.department_name : "Admin Dashboard"}
-                            </h1>
-                            <Badge variant="outline" className="border-purple-300 text-purple-700 bg-purple-50 font-bold text-[11px] tracking-widest uppercase px-2.5">
-                                Admin
-                            </Badge>
-                        </div>
-                        {/* Breadcrumb */}
-                        <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5 font-medium">
-                            <button
-                                onClick={handleBack}
-                                className={`transition-colors ${selectedTeam ? "hover:text-gray-700 cursor-pointer" : "cursor-default"}`}
-                            >
-                                Team Reports
-                            </button>
-                            {selectedTeam && (
-                                <>
-                                    <ChevronRight className="w-3 h-3" />
-                                    <span className="text-gray-700 font-semibold">{selectedTeam.department_name}</span>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                    {showBack && (
-                        <Button
-                            size="sm"
-                            onClick={handleBack}
-                            className="gap-1.5 font-bold rounded-lg bg-gray-900 text-white hover:bg-gray-700 active:scale-95 px-4 h-9 shadow-sm transition-all"
-                        >
-                            <ArrowLeft className="w-4 h-4 shrink-0" />
-                            Back to Teams
-                        </Button>
-                    )}
+            <div className="flex items-center gap-2">
+                {showBack && (
+                    <Button
+                        size="sm"
+                        onClick={handleBack}
+                        className="gap-1.5 font-bold rounded-lg bg-gray-900 text-white hover:bg-gray-700 active:scale-95 px-4 h-9 shadow-sm transition-all"
+                    >
+                        <ArrowLeft className="w-4 h-4 shrink-0" />
+                        Back to Teams
+                    </Button>
+                )}
 
-                    {!selectedTeam && !loadingReport && !loadingTeams && !teamsError && teams.length > 0 && (
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={downloadAllReports}
-                            disabled={downloadingAll}
-                            className="gap-2 font-semibold rounded-lg border-gray-300 hover:border-gray-500 hover:bg-gray-50 h-9"
-                        >
-                            {downloadingAll
-                                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Downloading…</>
-                                : <><Download className="w-3.5 h-3.5" /> Download All Reports</>
-                            }
-                        </Button>
-                    )}
-                </div>
+                {!selectedTeam && !loadingReport && !loadingTeams && !teamsError && teams.length > 0 && (
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={downloadAllReports}
+                        disabled={downloadingAll}
+                        className="gap-2 font-semibold rounded-lg border-gray-300 hover:border-gray-500 hover:bg-gray-50 h-9"
+                    >
+                        {downloadingAll
+                            ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Downloading…</>
+                            : <><Download className="w-3.5 h-3.5" /> Download All Reports</>
+                        }
+                    </Button>
+                )}
             </div>
 
             <div className="h-px bg-gray-100" />
@@ -241,7 +197,6 @@ export default function AdminDashboard() {
                             sortBy={sortBy}
                             onSearchChange={setSearchQuery}
                             onSortChange={setSortBy}
-                            onTeamClick={openTeam}
                         />
                     )}
                 </>

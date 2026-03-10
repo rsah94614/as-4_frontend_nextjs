@@ -3,14 +3,26 @@
 import { TicketPercent, Package } from "lucide-react";
 import StockBadge from "@/components/features/redeem/StockBadge";
 import { RewardItem } from "@/types/redeem-types";
+import {
+  CARD_CONTAINER,
+  CARD_ENABLED,
+  CARD_DISABLED,
+  CARD_BODY,
+  ICON_BOX,
+  GRADIENT_PRIMARY,
+  GRADIENT_PRIMARY_HOVER,
+  GRADIENT_SECONDARY,
+  ANIMATE_FADE_IN_UP,
+} from "@/components/features/redeem/redeem-styles";
 
 interface Props {
   item: RewardItem;
   canAfford: boolean;
   onRedeem: (item: RewardItem) => void;
+  staggerIndex?: number;
 }
 
-export default function RewardCard({ item, canAfford, onRedeem }: Props) {
+export default function RewardCard({ item, canAfford, onRedeem, staggerIndex = 0 }: Props) {
   const outOfStock = item.stock_status === "Out of Stock";
 
   const isVoucher =
@@ -19,27 +31,23 @@ export default function RewardCard({ item, canAfford, onRedeem }: Props) {
 
   const disabled = outOfStock || !canAfford;
 
+  const staggerDelay = `stagger-${Math.min(staggerIndex + 1, 8)}`;
+
   return (
     <div
-      className={`group relative rounded-3xl border bg-white flex flex-col overflow-hidden transition-all duration-200
-        ${
-          disabled
-            ? "opacity-60 cursor-not-allowed border-slate-100"
-            : "cursor-pointer hover:shadow-lg hover:-translate-y-0.5 hover:border-purple-200 border-slate-100 shadow-sm"
-        }`}
+      className={`${CARD_CONTAINER} ${disabled ? CARD_DISABLED : CARD_ENABLED} ${ANIMATE_FADE_IN_UP} ${staggerDelay}`}
     >
+      {/* Top gradient stripe with shimmer on hover */}
       <div
-        className={`h-2 w-full ${
-          isVoucher
-            ? "bg-gradient-to-r from-fuchsia-500 to-purple-600"
-            : "bg-gradient-to-r from-purple-700 to-fuchsia-600"
+        className={`h-2 w-full hover-gradient-shimmer transition-all duration-300 ${
+          isVoucher ? GRADIENT_SECONDARY : GRADIENT_PRIMARY
         }`}
       />
 
-      <div className="flex flex-col flex-1 p-5">
+      <div className={CARD_BODY}>
         <div className="flex items-start justify-between mb-3">
           <div
-            className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
+            className={`${ICON_BOX} transition-transform duration-200 group-hover:scale-110 ${
               isVoucher ? "bg-fuchsia-50" : "bg-purple-50"
             }`}
           >
@@ -74,7 +82,9 @@ export default function RewardCard({ item, canAfford, onRedeem }: Props) {
               <p className="text-[11px] text-slate-400 mb-0.5">
                 Points required
               </p>
-              <p className="text-lg font-bold text-slate-800">
+              <p className={`text-lg font-bold text-slate-800 transition-all duration-300 ${
+                canAfford && !outOfStock ? "group-hover:text-purple-700" : ""
+              }`}>
                 {item.default_points.toLocaleString()}
                 <span className="text-xs font-normal text-slate-400 ml-1">
                   pts
@@ -91,10 +101,10 @@ export default function RewardCard({ item, canAfford, onRedeem }: Props) {
             <button
               disabled={disabled}
               onClick={() => !disabled && onRedeem(item)}
-              className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+              className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
                 disabled
                   ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-purple-700 to-fuchsia-600 text-white hover:from-purple-800 hover:to-fuchsia-700 active:scale-95"
+                  : `${GRADIENT_PRIMARY} text-white ${GRADIENT_PRIMARY_HOVER} active:scale-95 hover:shadow-md hover:shadow-purple-200`
               }`}
             >
               {outOfStock

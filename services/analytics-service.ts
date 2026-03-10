@@ -8,6 +8,10 @@ import type {
     LeaderboardEntryResponse,
     TeamSummaryResponse,
     TeamReportResponse,
+    ParticipationResponse,
+    RecognitionTrendResponse,
+    PaginatedUserRecognition,
+    PaginatedTeamRecognition,
 } from "@/types/dashboard-types";
 
 const analyticsClient = createAuthenticatedClient("/api/proxy/analytics");
@@ -37,8 +41,49 @@ export async function fetchDashboardLeaderboard(): Promise<LeaderboardEntryRespo
 
 export async function fetchTeamsSummary(): Promise<TeamSummaryResponse[] | null> {
     try {
-        // Current — correct path
         const res = await analyticsClient.get<TeamSummaryResponse[]>("/dashboard/teams");
+        return res.data;
+    } catch { return null; }
+}
+
+export async function fetchRecognitionUsers(
+    range: "week" | "month" | "quarter" | "year",
+    page = 1,
+    limit = 100,
+): Promise<PaginatedUserRecognition | null> {
+    try {
+        const res = await analyticsClient.get<PaginatedUserRecognition>(
+            `/dashboard/recognition/users?range=${range}&page=${page}&limit=${limit}`
+        );
+        return res.data;
+    } catch { return null; }
+}
+
+export async function fetchRecognitionTeams(
+    range: "week" | "month" | "quarter" | "year",
+    page = 1,
+    limit = 50,
+): Promise<PaginatedTeamRecognition | null> {
+    try {
+        const res = await analyticsClient.get<PaginatedTeamRecognition>(
+            `/dashboard/recognition/teams?range=${range}&page=${page}&limit=${limit}`
+        );
+        return res.data;
+    } catch { return null; }
+}
+
+export async function fetchRecognitionTrend(range: "3m" | "6m" | "1y"): Promise<RecognitionTrendResponse | null> {
+    try {
+        const res = await analyticsClient.get<RecognitionTrendResponse>(
+            `/dashboard/recognition-trend?range=${range}`
+        );
+        return res.data;
+    } catch { return null; }
+}
+
+export async function fetchParticipation(): Promise<ParticipationResponse | null> {
+    try {
+        const res = await analyticsClient.get<ParticipationResponse>("/dashboard/participation");
         return res.data;
     } catch { return null; }
 }
@@ -51,8 +96,6 @@ export async function fetchTeamReport(departmentId: string): Promise<TeamReportR
 }
 
 // ── Aggregate fetch — for the main dashboard page ────────────────────────────
-// Hits /api/proxy/dashboard which fans out all 4 endpoints in parallel server-side.
-// Reduces 4 browser round trips to 1.
 
 export interface DashboardData {
     platformStats:  PlatformStatsResponse | null;
@@ -66,7 +109,6 @@ export async function fetchAllDashboardData(): Promise<DashboardData> {
         const res = await analyticsClient.get<DashboardData>("/dashboard/all");
         return res.data;
     } catch {
-        // Fallback: fire individually in parallel if aggregate route unavailable
         const [platformStats, recentReviews, leaderboard, teams] = await Promise.allSettled([
             fetchDashboardPlatformStats(),
             fetchDashboardRecentReviews(),

@@ -11,6 +11,7 @@ interface HistoryListProps {
     error: string | null;
     onRetry: () => void;
     onClearFilters: () => void;
+    onItemClick?: (item: HistoryItem) => void;
 }
 
 export default function HistoryList({
@@ -20,6 +21,7 @@ export default function HistoryList({
     error,
     onRetry,
     onClearFilters,
+    onItemClick,
 }: HistoryListProps) {
     return (
         <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
@@ -65,7 +67,7 @@ export default function HistoryList({
             {!loading &&
                 !error &&
                 items.map((item) => (
-                    <HistoryCard key={item.history_id} item={item} />
+                    <HistoryCard key={item.history_id} item={item} onClick={onItemClick} />
                 ))}
         </div>
     );
