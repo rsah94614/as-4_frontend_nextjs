@@ -1,7 +1,6 @@
 import { createAuthenticatedClient } from "@/lib/api-utils";
 
-const axiosClient = createAuthenticatedClient(
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001"
-);
+// Routes through Next.js proxy — no direct microservice URL in browser
+const axiosClient = createAuthenticatedClient("/api/proxy/auth");
 
 export default axiosClient;

@@ -1,52 +1,37 @@
 // services/notification-service.ts
-// Notification API service — refactored to use dedicated Axios client.
+// All requests routed through Next.js proxy — no direct microservice URL in browser.
 
-import employeeApiClient from "@/services/employee-api-client";
-import type {
-    Notification,
-    NotificationListResponse,
-} from "@/types/notification-types";
+import { createAuthenticatedClient } from "@/lib/api-utils";
+import type { Notification, NotificationListResponse } from "@/types/notification-types";
 
-const BASE_URL = "/notifications";
-
-// ─── List ─────────────────────────────────────────────────────────────────────
+// Notifications live on the employee service (port 8003)
+const notifClient = createAuthenticatedClient("/api/proxy/employees/v1");
+const BASE = "/notifications";
 
 export async function getNotifications(
     limit = 50,
     unreadOnly = false
 ): Promise<NotificationListResponse> {
-    const params = {
-        limit,
-        unread_only: unreadOnly,
-    };
-    const res = await employeeApiClient.get(BASE_URL, { params });
+    const res = await notifClient.get(BASE, { params: { limit, unread_only: unreadOnly } });
     return res.data;
 }
-
-// ─── Unread count ─────────────────────────────────────────────────────────────
 
 export async function getUnreadCount(): Promise<number> {
     try {
-        const res = await employeeApiClient.get(`${BASE_URL}/unread-count`);
+        const res = await notifClient.get(`${BASE}/unread-count`);
         return res.data.unread_count;
     } catch (err) {
         console.error("[NotificationService] getUnreadCount failed:", err);
-        return 0; // Return 0 to avoid breaking UI, but log error
+        return 0;
     }
 }
 
-// ─── Mark one as read ─────────────────────────────────────────────────────────
-
 export async function markOneRead(notificationId: string): Promise<Notification> {
-    // Some backends require an empty body for PUT
-    const res = await employeeApiClient.put(`${BASE_URL}/${notificationId}/read`, {});
+    const res = await notifClient.put(`${BASE}/${notificationId}/read`, {});
     return res.data;
 }
 
-// ─── Mark all as read ────────────────────────────────────────────────────────
-
 export async function markAllRead(): Promise<number> {
-    // Some backends require an empty body for PUT
-    const res = await employeeApiClient.put(`${BASE_URL}/read-all`, {});
+    const res = await notifClient.put(`${BASE}/read-all`, {});
     return res.data.marked_read;
 }
