@@ -21,7 +21,7 @@ async function fetchTeamsWithDetail(): Promise<{
     data: TeamSummaryResponse[] | null;
     error: string | null;
 }> {
-    const url = `${ANALYTICS_API}/v1/dashboard/teams`;
+    const url = `${ANALYTICS_API}/v1/analytics/dashboard/teams`;
     try {
         const { fetchWithAuth } = await import("@/services/auth-service");
         const res = await fetchWithAuth(url);
