@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, Search, LayoutGrid, RefreshCw } from "lucide-react";
-import { fetchWithAuth } from "@/services/auth-service";
+
+// 1. Swap fetchWithAuth for our Axios client builder
+import { createAuthenticatedClient } from "@/lib/api-utils";
 import { Category, RewardItem, Pagination } from "@/types/reward-types";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -14,7 +16,8 @@ import { RewardGrid } from "@/components/features/admin/rewards/RewardGrid";
 import { RewardModal } from "@/components/features/admin/rewards/RewardModal";
 import { RestockModal } from "@/components/features/admin/rewards/RestockModal";
 
-const API = process.env.NEXT_PUBLIC_REWARDS_API_URL ?? "http://localhost:8006";
+// 2. Create the proxy client right here
+const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
 
 export default function RewardsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -35,20 +38,19 @@ export default function RewardsPage() {
     setLoading(true);
     setError("");
     try {
-      const [catR, itemR] = await Promise.all([
-        fetchWithAuth(`${API}/v1/rewards/categories?active_only=false`),
-        fetchWithAuth(`${API}/v1/rewards/catalog?active_only=${activeOnly}&page=${page}&size=12`),
+      // 3. Use the Axios client with relative paths!
+      const [catRes, itemRes] = await Promise.all([
+        rewardsClient.get(`/categories?active_only=false`),
+        rewardsClient.get(`/catalog?active_only=${activeOnly}&page=${page}&size=12`),
       ]);
-      if (catR.ok) setCategories(await catR.json());
-      if (itemR.ok) {
-        const d = await itemR.json();
-        setItems(d.data);
-        setPagination(d.pagination);
-      } else {
-        setError("Failed to load catalog. Check your connection or permissions.");
-      }
+      
+      // Axios automatically parses JSON into the .data property
+      setCategories(catRes.data);
+      setItems(itemRes.data.data);
+      setPagination(itemRes.data.pagination);
+      
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "An unexpected error occurred.");
+      setError(e instanceof Error ? e.message : "Failed to load catalog. Check your connection.");
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { fetchWithAuth } from "@/services/auth-service";
+// 1. Swap fetchWithAuth for our Axios client builder
+import { createAuthenticatedClient } from "@/lib/api-utils";
 import { matchesPeriod, matchesType } from "./history-utils";
 import { PAGE_SIZE } from "./constants";
 import type {
@@ -11,7 +12,8 @@ import type {
     TypeFilter,
 } from "./types";
 
-// 1. Removed the REWARDS_API constant
+// 2. Create the proxy client
+const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
 
 export function useHistoryData() {
     // ── Filter state ──────────────────────────────────────────────────────────
@@ -39,20 +41,20 @@ export function useHistoryData() {
         setLoading(true);
         setError(null);
         try {
-            // 2. Point directly to the Next.js proxy route
-            const res = await fetchWithAuth(
-                `/api/proxy/rewards/history/me?page=${pageNum}&size=${PAGE_SIZE}`
+            // 3. Use the Axios client with relative paths
+            const res = await rewardsClient.get<PaginatedHistoryResponse>(
+                `/history/me?page=${pageNum}&size=${PAGE_SIZE}`
             );
 
-            if (!res.ok) {
-                throw new Error(`Failed to fetch history (${res.status})`);
-            }
-
-            const json: PaginatedHistoryResponse = await res.json();
-            setAllHistory(json.data);
-            setTotalItems(json.total_items);
+            // Axios automatically resolves JSON into the `.data` property
+            // and throws an error automatically if the status is not 2xx.
+            setAllHistory(res.data.data);
+            setTotalItems(res.data.total_items);
+            
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Something went wrong");
+            // 4. Handle Axios errors properly to extract backend details
+            const e = err as { response?: { data?: { detail?: string } }, message?: string };
+            setError(e.response?.data?.detail || e.message || "Something went wrong");
         } finally {
             setLoading(false);
         }

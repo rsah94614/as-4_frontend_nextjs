@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { fetchWithAuth } from "@/services/auth-service";
+// 1. Swap fetchWithAuth for your proxy-enabled client factory
+import { createAuthenticatedClient } from "@/lib/api-utils";
 import { Category } from "@/types/reward-types";
 
-const API = process.env.NEXT_PUBLIC_REWARDS_API_URL ?? "http://localhost:8006";
+// 2. Instantiate the proxy client right here (or import it if you have it exported globally)
+const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
 
 export function useRewardCategories() {
     const [categories, setCategories] = useState<Category[]>([]);
@@ -21,14 +23,16 @@ export function useRewardCategories() {
         setLoading(true);
         setError(null);
         try {
-            const r = await fetchWithAuth(`${API}/v1/rewards/categories?active_only=${activeOnly}`);
-            if (r.ok) {
-                setCategories(await r.json());
-            } else {
-                setError("Failed to load categories. Check your connection or permissions.");
-            }
+            // 3. Make the call using relative paths! No more double-proxy or CORS issues.
+            const res = await rewardsClient.get(`/categories?active_only=${activeOnly}`);
+            
+            // Axios automatically resolves JSON into the `.data` property
+            setCategories(res.data);
+            
         } catch (e: unknown) {
-            setError(e instanceof Error ? e.message : "An unexpected error occurred.");
+            // Type assertion for Axios errors to pull out clean backend error messages
+            const err = e as { response?: { data?: { detail?: string } }, message?: string };
+            setError(err.response?.data?.detail || err.message || "Failed to load categories.");
         } finally {
             setLoading(false);
         }
