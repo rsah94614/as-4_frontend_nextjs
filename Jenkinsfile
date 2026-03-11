@@ -18,14 +18,14 @@ pipeline {
         HOST_PORT = "3000"
 
         // --- Frontend API Routing Variables ---
-        NEXT_PUBLIC_API_URL = "https://test.aabhar.top/v1/auth"
-        NEXT_PUBLIC_RECOGNITION_API_URL = "https://test.aabhar.top/v1/recognitions"
-        NEXT_PUBLIC_EMPLOYEE_API_URL = "https://test.aabhar.top/v1/employees"
-        NEXT_PUBLIC_WALLET_API_URL = "https://test.aabhar.top/v1/wallets"
-        NEXT_PUBLIC_REWARDS_API_URL = "https://test.aabhar.top/v1/rewards"
-        NEXT_PUBLIC_ANALYTICS_API_URL = "https://test.aabhar.top/v1/analytics"
-        NEXT_PUBLIC_ORG_API_URL = "https://test.aabhar.top/v1/organizations"
-        NEXT_PUBLIC_ROLES_API_URL = "https://test.aabhar.top/v1/roles"
+        NEXT_PUBLIC_API_URL = "https://test.aabhar.top"
+        NEXT_PUBLIC_RECOGNITION_API_URL = "https://test.aabhar.top"
+        NEXT_PUBLIC_EMPLOYEE_API_URL = "https://test.aabhar.top"
+        NEXT_PUBLIC_WALLET_API_URL = "https://test.aabhar.top"
+        NEXT_PUBLIC_REWARDS_API_URL = "https://test.aabhar.top"
+        NEXT_PUBLIC_ANALYTICS_API_URL = "https://test.aabhar.top"
+        NEXT_PUBLIC_ORG_API_URL = "https://test.aabhar.top"
+        NEXT_PUBLIC_ROLES_API_URL = "https://test.aabhar.top"
     }
 
     options {
