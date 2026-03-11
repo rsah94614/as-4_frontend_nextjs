@@ -20,9 +20,9 @@ import type { ReviewResponse, PaginatedReviewResponse } from "@/types/review";
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const ENDPOINTS = {
-    REVIEWS_CREATE:     "/v1/reviews",
-    REVIEWS_LIST:       "/v1/reviews",
-    CREDIT_FROM_REVIEW: "/v1/wallets/credit-from-review",
+    REVIEWS_CREATE:     "/reviews",
+    REVIEWS_LIST:       "/reviews",
+    CREDIT_FROM_REVIEW: "/credit-from-review",
 } as const;
 
 export const MAX_REVIEWS_PER_MONTH = 5;

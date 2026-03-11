@@ -13,16 +13,53 @@ import { AuditTable } from "@/components/features/admin/audit-logs/AuditTable";
 import { AuditDetailModal } from "@/components/features/admin/audit-logs/AuditDetailModal";
 
 export default function AuditLogsPage() {
-  const {
-    logs,
-    pagination,
-    loading,
-    error,
-    filters,
-    setPage,
-    applyFilters,
-    clearFilters,
-  } = useAuditLogs();
+  const [logs, setLogs]             = useState<AuditLog[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState<string | null>(null);
+  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Filter state
+  const [page, setPage]                   = useState(1);
+  const [tableName, setTableName]         = useState("");
+  const [operationType, setOperationType] = useState<OperationType | "">("");
+  const [performedBy, setPerformedBy]     = useState("");
+  const [startDate, setStartDate]         = useState("");
+  const [endDate, setEndDate]             = useState("");
+
+  // Staged filter state (only applied on Search click)
+  const [staged, setStaged] = useState({ tableName: "", operationType: "" as OperationType | "", performedBy: "", startDate: "", endDate: "" });
+
+  const hasActiveFilters = !!(tableName || operationType || performedBy || startDate || endDate);
+
+  const fetchLogs = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params: Record<string, string | number> = { page, limit: 50 };
+      if (tableName)     params.table_name     = tableName;
+      if (operationType) params.operation_type = operationType;
+      if (performedBy)   params.performed_by   = performedBy;
+      if (startDate)     params.start_date     = new Date(startDate).toISOString();
+      if (endDate)       params.end_date       = new Date(endDate).toISOString();
+
+      const res = await orgApiClient.get<{ data: AuditLog[]; pagination: Pagination }>("/audit-logs", { params });
+      setLogs(res.data.data ?? []);
+      setPagination(res.data.pagination ?? null);
+     } catch (e: unknown) {
+        const s = (e as { response?: { status?: number } })?.response?.status;
+      setError(s === 401
+        ? "Your session has expired. Please log in again."
+        : "Could not load audit logs. Please check that the service is running."
+      );
+      setLogs([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, tableName, operationType, performedBy, startDate, endDate]);
+
+  useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);

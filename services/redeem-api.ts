@@ -13,8 +13,8 @@ import {
 const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
 const walletClient  = createAuthenticatedClient("/api/proxy/wallet");
 
-const REWARDS_PROXY = "/v1/rewards";
-const WALLET_PROXY  = "/v1/wallets";
+const REWARDS_PROXY = "";
+const WALLET_PROXY  = "";
 
 export async function fetchCatalog(page = 1, size = 20): Promise<PaginatedCatalogResponse> {
     try {

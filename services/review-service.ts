@@ -1,6 +1,11 @@
 // services/review-service.ts
 // Talks to the Recognition Service via Next.js proxy.
 // All requests routed through /api/proxy/recognition/* — no direct port in browser.
+//
+// The proxy maps /api/proxy/recognition/** → http://localhost:8005/**
+// The recognition service listens at /reviews and /review-categories directly.
+// FastAPI root_path="/v1/recognitions" is docs-only — not a URL prefix.
+// So paths here are just `/reviews`, `/review-categories`, etc.
 
 import { createAuthenticatedClient } from '@/lib/api-utils'
 import { uploadToStorage } from './cloudinary'
@@ -25,8 +30,10 @@ export type {
 export const reviewService = {
     async listReviews(page = 1, pageSize = 20): Promise<PaginatedReviewResponse> {
         try {
+            // FIX: was `/v1/reviews?...` → upstream hit /v1/reviews which doesn't exist.
+            // Service listens at /reviews directly (root_path is docs-only).
             const res = await recognitionClient.get<PaginatedReviewResponse>(
-                `/v1/reviews?page=${page}&page_size=${pageSize}`
+                `/reviews?page=${page}&page_size=${pageSize}`
             );
             return res.data;
         } catch (error: unknown) {
@@ -36,7 +43,7 @@ export const reviewService = {
 
     async getReview(reviewId: string): Promise<ReviewResponse> {
         try {
-            const res = await recognitionClient.get<ReviewResponse>(`/v1/reviews/${reviewId}`);
+            const res = await recognitionClient.get<ReviewResponse>(`/reviews/${reviewId}`);
             return res.data;
         } catch (error: unknown) {
             throw new Error(extractApiError(error, 'Failed to fetch review'));
@@ -45,7 +52,7 @@ export const reviewService = {
 
     async createReview(data: ReviewCreateRequest): Promise<ReviewResponse> {
         try {
-            const res = await recognitionClient.post<ReviewResponse>('/v1/reviews', data);
+            const res = await recognitionClient.post<ReviewResponse>('/reviews', data);
             return res.data;
         } catch (error: unknown) {
             throw new Error(extractApiError(error, 'Failed to create review'));
@@ -54,7 +61,7 @@ export const reviewService = {
 
     async updateReview(reviewId: string, data: ReviewUpdateRequest): Promise<ReviewResponse> {
         try {
-            const res = await recognitionClient.put<ReviewResponse>(`/v1/reviews/${reviewId}`, data);
+            const res = await recognitionClient.put<ReviewResponse>(`/reviews/${reviewId}`, data);
             return res.data;
         } catch (error: unknown) {
             throw new Error(extractApiError(error, 'Failed to update review'));

@@ -2,49 +2,352 @@
 
 import { useState, useMemo } from "react";
 import {
-  Search,
-  RefreshCw,
-  Loader2,
-  Flag,
-  X,
-  MessageSquare,
-  TrendingUp,
-  Calendar,
-} from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
-import { useAdminReviews } from "@/hooks/useAdminReviews";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+  Search, RefreshCw, ChevronLeft, ChevronRight,
+  Loader2, Flag, Star, X, ChevronDown, ChevronUp,
+  MessageSquare, TrendingUp, Calendar
+} from "lucide-react"
+import { createAuthenticatedClient } from "@/lib/api-utils"
+import Navbar from "@/components/layout/Navbar"
+import Sidebar from "@/components/layout/Sidebar"
 
-// Modular Components
-import { CalendarStrip, Stars } from "@/components/features/admin/reviews/UIHelpers";
-import { TeamSection } from "@/components/features/admin/reviews/TeamSection";
+// ─── Proxy clients ────────────────────────────────────────────────────────────
+const employeeClient    = createAuthenticatedClient("/api/proxy/employees")
+const recognitionClient = createAuthenticatedClient("/api/proxy/recognition")
 
-const FLAG_RATING = 2;
+const FLAG_RATING = 2
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface Employee {
+  employee_id: string
+  username: string
+  email: string
+  designation_name?: string
+  department_name?: string
+  manager_id?: string
+  is_active: boolean
+}
+
+interface Review {
+  review_id: string
+  reviewer_id: string
+  receiver_id: string
+  rating: number
+  comment: string
+  image_url?: string | null
+  video_url?: string | null
+  status_id: string
+  review_at: string
+  created_at: string
+  created_by: string
+  updated_at: string
+  updated_by: string
+}
+
+// ─── Calendar Strip ───────────────────────────────────────────────────────────
+function CalendarStrip({ month, year, onChange }: {
+  month: number; year: number; onChange: (m: number, y: number) => void
+}) {
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  const prev = () => month === 0 ? onChange(11, year - 1) : onChange(month - 1, year)
+  const next = () => month === 11 ? onChange(0, year + 1) : onChange(month + 1, year)
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <button onClick={prev} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition">
+        <ChevronLeft className="w-4 h-4" />
+      </button>
+      <div className="flex items-center gap-1 flex-wrap">
+        {MONTHS.map((m, i) => (
+          <button key={m} onClick={() => onChange(i, year)}
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${i === month ? "bg-purple-700 text-white shadow" : "text-slate-500 hover:bg-slate-100"
+              }`}>
+            {m}
+          </button>
+        ))}
+      </div>
+      <button onClick={next} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition">
+        <ChevronRight className="w-4 h-4" />
+      </button>
+      <div className="flex items-center gap-1 ml-1">
+        <button onClick={() => onChange(month, year - 1)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 text-xs font-bold transition">◂</button>
+        <span className="text-sm font-bold text-black px-1">{year}</span>
+        <button onClick={() => onChange(month, year + 1)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 text-xs font-bold transition">▸</button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Stars ────────────────────────────────────────────────────────────────────
+function Stars({ value, size = "sm" }: { value: number; size?: "sm" | "md" }) {
+  const cls = size === "md" ? "w-4 h-4" : "w-3 h-3"
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map(i => (
+        <Star key={i} className={`${cls} ${i <= value ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"}`} />
+      ))}
+    </div>
+  )
+}
+
+// ─── Single review row ────────────────────────────────────────────────────────
+function ReviewRow({ review, employees }: { review: Review; employees: Employee[] }) {
+  const flagged = review.rating <= FLAG_RATING
+  const reviewer = employees.find(e => e.employee_id === review.reviewer_id)
+
+  return (
+    <div className={`flex items-start gap-3 rounded-xl p-3 border ${flagged ? "bg-red-50/60 border-red-100" : "bg-white border-slate-100"
+      }`}>
+      <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${flagged ? "bg-red-100 text-red-600" : "bg-slate-100 text-slate-600"
+        }`}>
+        {(reviewer?.username ?? "?").charAt(0).toUpperCase()}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-semibold text-black">{reviewer?.username ?? "Unknown"}</span>
+          <Stars value={review.rating} />
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${flagged
+            ? "bg-red-100 text-red-600"
+            : review.rating >= 4
+              ? "bg-green-100 text-green-700"
+              : "bg-amber-100 text-amber-700"
+            }`}>{review.rating}/5</span>
+          {flagged && (
+            <span className="flex items-center gap-0.5 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
+              <Flag className="w-2.5 h-2.5" /> Flagged
+            </span>
+          )}
+          <span className="text-[10px] text-slate-400 ml-auto">
+            {new Date(review.review_at).toLocaleDateString("en-US", { day: "numeric", month: "short" })}
+          </span>
+        </div>
+        {review.comment && (
+          <p className="text-xs text-slate-600 mt-1 leading-relaxed line-clamp-2">{review.comment}</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Member section ───────────────────────────────────────────────────────────
+function MemberSection({ member, reviews, employees, isManager }: {
+  member: Employee; reviews: Review[]; employees: Employee[]; isManager: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const memberReviews = reviews.filter(r => r.receiver_id === member.employee_id)
+  if (memberReviews.length === 0) return null
+
+  const avg = memberReviews.reduce((s, r) => s + r.rating, 0) / memberReviews.length
+  const flagged = memberReviews.filter(r => r.rating <= FLAG_RATING).length
+
+  return (
+    <div className="space-y-2">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition text-left ${flagged > 0 ? "bg-red-50" : "bg-slate-50"
+          } hover:brightness-95`}
+      >
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${isManager ? "bg-purple-100 text-purple-700" : "bg-slate-200 text-slate-600"
+          }`}>
+          {member.username.charAt(0).toUpperCase()}
+        </div>
+        <span className="text-xs font-bold text-black flex-1 text-left">{member.username}</span>
+        {isManager && (
+          <span className="text-[9px] font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
+            Manager
+          </span>
+        )}
+        <Stars value={Math.round(avg)} />
+        <span className="text-xs font-semibold text-black w-8 text-right">{avg.toFixed(1)}</span>
+        {flagged > 0 && (
+          <span className="flex items-center gap-0.5 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full flex-shrink-0">
+            <Flag className="w-2.5 h-2.5" />{flagged}
+          </span>
+        )}
+        <span className="text-[10px] text-slate-400">({memberReviews.length})</span>
+        {open
+          ? <ChevronUp className="w-3 h-3 text-slate-400" />
+          : <ChevronDown className="w-3 h-3 text-slate-400" />
+        }
+      </button>
+      {open && (
+        <div className="space-y-1.5 pl-3">
+          {memberReviews.map(r => (
+            <ReviewRow key={r.review_id} review={r} employees={employees} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Team section ─────────────────────────────────────────────────────────────
+function TeamSection({ manager, members, reviews, employees, expanded, onToggle }: {
+  manager: Employee; members: Employee[]; reviews: Review[]
+  employees: Employee[]; expanded: boolean; onToggle: () => void
+}) {
+  const teamIds = useMemo(
+    () => new Set([manager.employee_id, ...members.map(m => m.employee_id)]),
+    [manager.employee_id, members]
+  )
+  const teamReviews = reviews.filter(r => teamIds.has(r.receiver_id))
+  const flaggedCount = teamReviews.filter(r => r.rating <= FLAG_RATING).length
+  const totalCount = teamReviews.length
+  const avg = totalCount > 0
+    ? teamReviews.reduce((s, r) => s + r.rating, 0) / totalCount
+    : 0
+
+  return (
+    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${flaggedCount > 0 ? "border-red-100" : "border-slate-100"
+      }`}>
+      <button onClick={onToggle} className="w-full flex items-center gap-3 p-4 hover:bg-slate-50/50 transition text-left">
+        <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold flex-shrink-0">
+          {manager.username.charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="font-bold text-black truncate">{manager.username}</p>
+            <span className="text-[10px] font-semibold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full flex-shrink-0">
+              Manager
+            </span>
+          </div>
+          <p className="text-xs text-slate-500">
+            {manager.department_name || "—"} · {members.length + 1} members
+          </p>
+        </div>
+        <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+          <span className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-full">
+            <MessageSquare className="w-3 h-3 text-slate-400" />{totalCount}
+          </span>
+          {avg > 0 && (
+            <span className="flex items-center gap-1.5 text-xs bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-full">
+              <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+              <span className="font-semibold text-black">{avg.toFixed(1)}</span>
+            </span>
+          )}
+          {flaggedCount > 0 && (
+            <span className="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 border border-red-100 px-2.5 py-1 rounded-full">
+              <Flag className="w-3 h-3" />{flaggedCount} flagged
+            </span>
+          )}
+        </div>
+        {expanded
+          ? <ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          : <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
+        }
+      </button>
+
+      {expanded && (
+        <div className="border-t border-slate-100 p-4 space-y-3">
+          {totalCount === 0 ? (
+            <p className="text-xs text-slate-400 text-center py-4">No reviews received this period.</p>
+          ) : (
+            [manager, ...members].map(member => (
+              <MemberSection
+                key={member.employee_id}
+                member={member}
+                reviews={reviews}
+                employees={employees}
+                isManager={member.employee_id === manager.employee_id}
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function AdminReviewsPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const {
-    employees,
-    reviews,
-    loading,
-    error,
-    month,
-    year,
-    setMonth,
-    setYear,
-    managers,
-    getTeam,
-    summary,
-    refresh,
-  } = useAdminReviews();
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [allReviews, setAllReviews] = useState<Review[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
+  const [showFlagged, setShowFlagged] = useState(false)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [month, setMonth] = useState(new Date().getMonth())
+  const [year, setYear] = useState(new Date().getFullYear())
 
-  const [search, setSearch] = useState("");
-  const [showFlagged, setShowFlagged] = useState(false);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  async function fetchAllEmployees(): Promise<Employee[]> {
+    const PAGE_SIZE = 100
+    const all: Employee[] = []
+    let page = 1
+    while (true) {
+      // FIX: was fetchWithAuth(`${EMPLOYEE_API}/v1/employees?...`) — direct call + wrong path
+      // Employee list route is /list. Now uses proxy client.
+      const res = await employeeClient.get<{ data: Employee[]; pagination: { total_pages: number } }>(
+        `/list?limit=${PAGE_SIZE}&page=${page}`
+      )
+      const rows = res.data.data ?? []
+      all.push(...rows)
+      if (page >= (res.data.pagination?.total_pages ?? 1)) break
+      page++
+    }
+    return all
+  }
+
+  async function fetchAllReviews(): Promise<Review[]> {
+    const PAGE_SIZE = 100
+    const all: Review[] = []
+    let page = 1
+    while (true) {
+      try {
+        // FIX: was fetchWithAuth(`${RECOGNITION_API}/v1/reviews?...`) — direct call
+        // Now uses proxy client.
+        const res = await recognitionClient.get<{ data: Review[]; pagination: { total_pages: number } }>(
+          `/reviews?page=${page}&page_size=${PAGE_SIZE}`
+        )
+        const rows = res.data.data ?? []
+        all.push(...rows)
+        if (page >= (res.data.pagination?.total_pages ?? 1)) break
+        page++
+      } catch (e) {
+        console.warn("Reviews fetch failed:", e)
+        break
+      }
+    }
+    return all
+  }
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [emps, revs] = await Promise.all([fetchAllEmployees(), fetchAllReviews()])
+      setEmployees(emps)
+      setAllReviews(revs)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  const reviews = useMemo(() =>
+    allReviews.filter(r => {
+      const d = new Date(r.review_at)
+      return d.getMonth() === month && d.getFullYear() === year
+    }),
+    [allReviews, month, year]
+  )
+
+  const { managers, getTeam } = useMemo(() => {
+    const managersSet = new Set(
+      employees.map(e => e.manager_id).filter((id): id is string => !!id)
+    )
+    const mgrs = employees.filter(e => managersSet.has(e.employee_id))
+    const get = (id: string) => employees.filter(e => e.manager_id === id)
+    return { managers: mgrs, getTeam: get }
+  }, [employees])
+
+  const totalReviews = reviews.length
+  const flaggedTotal = reviews.filter(r => r.rating <= FLAG_RATING).length
+  const overallAvg = totalReviews > 0
+    ? reviews.reduce((s, r) => s + r.rating, 0) / totalReviews
+    : 0
 
   const filteredManagers = useMemo(() => {
     const term = search.toLowerCase();

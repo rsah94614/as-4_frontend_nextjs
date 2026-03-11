@@ -35,11 +35,21 @@ export default function SeasonalMultipliersPage() {
     setTimeout(() => setFlash(null), 5000);
   };
 
-  const handleCreate = async (form: Record<string, unknown>) => {
-    const label = (form.label as string || "").trim();
-    const multiplierVal = form.multiplier as string;
-    const effectiveFrom = form.effective_from as string;
-    const effectiveTo = form.effective_to as string;
+  const fetchMultipliers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params: Record<string, string | number> = {};
+      if (filterQuarter) params.quarter = filterQuarter;
+      const res = await orgApiClient.get<Multiplier[]>("/seasonal-multipliers", { params });
+      setMultipliers(Array.isArray(res.data) ? res.data : []);
+    } catch (e: unknown) {
+      showFlash(apiError(e, "Could not load multipliers. Please refresh."), "error");
+} finally {
+      setLoading(false);
+    }
+  }, [filterQuarter]);
+
+  useEffect(() => { fetchMultipliers(); }, [fetchMultipliers]);
 
     if (!label) return showFlash("Please enter a label for this multiplier.", "error");
     if (!multiplierVal || isNaN(parseFloat(multiplierVal))) return showFlash("Please enter a valid multiplier value (e.g. 1.5).", "error");
@@ -59,10 +69,10 @@ export default function SeasonalMultipliersPage() {
       await createMultiplier(body);
       setShowCreate(false);
       showFlash("Multiplier created successfully.");
+      fetchMultipliers();
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      showFlash(detail ?? "Could not create multiplier. Dates may overlap.", "error");
-    } finally {
+      showFlash(apiError(e, "Could not create multiplier. Dates may overlap with an existing entry."), "error");
+} finally {
       setSaving(false);
     }
   };
@@ -94,10 +104,10 @@ export default function SeasonalMultipliersPage() {
       await updateMultiplier(id, body);
       setEditId(null);
       showFlash("Multiplier updated successfully.");
+      fetchMultipliers();
     } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      showFlash(detail ?? "Could not update. Check for overlaps.", "error");
-    } finally {
+      showFlash(apiError(e, "Could not update. Check for overlapping date ranges."), "error");
+} finally {
       setSaving(false);
     }
   };
@@ -107,11 +117,10 @@ export default function SeasonalMultipliersPage() {
       await deleteMultiplier(id);
       setDeleteTarget(null);
       showFlash("Multiplier deleted.");
-    } catch (e: unknown) {
-      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      setDeleteTarget(null);
-      showFlash(detail ?? "Only upcoming multipliers can be deleted.", "error");
-    }
+      fetchMultipliers();
+   } catch (e: unknown) {
+     setDeleteTarget(null);
+     showFlash(apiError(e, "Only upcoming multipliers can be deleted."), "error");}
   };
 
   const activeCount = multipliers.filter(m => getStatus(m) === "active").length;
