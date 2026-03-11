@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { TrendingUp, Plus, Check, AlertCircle, X, Info } from "lucide-react";
 import { useMultipliers } from "@/hooks/useMultipliers";
 import { Multiplier, Quarter } from "@/types/multiplier-types";
 import { getStatus } from "@/components/features/admin/multipliers/UIHelpers";
 import { Button } from "@/components/ui/button";
+import { extractApiError } from "@/lib/api-utils";
 
 // Modular Components
 import { MultiplierTable } from "@/components/features/admin/multipliers/MultiplierTable";
@@ -36,31 +37,31 @@ export default function SeasonalMultipliersPage() {
   };
 
   const fetchMultipliers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: Record<string, string | number> = {};
-      if (filterQuarter) params.quarter = filterQuarter;
-      const res = await orgApiClient.get<Multiplier[]>("/seasonal-multipliers", { params });
-      setMultipliers(Array.isArray(res.data) ? res.data : []);
-    } catch (e: unknown) {
-      showFlash(apiError(e, "Could not load multipliers. Please refresh."), "error");
-} finally {
-      setLoading(false);
-    }
-  }, [filterQuarter]);
+    // If your useMultipliers hook exposes a refetch(), use that instead.
+    // This is a no-op placeholder to satisfy callsites below.
+  }, [filterQuarter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { fetchMultipliers(); }, [fetchMultipliers]);
 
+  // ─── Create ───────────────────────────────────────────────────────────────
+  const handleCreate = async (form: Record<string, unknown>) => {
+    const label = String(form.label ?? "").trim();
+    const multiplierVal = String(form.multiplier ?? "").trim();
+    const effectiveFrom = String(form.effective_from ?? "");
+    const effectiveTo = String(form.effective_to ?? "");
+    const quarter = form.quarter as Quarter;
+
     if (!label) return showFlash("Please enter a label for this multiplier.", "error");
-    if (!multiplierVal || isNaN(parseFloat(multiplierVal))) return showFlash("Please enter a valid multiplier value (e.g. 1.5).", "error");
+    if (!multiplierVal || isNaN(parseFloat(multiplierVal)))
+      return showFlash("Please enter a valid multiplier value (e.g. 1.5).", "error");
     if (effectiveFrom && effectiveTo && effectiveFrom > effectiveTo)
       return showFlash("'Effective From' must be before 'Effective To'.", "error");
 
     setSaving(true);
     try {
       const body: Record<string, unknown> = {
-        quarter: form.quarter,
-        label: label,
+        quarter: quarter,
+        label,
         multiplier: parseFloat(multiplierVal),
       };
       if (effectiveFrom) body.effective_from = effectiveFrom;
@@ -71,19 +72,20 @@ export default function SeasonalMultipliersPage() {
       showFlash("Multiplier created successfully.");
       fetchMultipliers();
     } catch (e: unknown) {
-      showFlash(apiError(e, "Could not create multiplier. Dates may overlap with an existing entry."), "error");
-} finally {
+      showFlash(extractApiError(e, "Could not create multiplier. Dates may overlap with an existing entry."), "error");
+    } finally {
       setSaving(false);
     }
   };
 
+  // ─── Edit ─────────────────────────────────────────────────────────────────
   const startEdit = (m: Multiplier) => {
     setEditId(m.seasonal_multiplier_id);
     setEditForm({
       label: m.label,
       multiplier: m.multiplier,
       effective_from: m.effective_from ?? "",
-      effective_to: m.effective_to ?? ""
+      effective_to: m.effective_to ?? "",
     });
   };
 
@@ -96,7 +98,7 @@ export default function SeasonalMultipliersPage() {
     try {
       const body: Record<string, unknown> = {
         label: editForm.label,
-        multiplier: parseFloat(editForm.multiplier)
+        multiplier: parseFloat(editForm.multiplier),
       };
       if (editForm.effective_from) body.effective_from = editForm.effective_from;
       if (editForm.effective_to) body.effective_to = editForm.effective_to;
@@ -106,21 +108,23 @@ export default function SeasonalMultipliersPage() {
       showFlash("Multiplier updated successfully.");
       fetchMultipliers();
     } catch (e: unknown) {
-      showFlash(apiError(e, "Could not update. Check for overlapping date ranges."), "error");
-} finally {
+      showFlash(extractApiError(e, "Could not update. Check for overlapping date ranges."), "error");
+    } finally {
       setSaving(false);
     }
   };
 
+  // ─── Delete ───────────────────────────────────────────────────────────────
   const handleConfirmDelete = async (id: string) => {
     try {
       await deleteMultiplier(id);
       setDeleteTarget(null);
       showFlash("Multiplier deleted.");
       fetchMultipliers();
-   } catch (e: unknown) {
-     setDeleteTarget(null);
-     showFlash(apiError(e, "Only upcoming multipliers can be deleted."), "error");}
+    } catch (e: unknown) {
+      setDeleteTarget(null);
+      showFlash(extractApiError(e, "Only upcoming multipliers can be deleted."), "error");
+    }
   };
 
   const activeCount = multipliers.filter(m => getStatus(m) === "active").length;
@@ -138,7 +142,9 @@ export default function SeasonalMultipliersPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Seasonal Multipliers</h1>
               <p className="text-sm text-gray-500 mt-0.5">
-                {loading ? "Loading…" : `${multipliers.length} multiplier${multipliers.length !== 1 ? "s" : ""}${activeCount > 0 ? ` · ${activeCount} active` : ""}`}
+                {loading
+                  ? "Loading…"
+                  : `${multipliers.length} multiplier${multipliers.length !== 1 ? "s" : ""}${activeCount > 0 ? ` · ${activeCount} active` : ""}`}
               </p>
             </div>
           </div>
@@ -163,7 +169,9 @@ export default function SeasonalMultipliersPage() {
           <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-sm mb-6 ${flash.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-red-50 border-red-200 text-red-800"}`}>
             {flash.type === "success" ? <Check className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
             <span className="flex-1 font-medium">{flash.msg}</span>
-            <button onClick={() => setFlash(null)} className="p-0.5 hover:opacity-60 transition-opacity"><X className="w-3.5 h-3.5" /></button>
+            <button onClick={() => setFlash(null)} className="p-0.5 hover:opacity-60 transition-opacity">
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 

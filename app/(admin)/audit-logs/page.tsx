@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ClipboardList, Filter, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuditLogs } from "@/hooks/useAuditLogs";
-import { AuditLog } from "@/types/audit-types";
+import { AuditLog, AuditFilters, OperationType } from "@/types/audit-types";
+import { PaginationMeta } from "@/types/pagination";
+import orgApiClient from "@/services/org-api-client";
 
 // Modular Components from global features directory
 import { PageShell, InfoBanner } from "@/components/features/admin/audit-logs/UIHelpers";
@@ -12,9 +13,12 @@ import { AuditFilterPanel } from "@/components/features/admin/audit-logs/AuditFi
 import { AuditTable } from "@/components/features/admin/audit-logs/AuditTable";
 import { AuditDetailModal } from "@/components/features/admin/audit-logs/AuditDetailModal";
 
+// Raw shape returned by the API — mapped to PaginationMeta before storing
+interface ApiPagination { total: number; page: number; limit: number; }
+
 export default function AuditLogsPage() {
   const [logs, setLogs]             = useState<AuditLog[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
@@ -28,10 +32,24 @@ export default function AuditLogsPage() {
   const [startDate, setStartDate]         = useState("");
   const [endDate, setEndDate]             = useState("");
 
-  // Staged filter state (only applied on Search click)
-  const [staged, setStaged] = useState({ tableName: "", operationType: "" as OperationType | "", performedBy: "", startDate: "", endDate: "" });
-
   const hasActiveFilters = !!(tableName || operationType || performedBy || startDate || endDate);
+
+  // Active filters object (passed to child components that expect a filters shape)
+  const filters: AuditFilters = { tableName, operationType, performedBy, startDate, endDate };
+
+  const applyFilters = (next: AuditFilters) => {
+    setTableName(next.tableName);
+    setOperationType(next.operationType);
+    setPerformedBy(next.performedBy);
+    setStartDate(next.startDate);
+    setEndDate(next.endDate);
+    setPage(1);
+    setFiltersOpen(false);
+  };
+
+  const clearFilters = () => {
+    applyFilters({ tableName: "", operationType: "", performedBy: "", startDate: "", endDate: "" });
+  };
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -44,11 +62,19 @@ export default function AuditLogsPage() {
       if (startDate)     params.start_date     = new Date(startDate).toISOString();
       if (endDate)       params.end_date       = new Date(endDate).toISOString();
 
-      const res = await orgApiClient.get<{ data: AuditLog[]; pagination: Pagination }>("/audit-logs", { params });
+      const res = await orgApiClient.get<{ data: AuditLog[]; pagination: ApiPagination }>("/audit-logs", { params });
       setLogs(res.data.data ?? []);
-      setPagination(res.data.pagination ?? null);
-     } catch (e: unknown) {
-        const s = (e as { response?: { status?: number } })?.response?.status;
+      const p = res.data.pagination;
+      setPagination(p ? {
+        current_page:  p.page,
+        per_page:      p.limit,
+        total:         p.total,
+        total_pages:   Math.max(1, Math.ceil(p.total / p.limit)),
+        has_next:      p.page < Math.ceil(p.total / p.limit),
+        has_previous:  p.page > 1,
+      } : null);
+    } catch (e: unknown) {
+      const s = (e as { response?: { status?: number } })?.response?.status;
       setError(s === 401
         ? "Your session has expired. Please log in again."
         : "Could not load audit logs. Please check that the service is running."
@@ -60,17 +86,6 @@ export default function AuditLogsPage() {
   }, [page, tableName, operationType, performedBy, startDate, endDate]);
 
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
-
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
-
-  const hasActiveFilters = !!(
-    filters.tableName ||
-    filters.operationType ||
-    filters.performedBy ||
-    filters.startDate ||
-    filters.endDate
-  );
 
   return (
     <PageShell>
@@ -122,29 +137,29 @@ export default function AuditLogsPage() {
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <span className="text-xs text-gray-400 font-medium">Active filters:</span>
-          {filters.tableName && (
+          {tableName && (
             <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 rounded-full font-medium">
-              Table: {filters.tableName}
+              Table: {tableName}
             </span>
           )}
-          {filters.operationType && (
+          {operationType && (
             <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 rounded-full font-medium">
-              Action: {filters.operationType}
+              Action: {operationType}
             </span>
           )}
-          {filters.performedBy && (
+          {performedBy && (
             <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 rounded-full font-medium">
-              By: {filters.performedBy.slice(0, 8)}…
+              By: {performedBy.slice(0, 8)}…
             </span>
           )}
-          {filters.startDate && (
+          {startDate && (
             <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 rounded-full font-medium">
-              From: {new Date(filters.startDate).toLocaleDateString()}
+              From: {new Date(startDate).toLocaleDateString()}
             </span>
           )}
-          {filters.endDate && (
+          {endDate && (
             <span className="text-xs bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 rounded-full font-medium">
-              To: {new Date(filters.endDate).toLocaleDateString()}
+              To: {new Date(endDate).toLocaleDateString()}
             </span>
           )}
         </div>

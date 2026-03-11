@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react"
 import {
   Search, RefreshCw, ChevronLeft, ChevronRight, Loader2,
   Users, ChevronDown, ChevronUp, Star, Award, Calendar, Filter, X,
@@ -769,9 +769,11 @@ export default function AdminTeamsPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+ }, [])
 
-  useEffect(() => { fetchAll() }, [fetchAll])
+ const refresh = fetchAll
+
+ useEffect(() => { fetchAll() }, [fetchAll])
 
   const filteredReviews = useMemo(() =>
     allReviews.filter(r => {
