@@ -1,16 +1,9 @@
 // services/department-service.ts
 //
-// Talks to Organization Service (port 8007) at:
-//   GET  /v1/org/departments            → paginated list
-//   GET  /v1/org/departments/:id        → detail
-//   POST /v1/org/departments            → create
-//   PUT  /v1/org/departments/:id        → update
-//   GET  /v1/org/department-types       → all types (for dropdowns)
-//
-// Uses orgApiClient which already has baseURL = http://localhost:8007/v1/org
-// and Bearer token handling.
+// All requests routed through Next.js proxy (/api/proxy/org/*)
+// — no direct microservice URL exposed to the browser.
 
-import orgApiClient from "./org-api-client";
+import { createAuthenticatedClient } from "@/lib/api-utils";
 import {
     DepartmentType,
     Department,
@@ -20,13 +13,16 @@ import {
     UpdateDepartmentPayload
 } from "@/types/department-types";
 
+// Create the proxied client pointing to your Next.js route
+const orgClient = createAuthenticatedClient("/api/proxy/org");
+
 // ─────────────────────────────────────────────
 // Service
 // ─────────────────────────────────────────────
 
 export const departmentService = {
     /**
-     * GET /v1/org/departments
+     * GET /api/proxy/org/departments
      * Paginated list with optional search filter.
      */
     async list(params?: {
@@ -35,7 +31,7 @@ export const departmentService = {
         search?: string;
         is_active?: boolean;
     }): Promise<DepartmentListResponse> {
-        const res = await orgApiClient.get<DepartmentListResponse>("/departments", {
+        const res = await orgClient.get<DepartmentListResponse>("/departments", {
             params: {
                 page: params?.page ?? 1,
                 limit: params?.limit ?? 20,
@@ -47,31 +43,31 @@ export const departmentService = {
     },
 
     /**
-     * GET /v1/org/departments/:id
+     * GET /api/proxy/org/departments/:id
      */
     async getById(departmentId: string): Promise<DepartmentDetail> {
-        const res = await orgApiClient.get<DepartmentDetail>(
+        const res = await orgClient.get<DepartmentDetail>(
             `/departments/${departmentId}`
         );
         return res.data;
     },
 
     /**
-     * POST /v1/org/departments
+     * POST /api/proxy/org/departments
      */
     async create(payload: CreateDepartmentPayload): Promise<Department> {
-        const res = await orgApiClient.post<Department>("/departments", payload);
+        const res = await orgClient.post<Department>("/departments", payload);
         return res.data;
     },
 
     /**
-     * PUT /v1/org/departments/:id
+     * PUT /api/proxy/org/departments/:id
      */
     async update(
         departmentId: string,
         payload: UpdateDepartmentPayload
     ): Promise<Department> {
-        const res = await orgApiClient.put<Department>(
+        const res = await orgClient.put<Department>(
             `/departments/${departmentId}`,
             payload
         );
@@ -79,13 +75,12 @@ export const departmentService = {
     },
 
     /**
-     * GET /v1/org/department-types
+     * GET /api/proxy/org/department-types
      * Fetches all department types for the create/edit dropdown.
-     * Backend returns a plain array (list[DepartmentTypeResponse]).
      */
     async listTypes(): Promise<DepartmentType[]> {
         try {
-            const res = await orgApiClient.get<
+            const res = await orgClient.get<
                 { data: DepartmentType[] } | DepartmentType[]
             >("/department-types");
             // Handle both plain array and wrapped { data: [] } responses

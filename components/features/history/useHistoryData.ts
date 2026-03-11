@@ -11,7 +11,7 @@ import type {
     TypeFilter,
 } from "./types";
 
-const REWARDS_API = process.env.NEXT_PUBLIC_REWARDS_API_URL;
+// 1. Removed the REWARDS_API constant
 
 export function useHistoryData() {
     // ── Filter state ──────────────────────────────────────────────────────────
@@ -39,8 +39,9 @@ export function useHistoryData() {
         setLoading(true);
         setError(null);
         try {
+            // 2. Point directly to the Next.js proxy route
             const res = await fetchWithAuth(
-                `${REWARDS_API}/v1/rewards/history/me?page=${pageNum}&size=${PAGE_SIZE}`
+                `/api/proxy/rewards/history/me?page=${pageNum}&size=${PAGE_SIZE}`
             );
 
             if (!res.ok) {
