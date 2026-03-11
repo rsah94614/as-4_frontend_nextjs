@@ -14,10 +14,21 @@ import { Gift, Ticket, RefreshCw, ChevronLeft, ChevronRight, ArrowDownCircle } f
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { auth } from "@/services/auth-service";
 import { extractApiError } from "@/lib/api-utils";
+import { Button } from "@/components/ui/button";
 
 // ─── Proxy client ─────────────────────────────────────────────────────────────
 
 const walletClient = createAuthenticatedClient("/api/proxy/wallet");
+
+// ─── Date helpers ─────────────────────────────────────────────────────────────
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+}
 
 // ─── Exact API response types (mirrors backend schemas.py) ───────────────────
 
@@ -404,7 +415,8 @@ export default function Wallet() {
             )}
           </div>
 
-          <button
+          {/* FIX: was <button ...> ... </Button> — mismatched tags */}
+          <Button
             onClick={() => {
               if (wallet?.wallet_id) {
                 loadTransactions(wallet.wallet_id, txnPage);

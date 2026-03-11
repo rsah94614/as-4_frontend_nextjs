@@ -1,8 +1,7 @@
-import { User, Mail, Calendar, Briefcase, Building2, UserCircle, Tag, Award, Gift, Clock, Trophy, Target, TrendingUp } from "lucide-react";
+import { User, Mail, Calendar, Briefcase, Building2, UserCircle, Tag, Award, Gift, Clock, Trophy, Target } from "lucide-react";
 import type { EmployeeDetail } from "@/types/profile-types";
 import { useEffect, useState } from "react";
 import { fetchDashboardLeaderboard } from "@/services/analytics-service";
-import type { LeaderboardEntryResponse } from "@/types/dashboard-types";
 
 interface ProfileSectionsProps {
     profile: EmployeeDetail;

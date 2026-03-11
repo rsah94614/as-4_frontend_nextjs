@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { TrendingUp, AlertTriangle, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,12 +20,17 @@ const RANGES: { value: Range; label: string }[] = [
     { value: "1y", label: "1 Year"   },
 ];
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
+// Pre-computed stable skeleton bar heights — avoids Math.random() during render
+const SKELETON_HEIGHTS = [58, 72, 45, 83, 61, 37, 76, 52, 68, 41, 87, 55];
+
+type TrendState =
+    | { status: "loading" }
+    | { status: "error" }
+    | { status: "ok"; data: TrendPoint[] };
 
 function TrendSkeleton() {
     return (
         <Card>
-            
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <Skeleton className="h-4 w-40 rounded-lg" />
@@ -34,9 +39,9 @@ function TrendSkeleton() {
             </CardHeader>
             <CardContent>
                 <div className="flex items-end gap-1.5 h-[320px] pt-4">
-                    {Array.from({ length: 12 }).map((_, i) => (
+                    {SKELETON_HEIGHTS.map((height, i) => (
                         <div key={i} className="flex-1 flex flex-col justify-end gap-1">
-                            <Skeleton className="w-full rounded-t-sm animate-pulse" style={{ height: `${30 + Math.random() * 60}%` }} />
+                            <Skeleton className="w-full rounded-t-sm animate-pulse" style={{ height: `${height}%` }} />
                         </div>
                     ))}
                 </div>
@@ -45,30 +50,23 @@ function TrendSkeleton() {
     );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
 export default function AdminRecognitionTrendSection() {
-    const [range, setRange]     = useState<Range>("6m");
-    const [data, setData]       = useState<TrendPoint[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError]     = useState(false);
+    const [range, setRange] = useState<Range>("6m");
+    const [trendState, setTrendState] = useState<TrendState>({ status: "loading" });
 
-    const load = async (r: Range) => {
-        setLoading(true);
-        setError(false);
-        const res = await fetchRecognitionTrend(r);
-        if (res) setData(res.data);
-        else setError(true);
-        setLoading(false);
-    };
+    // The effect depends on `range` directly. It never calls setState itself —
+    // all setState calls happen inside the .then() callback.
+    const load = useCallback((r: Range) => {
+        fetchRecognitionTrend(r).then((res) => {
+            setTrendState(res ? { status: "ok", data: res.data } : { status: "error" });
+        });
+    }, []);
 
-    useEffect(() => { load(range); }, [range]);
+    useEffect(() => {
+        load(range);
+    }, [range, load]);
 
-    const handleRangeChange = (r: Range) => {
-        setRange(r);
-    };
-
-    if (loading) return <TrendSkeleton />;
+    if (trendState.status === "loading") return <TrendSkeleton />;
 
     return (
         <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -82,7 +80,7 @@ export default function AdminRecognitionTrendSection() {
                         {RANGES.map(r => (
                             <button
                                 key={r.value}
-                                onClick={() => handleRangeChange(r.value)}
+                                onClick={() => setRange(r.value)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                                     range === r.value
                                         ? "bg-white text-gray-900 shadow-sm"
@@ -96,7 +94,7 @@ export default function AdminRecognitionTrendSection() {
                 </div>
             </CardHeader>
             <CardContent>
-                {error ? (
+                {trendState.status === "error" ? (
                     <div className="flex flex-col items-center justify-center h-[320px] gap-4 text-center">
                         <div className="p-3 rounded-xl bg-red-50 border border-red-200">
                             <AlertTriangle className="w-6 h-6 text-red-500" />
@@ -109,7 +107,7 @@ export default function AdminRecognitionTrendSection() {
                     </div>
                 ) : (
                     <ResponsiveContainer width="100%" height={320}>
-                        <AreaChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                        <AreaChart data={trendState.data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="gradGiven" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%"  stopColor="#7c3aed" stopOpacity={0.2} />

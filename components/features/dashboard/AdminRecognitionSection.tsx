@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,9 @@ import { ArrowUpRight, ArrowDownRight, Trophy, Users, UserCheck, AlertTriangle, 
 import { fetchRecognitionUsers, fetchRecognitionTeams } from "@/services/analytics-service";
 import type { UserRecognition, TeamRecognition } from "@/types/dashboard-types";
 
-type Range      = "week" | "month" | "quarter" | "year";
-type Layout     = "user" | "team";
-type UserSort   = "givers" | "receivers";
+type Range    = "week" | "month" | "quarter" | "year";
+type Layout   = "user" | "team";
+type UserSort = "givers" | "receivers";
 
 const TEAM_COLORS = ["#7c3aed", "#3b82f6", "#14b8a6", "#f97316", "#ec4899", "#6366f1", "#10b981", "#f59e0b"];
 
@@ -22,8 +22,6 @@ const DATE_RANGES: { value: Range; label: string }[] = [
     { value: "quarter", label: "Last 3 Months" },
     { value: "year",    label: "This Year"     },
 ];
-
-// ─── Skeletons ────────────────────────────────────────────────────────────────
 
 function AggSkeleton() {
     return (
@@ -60,8 +58,6 @@ function TableSkeleton() {
     );
 }
 
-// ─── UserTable ────────────────────────────────────────────────────────────────
-
 function UserTable({ users, sort, onSortChange }: {
     users: UserRecognition[];
     sort: UserSort;
@@ -82,15 +78,9 @@ function UserTable({ users, sort, onSortChange }: {
                 <div className="flex items-center gap-1.5 p-1 bg-muted rounded-xl">
                     <span className="text-[11px] text-muted-foreground font-medium px-1.5">Sort by</span>
                     {sortOptions.map(({ value, label, icon: Icon, activeClass }) => (
-                        <button
-                            key={value}
-                            onClick={() => onSortChange(value)}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                sort === value ? activeClass : "text-muted-foreground hover:text-gray-700 hover:bg-background/60"
-                            }`}
-                        >
-                            <Icon className="w-3.5 h-3.5" />
-                            {label}
+                        <button key={value} onClick={() => onSortChange(value)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${sort === value ? activeClass : "text-muted-foreground hover:text-gray-700 hover:bg-background/60"}`}>
+                            <Icon className="w-3.5 h-3.5" />{label}
                         </button>
                     ))}
                 </div>
@@ -120,15 +110,11 @@ function UserTable({ users, sort, onSortChange }: {
                         </div>
                     </div>
                 ))}
-                {sorted.length === 0 && (
-                    <p className="text-center text-sm text-muted-foreground py-8">No data for this period.</p>
-                )}
+                {sorted.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No data for this period.</p>}
             </div>
         </div>
     );
 }
-
-// ─── TeamBreakdown ────────────────────────────────────────────────────────────
 
 function TeamBreakdown({ teams }: { teams: TeamRecognition[] }) {
     return (
@@ -152,7 +138,7 @@ function TeamBreakdown({ teams }: { teams: TeamRecognition[] }) {
                         </div>
                         <div className="h-1.5 rounded-full bg-muted overflow-hidden flex">
                             <div className="h-full rounded-l-full transition-all" style={{ width: `${givenPct}%`, backgroundColor: color + "cc" }} />
-                            <div className="h-full rounded-r-full flex-1"          style={{ backgroundColor: color + "33" }} />
+                            <div className="h-full rounded-r-full flex-1" style={{ backgroundColor: color + "33" }} />
                         </div>
                         <div className="flex justify-between text-[10px] text-muted-foreground">
                             <span>{givenPct}% given</span>
@@ -161,49 +147,48 @@ function TeamBreakdown({ teams }: { teams: TeamRecognition[] }) {
                     </div>
                 );
             })}
-            {teams.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground py-8">No data for this period.</p>
-            )}
+            {teams.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No data for this period.</p>}
         </div>
     );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+type RecognitionState = {
+    users: UserRecognition[];
+    teams: TeamRecognition[];
+    loading: boolean;
+    error: boolean;
+};
 
 export default function AdminRecognitionSection() {
     const [range,    setRange]    = useState<Range>("month");
     const [layout,   setLayout]   = useState<Layout>("user");
     const [userSort, setUserSort] = useState<UserSort>("givers");
 
-    const [users,        setUsers]        = useState<UserRecognition[]>([]);
-    const [teams,        setTeams]        = useState<TeamRecognition[]>([]);
-    const [loadingUsers, setLoadingUsers] = useState(true);
-    const [loadingTeams, setLoadingTeams] = useState(true);
-    const [error,        setError]        = useState(false);
+    const [recog, setRecog] = useState<RecognitionState>({
+        users: [], teams: [], loading: true, error: false,
+    });
 
-    const loadUsers = async (r: Range) => {
-        setLoadingUsers(true);
-        const res = await fetchRecognitionUsers(r);
-        if (res) setUsers(res.items);
-        else setError(true);
-        setLoadingUsers(false);
-    };
-
-    const loadTeams = async (r: Range) => {
-        setLoadingTeams(true);
-        const res = await fetchRecognitionTeams(r);
-        if (res) setTeams(res.items);
-        else setError(true);
-        setLoadingTeams(false);
-    };
+    // loadAll only touches state in .then() — never synchronously.
+    // The effect calls loadAll(); the effect body itself has zero setState calls.
+    const loadAll = useCallback((r: Range) => {
+        Promise.all([
+            fetchRecognitionUsers(r),
+            fetchRecognitionTeams(r),
+        ]).then(([usersRes, teamsRes]) => {
+            setRecog({
+                users:   usersRes ? usersRes.items : [],
+                teams:   teamsRes ? teamsRes.items : [],
+                loading: false,
+                error:   !usersRes || !teamsRes,
+            });
+        });
+    }, []);
 
     useEffect(() => {
-        setError(false);
-        loadUsers(range);
-        loadTeams(range);
-    }, [range]);
+        loadAll(range);
+    }, [range, loadAll]);
 
-    const loading = loadingUsers || loadingTeams;
+    const { users, teams, loading, error } = recog;
 
     const totalGiven    = users.reduce((s, u) => s + u.given,    0);
     const totalReceived = users.reduce((s, u) => s + u.received, 0);
@@ -247,8 +232,6 @@ export default function AdminRecognitionSection() {
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
-
-                {/* Agg cards */}
                 {loading ? <AggSkeleton /> : (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         {aggCards.map(({ label, value, icon: Icon, color }, i) => (
@@ -265,33 +248,23 @@ export default function AdminRecognitionSection() {
                     </div>
                 )}
 
-                {/* Error */}
                 {error && !loading && (
                     <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
                         <div className="p-3 rounded-xl bg-red-50 border border-red-200">
                             <AlertTriangle className="w-6 h-6 text-red-500" />
                         </div>
                         <p className="text-sm text-gray-500">Could not load recognition data.</p>
-                        <Button size="sm" onClick={() => { loadUsers(range); loadTeams(range); }} className="gap-2 font-bold rounded-lg bg-gray-900 text-white hover:bg-gray-700 px-4">
+                        <Button size="sm" onClick={() => loadAll(range)} className="gap-2 font-bold rounded-lg bg-gray-900 text-white hover:bg-gray-700 px-4">
                             <RefreshCw className="w-3.5 h-3.5" />
                             Retry
                         </Button>
                     </div>
                 )}
 
-                {/* Table / breakdown */}
                 {!error && (
                     <>
-                        {layout === "user" && (
-                            loadingUsers
-                                ? <TableSkeleton />
-                                : <UserTable users={users} sort={userSort} onSortChange={setUserSort} />
-                        )}
-                        {layout === "team" && (
-                            loadingTeams
-                                ? <TableSkeleton />
-                                : <TeamBreakdown teams={teams} />
-                        )}
+                        {layout === "user"  && (loading ? <TableSkeleton /> : <UserTable users={users} sort={userSort} onSortChange={setUserSort} />)}
+                        {layout === "team"  && (loading ? <TableSkeleton /> : <TeamBreakdown teams={teams} />)}
                     </>
                 )}
             </CardContent>
