@@ -1,7 +1,6 @@
 import { createAuthenticatedClient } from "@/lib/api-utils";
 
-const walletApiClient = createAuthenticatedClient(
-    process.env.NEXT_PUBLIC_WALLET_API_URL || "http://localhost:8004"
-);
+// All requests routed through Next.js proxy (/api/proxy/wallet/*)
+const walletApiClient = createAuthenticatedClient("/api/proxy/wallet");
 
 export default walletApiClient;

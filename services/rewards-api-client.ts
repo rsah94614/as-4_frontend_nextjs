@@ -1,7 +1,6 @@
 import { createAuthenticatedClient } from "@/lib/api-utils";
 
-const rewardsApiClient = createAuthenticatedClient(
-    process.env.NEXT_PUBLIC_REWARDS_API_URL || "http://localhost:8006"
-);
+// All requests routed through Next.js proxy (/api/proxy/rewards/*)
+const rewardsApiClient = createAuthenticatedClient("/api/proxy/rewards");
 
 export default rewardsApiClient;

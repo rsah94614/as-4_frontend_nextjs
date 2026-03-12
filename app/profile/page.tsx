@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthProvider";
-import { fetchWithAuth } from "@/services/auth-service";
+
+// 1. Swap fetchWithAuth for your dedicated employee service
+import { employeeService } from "@/services/employee-service"; 
+
 import ProtectedRoute from "@/components/features/auth/ProtectedRoute";
 import ProfileSkeleton from "@/components/features/profile/ProfileSkeleton";
 import ProfileHeader from "@/components/features/profile/ProfileHeader";
@@ -13,7 +16,7 @@ import { ArrowLeft } from "lucide-react";
 import type { EmployeeDetail } from "@/types/profile-types";
 import { Button } from "@/components/ui/button";
 
-const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL;
+// 2. Removed the EMPLOYEE_API constant completely
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -34,12 +37,15 @@ export default function ProfilePage() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetchWithAuth(
-                `${EMPLOYEE_API}/v1/employees/${employeeId}`
-            );
-            if (!res.ok) throw new Error(`Failed to load profile (${res.status})`);
-            const data: EmployeeDetail = await res.json();
-            setProfile(data);
+            const data = await employeeService.getEmployee(employeeId);
+            
+            // FIX: Assert the type to match the UI's expectation. 
+            // We ensure 'roles' is an array to satisfy the strict UI types.
+            setProfile({
+                ...data,
+                roles: data.roles || []
+            } as unknown as EmployeeDetail);
+            
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Something went wrong");
         } finally {
