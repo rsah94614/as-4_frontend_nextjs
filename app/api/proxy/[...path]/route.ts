@@ -39,14 +39,17 @@ import { NextRequest, NextResponse } from "next/server";
 // ─── Service registry ─────────────────────────────────────────────────────────
 
 const SERVICE_MAP: Record<string, string> = {
-    auth:        (process.env.AUTH_SERVICE_URL        || "http://localhost:8001") + "/v1/auth",
-    roles: (process.env.ROLES_SERVICE_URL || "http://localhost:8002"),
-    employees:   (process.env.EMPLOYEES_SERVICE_URL   || "http://localhost:8003") + "/v1/employees",
-    wallet: (process.env.WALLET_SERVICE_URL || "http://localhost:8004"),
-    recognition: (process.env.RECOGNITION_SERVICE_URL || "http://localhost:8005"),
-    rewards:     (process.env.REWARDS_SERVICE_URL     || "http://localhost:8006") + "/v1/rewards",
-    org:         (process.env.ORG_SERVICE_URL         || "http://localhost:8007") + "/v1/organizations",
-    analytics:   (process.env.ANALYTICS_SERVICE_URL  || "http://localhost:8008") + "/v1/analytics",
+    auth:        (process.env.NEXT_PUBLIC_API_URL           ) + "/v1/auth",
+    // FIX: Added + "/v1/roles"
+    roles:       (process.env.NEXT_PUBLIC_ROLES_API_URL     ) + "/v1/roles",
+    employees:   (process.env.NEXT_PUBLIC_EMPLOYEE_API_URL  ) + "/v1/employees",
+    // FIX: Added + "/v1/wallets"
+    wallet:      (process.env.NEXT_PUBLIC_WALLET_API_URL    ) + "/v1/wallets",
+    // FIX: Added + "/v1/recognitions"
+    recognition: (process.env.NEXT_PUBLIC_RECOGNITION_API_URL) + "/v1/recognitions",
+    rewards:     (process.env.NEXT_PUBLIC_REWARDS_API_URL   ) + "/v1/rewards",
+    org:         (process.env.NEXT_PUBLIC_ORG_API_URL       ) + "/v1/organizations",
+    analytics:   (process.env.NEXT_PUBLIC_ANALYTICS_API_URL ) + "/v1/analytics",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

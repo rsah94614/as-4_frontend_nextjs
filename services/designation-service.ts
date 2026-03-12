@@ -1,15 +1,9 @@
 // services/designation-service.ts
 //
-// Talks to Organization Service (port 8007) at:
-//   GET  /v1/org/designations       → paginated list
-//   GET  /v1/org/designations/:id   → detail
-//   POST /v1/org/designations       → create
-//   PUT  /v1/org/designations/:id   → update
-//
-// Uses orgApiClient which already has baseURL = http://localhost:8007/v1/org
-// and Bearer token handling.
+// All requests routed through Next.js proxy (/api/proxy/org/*)
+// — no direct microservice URL exposed to the browser.
 
-import orgApiClient from "./org-api-client";
+import { createAuthenticatedClient } from "@/lib/api-utils";
 
 import {
     Designation,
@@ -19,20 +13,23 @@ import {
     UpdateDesignationPayload
 } from "@/types/designation-types";
 
+// Create the proxied client pointing to your Next.js route
+const orgClient = createAuthenticatedClient("/api/proxy/org");
+
 // ─────────────────────────────────────────────
 // Service
 // ─────────────────────────────────────────────
 
 export const designationService = {
     /**
-     * GET /v1/org/designations
+     * GET /api/proxy/org/designations
      */
     async list(params?: {
         page?: number;
         limit?: number;
         is_active?: boolean;
     }): Promise<DesignationListResponse> {
-        const res = await orgApiClient.get<DesignationListResponse>("/designations", {
+        const res = await orgClient.get<DesignationListResponse>("/designations", {
             params: {
                 page: params?.page ?? 1,
                 limit: params?.limit ?? 20,
@@ -43,31 +40,31 @@ export const designationService = {
     },
 
     /**
-     * GET /v1/org/designations/:id
+     * GET /api/proxy/org/designations/:id
      */
     async getById(designationId: string): Promise<DesignationDetail> {
-        const res = await orgApiClient.get<DesignationDetail>(
+        const res = await orgClient.get<DesignationDetail>(
             `/designations/${designationId}`
         );
         return res.data;
     },
 
     /**
-     * POST /v1/org/designations
+     * POST /api/proxy/org/designations
      */
     async create(payload: CreateDesignationPayload): Promise<Designation> {
-        const res = await orgApiClient.post<Designation>("/designations", payload);
+        const res = await orgClient.post<Designation>("/designations", payload);
         return res.data;
     },
 
     /**
-     * PUT /v1/org/designations/:id
+     * PUT /api/proxy/org/designations/:id
      */
     async update(
         designationId: string,
         payload: UpdateDesignationPayload
     ): Promise<DesignationDetail> {
-        const res = await orgApiClient.put<DesignationDetail>(
+        const res = await orgClient.put<DesignationDetail>(
             `/designations/${designationId}`,
             payload
         );

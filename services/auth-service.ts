@@ -1,5 +1,6 @@
 // services/auth-service.ts - Authentication utility functions
 
+import axios from 'axios' // 1. Import bare axios to bypass interceptors!
 import axiosClient from './api-client'
 
 /**
@@ -12,11 +13,6 @@ const STORAGE_KEYS = {
     TOKEN_EXPIRES_AT: 'token_expires_at',
 } as const
 
-/**
- * API configuration
- * Auth endpoints route through the Next.js proxy — no direct port in browser.
- * axiosClient base is already /api/proxy/auth — these are relative paths only.
- */
 export const AUTH_ENDPOINTS = {
     LOGIN:           '/login',
     LOGOUT:          '/logout',
@@ -25,6 +21,9 @@ export const AUTH_ENDPOINTS = {
     FORGOT_PASSWORD: '/forgot-password',
     RESET_PASSWORD:  '/reset-password',
 } as const
+
+// 2. Create a module-level lock for concurrency
+let refreshPromise: Promise<boolean> | null = null;
 
 /**
  * Token management functions
@@ -80,36 +79,44 @@ export const auth = {
         const refreshToken = auth.getRefreshToken()
         if (!refreshToken) return false
 
-        try {
-            // FIX: Use axiosClient (NOT bare axios) so the request routes through
-            // the Next.js proxy at /api/proxy/auth/refresh.
-            //
-            // Previously this used bare axios.post(AUTH_ENDPOINTS.REFRESH, ...)
-            // which resolved '/refresh' as a relative URL against the current
-            // page origin (e.g. http://localhost:3000/refresh) — bypassing the
-            // proxy entirely. The request would 404, refreshed = false, tokens
-            // would be cleared, and the user got redirected to /login mid-session.
-            //
-            // axiosClient has baseURL = /api/proxy/auth, so this correctly
-            // becomes /api/proxy/auth/refresh → proxied to the auth microservice.
-            const response = await axiosClient.post(
-                AUTH_ENDPOINTS.REFRESH,
-                { refresh_token: refreshToken },
-            )
-
-            const data = response.data
-            auth.setTokens(
-                data.access_token,
-                data.refresh_token,
-                data.employee,
-                data.expires_in
-            )
-            return true
-        } catch (error) {
-            console.error('Token refresh error:', error)
-            auth.clearTokens()
-            return false
+        // 3. The Concurrency Lock: If a refresh is already happening, just wait for it!
+        if (refreshPromise) {
+            return refreshPromise;
         }
+
+        // 4. Create the refresh promise
+        refreshPromise = (async () => {
+            try {
+                // 5. Use BARE axios, NOT axiosClient, to avoid infinite 401 loops!
+                // We must provide the full proxy path since bare axios doesn't have the baseURL.
+                const response = await axios.post(
+                    '/api/proxy/auth/refresh', 
+                    { refresh_token: refreshToken },
+                    { headers: { "Content-Type": "application/json" } }
+                )
+
+                const data = response.data
+                auth.setTokens(
+                    data.access_token,
+                    data.refresh_token,
+                    data.employee,
+                    data.expires_in
+                )
+                return true
+            } catch (error) {
+                console.error('Token refresh error:', error)
+                auth.clearTokens()
+                
+                // If refresh completely fails, gracefully kick the user to login
+                if (typeof window !== 'undefined') window.location.href = '/login';
+                return false
+            } finally {
+                // 6. Release the lock when done
+                refreshPromise = null;
+            }
+        })();
+
+        return refreshPromise;
     },
 
     logout: async (): Promise<void> => {
