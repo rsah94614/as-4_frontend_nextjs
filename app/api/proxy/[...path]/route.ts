@@ -46,7 +46,7 @@ const SERVICE_MAP: Record<string, string> = {
     recognition: (process.env.RECOGNITION_SERVICE_URL || "http://localhost:8005"),
     rewards:     (process.env.REWARDS_SERVICE_URL     || "http://localhost:8006") + "/v1/rewards",
     org:         (process.env.ORG_SERVICE_URL         || "http://localhost:8007") + "/v1/organizations",
-    analytics:   (process.env.ANALYTICS_SERVICE_URL  || "http://localhost:8008") + "/v1/analytics",
+    analytics:   (process.env.NEXT_PUBLIC_ANALYTICS_API_URL  || "http://localhost:8008") + "/v1/analytics",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
