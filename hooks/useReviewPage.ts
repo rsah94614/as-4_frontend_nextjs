@@ -7,10 +7,7 @@ import { getTeamMembersForUI, type TeamMember } from "@/services/employee-servic
 import { requireAuthenticatedUserId } from "@/lib/api-utils"
 import type { Review, ReviewCategory, ViewMode, ToastState, SubmittedReviewData } from "@/types/review-types"
 
-// FIX: Use proxy client instead of direct API URL.
 const recognitionClient = createAuthenticatedClient("/api/proxy/recognition")
-
-// ─── Hook Return Type ─────────────────────────────────────────────────────────
 
 export interface ReviewPageState {
     myId: string
@@ -27,8 +24,6 @@ export interface ReviewPageState {
     editingReview: Review | null
     receiverId: string
     setReceiverId: (id: string) => void
-    rating: number
-    setRating: (r: number) => void
     categoryIds: string[]
     setCategoryIds: React.Dispatch<React.SetStateAction<string[]>>
     comment: string
@@ -50,40 +45,37 @@ export interface ReviewPageState {
     backToList: () => void
     handleSubmit: (e: React.FormEvent) => Promise<void>
     loadReviews: (pg?: number) => Promise<void>
-    submittedData: SubmittedReviewData | null  // FIX: was missing from interface
-    startNewReview: () => void                 // FIX: was missing from interface
+    submittedData: SubmittedReviewData | null
+    startNewReview: () => void
 }
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useReviewPage(): ReviewPageState {
     const [myId] = useState<string>(() => {
         try { return requireAuthenticatedUserId() } catch { return "" }
     })
 
-    const [reviews, setReviews] = useState<Review[]>([])
-    const [categories, setCategories] = useState<ReviewCategory[]>([])
+    const [reviews, setReviews]         = useState<Review[]>([])
+    const [categories, setCategories]   = useState<ReviewCategory[]>([])
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
-    const [teamLeader, setTeamLeader] = useState<TeamMember | null>(null)
+    const [teamLeader, setTeamLeader]   = useState<TeamMember | null>(null)
     const [totalReviews, setTotalReviews] = useState(0)
-    const [page, setPage] = useState(1)
-    const [totalPages, setTotalPages] = useState(1)
+    const [page, setPage]               = useState(1)
+    const [totalPages, setTotalPages]   = useState(1)
     const [loadingData, setLoadingData] = useState(true)
-    const [dataError, setDataError] = useState<string | null>(null)
+    const [dataError, setDataError]     = useState<string | null>(null)
 
-    const [view, setView] = useState<ViewMode>("compose")
-    const [editingReview, setEditingReview] = useState<Review | null>(null)
+    const [view, setView]                     = useState<ViewMode>("compose")
+    const [editingReview, setEditingReview]   = useState<Review | null>(null)
 
     const [receiverId, setReceiverId] = useState("")
-    const [rating, setRating] = useState(0)
     const [categoryIds, setCategoryIds] = useState<string[]>([])
-    const [comment, setComment] = useState("")
-    const [files, setFiles] = useState<File[]>([])
+    const [comment, setComment]         = useState("")
+    const [files, setFiles]             = useState<File[]>([])
     const fileRef = useRef<HTMLInputElement>(null)
 
-    const [submitting, setSubmitting] = useState(false)
-    const [toast, setToast] = useState<ToastState | null>(null)
-    const [listTab, setListTab] = useState<"all" | "given" | "received">("all")
+    const [submitting, setSubmitting]     = useState(false)
+    const [toast, setToast]               = useState<ToastState | null>(null)
+    const [listTab, setListTab]           = useState<"all" | "given" | "received">("all")
     const [submittedData, setSubmittedData] = useState<SubmittedReviewData | null>(null)
 
     const monthStart = new Date()
@@ -140,7 +132,6 @@ export function useReviewPage(): ReviewPageState {
 
     function openCompose() {
         setReceiverId("")
-        setRating(0)
         setCategoryIds([])
         setComment("")
         setFiles([])
@@ -155,7 +146,6 @@ export function useReviewPage(): ReviewPageState {
 
     function openEdit(r: Review) {
         setReceiverId(r.receiver_id)
-        setRating(r.rating)
         setCategoryIds(r.category_ids ?? (r.category_id ? [r.category_id] : []))
         setComment(r.comment)
         setFiles([])
@@ -183,10 +173,6 @@ export function useReviewPage(): ReviewPageState {
             setToast({ msg: "Select at least one recognition category.", kind: "error" })
             return
         }
-        if (rating === 0) {
-            setToast({ msg: "Give a star rating.", kind: "error" })
-            return
-        }
         if (comment.trim().length < 10) {
             setToast({ msg: "Comment needs at least 10 characters.", kind: "error" })
             return
@@ -203,15 +189,13 @@ export function useReviewPage(): ReviewPageState {
 
             if (view === "edit" && editingReview) {
                 const patch: Record<string, unknown> = {}
-                if (rating !== editingReview.rating) patch.rating = rating
                 if (
                     categoryIds.sort().join() !==
                     (editingReview.category_ids ?? [editingReview.category_id])
                         .filter(Boolean)
                         .sort()
                         .join()
-                )
-                    patch.category_ids = categoryIds
+                ) patch.category_ids = categoryIds
                 if (comment.trim() !== editingReview.comment) patch.comment = comment.trim()
                 if (imageUrl) patch.image_url = imageUrl
                 if (videoUrl) patch.video_url = videoUrl
@@ -225,30 +209,25 @@ export function useReviewPage(): ReviewPageState {
                 setToast({ msg: "Review updated. Points recalculated automatically.", kind: "success" })
             } else {
                 await recognitionClient.post(`/reviews`, {
-                    receiver_id: receiverId,
-                    rating,
+                    receiver_id:  receiverId,
                     category_ids: categoryIds,
-                    comment: comment.trim(),
+                    comment:      comment.trim(),
                     ...(imageUrl && { image_url: imageUrl }),
                     ...(videoUrl && { video_url: videoUrl }),
                 })
-                setToast({ msg: "Review submitted! Points credited to their wallet. 🎉", kind: "success" })
 
-                // FIX: derive receiverName and selectedCatNames from current state
-                // before clearing form — these were referenced but never defined
-                const receiverName =
-                    allReceivers.find((r) => r.id === receiverId)?.name ?? "Team Member"
+                const receiverName = allReceivers.find((r) => r.id === receiverId)?.name ?? "Team Member"
                 const selectedCatNames = categoryIds
                     .map((id) => categories.find((c) => c.category_id === id)?.category_name)
                     .filter((n): n is string => !!n)
 
                 setSubmittedData({
                     receiverName,
-                    rating,
                     categoryNames: selectedCatNames,
                     comment: comment.trim(),
                     submittedAt: new Date().toISOString(),
                 })
+                setToast({ msg: "Review submitted! Points credited to their wallet. 🎉", kind: "success" })
             }
 
             await loadReviews(1)
@@ -268,7 +247,7 @@ export function useReviewPage(): ReviewPageState {
     }
 
     const filteredReviews = reviews.filter((r) => {
-        if (listTab === "given") return r.reviewer_id === myId
+        if (listTab === "given")    return r.reviewer_id === myId
         if (listTab === "received") return r.receiver_id === myId
         return true
     })
@@ -288,8 +267,6 @@ export function useReviewPage(): ReviewPageState {
         editingReview,
         receiverId,
         setReceiverId,
-        rating,
-        setRating,
         categoryIds,
         setCategoryIds,
         comment,

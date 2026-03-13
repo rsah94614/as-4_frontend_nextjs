@@ -1,10 +1,8 @@
 "use client"
 
-import { Check } from "lucide-react"
+import { Zap } from "lucide-react"
 import type { ReviewCategory } from "@/types/review-types"
 import { cn } from "@/lib/utils"
-
-// ─── Category Picker ──────────────────────────────────────────────────────────
 
 interface CategoryPickerProps {
     categories: ReviewCategory[]
@@ -31,33 +29,43 @@ function CategoryCard({
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "relative flex flex-col gap-1.5 rounded-2xl border-2 px-4 py-3.5 text-left transition-all duration-200 w-full",
+                "relative flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-150 w-full group",
                 disabled && !selected && "opacity-40 cursor-not-allowed",
                 selected
-                    ? "border-purple-500 bg-purple-50/60 shadow-sm"
-                    : "border-gray-100 bg-white hover:border-purple-200 hover:shadow-sm"
+                    ? "border-[#E31837] bg-[#E31837]/5 shadow-sm"
+                    : "border-gray-200 bg-white hover:border-[#004C8F]/30 hover:bg-gray-50"
             )}
         >
-            <span
-                className={cn(
-                    "text-sm font-semibold leading-snug",
-                    selected ? "text-purple-700" : "text-gray-800"
+            {/* Left accent bar */}
+            <div className={cn(
+                "w-0.5 self-stretch rounded-full transition-all",
+                selected ? "bg-[#E31837]" : "bg-gray-200 group-hover:bg-gray-300"
+            )} />
+
+            <div className="flex-1 min-w-0">
+                <span className={cn(
+                    "text-sm font-semibold leading-snug block",
+                    selected ? "text-[#004C8F]" : "text-gray-700"
+                )}>
+                    {cat.category_name}
+                </span>
+                {cat.description && (
+                    <span className="text-[11px] text-gray-400 leading-snug mt-0.5 block truncate">
+                        {cat.description}
+                    </span>
                 )}
-            >
-                {cat.category_name}
+            </div>
+
+            {/* Multiplier badge */}
+            <span className={cn(
+                "inline-flex items-center gap-0.5 text-[10px] font-black rounded px-2 py-1 shrink-0",
+                selected
+                    ? "bg-[#E31837] text-white"
+                    : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
+            )}>
+                <Zap size={8} />
+                ×{cat.multiplier}
             </span>
-
-            {cat.description && (
-                <span className="text-[11px] text-gray-400 leading-snug line-clamp-1">
-                    {cat.description}
-                </span>
-            )}
-
-            {selected && (
-                <span className="absolute top-2.5 right-2.5 w-5 h-5 bg-purple-700 rounded-full flex items-center justify-center">
-                    <Check size={11} className="text-white" strokeWidth={3} />
-                </span>
-            )}
         </button>
     )
 }

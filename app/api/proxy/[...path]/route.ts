@@ -40,12 +40,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 const SERVICE_MAP: Record<string, string> = {
     auth:        (process.env.NEXT_PUBLIC_API_URL           ) + "/v1/auth",
-    // FIX: Added + "/v1/roles"
     roles:       (process.env.NEXT_PUBLIC_ROLES_API_URL     ) + "/v1/roles",
     employees:   (process.env.NEXT_PUBLIC_EMPLOYEE_API_URL  ) + "/v1/employees",
-    // FIX: Added + "/v1/wallets"
     wallet:      (process.env.NEXT_PUBLIC_WALLET_API_URL    ) + "/v1/wallets",
-    // FIX: Added + "/v1/recognitions"
     recognition: (process.env.NEXT_PUBLIC_RECOGNITION_API_URL) + "/v1/recognitions",
     rewards:     (process.env.NEXT_PUBLIC_REWARDS_API_URL   ) + "/v1/rewards",
     org:         (process.env.NEXT_PUBLIC_ORG_API_URL       ) + "/v1/organizations",
