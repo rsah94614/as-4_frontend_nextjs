@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { createAuthenticatedClient } from "@/lib/api-utils"
 import { uploadToStorage } from "@/services/cloudinary"
 import { getTeamMembersForUI, type TeamMember } from "@/services/employee-service"
@@ -8,6 +8,8 @@ import { requireAuthenticatedUserId } from "@/lib/api-utils"
 import type { Review, ReviewCategory, ViewMode, ToastState, SubmittedReviewData } from "@/types/review-types"
 
 const recognitionClient = createAuthenticatedClient("/api/proxy/recognition")
+
+const ITEMS_PER_PAGE = 6
 
 export interface ReviewPageState {
     myId: string
@@ -39,6 +41,9 @@ export interface ReviewPageState {
     givenThisMonth: number
     reviewedThisMonth: Set<string>
     filteredReviews: Review[]
+    filteredPage: number
+    filteredTotalPages: number
+    setFilteredPage: (pg: number) => void
     allReceivers: (TeamMember & { isManager: boolean })[]
     openCompose: () => void
     openEdit: (r: Review) => void
@@ -75,8 +80,15 @@ export function useReviewPage(): ReviewPageState {
 
     const [submitting, setSubmitting]     = useState(false)
     const [toast, setToast]               = useState<ToastState | null>(null)
-    const [listTab, setListTab]           = useState<"all" | "given" | "received">("all")
+    const [listTab, setListTabRaw]        = useState<"all" | "given" | "received">("all")
     const [submittedData, setSubmittedData] = useState<SubmittedReviewData | null>(null)
+    const [filteredPage, setFilteredPage]   = useState(1)
+
+    // Reset filtered page when tab changes
+    const setListTab = useCallback((tab: "all" | "given" | "received") => {
+        setListTabRaw(tab)
+        setFilteredPage(1)
+    }, [])
 
     const monthStart = new Date()
     monthStart.setDate(1)
@@ -102,6 +114,7 @@ export function useReviewPage(): ReviewPageState {
             setTotalReviews(res.data.pagination.total)
             setTotalPages(res.data.pagination.total_pages)
             setPage(pg)
+            setFilteredPage(1)
         } catch {
             setDataError("Failed to load reviews. Check your connection.")
         }
@@ -246,11 +259,22 @@ export function useReviewPage(): ReviewPageState {
         }
     }
 
-    const filteredReviews = reviews.filter((r) => {
-        if (listTab === "given")    return r.reviewer_id === myId
-        if (listTab === "received") return r.receiver_id === myId
-        return true
-    })
+    // Filter reviews by tab
+    const allFilteredReviews = useMemo(() => {
+        return reviews.filter((r) => {
+            if (listTab === "given")    return r.reviewer_id === myId
+            if (listTab === "received") return r.receiver_id === myId
+            return true
+        })
+    }, [reviews, listTab, myId])
+
+    // Client-side pagination of filtered results
+    const filteredTotalPages = Math.max(1, Math.ceil(allFilteredReviews.length / ITEMS_PER_PAGE))
+    const safePage = Math.min(filteredPage, filteredTotalPages)
+    const filteredReviews = allFilteredReviews.slice(
+        (safePage - 1) * ITEMS_PER_PAGE,
+        safePage * ITEMS_PER_PAGE
+    )
 
     return {
         myId,
@@ -282,6 +306,9 @@ export function useReviewPage(): ReviewPageState {
         givenThisMonth,
         reviewedThisMonth,
         filteredReviews,
+        filteredPage: safePage,
+        filteredTotalPages,
+        setFilteredPage,
         allReceivers,
         openCompose,
         openEdit,

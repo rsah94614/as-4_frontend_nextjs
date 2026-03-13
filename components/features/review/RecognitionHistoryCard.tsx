@@ -4,6 +4,8 @@ import { Tag, Clock, Image as ImageIcon, Video, Zap, ArrowUpRight, ArrowDownLeft
 import type { Review, ReviewCategory } from "@/types/review-types"
 import { fmtDate } from "@/lib/review-utils"
 import { cn } from "@/lib/utils"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 interface ReviewCardProps {
     review: Review
@@ -23,36 +25,39 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
     const rawPts = review.raw_points != null ? review.raw_points : null
 
     return (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:border-gray-200 hover:shadow-md transition-all duration-200 group">
+        <Card className="rounded-xl overflow-hidden hover:border-gray-300 hover:shadow-md transition-all duration-200 group border-gray-200">
             {/* Top accent stripe */}
             <div className={cn(
                 "h-0.5 w-full",
                 isMine ? "bg-[#004C8F]" : "bg-[#E31837]"
             )} />
 
-            <div className="p-5">
+            <CardContent className="p-4 sm:p-5">
                 {/* Header row */}
                 <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
                         {/* Direction badge */}
-                        <span className={cn(
-                            "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded",
-                            isMine
-                                ? "bg-[#004C8F]/8 text-[#004C8F]"
-                                : "bg-[#E31837]/8 text-[#E31837]"
-                        )}>
+                        <Badge 
+                            variant="secondary" 
+                            className={cn(
+                                "gap-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md border-0 pointer-events-none",
+                                isMine
+                                    ? "bg-[#004C8F]/8 text-[#004C8F] hover:bg-[#004C8F]/8"
+                                    : "bg-[#E31837]/8 text-[#E31837] hover:bg-[#E31837]/8"
+                            )}
+                        >
                             {isMine
-                                ? <ArrowUpRight size={10} />
-                                : <ArrowDownLeft size={10} />
+                                ? <ArrowUpRight size={12} strokeWidth={2.5} />
+                                : <ArrowDownLeft size={12} strokeWidth={2.5} />
                             }
                             {isMine ? "Given" : "Received"}
-                        </span>
+                        </Badge>
                     </div>
 
                     {rawPts !== null && (
-                        <div className="flex items-center gap-1 bg-amber-50 border border-amber-200/60 rounded px-2 py-1">
-                            <Zap size={10} className="text-amber-500" />
-                            <span className="text-[11px] font-black text-amber-600 tabular-nums">
+                        <div className="flex items-center gap-1 bg-[#004C8F]/5 border border-[#004C8F]/15 rounded-md px-2 py-1">
+                            <Zap size={10} className="text-[#004C8F]" />
+                            <span className="text-[11px] font-black text-[#004C8F] tabular-nums">
                                 {rawPts % 1 === 0 ? rawPts : rawPts.toFixed(2)} pts
                             </span>
                         </div>
@@ -63,13 +68,14 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
                 {catCodes.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-3">
                         {catCodes.map((code) => (
-                            <span
+                            <Badge
                                 key={code}
-                                className="inline-flex items-center gap-1 text-[10px] font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded"
+                                variant="secondary"
+                                className="gap-1 text-[10px] font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md hover:bg-gray-100 border-0 pointer-events-none"
                             >
-                                <Tag size={8} />
+                                <Tag size={10} />
                                 {code}
-                            </span>
+                            </Badge>
                         ))}
                     </div>
                 )}
@@ -110,7 +116,7 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
                         {fmtDate(review.review_at)}
                     </span>
                 </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     )
 }

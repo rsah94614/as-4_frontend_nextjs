@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   LayoutGrid, FileText, Trophy, Clock,
-  Wallet, SlidersHorizontal, LogOut, X, Bug,
+  Wallet, SlidersHorizontal, LogOut, Bug,
 } from "lucide-react";
 
 const navItems = [
