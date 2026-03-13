@@ -3,6 +3,8 @@
 import { Zap } from "lucide-react"
 import type { ReviewCategory } from "@/types/review-types"
 import { cn } from "@/lib/utils"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 interface CategoryPickerProps {
     categories: ReviewCategory[]
@@ -29,43 +31,52 @@ function CategoryCard({
             onClick={onClick}
             disabled={disabled}
             className={cn(
-                "relative flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-150 w-full group",
-                disabled && !selected && "opacity-40 cursor-not-allowed",
-                selected
-                    ? "border-[#E31837] bg-[#E31837]/5 shadow-sm"
-                    : "border-gray-200 bg-white hover:border-[#004C8F]/30 hover:bg-gray-50"
+                "w-full text-left group outline-none",
+                disabled && !selected && "opacity-40 cursor-not-allowed"
             )}
         >
-            {/* Left accent bar */}
-            <div className={cn(
-                "w-0.5 self-stretch rounded-full transition-all",
-                selected ? "bg-[#E31837]" : "bg-gray-200 group-hover:bg-gray-300"
-            )} />
-
-            <div className="flex-1 min-w-0">
-                <span className={cn(
-                    "text-sm font-semibold leading-snug block",
-                    selected ? "text-[#004C8F]" : "text-gray-700"
-                )}>
-                    {cat.category_name}
-                </span>
-                {cat.description && (
-                    <span className="text-[11px] text-gray-400 leading-snug mt-0.5 block truncate">
-                        {cat.description}
-                    </span>
-                )}
-            </div>
-
-            {/* Multiplier badge */}
-            <span className={cn(
-                "inline-flex items-center gap-0.5 text-[10px] font-black rounded px-2 py-1 shrink-0",
+            <Card className={cn(
+                "relative !flex-row items-center !gap-0 overflow-hidden transition-all duration-150 shadow-sm !py-0 h-[52px]",
                 selected
-                    ? "bg-[#E31837] text-white"
-                    : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
+                    ? "border-[#E31837] bg-[#E31837]/5"
+                    : "border-gray-200 bg-white group-hover:border-[#004C8F]/30 group-hover:bg-gray-50"
             )}>
-                <Zap size={8} />
-                ×{cat.multiplier}
-            </span>
+                {/* Left accent bar */}
+                <div className={cn(
+                    "absolute left-0 top-0 bottom-0 w-0.5 transition-all",
+                    selected ? "bg-[#E31837]" : "bg-transparent group-hover:bg-gray-200"
+                )} />
+
+                <div className="flex-1 min-w-0 py-1.5 pl-4 pr-2">
+                    <span className={cn(
+                        "text-xs font-semibold leading-tight block",
+                        selected ? "text-[#004C8F]" : "text-gray-700"
+                    )}>
+                        {cat.category_name}
+                    </span>
+                    {cat.description && (
+                        <span className="text-[10px] text-gray-400 leading-tight mt-0.5 block truncate">
+                            {cat.description}
+                        </span>
+                    )}
+                </div>
+
+                {/* Multiplier badge */}
+                <div className="pr-3 shrink-0">
+                    <Badge 
+                        variant="secondary"
+                        className={cn(
+                            "gap-0.5 text-[9px] font-black rounded-md px-1.5 py-0.5 border-0 hover:bg-transparent transition-colors",
+                            selected
+                                ? "bg-[#E31837] text-white hover:bg-[#E31837]/90"
+                                : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
+                        )}
+                    >
+                        <Zap size={9} strokeWidth={2.5} />
+                        ×{cat.multiplier}
+                    </Badge>
+                </div>
+            </Card>
         </button>
     )
 }

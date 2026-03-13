@@ -1,9 +1,12 @@
 "use client"
 
-import { Loader2, AlertCircle, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react"
-import ReviewCard from "./ReviewCard"
+import { AlertCircle, MessageSquare, ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
+import ReviewCard from "./RecognitionHistoryCard"
+import { ReviewListSkeleton } from "./ReviewPageSkeleton"
 import type { Review, ReviewCategory } from "@/types/review-types"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface ReviewListSectionProps {
     filteredReviews: Review[]
@@ -25,6 +28,23 @@ const TABS = [
     { key: "received", label: "Received" },
 ] as const
 
+// Helper to generate pagination window
+function getPaginationArray(current: number, total: number) {
+    if (total <= 7) {
+        return Array.from({ length: total }, (_, i) => i + 1)
+    }
+
+    if (current <= 4) {
+        return [1, 2, 3, 4, 5, "...", total]
+    }
+
+    if (current >= total - 3) {
+        return [1, "...", total - 4, total - 3, total - 2, total - 1, total]
+    }
+
+    return [1, "...", current - 1, current, current + 1, "...", total]
+}
+
 export default function ReviewListSection({
     filteredReviews,
     myId,
@@ -38,49 +58,51 @@ export default function ReviewListSection({
     onCompose,
     onLoadReviews,
 }: ReviewListSectionProps) {
+    const paginationItems = getPaginationArray(page, totalPages)
+
     return (
         <div>
-            <div className="flex items-center gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
-                {TABS.map((tab) => (
-                    <button
-                        key={tab.key}
-                        onClick={() => setListTab(tab.key)}
-                        className={cn(
-                            "px-4 py-2 rounded-md text-sm font-semibold transition-all duration-150",
-                            listTab === tab.key
-                                ? "bg-white text-[#004C8F] shadow-sm"
-                                : "text-gray-500 hover:text-gray-700"
-                        )}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+            <Tabs 
+                value={listTab} 
+                onValueChange={(val) => setListTab(val as "all" | "given" | "received")}
+                className="mb-6 sm:mb-8"
+            >
+                <TabsList className="bg-gray-100 p-1 h-auto">
+                    {TABS.map((tab) => (
+                        <TabsTrigger 
+                            key={tab.key} 
+                            value={tab.key}
+                            className={cn(
+                                "px-4 sm:px-5 py-2 rounded-md text-xs sm:text-sm font-semibold transition-all duration-150 data-[state=active]:bg-white data-[state=active]:text-[#004C8F] data-[state=active]:shadow-sm text-gray-500 hover:text-gray-900"
+                            )}
+                        >
+                            {tab.label}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+            </Tabs>
 
-            {loadingData && (
-                <div className="flex justify-center py-24">
-                    <Loader2 className="w-7 h-7 animate-spin text-[#004C8F]/30" />
-                </div>
-            )}
+            {loadingData && <ReviewListSkeleton />}
 
             {!loadingData && dataError && (
-                <div className="flex flex-col items-center py-16 gap-3 bg-white rounded-xl border border-gray-100">
+                <div className="flex flex-col items-center py-16 gap-3 bg-white rounded-xl border border-gray-100 shadow-sm">
                     <div className="w-12 h-12 rounded-full bg-[#E31837]/10 flex items-center justify-center">
                         <AlertCircle className="w-6 h-6 text-[#E31837]" />
                     </div>
                     <p className="text-sm text-gray-600">{dataError}</p>
-                    <button
+                    <Button 
+                        variant="link" 
                         onClick={() => onLoadReviews(1)}
-                        className="text-sm text-[#004C8F] font-semibold underline underline-offset-2 hover:text-[#E31837] transition-colors"
+                        className="text-[#004C8F] font-semibold hover:text-[#E31837]"
                     >
                         Retry
-                    </button>
+                    </Button>
                 </div>
             )}
 
             {!loadingData && !dataError && filteredReviews.length === 0 && (
-                <div className="flex flex-col items-center py-16 gap-4 bg-white rounded-xl border border-gray-100">
-                    <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+                <div className="flex flex-col items-center py-16 gap-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <div className="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center">
                         <MessageSquare className="w-6 h-6 text-gray-300" strokeWidth={1.5} />
                     </div>
                     <div className="text-center">
@@ -91,17 +113,17 @@ export default function ReviewListSection({
                                     ? "No recognitions received yet"
                                     : "No recognitions yet"}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-gray-400 mt-1 mb-4">
                             {listTab !== "received" && "Start by recognising a teammate's contribution."}
                         </p>
                     </div>
                     {listTab !== "received" && (
-                        <button
+                        <Button 
                             onClick={onCompose}
-                            className="text-sm text-white font-semibold bg-[#E31837] hover:bg-[#c41230] px-5 py-2.5 rounded-lg transition-colors"
+                            className="bg-[#E31837] hover:bg-[#c41230] text-white px-6 font-semibold shadow-sm"
                         >
                             Write a Recognition
-                        </button>
+                        </Button>
                     )}
                 </div>
             )}
@@ -120,39 +142,57 @@ export default function ReviewListSection({
                     </div>
 
                     {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-2 mt-8">
-                            <button
+                        <div className="flex items-center justify-center gap-1.5 mt-10">
+                            <Button
+                                variant="outline"
+                                size="icon"
                                 disabled={page <= 1}
                                 onClick={() => onLoadReviews(page - 1)}
-                                className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                className="w-9 h-9 border-gray-200 text-gray-500 hover:bg-gray-50"
                             >
-                                <ChevronLeft size={15} />
-                            </button>
+                                <ChevronLeft size={16} />
+                            </Button>
 
-                            <div className="flex items-center gap-1">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
-                                    <button
-                                        key={pg}
-                                        onClick={() => onLoadReviews(pg)}
-                                        className={cn(
-                                            "w-9 h-9 rounded-lg text-sm font-semibold transition-all",
-                                            pg === page
-                                                ? "bg-[#004C8F] text-white"
-                                                : "text-gray-500 hover:bg-gray-100"
-                                        )}
-                                    >
-                                        {pg}
-                                    </button>
-                                ))}
+                            <div className="flex items-center gap-1 mx-2">
+                                {paginationItems.map((item, idx) => {
+                                    if (item === "...") {
+                                        return (
+                                            <div key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-gray-400">
+                                                <MoreHorizontal size={16} />
+                                            </div>
+                                        )
+                                    }
+                                    
+                                    const pg = item as number;
+                                    const isActive = pg === page;
+                                    
+                                    return (
+                                        <Button
+                                            key={pg}
+                                            variant={isActive ? "default" : "ghost"}
+                                            onClick={() => onLoadReviews(pg)}
+                                            className={cn(
+                                                "w-9 h-9 p-0 font-semibold text-sm",
+                                                isActive 
+                                                    ? "bg-[#004C8F] text-white hover:bg-[#003a6e]" 
+                                                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                                            )}
+                                        >
+                                            {pg}
+                                        </Button>
+                                    )
+                                })}
                             </div>
 
-                            <button
+                            <Button
+                                variant="outline"
+                                size="icon"
                                 disabled={page >= totalPages}
                                 onClick={() => onLoadReviews(page + 1)}
-                                className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                className="w-9 h-9 border-gray-200 text-gray-500 hover:bg-gray-50"
                             >
-                                <ChevronRight size={15} />
-                            </button>
+                                <ChevronRight size={16} />
+                            </Button>
                         </div>
                     )}
                 </>
