@@ -103,7 +103,7 @@
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: oklch(0.205 0 0);
@@ -124,6 +124,39 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* ── Global pointer cursor for all interactive elements ── */
+  a,
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="option"],
+  [role="checkbox"],
+  [role="radio"],
+  [role="switch"],
+  [role="combobox"],
+  [role="listbox"],
+  label[for],
+  select,
+  summary,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="file"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="button"] {
+    cursor: pointer;
+  }
+
+  /* Disabled elements should show not-allowed instead */
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
 
 /* ================= HIDE SCROLLBAR ================= */
@@ -133,9 +166,7 @@
 
 .scrollbar-hide {
   -ms-overflow-style: none;
-  /* IE */
   scrollbar-width: none;
-  /* Firefox */
 }
 
 /* ================= NETFLIX SNAP ================= */
@@ -149,13 +180,11 @@
 
 /* ================= REDEEM PAGE ANIMATIONS ================= */
 
-/* --- Fade-in-up: cards slide up on entrance --- */
 @keyframes fadeInUp {
   from {
     opacity: 0;
     transform: translateY(20px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -166,15 +195,9 @@
   animation: fadeInUp 0.5s ease-out both;
 }
 
-/* --- Shimmer: skeleton loading effect --- */
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .animate-shimmer {
@@ -186,13 +209,11 @@
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* --- Scale-in: dialog entrance --- */
 @keyframes scaleIn {
   from {
     opacity: 0;
     transform: scale(0.92);
   }
-
   to {
     opacity: 1;
     transform: scale(1);
@@ -203,177 +224,81 @@
   animation: scaleIn 0.3s ease-out both;
 }
 
-/* --- Pulse glow: wallet points update --- */
 @keyframes pulseGlow {
-
-  0%,
-  100% {
-    text-shadow: 0 0 0 transparent;
-  }
-
-  50% {
-    text-shadow: 0 0 20px rgba(147, 51, 234, 0.4), 0 0 40px rgba(147, 51, 234, 0.2);
-  }
+  0%, 100% { text-shadow: 0 0 0 transparent; }
+  50%       { text-shadow: 0 0 20px rgba(147, 51, 234, 0.4), 0 0 40px rgba(147, 51, 234, 0.2); }
 }
 
 .animate-pulse-glow {
   animation: pulseGlow 1.5s ease-in-out 2;
 }
 
-/* --- Checkmark bounce: success state --- */
 @keyframes checkBounce {
-  0% {
-    opacity: 0;
-    transform: scale(0);
-  }
-
-  50% {
-    transform: scale(1.2);
-  }
-
-  70% {
-    transform: scale(0.9);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  0%   { opacity: 0; transform: scale(0); }
+  50%  { transform: scale(1.2); }
+  70%  { transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 .animate-check-bounce {
   animation: checkBounce 0.6s ease-out both;
 }
 
-/* --- Confetti particles: success celebration --- */
 @keyframes confettiFloat {
-  0% {
-    opacity: 1;
-    transform: translateY(0) rotate(0deg) scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translateY(-80px) rotate(720deg) scale(0);
-  }
+  0%   { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translateY(-80px) rotate(720deg) scale(0); }
 }
 
-/* --- Count-up number glow --- */
 @keyframes countGlow {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-
-  60% {
-    transform: scale(1.05);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  0%   { opacity: 0; transform: scale(0.8); }
+  60%  { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 .animate-count-in {
   animation: countGlow 0.6s ease-out both;
 }
 
-/* --- Sparkle on icon --- */
 @keyframes sparkle {
-
-  0%,
-  100% {
-    filter: drop-shadow(0 0 0 transparent);
-  }
-
-  50% {
-    filter: drop-shadow(0 0 6px rgba(147, 51, 234, 0.5));
-  }
+  0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+  50%       { filter: drop-shadow(0 0 6px rgba(147, 51, 234, 0.5)); }
 }
 
 .animate-sparkle {
   animation: sparkle 2s ease-in-out infinite;
 }
 
-/* --- Card stagger delays (CSS custom property based) --- */
-.stagger-1 {
-  animation-delay: 0.05s;
-}
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s;  }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s;  }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s;  }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.4s;  }
 
-.stagger-2 {
-  animation-delay: 0.1s;
-}
-
-.stagger-3 {
-  animation-delay: 0.15s;
-}
-
-.stagger-4 {
-  animation-delay: 0.2s;
-}
-
-.stagger-5 {
-  animation-delay: 0.25s;
-}
-
-.stagger-6 {
-  animation-delay: 0.3s;
-}
-
-.stagger-7 {
-  animation-delay: 0.35s;
-}
-
-.stagger-8 {
-  animation-delay: 0.4s;
-}
-
-/* --- Fade in generic --- */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out both;
 }
 
-/* --- Slide-down for banner --- */
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .animate-slide-down {
   animation: slideDown 0.5s ease-out both;
 }
 
-/* --- Gradient shimmer hover for card top stripe --- */
 @keyframes gradientShimmer {
-  0% {
-    background-size: 100% 100%;
-  }
-
-  50% {
-    background-size: 200% 100%;
-  }
-
-  100% {
-    background-size: 100% 100%;
-  }
+  0%   { background-size: 100% 100%; }
+  50%  { background-size: 200% 100%; }
+  100% { background-size: 100% 100%; }
 }
 
 .hover-gradient-shimmer:hover {

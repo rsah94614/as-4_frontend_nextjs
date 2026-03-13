@@ -13,7 +13,6 @@ export interface Review {
     review_id: string
     reviewer_id: string
     receiver_id: string
-    rating: number
     comment: string
     image_url?: string | null
     video_url?: string | null
@@ -41,7 +40,6 @@ export interface ToastState {
 
 export interface SubmittedReviewData {
     receiverName: string
-    rating: number
     categoryNames: string[]
     comment: string
     submittedAt: string
