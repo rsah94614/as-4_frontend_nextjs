@@ -1,7 +1,6 @@
 "use client"
 
 import { Loader2, AlertCircle, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import ReviewCard from "./ReviewCard"
 import type { Review, ReviewCategory } from "@/types/review-types"
 import { cn } from "@/lib/utils"
@@ -41,7 +40,6 @@ export default function ReviewListSection({
 }: ReviewListSectionProps) {
     return (
         <div>
-            {/* Tab bar */}
             <div className="flex items-center gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
                 {TABS.map((tab) => (
                     <button
@@ -59,14 +57,12 @@ export default function ReviewListSection({
                 ))}
             </div>
 
-            {/* Loading */}
             {loadingData && (
                 <div className="flex justify-center py-24">
                     <Loader2 className="w-7 h-7 animate-spin text-[#004C8F]/30" />
                 </div>
             )}
 
-            {/* Error */}
             {!loadingData && dataError && (
                 <div className="flex flex-col items-center py-16 gap-3 bg-white rounded-xl border border-gray-100">
                     <div className="w-12 h-12 rounded-full bg-[#E31837]/10 flex items-center justify-center">
@@ -82,7 +78,6 @@ export default function ReviewListSection({
                 </div>
             )}
 
-            {/* Empty */}
             {!loadingData && !dataError && filteredReviews.length === 0 && (
                 <div className="flex flex-col items-center py-16 gap-4 bg-white rounded-xl border border-gray-100">
                     <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
@@ -111,7 +106,6 @@ export default function ReviewListSection({
                 </div>
             )}
 
-            {/* Cards grid */}
             {!loadingData && !dataError && filteredReviews.length > 0 && (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -125,7 +119,6 @@ export default function ReviewListSection({
                         ))}
                     </div>
 
-                    {/* Pagination */}
                     {totalPages > 1 && (
                         <div className="flex items-center justify-center gap-2 mt-8">
                             <button

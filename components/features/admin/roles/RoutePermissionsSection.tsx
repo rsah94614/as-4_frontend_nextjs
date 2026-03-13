@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Shield, Plus, X, Loader2, Search, ChevronRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Shield, Plus, X, Loader2, Search, Lock, Info, ChevronDown } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import {
     rolesApi,
     routePermissionsApi,
@@ -15,21 +16,57 @@ interface RoutePermissionsSectionProps {
     toast: (msg: string, t?: ToastType) => void;
 }
 
+const HOW_IT_WORKS = [
+    { n: "01", title: "Select a Role",    desc: "Click a role pill to load its current route permissions." },
+    { n: "02", title: "Assigned Routes",  desc: "Routes in the left panel are accessible by the selected role." },
+    { n: "03", title: "Grant Access",     desc: "Click + on any available route to grant the role access instantly." },
+    { n: "04", title: "Revoke Access",    desc: "Hover an assigned route and click × to remove access immediately." },
+];
+
+function HowItWorks() {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
+            <button
+                type="button"
+                onClick={() => setOpen((o) => !o)}
+                className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-colors"
+            >
+                <div className="flex items-center gap-2">
+                    <Info size={13} className="text-[#E31837]" />
+                    <span className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</span>
+                </div>
+                <ChevronDown size={15} className={cn("text-gray-400 transition-transform duration-200", open && "rotate-180")} />
+            </button>
+            {open && (
+                <div className="border-t border-gray-100">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                        {HOW_IT_WORKS.map((s) => (
+                            <div key={s.n} className="flex gap-3 px-5 py-4">
+                                <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
+                                <div>
+                                    <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
+                                    <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps) {
-    const [permissions, setPermissions]     = useState<RoutePermission[]>([]);
-    const [roles, setRoles]                 = useState<Role[]>([]);
-    const [loading, setLoading]             = useState(true);
-    const [selectedRoleId, setSelectedRoleId] = useState<string>("");
-    const [removing, setRemoving]           = useState<string | null>(null);
-    const [adding, setAdding]               = useState<string | null>(null);
-    // Separate search state per panel so filtering one side doesn't affect the other.
+    const [permissions, setPermissions]         = useState<RoutePermission[]>([]);
+    const [roles, setRoles]                     = useState<Role[]>([]);
+    const [loading, setLoading]                 = useState(true);
+    const [selectedRoleId, setSelectedRoleId]   = useState<string>("");
+    const [removing, setRemoving]               = useState<string | null>(null);
+    const [adding, setAdding]                   = useState<string | null>(null);
     const [assignedSearch, setAssignedSearch]   = useState("");
     const [availableSearch, setAvailableSearch] = useState("");
 
-    // ── Data loading ───────────────────────────────────────────────────────
-    // IMPORTANT: selectedRoleId is NOT a dependency of `load`.
-    // Role selection is purely a client-side filter over already-fetched data.
-    // Including it would cause a full API round-trip on every role pill click.
     const load = useCallback(async () => {
         try {
             setLoading(true);
@@ -39,100 +76,60 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
             ]);
             setPermissions(perms);
             setRoles(r);
-            // Auto-select the first role only when we don't already have a
-            // selection (i.e. initial load).  Use the functional updater so
-            // we never read stale closure state.
             setSelectedRoleId((prev) => prev || (r[0]?.role_id ?? ""));
         } catch (e: unknown) {
             toast((e as Error).message, "error");
         } finally {
             setLoading(false);
         }
-    }, [toast]); // ← no selectedRoleId here — intentional
+    }, [toast]);
 
-    useEffect(() => {
-        load();
-    }, [load]);
+    useEffect(() => { load(); }, [load]);
 
-    // ── Derived data (pure client-side) ───────────────────────────────────
     const selectedRole = roles.find((r) => r.role_id === selectedRoleId);
 
-    // Title lookup for fast O(1) access in render
     const titleMap = useMemo(
         () => Object.fromEntries(permissions.map((p) => [p.route_key, p.title ?? ""])),
         [permissions],
     );
 
-    // All unique sorted route keys known to the system
     const allRouteKeys = useMemo(
         () => [...new Set(permissions.map((p) => p.route_key))].sort(),
         [permissions],
     );
 
-    // Route keys assigned to the currently selected role
     const assignedSet = useMemo(() => {
         const s = new Set<string>();
-        for (const p of permissions) {
-            if (p.roles.some((r) => r.role_id === selectedRoleId)) {
-                s.add(p.route_key);
-            }
-        }
+        for (const p of permissions)
+            if (p.roles.some((r) => r.role_id === selectedRoleId)) s.add(p.route_key);
         return s;
     }, [permissions, selectedRoleId]);
 
-    const assignedRouteKeys  = useMemo(
-        () => allRouteKeys.filter((k) => assignedSet.has(k)),
-        [allRouteKeys, assignedSet],
-    );
-    const availableRouteKeys = useMemo(
-        () => allRouteKeys.filter((k) => !assignedSet.has(k)),
-        [allRouteKeys, assignedSet],
-    );
+    const assignedRouteKeys  = useMemo(() => allRouteKeys.filter((k) =>  assignedSet.has(k)), [allRouteKeys, assignedSet]);
+    const availableRouteKeys = useMemo(() => allRouteKeys.filter((k) => !assignedSet.has(k)), [allRouteKeys, assignedSet]);
 
-    // Apply search filters independently per panel
     const filterRoutes = (keys: string[], query: string) => {
         if (!query) return keys;
         const q = query.toLowerCase();
-        return keys.filter(
-            (k) => k.toLowerCase().includes(q) || titleMap[k].toLowerCase().includes(q),
-        );
+        return keys.filter((k) => k.toLowerCase().includes(q) || titleMap[k]?.toLowerCase().includes(q));
     };
 
-    const assignedFiltered  = useMemo(
-        () => filterRoutes(assignedRouteKeys,  assignedSearch),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [assignedRouteKeys,  assignedSearch,  titleMap],
-    );
-    const availableFiltered = useMemo(
-        () => filterRoutes(availableRouteKeys, availableSearch),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [availableRouteKeys, availableSearch, titleMap],
-    );
+    const assignedFiltered  = useMemo(() => filterRoutes(assignedRouteKeys,  assignedSearch),  // eslint-disable-next-line react-hooks/exhaustive-deps
+        [assignedRouteKeys, assignedSearch, titleMap]);
+    const availableFiltered = useMemo(() => filterRoutes(availableRouteKeys, availableSearch), // eslint-disable-next-line react-hooks/exhaustive-deps
+        [availableRouteKeys, availableSearch, titleMap]);
 
-    // ── Actions ────────────────────────────────────────────────────────────
     const handleAdd = async (route_key: string) => {
         if (!selectedRoleId || !selectedRole) return;
         try {
             setAdding(route_key);
             await routePermissionsApi.addRoutePermission({ route_key, role_id: selectedRoleId });
             toast(`Added: ${titleMap[route_key] || route_key}`);
-            // Optimistic update — no refetch needed
             setPermissions((prev) =>
-                prev.map((p) =>
-                    p.route_key !== route_key
-                        ? p
-                        : {
-                              ...p,
-                              roles: [
-                                  ...p.roles,
-                                  {
-                                      role_id:   selectedRoleId,
-                                      role_code: selectedRole.role_code,
-                                      role_name: selectedRole.role_name,
-                                  },
-                              ],
-                          },
-                ),
+                prev.map((p) => p.route_key !== route_key ? p : {
+                    ...p,
+                    roles: [...p.roles, { role_id: selectedRoleId, role_code: selectedRole.role_code, role_name: selectedRole.role_name }],
+                }),
             );
         } catch (e: unknown) {
             toast((e as Error).message, "error");
@@ -147,13 +144,11 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
             setRemoving(route_key);
             await routePermissionsApi.removeRoutePermission({ route_key, role_id: selectedRoleId });
             toast(`Removed: ${titleMap[route_key] || route_key}`);
-            // Optimistic update — no refetch needed
             setPermissions((prev) =>
-                prev.map((p) =>
-                    p.route_key !== route_key
-                        ? p
-                        : { ...p, roles: p.roles.filter((r) => r.role_id !== selectedRoleId) },
-                ),
+                prev.map((p) => p.route_key !== route_key ? p : {
+                    ...p,
+                    roles: p.roles.filter((r) => r.role_id !== selectedRoleId),
+                }),
             );
         } catch (e: unknown) {
             toast((e as Error).message, "error");
@@ -162,194 +157,191 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
         }
     };
 
-    const handleRoleSelect = (roleId: string) => {
-        setSelectedRoleId(roleId);
-        // Reset search when switching roles so the new view is unfiltered
-        setAssignedSearch("");
-        setAvailableSearch("");
-    };
-
-    // ── Render ─────────────────────────────────────────────────────────────
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-48 text-gray-400">
-                <Loader2 className="w-5 h-5 animate-spin" />
-            </div>
-        );
-    }
-
     return (
-        <div>
-            {/* Header */}
-            <div className="mb-5">
-                <h2 className="text-base font-semibold text-gray-900">Route Permissions</h2>
-                <p className="text-sm text-gray-500 mt-0.5">
-                    Select a role to view and manage its route access
-                </p>
-            </div>
+        <div className="w-full">
+            <HowItWorks />
 
-            {/* Role selector pills */}
-            <div className="flex flex-wrap gap-2 mb-6">
-                {roles.map((role) => {
-                    const count      = permissions.filter((p) =>
-                        p.roles.some((r) => r.role_id === role.role_id),
-                    ).length;
-                    const isSelected = role.role_id === selectedRoleId;
-                    return (
-                        <button
-                            key={role.role_id}
-                            onClick={() => handleRoleSelect(role.role_id)}
-                            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-medium transition-all
-                                ${
-                                    isSelected
-                                        ? "bg-purple-700 text-white border-purple-700 shadow-sm"
-                                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:text-gray-900"
-                                }`}
-                        >
-                            <Shield className="w-3.5 h-3.5" />
-                            {role.role_name}
-                            <span
-                                className={`text-xs px-1.5 py-0.5 rounded-full font-mono
-                                    ${isSelected ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"}`}
-                            >
-                                {count}
-                            </span>
-                        </button>
-                    );
-                })}
-            </div>
+            {/* Role selector card */}
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-4">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                    <Lock size={14} className="text-[#004C8F]" />
+                    <h2 className="text-sm font-bold text-[#004C8F]">Route Permissions</h2>
+                    {!loading && selectedRole && (
+                        <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full tabular-nums ml-1">
+                            {assignedRouteKeys.length} / {allRouteKeys.length} routes assigned
+                        </span>
+                    )}
+                </div>
 
-            {selectedRole && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* ── Left: Assigned routes ─────────────────────────── */}
-                    <div className="border border-gray-200 rounded-xl overflow-hidden">
-                        <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-semibold text-gray-900">
-                                    Assigned Routes
-                                </p>
-                                <p className="text-xs text-gray-400 mt-0.5">
-                                    {assignedRouteKeys.length} routes for{" "}
-                                    <span className="font-mono">{selectedRole.role_code}</span>
-                                </p>
+                <div className="p-6">
+                    {loading ? (
+                        <div className="flex gap-2 flex-wrap">
+                            {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-9 w-28 rounded-lg" />)}
+                        </div>
+                    ) : (
+                        <>
+                            <label className="block text-[11px] font-bold text-[#004C8F] uppercase tracking-widest mb-3">
+                                Select role to manage
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                                {roles.map((role) => {
+                                    const isSelected = role.role_id === selectedRoleId;
+                                    const count = allRouteKeys.filter((k) =>
+                                        permissions.find((x) => x.route_key === k)?.roles.some((r) => r.role_id === role.role_id)
+                                    ).length;
+                                    return (
+                                        <button
+                                            key={role.role_id}
+                                            onClick={() => setSelectedRoleId(role.role_id)}
+                                            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border transition-all duration-150"
+                                            style={
+                                                isSelected
+                                                    ? { background: "#004C8F", color: "#fff", borderColor: "#004C8F" }
+                                                    : { background: "#fff", color: "#6B7280", borderColor: "#E5E7EB" }
+                                            }
+                                        >
+                                            <Shield size={12} />
+                                            {role.role_name}
+                                            <span
+                                                className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded"
+                                                style={
+                                                    isSelected
+                                                        ? { background: "rgba(255,255,255,0.2)", color: "#fff" }
+                                                        : { background: "#F3F4F6", color: "#6B7280" }
+                                                }
+                                            >
+                                                {count}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
                             </div>
-                            <Badge variant="secondary" className="font-mono text-xs">
+                        </>
+                    )}
+                </div>
+            </div>
+
+            {/* Two-panel editor — full width, 50/50 split */}
+            {!loading && selectedRole && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    {/* ── Assigned panel ── */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                        <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-[#004C8F]">Assigned Routes</p>
+                                <p className="text-[10px] text-gray-400 mt-0.5 font-mono">{selectedRole.role_code}</p>
+                            </div>
+                            <span className="text-[10px] font-black text-[#004C8F] bg-blue-50 px-2 py-1 rounded tabular-nums">
                                 {assignedRouteKeys.length}
-                            </Badge>
+                            </span>
                         </div>
 
-                        <div className="px-3 py-2 border-b border-gray-100">
+                        {/* Search */}
+                        <div className="px-4 py-2.5 border-b border-gray-100">
                             <div className="relative">
-                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
                                     type="text"
-                                    placeholder="Filter assigned routes..."
+                                    placeholder="Filter routes…"
                                     value={assignedSearch}
                                     onChange={(e) => setAssignedSearch(e.target.value)}
-                                    className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-gray-50
+                                        placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40"
                                 />
                             </div>
                         </div>
 
                         <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
                             {assignedFiltered.length === 0 ? (
-                                <div className="flex items-center justify-center h-24 text-gray-400">
-                                    <p className="text-xs">
-                                        {assignedSearch ? "No matching routes" : "No routes assigned"}
-                                    </p>
-                                </div>
-                            ) : (
-                                assignedFiltered.map((routeKey) => (
-                                    <div
-                                        key={routeKey}
-                                        className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 group"
-                                    >
-                                        <div className="flex flex-col min-w-0">
-                                            {titleMap[routeKey] && (
-                                                <span className="text-xs font-medium text-gray-700 truncate mb-0.5">
-                                                    {titleMap[routeKey]}
-                                                </span>
-                                            )}
-                                            <MethodBadge routeKey={routeKey} />
-                                        </div>
-                                        <button
-                                            onClick={() => handleRemove(routeKey)}
-                                            disabled={removing === routeKey}
-                                            aria-label={`Remove ${routeKey}`}
-                                            className="ml-2 shrink-0 flex items-center gap-1 text-xs text-gray-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                                        >
-                                            {removing === routeKey ? (
-                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                            ) : (
-                                                <X className="w-3.5 h-3.5" />
-                                            )}
-                                        </button>
+                                <p className="text-xs text-gray-400 text-center py-10 font-medium">
+                                    {assignedSearch ? "No matching routes" : "No routes assigned yet"}
+                                </p>
+                            ) : assignedFiltered.map((routeKey) => (
+                                <div
+                                    key={routeKey}
+                                    className="flex items-center justify-between px-4 py-2.5 hover:bg-red-50/40 group transition-colors"
+                                >
+                                    <div className="flex flex-col min-w-0 gap-0.5">
+                                        {titleMap[routeKey] && (
+                                            <span className="text-[11px] font-semibold text-gray-600 truncate">{titleMap[routeKey]}</span>
+                                        )}
+                                        <MethodBadge routeKey={routeKey} />
                                     </div>
-                                ))
-                            )}
+                                    <button
+                                        onClick={() => handleRemove(routeKey)}
+                                        disabled={removing === routeKey}
+                                        aria-label={`Remove ${routeKey}`}
+                                        className="ml-2 shrink-0 w-6 h-6 rounded flex items-center justify-center
+                                            opacity-0 group-hover:opacity-100 transition-all disabled:opacity-40 hover:bg-red-100"
+                                        style={{ color: "#E31837" }}
+                                    >
+                                        {removing === routeKey
+                                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                                            : <X size={12} />}
+                                    </button>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* ── Right: Available routes ───────────────────────── */}
-                    <div className="border border-gray-200 rounded-xl overflow-hidden">
-                        <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
-                            <p className="text-sm font-semibold text-gray-900">
-                                Available Routes
-                            </p>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                                Click <ChevronRight className="inline w-3 h-3" /> to grant access
-                            </p>
+                    {/* ── Available panel ── */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                        <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-gray-700">Available Routes</p>
+                                <p className="text-[10px] text-gray-400 mt-0.5">Click + to grant access</p>
+                            </div>
+                            <span className="text-[10px] font-black text-gray-500 bg-gray-100 px-2 py-1 rounded tabular-nums">
+                                {availableRouteKeys.length}
+                            </span>
                         </div>
 
-                        <div className="px-3 py-2 border-b border-gray-100">
+                        {/* Search */}
+                        <div className="px-4 py-2.5 border-b border-gray-100">
                             <div className="relative">
-                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
                                     type="text"
-                                    placeholder="Search routes to add..."
+                                    placeholder="Search routes…"
                                     value={availableSearch}
                                     onChange={(e) => setAvailableSearch(e.target.value)}
-                                    className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-gray-200 bg-gray-50
+                                        placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40"
                                 />
                             </div>
                         </div>
 
                         <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
                             {availableFiltered.length === 0 ? (
-                                <div className="flex items-center justify-center h-24 text-gray-400">
-                                    <p className="text-xs">
-                                        {availableSearch ? "No matching routes" : "All routes assigned!"}
-                                    </p>
-                                </div>
-                            ) : (
-                                availableFiltered.map((routeKey) => (
-                                    <div
-                                        key={routeKey}
-                                        className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 group"
-                                    >
-                                        <div className="flex flex-col min-w-0">
-                                            {titleMap[routeKey] && (
-                                                <span className="text-xs font-medium text-gray-700 truncate mb-0.5">
-                                                    {titleMap[routeKey]}
-                                                </span>
-                                            )}
-                                            <MethodBadge routeKey={routeKey} />
-                                        </div>
-                                        <button
-                                            onClick={() => handleAdd(routeKey)}
-                                            disabled={adding === routeKey}
-                                            aria-label={`Add ${routeKey}`}
-                                            className="ml-2 shrink-0 flex items-center gap-1 text-xs text-gray-400 hover:text-emerald-600 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
-                                        >
-                                            {adding === routeKey ? (
-                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                            ) : (
-                                                <Plus className="w-3.5 h-3.5" />
-                                            )}
-                                        </button>
+                                <p className="text-xs text-gray-400 text-center py-10 font-medium">
+                                    {availableSearch ? "No matching routes" : "All routes assigned!"}
+                                </p>
+                            ) : availableFiltered.map((routeKey) => (
+                                <div
+                                    key={routeKey}
+                                    className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 group transition-colors"
+                                >
+                                    <div className="flex flex-col min-w-0 gap-0.5">
+                                        {titleMap[routeKey] && (
+                                            <span className="text-[11px] font-semibold text-gray-600 truncate">{titleMap[routeKey]}</span>
+                                        )}
+                                        <MethodBadge routeKey={routeKey} />
                                     </div>
-                                ))
-                            )}
+                                    <button
+                                        onClick={() => handleAdd(routeKey)}
+                                        disabled={adding === routeKey}
+                                        aria-label={`Add ${routeKey}`}
+                                        className="ml-2 shrink-0 w-6 h-6 rounded flex items-center justify-center
+                                            opacity-0 group-hover:opacity-100 transition-all disabled:opacity-40
+                                            hover:bg-green-100 text-emerald-600"
+                                    >
+                                        {adding === routeKey
+                                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                                            : <Plus size={12} />}
+                                    </button>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

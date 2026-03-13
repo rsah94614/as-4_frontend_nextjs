@@ -8,7 +8,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import CategoryPicker from "./CategoryPicker"
 import ReceiverPicker from "./ReceiverPicker"
-import type { Review, ReviewCategory, ViewMode, SubmittedReviewData } from "@/types/review-types"
+import type { ReviewCategory, ViewMode, SubmittedReviewData } from "@/types/review-types"
 import type { TeamMember } from "@/services/employee-service"
 import { fmtDate } from "@/lib/review-utils"
 import { cn } from "@/lib/utils"
@@ -49,22 +49,11 @@ function SuccessView({ data, onStartNew }: { data: SubmittedReviewData; onStartN
                         <span className="text-gray-500">Recognised</span>
                         <span className="font-semibold text-[#004C8F]">{data.receiverName}</span>
                     </div>
-                    {data.rawPoints != null && (
-                        <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Points Awarded</span>
-                            <div className="flex items-center gap-1">
-                                <Zap size={12} className="text-amber-500" />
-                                <span className="font-bold text-[#004C8F]">
-                                    {data.rawPoints % 1 === 0 ? data.rawPoints : data.rawPoints.toFixed(2)} pts
-                                </span>
-                            </div>
-                        </div>
-                    )}
-                    {data.categories?.length > 0 && (
+                    {data.categoryNames?.length > 0 && (
                         <div className="flex justify-between text-sm items-start gap-4">
                             <span className="text-gray-500 shrink-0">Categories</span>
                             <div className="flex flex-wrap gap-1 justify-end">
-                                {data.categories.map((c: string) => (
+                                {data.categoryNames.map((c: string) => (
                                     <span key={c} className="text-[10px] font-bold bg-[#004C8F]/8 text-[#004C8F] px-2 py-0.5 rounded">{c}</span>
                                 ))}
                             </div>
@@ -186,8 +175,6 @@ interface ReviewComposeFormProps {
     uniquePeopleCount: number
     totalReviews: number
     loadingStats?: boolean
-    reviews: Review[]
-    myId: string
     reviewerWeight?: number
     submittedData?: SubmittedReviewData | null
     onStartNew?: () => void
@@ -198,7 +185,7 @@ export default function ReviewComposeForm({
     categories, categoryIds, onCategoryIdsChange, comment, onCommentChange,
     files, onFilesChange, fileRef, submitting, onSubmit,
     givenThisMonth, uniquePeopleCount, totalReviews, loadingStats,
-    reviews, myId, submittedData, onStartNew, reviewerWeight,
+    submittedData, onStartNew, reviewerWeight,
 }: ReviewComposeFormProps) {
     const previewPts = useMemo(() => calcPreviewPoints(categories, categoryIds, reviewerWeight ?? 1.0), [categories, categoryIds, reviewerWeight])
     const step1Done = !!receiverId

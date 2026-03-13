@@ -4,7 +4,6 @@ import { useReviewPage } from "@/hooks/useReviewPage"
 import { useReviewerWeight } from "@/hooks/useReviewerWeight"
 import ReviewComposeForm from "@/components/features/review/ReviewComposeForm"
 import ReviewListSection from "@/components/features/review/ReviewListSection"
-
 import ReviewToast from "@/components/features/review/ReviewToast"
 
 export default function ReviewPage() {
@@ -25,7 +24,6 @@ export default function ReviewPage() {
               Recognise teammates · Points credited automatically
             </p>
           </div>
-          {/* Aabhar wordmark — red A, blue abhar */}
           <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
             <span style={{ color: '#E31837' }}>A</span>
             <span style={{ color: '#004C8F' }}>abhar</span>
@@ -33,12 +31,10 @@ export default function ReviewPage() {
         </div>
       </div>
 
-      {/* Red accent line */}
       <div className="h-0.5 shrink-0" style={{ background: '#E31837' }} />
 
       {/* ── Main content ── */}
       <div className="px-8 md:px-10 py-8 max-w-[1200px] mx-auto">
-
 
         <ReviewComposeForm
           view={state.view}
@@ -60,8 +56,6 @@ export default function ReviewPage() {
           uniquePeopleCount={state.reviewedThisMonth.size}
           totalReviews={state.totalReviews}
           loadingStats={state.loadingData}
-          reviews={state.reviews}
-          myId={state.myId}
           submittedData={state.submittedData}
           onStartNew={state.startNewReview}
           reviewerWeight={reviewerWeight}
@@ -83,7 +77,7 @@ export default function ReviewPage() {
           setListTab={state.setListTab}
           page={state.page}
           totalPages={state.totalPages}
-          onCompose={() => state.setView?.("compose")}
+          onCompose={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           onLoadReviews={state.loadReviews}
         />
       </div>

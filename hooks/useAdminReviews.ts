@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { fetchWithAuth } from "@/services/auth-service";
+import { createAuthenticatedClient } from "@/lib/api-utils";
 import { Employee, Review } from "@/types/admin-review-types";
 
-const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || "http://localhost:8002";
-const RECOGNITION_API = process.env.NEXT_PUBLIC_RECOGNITION_API_URL || "http://localhost:8005";
-const FLAG_RATING = 2;
+const employeeClient    = createAuthenticatedClient("/api/proxy/employees");
+const recognitionClient = createAuthenticatedClient("/api/proxy/recognition");
 
 export function useAdminReviews() {
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -21,14 +20,12 @@ export function useAdminReviews() {
         const all: Employee[] = [];
         let page = 1;
         while (true) {
-            const res = await fetchWithAuth(
-                `${EMPLOYEE_API}/v1/employees?limit=${PAGE_SIZE}&page=${page}`
+            const res = await employeeClient.get<{ data: Employee[]; pagination: { total_pages: number } }>(
+                `/list?limit=${PAGE_SIZE}&page=${page}`
             );
-            if (!res.ok) throw new Error(`Failed to fetch employees (${res.status})`);
-            const data = await res.json();
-            const rows: Employee[] = data.data ?? [];
+            const rows = res.data.data ?? [];
             all.push(...rows);
-            if (page >= (data.pagination?.total_pages ?? 1)) break;
+            if (page >= (res.data.pagination?.total_pages ?? 1)) break;
             page++;
         }
         return all;
@@ -39,18 +36,18 @@ export function useAdminReviews() {
         const all: Review[] = [];
         let page = 1;
         while (true) {
-            const res = await fetchWithAuth(
-                `${RECOGNITION_API}/v1/reviews?page=${page}&page_size=${PAGE_SIZE}`
-            );
-            if (!res.ok) {
-                console.warn(`Reviews fetch returned ${res.status}`);
+            try {
+                const res = await recognitionClient.get<{ data: Review[]; pagination: { total_pages: number } }>(
+                    `/reviews?page=${page}&page_size=${PAGE_SIZE}`
+                );
+                const rows = res.data.data ?? [];
+                all.push(...rows);
+                if (page >= (res.data.pagination?.total_pages ?? 1)) break;
+                page++;
+            } catch (e) {
+                console.warn("Reviews fetch failed:", e);
                 break;
             }
-            const data = await res.json();
-            const rows: Review[] = data.data ?? [];
-            all.push(...rows);
-            if (page >= (data.pagination?.total_pages ?? 1)) break;
-            page++;
         }
         return all;
     };
@@ -96,12 +93,8 @@ export function useAdminReviews() {
 
     const summary = useMemo(() => {
         const totalReviews = reviews.length;
-        const flaggedTotal = reviews.filter((r) => r.rating <= FLAG_RATING).length;
-        const overallAvg =
-            totalReviews > 0
-                ? reviews.reduce((s, r) => s + r.rating, 0) / totalReviews
-                : 0;
-        return { totalReviews, flaggedTotal, overallAvg };
+        const totalPoints = reviews.reduce((s, r) => s + (r.raw_points ?? 0), 0);
+        return { totalReviews, totalPoints };
     }, [reviews]);
 
     return {
