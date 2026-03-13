@@ -10,7 +10,26 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { Gift, Ticket, RefreshCw, ChevronLeft, ChevronRight, ArrowDownCircle } from "lucide-react";
+import {
+  Gift,
+  Ticket,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  ArrowDownCircle,
+  TrendingUp,
+  Star,
+  Wallet as WalletIcon,
+} from "lucide-react";
+import Link from "next/link";
+import {
+  PAGE_WRAPPER,
+  PAGE_HEADER,
+  PAGE_HEADER_INNER,
+  PAGE_CONTENT,
+  HDFC_RED,
+  HDFC_BLUE,
+} from "@/components/features/history/history-styles";
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { auth } from "@/services/auth-service";
 import { extractApiError } from "@/lib/api-utils";
@@ -23,11 +42,18 @@ const walletClient = createAuthenticatedClient("/api/proxy/wallet");
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleDateString(undefined, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 // ─── Exact API response types (mirrors backend schemas.py) ───────────────────
@@ -95,7 +121,9 @@ async function fetchWallet(employeeId: string): Promise<WalletData> {
 
 async function fetchPointsSummary(walletId: string): Promise<PointsSummary> {
   try {
-    const res = await walletClient.get<PointsSummary>(`/${walletId}/points-summary`);
+    const res = await walletClient.get<PointsSummary>(
+      `/${walletId}/points-summary`
+    );
     return res.data;
   } catch (error: unknown) {
     throw new Error(extractApiError(error, "Failed to load points summary"));
@@ -124,132 +152,14 @@ async function fetchTransactions(
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function StatCard({
-  label,
-  value,
-  sub,
-  subValue,
-  variant = "white",
-}: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  subValue?: string | number;
-  variant?: "white" | "green" | "purple";
-}) {
-  const bg = {
-    white: "bg-white border border-gray-100 shadow-sm",
-    green: "bg-green-200/60 border border-green-200/40",
-    purple: "bg-purple-200/60 border border-purple-200/40",
-  }[variant];
-
-  return (
-    <div className={`rounded-2xl p-6 ${bg}`}>
-      <p className="text-sm text-gray-500">{label}</p>
-      <h2 className="text-3xl font-semibold mt-2 text-gray-900">
-        {typeof value === "number" ? value.toLocaleString() : value}
-      </h2>
-      {sub && (
-        <div className="flex justify-between mt-4 text-sm text-gray-500">
-          <span>{sub}</span>
-          <span>
-            {typeof subValue === "number"
-              ? subValue.toLocaleString()
-              : subValue}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MonthYearCard({
-  monthPoints,
-  yearPoints,
-}: {
-  monthPoints: number;
-  yearPoints: number;
-}) {
-  return (
-    <div className="rounded-2xl p-6 bg-purple-200/60 border border-purple-200/40">
-      <div className="flex flex-col gap-4 text-sm text-gray-700">
-        <div>
-          <p>This month</p>
-          <p className="text-xl font-semibold text-gray-900">
-            {monthPoints.toLocaleString()}
-          </p>
-        </div>
-        <div>
-          <p>This year</p>
-          <p className="text-xl font-semibold text-gray-900">
-            {yearPoints.toLocaleString()}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TransactionRow({ txn }: { txn: Transaction }) {
-  const isCredit = txn.transaction_type.is_credit;
-
-  return (
-    <div className="flex justify-between items-center bg-gray-50 border border-gray-100 rounded-xl px-5 py-4 group hover:border-gray-200 transition-colors">
-      <div className="flex items-center gap-3 min-w-0">
-        <div
-          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
-            ${isCredit ? "bg-green-100" : "bg-fuchsia-50"}`}
-        >
-          {isCredit ? (
-            <Gift size={15} className="text-green-600" />
-          ) : (
-            <Ticket size={15} className="text-fuchsia-600" />
-          )}
-        </div>
-
-        <div className="min-w-0">
-          <p className="text-sm text-gray-800 truncate">
-            {txn.description || txn.transaction_type.name}
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {formatDate(txn.transaction_at)} · {formatTime(txn.transaction_at)}
-            {txn.reference_number && (
-              <span className="ml-2 font-mono opacity-60">
-                #{txn.reference_number.slice(0, 16)}
-              </span>
-            )}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-col items-end flex-shrink-0 ml-4">
-        <p
-          className={`text-sm font-semibold ${
-            isCredit ? "text-green-600" : "text-fuchsia-600"
-          }`}
-        >
-          {isCredit ? "+" : "-"}
-          {txn.amount.toLocaleString()}
-        </p>
-        <span
-          className={`text-[10px] px-2 py-0.5 rounded-full mt-1 font-medium
-            ${
-              txn.status.code === "SUCCESS"
-                ? "bg-green-100 text-green-700"
-                : txn.status.code === "FAILED"
-                ? "bg-red-100 text-red-600"
-                : "bg-amber-100 text-amber-700"
-            }`}
-        >
-          {txn.status.name}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse bg-gray-200 rounded-xl ${className}`} />;
+  return (
+    <div className={`animate-pulse bg-white/20 rounded-xl ${className}`} />
+  );
+}
+
+function SkeletonLight({ className = "" }: { className?: string }) {
+  return <div className={`animate-pulse bg-gray-100 rounded-xl ${className}`} />;
 }
 
 function ErrorBanner({
@@ -269,6 +179,55 @@ function ErrorBanner({
         <RefreshCw size={13} />
         Retry
       </button>
+    </div>
+  );
+}
+
+function ActivityRow({ txn }: { txn: Transaction }) {
+  const isCredit = txn.transaction_type.is_credit;
+
+  return (
+    <div className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0 group hover:bg-red-50/20 px-2 rounded-xl transition-colors">
+      {/* Icon circle */}
+      <div
+        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${isCredit ? "bg-red-50" : "bg-gray-100"
+          }`}
+      >
+        {isCredit ? (
+          <TrendingUp size={16} className="text-[#E31837]" />
+        ) : (
+          <Ticket size={16} className="text-gray-400" />
+        )}
+      </div>
+
+      {/* Description */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-[#E31837] transition-colors">
+          {txn.description || txn.transaction_type.name}
+        </p>
+        <p className="text-xs text-gray-400 mt-0.5">
+          {isCredit
+            ? `Received ${txn.amount.toLocaleString()} Points`
+            : `Redeemed ${txn.amount.toLocaleString()} Points`}
+        </p>
+      </div>
+
+      {/* Date + progress */}
+      <div className="flex-shrink-0 text-right">
+        <p className="text-xs text-gray-400">
+          {formatDate(txn.transaction_at)}
+        </p>
+        {/* Mini progress indicator */}
+        <div className="mt-1.5 w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${Math.min(100, (txn.amount / 500) * 100)}%`,
+              background: isCredit ? "#004C8F" : "#E31837",
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -361,148 +320,322 @@ export default function Wallet() {
   }
 
   // ─── Render ───────────────────────────────────────────────────────────────
-
   return (
-    <div className="flex flex-col gap-8">
+    <div className={PAGE_WRAPPER}>
 
-      {/* ── Top Stats Row ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {loadingWallet ? (
-          <>
-            <Skeleton className="h-36" />
-            <Skeleton className="h-36" />
-            <Skeleton className="h-36" />
-          </>
-        ) : walletError ? (
-          <div className="col-span-3">
-            <ErrorBanner message={walletError} onRetry={loadWallet} />
-          </div>
-        ) : wallet ? (
-          <>
-            <StatCard
-              label="Lifetime Points"
-              value={wallet.total_earned_points}
-              sub="Redeemed"
-              subValue={wallet.redeemed_points}
-              variant="white"
-            />
-            <StatCard
-              label="Redeemable"
-              value={wallet.available_points}
-            />
-            <MonthYearCard
-              monthPoints={summary?.points_this_month ?? 0}
-              yearPoints={summary?.points_this_year ?? 0}
-            />
-          </>
-        ) : null}
-      </div>
-
-      {/* ── Recent Transactions ───────────────────────────────────────────── */}
-      <div
-        id="txn-section"
-        className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100"
-      >
-        <div className="flex justify-between items-center mb-6">
+      {/* ── Page Header ── */}
+      <div className={PAGE_HEADER}>
+        <div className={PAGE_HEADER_INNER}>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Transactions
-            </h3>
-            {txnData && (
-              <p className="text-xs text-gray-400 mt-0.5">
-                {txnData.total.toLocaleString()} total
-              </p>
-            )}
+            <h1 className="text-2xl font-bold leading-tight" style={{ color: HDFC_BLUE }}>
+              Wallet
+            </h1>
+            <p className="text-sm text-gray-400 mt-1">
+              Manage your points balance and transactions
+            </p>
           </div>
-
-          {/* FIX: was <button ...> ... </Button> — mismatched tags */}
-          <Button
-            onClick={() => {
-              if (wallet?.wallet_id) {
-                loadTransactions(wallet.wallet_id, txnPage);
-              }
-            }}
-            disabled={loadingTxns || !wallet}
-            className="text-indigo-600 bg-indigo-50 border-indigo-100 hover:bg-indigo-100 hover:text-indigo-700 shadow-sm transition-all"
-          >
-            <RefreshCw
-              size={14}
-              className={`mr-2 ${loadingTxns ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
+          <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
+            <span style={{ color: HDFC_RED }}>A</span>
+            <span style={{ color: HDFC_BLUE }}>abhar</span>
+          </span>
         </div>
-
-        {txnError && (
-          <div className="mb-4">
-            <ErrorBanner
-              message={txnError}
-              onRetry={() =>
-                wallet && loadTransactions(wallet.wallet_id, txnPage)
-              }
-            />
-          </div>
-        )}
-
-        <div className="flex flex-col gap-4">
-          {loadingTxns ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-16" />
-            ))
-          ) : txnData?.transactions.length === 0 ? (
-            <div className="flex flex-col items-center py-12 gap-3 text-gray-400">
-              <ArrowDownCircle size={32} strokeWidth={1.2} />
-              <p className="text-sm">No transactions yet.</p>
-            </div>
-          ) : (
-            txnData?.transactions.map((txn) => (
-              <TransactionRow key={txn.transaction_id} txn={txn} />
-            ))
-          )}
-        </div>
-
-        {!loadingTxns && txnData && txnData.total > TXN_PAGE_SIZE && (
-          <div className="flex items-center justify-between mt-6 pt-5 border-t border-gray-100">
-            <button
-              onClick={() => handlePageChange(-1)}
-              disabled={txnPage === 1}
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800
-                disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft size={16} />
-              Previous
-            </button>
-
-            <span className="text-sm text-gray-400">
-              Page <b className="text-gray-700">{txnPage}</b> of{" "}
-              <b className="text-gray-700">{totalPages}</b>
-            </span>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(-1)}
-                disabled={txnPage === 1}
-                className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-sm"
-              >
-                <ChevronLeft size={16} className="mr-1" />
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(1)}
-                disabled={txnPage >= totalPages}
-                className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-sm"
-              >
-                Next
-                <ChevronRight size={16} className="ml-1" />
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
 
+      {/* Red accent line */}
+      <div className="h-0.5 shrink-0" style={{ background: HDFC_RED }} />
+
+      {/* ── Main content ── */}
+      <div className={PAGE_CONTENT}>
+        <div className="flex flex-col gap-6">
+
+          {/* ── Hero Balance Banner ─────────────────────────────────────────────── */}
+          <div
+            className="rounded-2xl overflow-hidden shadow-lg relative"
+            style={{
+              background: "linear-gradient(135deg, #1a3a6e 0%, #004C8F 40%, #2d3a8c 75%, #4c3a9e 100%)",
+            }}
+          >
+            {/* Decorative circles */}
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10"
+              style={{ background: "radial-gradient(circle, #fff 0%, transparent 70%)", transform: "translate(30%, -30%)" }} />
+            <div className="absolute bottom-0 left-1/3 w-40 h-40 rounded-full opacity-5"
+              style={{ background: "radial-gradient(circle, #fff 0%, transparent 70%)", transform: "translateY(50%)" }} />
+
+            <div className="relative px-4 py-3 border-b border-white/20" style={{ background: "rgba(227,24,55,0.25)" }}>
+              <p className="text-white font-bold text-sm tracking-widest uppercase">Wallet Balance</p>
+            </div>
+
+            <div className="relative flex flex-col lg:flex-row">
+              {/* Left — Balance info */}
+              <div className="flex-1 px-6 py-6 flex items-center gap-6">
+                {/* Wallet illustration */}
+                <div className="flex-shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center"
+                  style={{ background: "rgba(255,255,255,0.12)", backdropFilter: "blur(8px)" }}>
+                  <WalletIcon size={40} className="text-yellow-300" />
+                </div>
+
+                {/* Points Balance */}
+                <div>
+                  <p className="text-white/70 text-xs font-medium uppercase tracking-widest">
+                    Points Balance
+                  </p>
+                  {loadingWallet ? (
+                    <Skeleton className="h-9 w-28 mt-1" />
+                  ) : (
+                    <p className="text-white text-4xl font-bold mt-1">
+                      {(wallet?.available_points ?? 0).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+
+                {/* Redeem button */}
+                <div className="ml-auto">
+                  <Link href="/redeem">
+                    <button
+                      className="px-6 py-3 rounded-xl font-bold text-white text-sm shadow-lg transition-all duration-200 active:scale-95"
+                      style={{
+                        background: "#E31837",
+                        boxShadow: "0 4px 15px rgba(227,24,55,0.4)",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#c41230")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "#E31837")}
+                    >
+                      Redeem Reward
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Error if wallet failed ─────────────────────────────────────────── */}
+          {walletError && (
+            <ErrorBanner message={walletError} onRetry={loadWallet} />
+          )}
+
+          {/* ── Stats row ─────────────────────────────────────────────────────── */}
+          {!loadingWallet && wallet && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                {
+                  label: "Lifetime Points Earned",
+                  value: wallet.total_earned_points,
+                  icon: Gift,
+                  bg: "#FDEAED",
+                  color: HDFC_RED,
+                  border: HDFC_RED,
+                },
+                {
+                  label: "Points Redeemed",
+                  value: wallet.redeemed_points,
+                  icon: Ticket,
+                  bg: "#f0f4ff",
+                  color: "#6366f1",
+                  border: "#6366f1",
+                },
+              ].map(({ label, value, icon: Icon, bg, color, border }) => (
+                <div
+                  key={label}
+                  className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow"
+                  style={{ borderTop: `3px solid ${border}` }}
+                >
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: bg }}
+                  >
+                    <Icon size={22} style={{ color }} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium" style={{ color }}>{label}</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-0.5">
+                      {value.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Loading skeletons for stats row */}
+          {loadingWallet && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <SkeletonLight key={i} className="h-24" />
+              ))}
+            </div>
+          )}
+
+          {/* ── Main content: Activity + Side Panel ─────────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            {/* ── Left: Recent Wallet Activity ─────────────────────────────────── */}
+            <div
+              id="txn-section"
+              className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50" style={{ borderLeft: "3px solid #E31837" }}>
+                <div>
+                  <h3 className="text-base font-bold" style={{ color: HDFC_BLUE }}>
+                    Recent Wallet Activity
+                  </h3>
+                  {txnData && (
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {txnData.total.toLocaleString()} total transactions
+                    </p>
+                  )}
+                </div>
+                <Button
+                  onClick={() => {
+                    if (wallet?.wallet_id) {
+                      loadTransactions(wallet.wallet_id, txnPage);
+                    }
+                  }}
+                  disabled={loadingTxns || !wallet}
+                  size="sm"
+                  className="text-[#E31837] bg-red-50 border-red-100 hover:bg-red-100 hover:text-red-800 shadow-none transition-all"
+                >
+                  <RefreshCw
+                    size={13}
+                    className={`mr-1.5 ${loadingTxns ? "animate-spin" : ""}`}
+                  />
+                  Refresh
+                </Button>
+              </div>
+
+              {/* Transaction list */}
+              <div className="px-4 py-2">
+                {txnError && (
+                  <div className="mb-4 px-2">
+                    <ErrorBanner
+                      message={txnError}
+                      onRetry={() =>
+                        wallet && loadTransactions(wallet.wallet_id, txnPage)
+                      }
+                    />
+                  </div>
+                )}
+
+                {loadingTxns ? (
+                  <div className="flex flex-col gap-3 py-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <SkeletonLight key={i} className="h-14" />
+                    ))}
+                  </div>
+                ) : txnData?.transactions.length === 0 ? (
+                  <div className="flex flex-col items-center py-14 gap-3 text-gray-400">
+                    <ArrowDownCircle size={32} strokeWidth={1.2} />
+                    <p className="text-sm">No transactions yet.</p>
+                  </div>
+                ) : (
+                  <div className="py-1">
+                    {txnData?.transactions.map((txn) => (
+                      <ActivityRow key={txn.transaction_id} txn={txn} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Pagination footer */}
+              {!loadingTxns && txnData && txnData.total > TXN_PAGE_SIZE && (
+                <div className="flex items-center justify-between px-6 py-3 border-t border-gray-50">
+                  <span className="text-xs text-gray-400">
+                    Page <b className="text-gray-700">{txnPage}</b> of{" "}
+                    <b className="text-gray-700">{totalPages}</b>
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(-1)}
+                      disabled={txnPage === 1}
+                      className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-none"
+                    >
+                      <ChevronLeft size={14} className="mr-1" />
+                      Prev
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(1)}
+                      disabled={txnPage >= totalPages}
+                      className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-none"
+                    >
+                      Next
+                      <ChevronRight size={14} className="ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* View All Activity link */}
+              <div className="px-6 py-3 border-t border-gray-50 flex justify-center">
+                <Link
+                  href="/history"
+                  className="text-sm font-semibold flex items-center gap-1 transition-colors hover:opacity-80"
+                  style={{ color: HDFC_RED }}
+                >
+                  View All Activity
+                  <ChevronRight size={15} />
+                </Link>
+              </div>
+            </div>
+
+            {/* ── Right: Period Summary Panel ───────────────────────────── */}
+            <div className="flex flex-col gap-4">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5" style={{ borderTop: "3px solid #004C8F" }}>
+                <div className="flex items-center gap-2 mb-4">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ background: "#E8F1FA" }}
+                  >
+                    <Star size={15} style={{ color: HDFC_BLUE }} />
+                  </div>
+                  <h4 className="font-bold text-sm" style={{ color: HDFC_BLUE }}>Period Summary</h4>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between bg-gray-50 px-3 py-2.5 rounded-xl">
+                    <span className="text-xs font-medium text-gray-600">This Month</span>
+                    {loadingWallet ? (
+                      <SkeletonLight className="h-5 w-12" />
+                    ) : (
+                      <span className="font-bold text-gray-900 text-sm">
+                        {(summary?.points_this_month ?? 0).toLocaleString()}
+                        <span className="text-xs font-normal text-gray-400 ml-1">pts</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between bg-gray-50 px-3 py-2.5 rounded-xl">
+                    <span className="text-xs font-medium text-gray-600">This Year</span>
+                    {loadingWallet ? (
+                      <SkeletonLight className="h-5 w-12" />
+                    ) : (
+                      <span className="font-bold text-gray-900 text-sm">
+                        {(summary?.points_this_year ?? 0).toLocaleString()}
+                        <span className="text-xs font-normal text-gray-400 ml-1">pts</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between bg-gray-50 px-3 py-2.5 rounded-xl">
+                    <span className="text-xs font-medium text-gray-600">Lifetime Total</span>
+                    {loadingWallet ? (
+                      <SkeletonLight className="h-5 w-12" />
+                    ) : (
+                      <span className="font-bold text-gray-900 text-sm">
+                        {(wallet?.total_earned_points ?? 0).toLocaleString()}
+                        <span className="text-xs font-normal text-gray-400 ml-1">pts</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
