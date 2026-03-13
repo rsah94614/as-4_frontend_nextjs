@@ -8,6 +8,15 @@ import HistoryPagination from "@/components/features/history/HistoryPagination";
 import TransactionDetailModal from "@/components/features/history/TransactionDetailModal";
 import type { HistoryItem } from "@/components/features/history/types";
 
+import {
+    PAGE_WRAPPER,
+    PAGE_CONTENT,
+    PAGE_HEADER,
+    PAGE_HEADER_INNER,
+    HDFC_RED,
+    HDFC_BLUE
+} from "@/components/features/history/history-styles";
+
 export default function HistoryPage() {
     const {
         selectedPeriod, setSelectedPeriod,
@@ -29,10 +38,31 @@ export default function HistoryPage() {
 
     return (
         <div
-            className="bg-white rounded-2xl md:rounded-4xl min-h-screen shadow-2xs"
+            className={PAGE_WRAPPER}
             onClick={closeDropdowns}
         >
-            <div className="p-4 sm:p-6 md:p-8">
+            {/* ── Page Header ── */}
+            <div className={PAGE_HEADER}>
+                <div className={PAGE_HEADER_INNER}>
+                    <div>
+                        <h1 className="text-2xl font-bold leading-tight" style={{ color: HDFC_BLUE }}>
+                            History
+                        </h1>
+                        <p className="text-sm text-gray-400 mt-1">
+                            View your points transactions and redemptions
+                        </p>
+                    </div>
+                    <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
+                        <span style={{ color: HDFC_RED }}>A</span>
+                        <span style={{ color: HDFC_BLUE }}>abhar</span>
+                    </span>
+                </div>
+            </div>
+
+            <div className="h-0.5 shrink-0" style={{ background: HDFC_RED }} />
+
+            {/* ── Main content ── */}
+            <div className={PAGE_CONTENT}>
                 <HistoryFilterBar
                     selectedPeriod={selectedPeriod}
                     setSelectedPeriod={setSelectedPeriod}

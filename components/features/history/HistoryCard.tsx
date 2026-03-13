@@ -1,8 +1,13 @@
-"use client";
-
-import { ArrowUpRight, TrendingUp } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { getMessage } from "./history-utils";
 import type { HistoryItem } from "./types";
+import { cn } from "@/lib/utils";
+
+import {
+    CARD_CONTAINER,
+    HDFC_BLUE,
+    HDFC_RED
+} from "./history-styles";
 
 interface HistoryCardProps {
     item: HistoryItem;
@@ -11,45 +16,68 @@ interface HistoryCardProps {
 
 export default function HistoryCard({ item, onClick }: HistoryCardProps) {
     const isRedemption = !!item.reward_catalog;
+    
+    // Mimic the ReviewCard top-stripe and direction badge logic
+    const stripeColor = isRedemption ? HDFC_RED : HDFC_BLUE;
+    const badgeBg = isRedemption ? "bg-[#E31837]/8 text-[#E31837]" : "bg-[#004C8F]/8 text-[#004C8F]";
 
     return (
         <button
             type="button"
             onClick={() => onClick?.(item)}
-            className="w-full bg-white rounded-xl border p-3 sm:p-5 flex items-center justify-between gap-3 text-left hover:border-gray-300 hover:shadow-sm transition-all group cursor-pointer"
+            className={CARD_CONTAINER}
         >
-            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                {isRedemption ? (
-                    <ArrowUpRight className="w-5 h-5 text-fuchsia-600 shrink-0" />
-                ) : (
-                    <TrendingUp className="w-5 h-5 text-green-500 shrink-0" />
-                )}
+            {/* Top accent stripe */}
+            <div 
+                className="h-0.5 w-full transition-colors"
+                style={{ backgroundColor: stripeColor }}
+            />
+            
+            <div className="p-5 flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                        {/* Direction badge mimicking ReviewCard */}
+                        <span className={cn(
+                            "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded",
+                            badgeBg
+                        )}>
+                            {isRedemption
+                                ? <ArrowUpRight size={10} />
+                                : <ArrowDownLeft size={10} />
+                            }
+                            {isRedemption ? "Redeemed" : "Earned"}
+                        </span>
+                        
+                        <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
+                            {new Date(item.granted_at).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                            })}
+                        </span>
+                    </div>
 
-                <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-medium text-gray-700 truncate sm:whitespace-normal group-hover:text-gray-900 transition-colors">
+                    <p className="text-sm font-semibold text-gray-800 leading-snug group-hover:text-[#004C8F] transition-colors">
                         {getMessage(item)}
                     </p>
 
                     {item.comment && isRedemption && (
-                        <p className="text-xs text-gray-400 truncate">{item.comment}</p>
+                        <p className="text-xs text-gray-500 truncate mt-1.5">{item.comment}</p>
                     )}
+                </div>
 
-                    <p className="text-xs text-gray-400 mt-0.5">
-                        {new Date(item.granted_at).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                        })}
+                <div className="text-right shrink-0">
+                    <span
+                        className="text-base font-bold tracking-tight"
+                        style={{ color: stripeColor }}
+                    >
+                        {isRedemption ? `-${item.points}` : `+${item.points}`}
+                    </span>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter -mt-1">
+                        Pts
                     </p>
                 </div>
             </div>
-
-            <span
-                className={`text-sm font-semibold shrink-0 ${isRedemption ? "text-fuchsia-600" : "text-green-600"
-                    }`}
-            >
-                {isRedemption ? `-${item.points}` : `+${item.points}`}
-            </span>
         </button>
     );
 }

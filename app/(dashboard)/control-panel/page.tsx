@@ -169,7 +169,7 @@ export default function ControlPanelHub() {
                         <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border text-xs font-bold"
                             style={{ background: '#FDEAED', borderColor: '#f8c4cc', color: '#E31837' }}>
                             <ShieldAlert size={13} />
-                            Admin Access Granted
+                            Admin Access
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-gray-400">
                             <LayoutGrid size={12} />

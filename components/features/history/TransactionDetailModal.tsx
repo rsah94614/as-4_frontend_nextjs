@@ -84,132 +84,110 @@ export default function TransactionDetailModal({
 
     return (
         <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-            <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden rounded-2xl border-0 shadow-2xl">
-                {/* ── Gradient header ── */}
-                <div
-                    className={`relative px-6 pt-7 pb-6 ${isRedemption
-                            ? "bg-gradient-to-br from-fuchsia-50 via-purple-50 to-pink-50"
-                            : "bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50"
-                        }`}
-                >
-                    {/* Decorative circles */}
-                    <div
-                        className={`absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-20 blur-xl ${isRedemption ? "bg-fuchsia-300" : "bg-emerald-300"
-                            }`}
-                    />
-                    <div
-                        className={`absolute -bottom-4 -left-4 w-16 h-16 rounded-full opacity-15 blur-lg ${isRedemption ? "bg-purple-300" : "bg-green-300"
-                            }`}
-                    />
+            <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden rounded-[32px] border-0 shadow-2xl animate-in zoom-in-95 duration-200">
+                {/* ── Header ── */}
+                <div className="relative px-8 pt-10 pb-8 bg-white border-b border-gray-100">
+                    <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: isRedemption ? "#E31837" : "#004C8F" }} />
 
-                    <DialogHeader className="relative z-10 space-y-3">
-                        <div
-                            className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm ${isRedemption
-                                    ? "bg-white/80 backdrop-blur-sm"
-                                    : "bg-white/80 backdrop-blur-sm"
-                                }`}
-                        >
+                    <DialogHeader className="relative z-10 space-y-4">
+                        <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 shadow-sm text-left align-left">
                             {isRedemption ? (
-                                <ArrowUpRight className="w-5 h-5 text-fuchsia-600" />
+                                <ArrowUpRight className="w-7 h-7 text-[#E31837]" />
                             ) : (
-                                <TrendingUp className="w-5 h-5 text-emerald-600" />
+                                <TrendingUp className="w-7 h-7 text-[#004C8F]" />
                             )}
                         </div>
-                        <DialogTitle className="text-[17px] font-bold text-gray-900 leading-snug pr-6">
-                            {getMessage(item)}
-                        </DialogTitle>
+                        <div className="space-y-1 text-left">
+                            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">
+                                Transaction Detail
+                            </p>
+                            <DialogTitle className="text-2xl font-bold text-[#004C8F] leading-tight">
+                                {getMessage(item)}
+                            </DialogTitle>
+                        </div>
                     </DialogHeader>
                 </div>
 
                 {/* ── Details section ── */}
-                <div className="px-6 py-5 space-y-5">
-                    {/* Type */}
-                    <DetailRow icon={<Coins className="w-4 h-4" />} label="Type">
-                        <div className="flex items-center gap-2.5">
-                            <Badge
-                                variant="outline"
-                                className={`text-xs font-semibold ${isRedemption
-                                        ? "border-fuchsia-200 text-fuchsia-700 bg-fuchsia-50"
-                                        : "border-emerald-200 text-emerald-700 bg-emerald-50"
-                                    }`}
-                            >
-                                {isRedemption ? "Redemption" : "Points Earned"}
-                            </Badge>
+                <div className="px-8 py-8 space-y-6 bg-white">
+                    {/* Points row */}
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isRedemption ? "bg-[#E31837]/10 text-[#E31837]" : "bg-[#004C8F]/10 text-[#004C8F]"}`}>
+                                <Coins className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                    {isRedemption ? "Points Deducted" : "Points Earned"}
+                                </p>
+                                <p className={`text-xl font-black ${isRedemption ? "text-[#E31837]" : "text-[#004C8F]"}`}>
+                                    {isRedemption ? "-" : "+"}{item.points}
+                                </p>
+                            </div>
                         </div>
-                    </DetailRow>
-
-                    {/* Points */}
-                    <DetailRow
-                        icon={<Coins className="w-4 h-4" />}
-                        label={isRedemption ? "Points Deducted" : "Points Earned"}
-                    >
-                        <span
-                            className={`text-xl font-bold tracking-tight ${isRedemption
-                                    ? "text-fuchsia-600"
-                                    : "text-emerald-600"
+                        <Badge
+                            className={`rounded-lg py-1 text-[10px] font-bold uppercase ${isRedemption
+                                ? "bg-[#E31837]/10 text-[#E31837] hover:bg-[#E31837]/10 border-none px-2"
+                                : "bg-[#004C8F]/10 text-[#004C8F] hover:bg-[#004C8F]/10 border-none px-2"
                                 }`}
                         >
-                            {item.points}
-                        </span>
-                        <span className="text-sm text-gray-400 ml-1.5 font-medium">
-                            points
-                        </span>
-                    </DetailRow>
+                            {isRedemption ? "Redemption" : "Points Earned"}
+                        </Badge>
+                    </div>
 
-                    {/* Divider */}
-                    <div className="border-t border-dashed border-gray-150" />
+                    <div className="grid grid-cols-2 gap-4">
+                        <DetailRow icon={<Calendar className="w-4 h-4" />} label="Date">
+                            <span className="text-sm text-gray-900 font-bold">
+                                {formatDate(item.granted_at)}
+                            </span>
+                        </DetailRow>
+                        <DetailRow icon={<Hash className="w-4 h-4" />} label="Time">
+                            <span className="text-sm text-gray-900 font-bold">
+                                {formatTime(item.granted_at)}
+                            </span>
+                        </DetailRow>
+                    </div>
 
-                    {/* Date & time */}
-                    <DetailRow
-                        icon={<Calendar className="w-4 h-4" />}
-                        label="Date & Time"
-                    >
-                        <span className="text-sm text-gray-800 font-medium">
-                            {formatDate(item.granted_at)}
-                        </span>
-                        <span className="text-xs text-gray-400 ml-2">
-                            {formatTime(item.granted_at)}
-                        </span>
-                    </DetailRow>
+                    <div className="border-t border-gray-100 pt-6" />
 
-                    {/* Transaction ID */}
                     <DetailRow
                         icon={<Hash className="w-4 h-4" />}
                         label="Transaction ID"
                     >
-                        <span className="text-xs font-mono text-gray-500 bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-lg inline-block">
-                            {item.history_id.slice(0, 8)}…
+                        <span className="text-xs font-mono text-gray-500 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-xl inline-block">
+                            {item.history_id}
                         </span>
                     </DetailRow>
 
                     {/* Reward details (if redemption) */}
                     {item.reward_catalog && (
-                        <>
-                            <div className="border-t border-dashed border-gray-150" />
-                            <DetailRow
-                                icon={<Package className="w-4 h-4" />}
-                                label="Reward"
-                            >
-                                <p className="text-sm text-gray-800 font-semibold">
+                        <div className="p-4 rounded-2xl bg-[#004C8F]/5 border border-[#004C8F]/10 space-y-3">
+                            <div className="flex items-center gap-2 text-[#004C8F]">
+                                <Package className="w-4 h-4" />
+                                <p className="text-[10px] font-bold uppercase tracking-wider">Reward Information</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-900 font-bold">
                                     {item.reward_catalog.reward_name}
                                 </p>
-                                <p className="text-xs font-mono text-gray-400 mt-0.5">
-                                    {item.reward_catalog.reward_code}
+                                <p className="text-xs font-mono text-[#004C8F]/70 mt-1">
+                                    Code: {item.reward_catalog.reward_code}
                                 </p>
-                            </DetailRow>
-                        </>
+                            </div>
+                        </div>
                     )}
 
                     {/* Comment */}
                     {item.comment && (
-                        <DetailRow
-                            icon={<MessageSquare className="w-4 h-4" />}
-                            label="Note"
-                        >
+                        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                            <div className="flex items-center gap-2 text-gray-400 mb-2">
+                                <MessageSquare className="w-4 h-4" />
+                                <p className="text-[10px] font-bold uppercase tracking-wider">Note</p>
+                            </div>
                             <p className="text-sm text-gray-600 leading-relaxed italic">
                                 &ldquo;{item.comment}&rdquo;
                             </p>
-                        </DetailRow>
+                        </div>
                     )}
                 </div>
             </DialogContent>
