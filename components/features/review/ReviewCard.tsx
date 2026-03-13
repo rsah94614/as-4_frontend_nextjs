@@ -1,12 +1,9 @@
 "use client"
 
-import { Star, Tag, Clock, Image as ImageIcon, Video } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Tag, Clock, Image as ImageIcon, Video, Zap, ArrowUpRight, ArrowDownLeft } from "lucide-react"
 import type { Review, ReviewCategory } from "@/types/review-types"
-import { RATING_LABELS, RATING_COLORS, fmtDate } from "@/lib/review-utils"
-
-// ─── Review Card ──────────────────────────────────────────────────────────────
+import { fmtDate } from "@/lib/review-utils"
+import { cn } from "@/lib/utils"
 
 interface ReviewCardProps {
     review: Review
@@ -17,75 +14,78 @@ interface ReviewCardProps {
 export default function ReviewCard({ review, myId, categories }: ReviewCardProps) {
     const isMine = review.reviewer_id === myId
 
-    const catNames = (review.category_ids ?? (review.category_id ? [review.category_id] : []))
-        .map((id) => categories.find((c) => c.category_id === id)?.category_name)
-        .filter(Boolean) as string[]
+    const catCodes: string[] =
+        review.category_codes ??
+        (review.category_ids ?? [])
+            .map((id) => categories.find((c) => c.category_id === id)?.category_code)
+            .filter(Boolean) as string[]
 
-    const catCodesFromResponse =
-        review.category_codes ?? (review.category_code ? [review.category_code] : [])
-
-    const displayCats = catNames.length > 0 ? catNames : catCodesFromResponse
+    const rawPts = review.raw_points != null ? review.raw_points : null
 
     return (
-        <Card className="rounded-2xl border border-gray-100 shadow-none hover:border-gray-200 hover:shadow-sm transition-all duration-200 overflow-hidden bg-gray-50 py-0">
-            <CardContent className="px-5 py-4">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <Badge
-                            variant="secondary"
-                            className={`text-[10px] font-bold uppercase tracking-wider rounded-full
-                ${isMine ? "bg-purple-100 text-purple-700" : "bg-green-100 text-green-700"}`}
-                        >
-                            {isMine ? "Given" : "Received"}
-                        </Badge>
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:border-gray-200 hover:shadow-md transition-all duration-200 group">
+            {/* Top accent stripe */}
+            <div className={cn(
+                "h-0.5 w-full",
+                isMine ? "bg-[#004C8F]" : "bg-[#E31837]"
+            )} />
 
-                        {displayCats.length > 0 &&
-                            displayCats.map((name, i) => (
-                                <Badge
-                                    key={i}
-                                    variant="outline"
-                                    className="text-[10px] font-medium bg-white text-gray-500 border-gray-100 rounded-full"
-                                >
-                                    <Tag size={9} />
-                                    {name}
-                                </Badge>
-                            ))}
+            <div className="p-5">
+                {/* Header row */}
+                <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                        {/* Direction badge */}
+                        <span className={cn(
+                            "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded",
+                            isMine
+                                ? "bg-[#004C8F]/8 text-[#004C8F]"
+                                : "bg-[#E31837]/8 text-[#E31837]"
+                        )}>
+                            {isMine
+                                ? <ArrowUpRight size={10} />
+                                : <ArrowDownLeft size={10} />
+                            }
+                            {isMine ? "Given" : "Received"}
+                        </span>
                     </div>
+
+                    {rawPts !== null && (
+                        <div className="flex items-center gap-1 bg-amber-50 border border-amber-200/60 rounded px-2 py-1">
+                            <Zap size={10} className="text-amber-500" />
+                            <span className="text-[11px] font-black text-amber-600 tabular-nums">
+                                {rawPts % 1 === 0 ? rawPts : rawPts.toFixed(2)} pts
+                            </span>
+                        </div>
+                    )}
                 </div>
 
-                {/* Stars */}
-                <div className="flex items-center gap-2 mb-2.5">
-                    <div className="flex">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                            <Star
-                                key={s}
-                                size={14}
-                                className={
-                                    s <= review.rating
-                                        ? "fill-amber-400 text-amber-400"
-                                        : "fill-gray-200 text-gray-200"
-                                }
-                            />
+                {/* Category tags */}
+                {catCodes.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                        {catCodes.map((code) => (
+                            <span
+                                key={code}
+                                className="inline-flex items-center gap-1 text-[10px] font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded"
+                            >
+                                <Tag size={8} />
+                                {code}
+                            </span>
                         ))}
                     </div>
-                    <span className={`text-xs font-semibold ${RATING_COLORS[review.rating]}`}>
-                        {RATING_LABELS[review.rating]}
-                    </span>
-                </div>
+                )}
 
                 {/* Comment */}
                 <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{review.comment}</p>
 
-                {/* Media */}
+                {/* Media links */}
                 {(review.image_url || review.video_url) && (
-                    <div className="flex gap-3 mt-2.5">
+                    <div className="flex gap-3 mt-3">
                         {review.image_url && (
                             <a
                                 href={review.image_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[11px] text-purple-700 hover:underline flex items-center gap-1 font-medium"
+                                className="text-[11px] text-[#004C8F] hover:text-[#E31837] flex items-center gap-1 font-semibold transition-colors"
                             >
                                 <ImageIcon size={10} /> Image
                             </a>
@@ -95,7 +95,7 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
                                 href={review.video_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-[11px] text-purple-700 hover:underline flex items-center gap-1 font-medium"
+                                className="text-[11px] text-[#004C8F] hover:text-[#E31837] flex items-center gap-1 font-semibold transition-colors"
                             >
                                 <Video size={10} /> Video
                             </a>
@@ -104,13 +104,13 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
                 )}
 
                 {/* Footer */}
-                <div className="mt-3 pt-2.5 border-t border-gray-100">
+                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
                     <span className="text-[11px] text-gray-400 flex items-center gap-1">
-                        <Clock size={10} />
+                        <Clock size={9} />
                         {fmtDate(review.review_at)}
                     </span>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     )
 }

@@ -1,12 +1,10 @@
 "use client"
 
-import { Loader2, AlertCircle, MessageSquare } from "lucide-react"
+import { Loader2, AlertCircle, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ReviewCard from "./ReviewCard"
 import type { Review, ReviewCategory } from "@/types/review-types"
 import { cn } from "@/lib/utils"
-
-// ─── Review List Section ──────────────────────────────────────────────────────
 
 interface ReviewListSectionProps {
     filteredReviews: Review[]
@@ -18,12 +16,15 @@ interface ReviewListSectionProps {
     setListTab: (tab: "all" | "given" | "received") => void
     page: number
     totalPages: number
-
     onCompose: () => void
     onLoadReviews: (pg: number) => void
 }
 
-const TABS = ["all", "given", "received"] as const
+const TABS = [
+    { key: "all", label: "All" },
+    { key: "given", label: "Given" },
+    { key: "received", label: "Received" },
+] as const
 
 export default function ReviewListSection({
     filteredReviews,
@@ -35,45 +36,47 @@ export default function ReviewListSection({
     setListTab,
     page,
     totalPages,
-
     onCompose,
     onLoadReviews,
 }: ReviewListSectionProps) {
     return (
-        <>
+        <div>
             {/* Tab bar */}
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
                 {TABS.map((tab) => (
-                    <Button
-                        key={tab}
-                        variant={listTab === tab ? "default" : "secondary"}
-                        size="sm"
-                        onClick={() => setListTab(tab)}
+                    <button
+                        key={tab.key}
+                        onClick={() => setListTab(tab.key)}
                         className={cn(
-                            "rounded-full capitalize",
-                            listTab === tab
-                                ? "bg-purple-700 text-white shadow-sm hover:bg-purple-800"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            "px-4 py-2 rounded-md text-sm font-semibold transition-all duration-150",
+                            listTab === tab.key
+                                ? "bg-white text-[#004C8F] shadow-sm"
+                                : "text-gray-500 hover:text-gray-700"
                         )}
                     >
-                        {tab}
-                    </Button>
+                        {tab.label}
+                    </button>
                 ))}
             </div>
 
             {/* Loading */}
             {loadingData && (
                 <div className="flex justify-center py-24">
-                    <Loader2 className="w-8 h-8 animate-spin text-gray-300" />
+                    <Loader2 className="w-7 h-7 animate-spin text-[#004C8F]/30" />
                 </div>
             )}
 
             {/* Error */}
             {!loadingData && dataError && (
-                <div className="flex flex-col items-center py-20 gap-3">
-                    <AlertCircle className="w-10 h-10 text-red-300" />
-                    <p className="text-gray-500 text-sm">{dataError}</p>
-                    <button onClick={() => onLoadReviews(1)} className="text-sm text-purple-600 underline">
+                <div className="flex flex-col items-center py-16 gap-3 bg-white rounded-xl border border-gray-100">
+                    <div className="w-12 h-12 rounded-full bg-[#E31837]/10 flex items-center justify-center">
+                        <AlertCircle className="w-6 h-6 text-[#E31837]" />
+                    </div>
+                    <p className="text-sm text-gray-600">{dataError}</p>
+                    <button
+                        onClick={() => onLoadReviews(1)}
+                        className="text-sm text-[#004C8F] font-semibold underline underline-offset-2 hover:text-[#E31837] transition-colors"
+                    >
                         Retry
                     </button>
                 </div>
@@ -81,25 +84,29 @@ export default function ReviewListSection({
 
             {/* Empty */}
             {!loadingData && !dataError && filteredReviews.length === 0 && (
-                <div className="flex flex-col items-center py-20 gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center">
-                        <MessageSquare className="w-7 h-7 text-purple-300" strokeWidth={1.5} />
+                <div className="flex flex-col items-center py-16 gap-4 bg-white rounded-xl border border-gray-100">
+                    <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+                        <MessageSquare className="w-6 h-6 text-gray-300" strokeWidth={1.5} />
                     </div>
-                    <p className="text-gray-500 text-sm font-medium">
-                        {listTab === "given"
-                            ? "You haven't given any reviews yet."
-                            : listTab === "received"
-                                ? "You haven't received any reviews yet."
-                                : "No reviews yet."}
-                    </p>
+                    <div className="text-center">
+                        <p className="text-sm font-semibold text-gray-700">
+                            {listTab === "given"
+                                ? "No recognitions given yet"
+                                : listTab === "received"
+                                    ? "No recognitions received yet"
+                                    : "No recognitions yet"}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                            {listTab !== "received" && "Start by recognising a teammate's contribution."}
+                        </p>
+                    </div>
                     {listTab !== "received" && (
-                        <Button
-                            variant="ghost"
+                        <button
                             onClick={onCompose}
-                            className="text-sm text-purple-700 font-semibold bg-purple-50 hover:bg-purple-100 rounded-xl"
+                            className="text-sm text-white font-semibold bg-[#E31837] hover:bg-[#c41230] px-5 py-2.5 rounded-lg transition-colors"
                         >
-                            Write your first review →
-                        </Button>
+                            Write a Recognition
+                        </button>
                     )}
                 </div>
             )}
@@ -120,32 +127,43 @@ export default function ReviewListSection({
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-3 mt-4 pb-4">
-                            <Button
-                                variant="outline"
-                                size="sm"
+                        <div className="flex items-center justify-center gap-2 mt-8">
+                            <button
                                 disabled={page <= 1}
                                 onClick={() => onLoadReviews(page - 1)}
-                                className="rounded-xl"
+                                className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
-                                ← Prev
-                            </Button>
-                            <span className="text-sm text-gray-500 font-medium tabular-nums">
-                                {page} / {totalPages}
-                            </span>
-                            <Button
-                                variant="outline"
-                                size="sm"
+                                <ChevronLeft size={15} />
+                            </button>
+
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
+                                    <button
+                                        key={pg}
+                                        onClick={() => onLoadReviews(pg)}
+                                        className={cn(
+                                            "w-9 h-9 rounded-lg text-sm font-semibold transition-all",
+                                            pg === page
+                                                ? "bg-[#004C8F] text-white"
+                                                : "text-gray-500 hover:bg-gray-100"
+                                        )}
+                                    >
+                                        {pg}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <button
                                 disabled={page >= totalPages}
                                 onClick={() => onLoadReviews(page + 1)}
-                                className="rounded-xl"
+                                className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
-                                Next →
-                            </Button>
+                                <ChevronRight size={15} />
+                            </button>
                         </div>
                     )}
                 </>
             )}
-        </>
+        </div>
     )
 }

@@ -1,600 +1,355 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import {
-    Star, Users, Tag, MessageSquare, Loader2,
-    Send, RotateCcw, Check, X, Image as ImageIcon, Video,
-    TrendingUp, Award, BarChart3, Clock,
-    CheckCircle2, PenLine,
+    Loader2, Send, Check, X, Image as ImageIcon, Video,
+    BarChart3, CheckCircle2, Zap, BookOpen, Paperclip,
 } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
-import StarPicker from "./StarPicker"
 import CategoryPicker from "./CategoryPicker"
 import ReceiverPicker from "./ReceiverPicker"
 import type { Review, ReviewCategory, ViewMode, SubmittedReviewData } from "@/types/review-types"
 import type { TeamMember } from "@/services/employee-service"
-import { RATING_LABELS, RATING_COLORS, fmtDate } from "@/lib/review-utils"
+import { fmtDate } from "@/lib/review-utils"
+import { cn } from "@/lib/utils"
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Filter categories based on star rating and multiplier value */
-function filterCategoriesByRating(categories: ReviewCategory[], rating: number): ReviewCategory[] {
-    if (rating <= 0) return categories
-
-    if (rating < 3) {
-
-        return categories.filter((c) => c.multiplier < 1)
-    } else {
-
-        return categories.filter((c) => c.multiplier > 1)
-    }
+function calcPreviewPoints(categories: ReviewCategory[], selectedIds: string[], weight = 1.0): number {
+    const total = selectedIds.reduce((sum, id) => {
+        const cat = categories.find((c) => c.category_id === id)
+        return sum + (cat ? cat.multiplier : 0)
+    }, 0)
+    return Math.round(total * weight * 10) / 10
 }
 
-// ─── Review Compose Form ──────────────────────────────────────────────────────
+function StepDot({ n, active, done }: { n: number; active: boolean; done: boolean }) {
+    return (
+        <div className={cn(
+            "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all",
+            done ? "bg-[#E31837] border-[#E31837] text-white"
+                : active ? "bg-white border-[#004C8F] text-[#004C8F]"
+                : "bg-white border-gray-300 text-gray-300"
+        )}>
+            {done ? <Check size={12} strokeWidth={3} /> : n}
+        </div>
+    )
+}
+
+function SuccessView({ data, onStartNew }: { data: SubmittedReviewData; onStartNew?: () => void }) {
+    return (
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="h-1 bg-[#E31837]" />
+            <div className="p-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-green-50 border-4 border-green-100 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="w-8 h-8 text-green-500" />
+                </div>
+                <h3 className="text-lg font-bold text-[#004C8F] mb-1">Recognition Submitted!</h3>
+                <p className="text-sm text-gray-500 mb-6">Your feedback has been recorded and points credited.</p>
+                <div className="bg-gray-50 border border-gray-100 rounded-xl p-5 text-left space-y-3 mb-6">
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Recognised</span>
+                        <span className="font-semibold text-[#004C8F]">{data.receiverName}</span>
+                    </div>
+                    {data.rawPoints != null && (
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">Points Awarded</span>
+                            <div className="flex items-center gap-1">
+                                <Zap size={12} className="text-amber-500" />
+                                <span className="font-bold text-[#004C8F]">
+                                    {data.rawPoints % 1 === 0 ? data.rawPoints : data.rawPoints.toFixed(2)} pts
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                    {data.categories?.length > 0 && (
+                        <div className="flex justify-between text-sm items-start gap-4">
+                            <span className="text-gray-500 shrink-0">Categories</span>
+                            <div className="flex flex-wrap gap-1 justify-end">
+                                {data.categories.map((c: string) => (
+                                    <span key={c} className="text-[10px] font-bold bg-[#004C8F]/8 text-[#004C8F] px-2 py-0.5 rounded">{c}</span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {data.submittedAt && (
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">Submitted</span>
+                            <span className="text-gray-600 text-xs">{fmtDate(data.submittedAt)}</span>
+                        </div>
+                    )}
+                </div>
+                <button type="button" onClick={onStartNew}
+                    className="w-full py-3 rounded-lg bg-[#004C8F] text-white text-sm font-semibold hover:bg-[#003a6e] transition-colors">
+                    Write Another Recognition
+                </button>
+            </div>
+        </div>
+    )
+}
+
+const HOW_IT_WORKS = [
+    { n: "01", title: "Select a Teammate", desc: "Choose who you'd like to recognise. Each person can be reviewed once per month." },
+    { n: "02", title: "Pick Categories", desc: "Select 1–5 categories. Each carries a multiplier. Points = sum of multipliers × your reviewer weight." },
+    { n: "03", title: "Write Feedback", desc: "Describe what they did, the impact it had, and why it matters. Min 10, max 2000 characters." },
+    { n: "04", title: "Attach Evidence", desc: "Optionally add an image or video to support your feedback. Max 2 files." },
+    { n: "05", title: "Submit", desc: "Points are auto-credited to the receiver's wallet on submission." },
+]
+
+function Sidebar({ givenThisMonth, uniquePeopleCount, totalReviews, loadingStats }: {
+    givenThisMonth: number; uniquePeopleCount: number; totalReviews: number; loadingStats?: boolean
+}) {
+    return (
+        <div className="space-y-4">
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="px-5 py-3.5 bg-white border-b border-gray-200 flex items-center gap-2">
+                    <BarChart3 size={13} className="text-[#E31837]" />
+                    <h3 className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">Your Activity</h3>
+                </div>
+                {loadingStats ? (
+                    <div className="p-5 space-y-4">
+                        {[0,1,2].map(i => (
+                            <div key={i} className="flex items-center justify-between">
+                                <Skeleton className="h-4 w-32" /><Skeleton className="h-6 w-10" />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="divide-y divide-gray-100">
+                        {[
+                            { label: "Given This Month", value: givenThisMonth, sub: "Reviews submitted" },
+                            { label: "Unique People", value: uniquePeopleCount, sub: "Teammates recognised" },
+                            { label: "Total Reviews", value: totalReviews, sub: "Given & received" },
+                        ].map(row => (
+                            <div key={row.label} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors">
+                                <div>
+                                    <p className="text-xs font-semibold text-[#004C8F]">{row.label}</p>
+                                    <p className="text-[10px] text-gray-400 mt-0.5">{row.sub}</p>
+                                </div>
+                                <span className="text-2xl font-bold text-[#004C8F] tabular-nums">{row.value}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                <div className="px-5 py-3.5 bg-white border-b border-gray-200 flex items-center gap-2">
+                    <BookOpen size={13} className="text-[#E31837]" />
+                    <h3 className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</h3>
+                </div>
+                <div className="divide-y divide-gray-100">
+                    {HOW_IT_WORKS.map(s => (
+                        <div key={s.n} className="flex gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors">
+                            <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
+                            <div>
+                                <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
+                                <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
+                            </div>
+                        </div>
+                    ))}
+                    <div className="px-5 py-4 bg-gray-50">
+                        <div className="flex items-start gap-2">
+                            <Zap size={12} className="text-[#E31837] mt-0.5 shrink-0" />
+                            <div>
+                                <p className="text-[11px] font-bold text-[#004C8F] mb-1.5">Points Formula</p>
+                                <code className="text-[10px] bg-white border border-gray-200 text-[#004C8F] px-2.5 py-1.5 rounded block font-mono">
+                                    raw_pts = Σ(multipliers) × weight
+                                </code>
+                                <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">
+                                    SUPER_ADMIN ×1.5 · HR ×1.2<br/>MANAGER ×1.3 · EMPLOYEE ×1.0
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
 
 interface ReviewComposeFormProps {
     view: ViewMode
-    // Receiver
     allReceivers: (TeamMember & { isManager: boolean })[]
     receiverId: string
     onReceiverChange: (id: string) => void
     reviewedThisMonth: Set<string>
-    // Rating
-    rating: number
-    onRatingChange: (r: number) => void
-    // Categories
     categories: ReviewCategory[]
     categoryIds: string[]
     onCategoryIdsChange: React.Dispatch<React.SetStateAction<string[]>>
-    // Comment
     comment: string
     onCommentChange: (c: string) => void
-    // Files
     files: File[]
     onFilesChange: React.Dispatch<React.SetStateAction<File[]>>
     fileRef: React.RefObject<HTMLInputElement | null>
-    // Submit
     submitting: boolean
     onSubmit: (e: React.FormEvent) => void
-    // Stats
     givenThisMonth: number
     uniquePeopleCount: number
     totalReviews: number
     loadingStats?: boolean
-    // Reviews for scrollable comments
     reviews: Review[]
     myId: string
-    // Submitted state
+    reviewerWeight?: number
     submittedData?: SubmittedReviewData | null
     onStartNew?: () => void
 }
 
 export default function ReviewComposeForm({
-    view,
-    allReceivers,
-    receiverId,
-    onReceiverChange,
-    reviewedThisMonth,
-    rating,
-    onRatingChange,
-    categories,
-    categoryIds,
-    onCategoryIdsChange,
-    comment,
-    onCommentChange,
-    files,
-    onFilesChange,
-    fileRef,
-    submitting,
-    onSubmit,
-    givenThisMonth,
-    uniquePeopleCount,
-    totalReviews,
-    loadingStats,
-    reviews,
-    myId,
-    submittedData,
-    onStartNew,
+    view, allReceivers, receiverId, onReceiverChange, reviewedThisMonth,
+    categories, categoryIds, onCategoryIdsChange, comment, onCommentChange,
+    files, onFilesChange, fileRef, submitting, onSubmit,
+    givenThisMonth, uniquePeopleCount, totalReviews, loadingStats,
+    reviews, myId, submittedData, onStartNew, reviewerWeight,
 }: ReviewComposeFormProps) {
+    const previewPts = useMemo(() => calcPreviewPoints(categories, categoryIds, reviewerWeight ?? 1.0), [categories, categoryIds, reviewerWeight])
+    const step1Done = !!receiverId
+    const step2Done = categoryIds.length > 0
+    const step3Done = comment.trim().length >= 10
+    const canSubmit = step1Done && step2Done && step3Done && !submitting
+    const sidebarProps = { givenThisMonth, uniquePeopleCount, totalReviews, loadingStats }
 
-    // ── Filter categories based on star rating ──
-    const filteredCategories = useMemo(() => {
-        const filtered = filterCategoriesByRating(categories, rating)
-        // If filtering removes everything, fall back to showing all categories
-        return filtered.length > 0 ? filtered : categories
-    }, [categories, rating])
-
-    const handleRatingChange = (newRating: number) => {
-        onRatingChange(newRating)
-        // Deselect any categories that will no longer be visible
-        const filtered = filterCategoriesByRating(categories, newRating)
-        const validSet = filtered.length > 0
-            ? new Set(filtered.map((c) => c.category_id))
-            : new Set(categories.map((c) => c.category_id))
-
-        onCategoryIdsChange((prev) => prev.filter((id) => validSet.has(id)))
+    if (view === "submitted" && submittedData) {
+        return (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2"><SuccessView data={submittedData} onStartNew={onStartNew} /></div>
+                <Sidebar {...sidebarProps} />
+            </div>
+        )
     }
 
-    // ── My given reviews for scrollable comments ──
-    const myGivenReviews = useMemo(() => {
-        return reviews
-            .filter((r) => r.reviewer_id === myId)
-            .sort((a, b) => new Date(b.review_at).getTime() - new Date(a.review_at).getTime())
-    }, [reviews, myId])
-
-    // ── Expandable comments state ──
-    const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null)
-    const [expandedSubmitted, setExpandedSubmitted] = useState(false)
-
-    // ── Dynamic max categories ──
-    const maxCategories = Math.min(filteredCategories.length, 5)
-
     return (
-        <form onSubmit={onSubmit} className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* ── Left: Form inputs ── */}
-            <div className="lg:col-span-3 space-y-5">
+        <form onSubmit={onSubmit} noValidate>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {/* ── Submitted Success State ── */}
-                {view === "submitted" && submittedData && (
-                    <Card className="rounded-2xl border border-green-100 shadow-none py-0 overflow-hidden">
-                        {/* Success header */}
-                        <div className="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 px-6 py-8 text-center">
-                            <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
-                                <CheckCircle2 size={32} className="text-white" />
+                {/* ── LEFT ── */}
+                <div className="lg:col-span-2">
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                            <h2 className="text-sm font-bold text-[#004C8F]">New Recognition</h2>
+                            <div className="flex items-center gap-2">
+                                <StepDot n={1} active={!step1Done} done={step1Done} />
+                                <div className="w-6 h-px bg-gray-200" />
+                                <StepDot n={2} active={step1Done && !step2Done} done={step2Done} />
+                                <div className="w-6 h-px bg-gray-200" />
+                                <StepDot n={3} active={step2Done && !step3Done} done={step3Done} />
                             </div>
-                            <h2 className="text-xl font-bold text-white mb-1">Review Submitted!</h2>
-                            <p className="text-sm text-green-100">Your feedback has been recorded successfully</p>
                         </div>
 
-                        <CardContent className="p-6 space-y-4">
-                            {/* Receiver */}
-                            <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3">
-                                <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
-                                    <Users size={16} className="text-purple-600" />
+                        <div className="p-6 space-y-7">
+                            {/* 01 */}
+                            <div>
+                                <label className="block text-[11px] font-bold text-[#004C8F] uppercase tracking-widest mb-2.5">
+                                    <span className="text-[#E31837] mr-1.5">01</span>Who are you recognising?
+                                </label>
+                                <ReceiverPicker allReceivers={allReceivers} receiverId={receiverId}
+                                    onSelect={onReceiverChange} reviewedThisMonth={reviewedThisMonth} />
+                            </div>
+
+                            {/* 02 */}
+                            <div>
+                                <div className="flex items-center justify-between mb-2.5">
+                                    <label className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
+                                        <span className="text-[#E31837] mr-1.5">02</span>Recognition categories
+                                    </label>
+                                    <span className="text-[11px] text-gray-400 tabular-nums">{categoryIds.length}/{Math.min(5, categories.length)} selected</span>
                                 </div>
-                                <div>
-                                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Reviewed</p>
-                                    <p className="text-sm font-semibold text-gray-800">{submittedData.receiverName}</p>
+                                <CategoryPicker categories={categories} selectedIds={categoryIds}
+                                    onChange={onCategoryIdsChange} maxSelectable={Math.min(5, categories.length)} />
+                                {categoryIds.length > 0 && (
+                                    <div className="mt-3 flex items-center gap-2 bg-amber-50 border border-amber-200/60 rounded-lg px-4 py-2.5">
+                                        <Zap size={12} className="text-amber-500 shrink-0" />
+                                        <span className="text-xs text-amber-700">
+                                            Preview: <span className="font-black tabular-nums">{previewPts} pts</span>
+                                            <span className="text-amber-400 font-normal ml-1">(at ×{(reviewerWeight ?? 1.0).toFixed(1)} weight)</span>
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* 03 */}
+                            <div>
+                                <label className="block text-[11px] font-bold text-[#004C8F] uppercase tracking-widest mb-2.5">
+                                    <span className="text-[#E31837] mr-1.5">03</span>Your feedback
+                                </label>
+                                <textarea value={comment} onChange={(e) => onCommentChange(e.target.value)}
+                                    maxLength={2000} rows={5}
+                                    placeholder="Describe what they did, the impact it had, and why it matters…"
+                                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-[#004C8F]
+                                        placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10
+                                        focus:border-[#004C8F]/40 resize-none transition-all leading-relaxed" />
+                                <div className="flex justify-between mt-1.5 px-0.5">
+                                    <span className="text-[11px]">
+                                        {comment.length > 0 && comment.length < 10 && (
+                                            <span className="text-[#E31837]">Minimum 10 characters</span>
+                                        )}
+                                    </span>
+                                    <span className={cn("text-[11px] tabular-nums", comment.length > 1900 ? "text-[#E31837]" : "text-gray-400")}>
+                                        {comment.length}/2000
+                                    </span>
                                 </div>
                             </div>
 
-                            {/* Rating */}
-                            <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3">
-                                <div className="flex items-center gap-0.5">
-                                    {[1, 2, 3, 4, 5].map((s) => (
-                                        <Star
-                                            key={s}
-                                            size={16}
-                                            className={
-                                                s <= submittedData.rating
-                                                    ? "fill-amber-400 text-amber-400"
-                                                    : "fill-gray-200 text-gray-200"
-                                            }
-                                        />
-                                    ))}
-                                </div>
-                                <span className={`text-sm font-semibold ${RATING_COLORS[submittedData.rating]}`}>
-                                    {RATING_LABELS[submittedData.rating]}
-                                </span>
-                            </div>
-
-                            {/* Categories */}
-                            {submittedData.categoryNames.length > 0 && (
-                                <div className="bg-gray-50 rounded-xl px-4 py-3">
-                                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-2">Categories</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {submittedData.categoryNames.map((name) => (
-                                            <span
-                                                key={name}
-                                                className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full px-2.5 py-1"
-                                            >
-                                                <Tag size={10} />
-                                                {name}
-                                            </span>
+                            {/* Attachments */}
+                            <div>
+                                <label className="block text-[11px] font-bold text-[#004C8F] uppercase tracking-widest mb-2.5">
+                                    Attachments <span className="text-gray-400 font-normal normal-case tracking-normal ml-1">(optional · max 2)</span>
+                                </label>
+                                {files.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mb-2">
+                                        {files.map((f, i) => (
+                                            <div key={i} className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs font-medium text-[#004C8F]">
+                                                {f.type.startsWith("image/") ? <ImageIcon size={12} /> : <Video size={12} />}
+                                                <span className="max-w-[120px] truncate">{f.name}</span>
+                                                <button type="button" onClick={() => onFilesChange(p => p.filter((_, fi) => fi !== i))}
+                                                    className="text-gray-400 hover:text-[#E31837] transition-colors"><X size={12} /></button>
+                                            </div>
                                         ))}
                                     </div>
-                                </div>
-                            )}
-
-                            {/* Comment */}
-                            {submittedData.comment && (
-                                <div
-                                    className="bg-gray-50 rounded-xl px-4 py-3 cursor-pointer hover:bg-gray-100/80 transition-colors"
-                                    onClick={() => setExpandedSubmitted((prev) => !prev)}
-                                >
-                                    <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-2">Your Feedback</p>
-                                    <p className={`text-sm text-gray-700 leading-relaxed ${expandedSubmitted ? "" : "line-clamp-4"}`}>
-                                        {submittedData.comment}
-                                    </p>
-                                    {submittedData.comment.length > 200 && (
-                                        <p className="text-[10px] text-purple-500 font-medium mt-1.5">
-                                            {expandedSubmitted ? "Show less" : "Click to read more…"}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Submitted time */}
-                            <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400 pt-1">
-                                <Clock size={11} />
-                                {fmtDate(submittedData.submittedAt)}
+                                )}
+                                {files.length < 2 && (
+                                    <>
+                                        <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden"
+                                            onChange={(e) => {
+                                                const picked = Array.from(e.target.files ?? []).slice(0, 2 - files.length)
+                                                onFilesChange(p => [...p, ...picked].slice(0, 2))
+                                                if (fileRef.current) fileRef.current.value = ""
+                                            }} />
+                                        <button type="button" onClick={() => fileRef.current?.click()}
+                                            className="flex items-center gap-2 text-sm text-gray-500 border border-dashed border-gray-300 rounded-lg
+                                                px-4 py-3 w-full hover:border-[#004C8F]/40 hover:bg-gray-50 hover:text-[#004C8F] transition-all">
+                                            <Paperclip size={14} /><span>Attach image or video</span>
+                                        </button>
+                                    </>
+                                )}
                             </div>
-                        </CardContent>
-
-                        {/* Write Another Review button */}
-                        <div className="px-6 pb-6">
-                            <Button
-                                type="button"
-                                onClick={onStartNew}
-                                className="w-full rounded-full bg-purple-700 hover:bg-purple-800 text-white font-medium text-sm py-3.5 h-auto shadow-sm"
-                            >
-                                <PenLine size={15} />
-                                Write Another Review
-                            </Button>
                         </div>
-                    </Card>
-                )}
 
-                {/* Who to review (compose only) */}
-                {view === "compose" && (
-                    <Card className="rounded-2xl border border-gray-100 shadow-none py-0">
-                        <CardContent className="p-5">
-                            <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <Users size={15} className="text-purple-700" /> Who are you reviewing?
-                                <span className="text-red-500 font-bold text-sm ml-1">*</span>
-                            </label>
-                            <ReceiverPicker
-                                allReceivers={allReceivers}
-                                receiverId={receiverId}
-                                onSelect={onReceiverChange}
-                                reviewedThisMonth={reviewedThisMonth}
-                            />
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Star rating */}
-                {view !== "submitted" && (
-                    <Card className="rounded-2xl border border-gray-100 shadow-none py-0 group/stars">
-                        <CardContent className="p-5">
-                            <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <Star size={15} className="text-amber-400" /> Star Rating
-                                <span className="text-red-500 font-bold text-sm ml-1">*</span>
-                            </label>
-                            <StarPicker value={rating} onChange={handleRatingChange} disabled={submitting} />
-                            <div className={`flex items-center gap-3 mt-3 pt-3 border-t transition-opacity duration-200 ${rating > 0
-                                ? "border-gray-50 opacity-100"
-                                : "border-transparent opacity-0 group-hover/stars:opacity-50"
-                                }`}>
-                                <span className={`text-sm font-semibold ${rating > 0 ? RATING_COLORS[rating] : "text-gray-400"}`}>
-                                    {rating > 0 ? RATING_LABELS[rating] : "\u00A0"}
-                                </span>
+                        {/* Submit bar */}
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-4">
+                            <div className="text-xs text-gray-500">
+                                {!step1Done && "Select a teammate to continue"}
+                                {step1Done && !step2Done && "Pick at least one category"}
+                                {step1Done && step2Done && !step3Done && "Write your feedback (min 10 chars)"}
+                                {canSubmit && (
+                                    <span className="text-green-600 font-semibold flex items-center gap-1.5">
+                                        <CheckCircle2 size={13} /> Ready to submit
+                                    </span>
+                                )}
                             </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Category */}
-                {view !== "submitted" && (
-                    <Card className="rounded-2xl border border-gray-100 shadow-none py-0">
-                        <CardContent className="p-5">
-                            <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <Tag size={15} className="text-purple-700" /> Recognition Category
-                                <span className="text-red-500 font-bold text-sm ml-1">*</span>
-                                <span className="text-gray-400 font-normal text-xs ml-auto">
-                                    {categoryIds.length}/{maxCategories} selected
-                                </span>
-                            </label>
-                            {categories.length === 0 ? (
-                                <div className="flex items-center gap-2 text-sm text-gray-400">
-                                    <Loader2 size={14} className="animate-spin" /> Loading categories…
-                                </div>
-                            ) : (
-                                <CategoryPicker
-                                    categories={filteredCategories}
-                                    selectedIds={categoryIds}
-                                    onChange={onCategoryIdsChange}
-                                    disabled={submitting}
-                                    maxSelectable={maxCategories}
-                                />
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Comment */}
-                {view !== "submitted" && (
-                    <Card className="rounded-2xl border border-gray-100 shadow-none py-0">
-                        <CardContent className="p-5">
-                            <div className="flex items-center justify-between mb-3">
-                                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                    <MessageSquare size={15} className="text-purple-700" /> Your Feedback
-                                    <span className="text-red-500 font-bold text-sm ml-1">*</span>
-                                </label>
-                                <span
-                                    className={`text-xs tabular-nums ${comment.length > 1900 ? "text-red-500 font-semibold" : "text-gray-400"
-                                        }`}
-                                >
-                                    {comment.length}/2000
-                                </span>
-                            </div>
-                            <Textarea
-                                value={comment}
-                                onChange={(e) => onCommentChange(e.target.value)}
-                                disabled={submitting}
-                                rows={5}
-                                maxLength={2000}
-                                placeholder="Be specific — describe what they did, the impact it had, and why it matters. Min 10 characters."
-                                className="rounded-xl border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800
-                placeholder:text-gray-400 focus:ring-2 focus:ring-purple-300 focus:border-transparent
-                resize-none"
-                            />
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Attachments */}
-                {view !== "submitted" && (
-                    <Card className="rounded-2xl border border-gray-100 shadow-none py-0">
-                        <CardContent className="p-5">
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                Attachments
-                                <span className="font-normal text-gray-400 ml-2 text-xs">optional · image or video</span>
-                            </label>
-
-                            {files.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                    {files.map((f, i) => (
-                                        <div
-                                            key={i}
-                                            className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3 py-1.5 text-xs"
-                                        >
-                                            {f.type.startsWith("video") ? (
-                                                <Video size={12} className="text-purple-500" />
-                                            ) : (
-                                                <ImageIcon size={12} className="text-blue-500" />
-                                            )}
-                                            <span className="max-w-30 truncate text-gray-600">{f.name}</span>
-                                            <button
-                                                type="button"
-                                                onClick={() => onFilesChange((fs) => fs.filter((_, j) => j !== i))}
-                                            >
-                                                <X size={12} className="text-gray-400 hover:text-red-500" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {files.length < 2 && (
-                                <>
-                                    <input
-                                        ref={fileRef}
-                                        type="file"
-                                        accept="image/*,video/*"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                            const picked = Array.from(e.target.files ?? [])
-                                            onFilesChange((prev) => [...prev, ...picked].slice(0, 2))
-                                            if (fileRef.current) fileRef.current.value = ""
-                                        }}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => fileRef.current?.click()}
-                                        className="text-sm text-purple-700 font-medium border border-dashed border-purple-200 rounded-xl px-4 py-2.5
-                    hover:bg-purple-50 transition-colors"
-                                    >
-                                        + Add file
-                                    </button>
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Submit button (hide on submitted view) */}
-                {view !== "submitted" && (
-                    <Button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full rounded-full bg-purple-700 hover:bg-purple-800 text-white font-medium text-sm py-3.5 h-auto
-                shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {submitting ? (
-                            <>
-                                <Loader2 size={16} className="animate-spin" />
-                                {view === "edit" ? "Saving…" : "Submitting…"}
-                            </>
-                        ) : view === "edit" ? (
-                            <>
-                                <RotateCcw size={15} />
-                                Save Changes
-                            </>
-                        ) : (
-                            <>
-                                <Send size={15} />
-                                Submit Review
-                            </>
-                        )}
-                    </Button>
-                )}
-            </div>
-
-            {/* ── Right: Guidelines + Stats + Recent Comments ── */}
-            <div className="lg:col-span-2 space-y-4">
-                {/* Review Guidelines */}
-                <Card className="rounded-2xl border border-purple-100 bg-purple-50 shadow-none py-0">
-                    <CardContent className="p-5">
-                        <p className="text-[11px] font-bold text-purple-700 uppercase tracking-widest mb-2.5">
-                            Review Guidelines
-                        </p>
-                        <ul className="space-y-1.5 text-xs text-purple-800">
-                            {[
-                                "Be specific about actions and their impact",
-                                "One review per teammate per month",
-                                "You cannot review yourself",
-                                "Recognition is credited automatically",
-                            ].map((text) => (
-                                <li key={text} className="flex items-start gap-1.5">
-                                    <Check size={11} className="mt-0.5 shrink-0 text-purple-600" />
-                                    {text}
-                                </li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
-
-                {/* ── Your Review Activity Stats ── */}
-                <Card className="rounded-2xl border border-gray-100 shadow-none py-0 overflow-hidden">
-                    <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 px-5 py-4">
-                        <p className="text-[11px] font-bold text-purple-200 uppercase tracking-widest flex items-center gap-1.5">
-                            <BarChart3 size={12} />
-                            Your Review Activity
-                        </p>
+                            <button type="submit" disabled={!canSubmit}
+                                className={cn("flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all",
+                                    canSubmit ? "bg-[#E31837] text-white hover:bg-[#c41230] shadow-sm"
+                                            : "bg-gray-200 text-gray-400 cursor-not-allowed")}>
+                                {submitting ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />}
+                                {submitting ? "Submitting…" : "Submit"}
+                            </button>
+                        </div>
                     </div>
+                </div>
 
-                    <CardContent className="p-0">
-                        {loadingStats ? (
-                            <div className="p-5 space-y-4">
-                                {[0, 1, 2].map((i) => (
-                                    <div key={i} className="flex items-center justify-between">
-                                        <Skeleton className="h-4 w-28" />
-                                        <Skeleton className="h-6 w-10" />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="divide-y divide-gray-50">
-                                {/* Given This Month */}
-                                <div className="flex items-center justify-between px-5 py-3.5 group hover:bg-purple-50/50 transition-colors">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                                            <TrendingUp size={14} className="text-purple-600" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-medium text-gray-700">Given This Month</p>
-                                            <p className="text-[10px] text-gray-400">Reviews submitted</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-xl font-bold text-gray-900 tabular-nums">
-                                        {givenThisMonth}
-                                    </span>
-                                </div>
-
-                                {/* Unique People */}
-                                <div className="flex items-center justify-between px-5 py-3.5 group hover:bg-blue-50/50 transition-colors">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                                            <Users size={14} className="text-blue-600" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-medium text-gray-700">Unique People</p>
-                                            <p className="text-[10px] text-gray-400">Reviewed this month</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-xl font-bold text-gray-900 tabular-nums">
-                                        {uniquePeopleCount}
-                                    </span>
-                                </div>
-
-                                {/* Total Reviews */}
-                                <div className="flex items-center justify-between px-5 py-3.5 group hover:bg-green-50/50 transition-colors">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                                            <Award size={14} className="text-green-600" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-medium text-gray-700">Total Reviews</p>
-                                            <p className="text-[10px] text-gray-400">Given &amp; received</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-xl font-bold text-gray-900 tabular-nums">
-                                        {totalReviews}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-                {/* ── Recent Comments (scrollable) ── */}
-                <Card className="rounded-2xl border border-gray-100 shadow-none py-0 overflow-hidden">
-                    <div className="bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 px-5 py-4">
-                        <p className="text-[11px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1.5">
-                            <MessageSquare size={12} />
-                            Your Recent Reviews
-                        </p>
-                    </div>
-
-                    <CardContent className="p-0">
-                        {loadingStats ? (
-                            <div className="p-5 space-y-4">
-                                {[0, 1, 2].map((i) => (
-                                    <div key={i} className="space-y-2">
-                                        <Skeleton className="h-3 w-full" />
-                                        <Skeleton className="h-3 w-3/4" />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : myGivenReviews.length === 0 ? (
-                            <div className="px-5 py-8 text-center">
-                                <MessageSquare size={24} className="text-gray-200 mx-auto mb-2" />
-                                <p className="text-xs text-gray-400">No reviews given yet</p>
-                            </div>
-                        ) : (
-                            <div className="max-h-[280px] overflow-y-auto divide-y divide-gray-50 custom-scrollbar">
-                                {myGivenReviews.map((r) => {
-                                    const isExpanded = expandedReviewId === r.review_id
-                                    return (
-                                        <div
-                                            key={r.review_id}
-                                            className="px-5 py-3.5 hover:bg-gray-50/50 transition-colors cursor-pointer"
-                                            onClick={() => setExpandedReviewId(isExpanded ? null : r.review_id)}
-                                        >
-                                            {/* Stars + Date */}
-                                            <div className="flex items-center justify-between mb-1.5">
-                                                <div className="flex items-center gap-0.5">
-                                                    {[1, 2, 3, 4, 5].map((s) => (
-                                                        <Star
-                                                            key={s}
-                                                            size={10}
-                                                            className={
-                                                                s <= r.rating
-                                                                    ? "fill-amber-400 text-amber-400"
-                                                                    : "fill-gray-200 text-gray-200"
-                                                            }
-                                                        />
-                                                    ))}
-                                                    <span className={`text-[10px] font-semibold ml-1.5 ${RATING_COLORS[r.rating]}`}>
-                                                        {RATING_LABELS[r.rating]}
-                                                    </span>
-                                                </div>
-                                                <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
-                                                    <Clock size={9} />
-                                                    {fmtDate(r.review_at)}
-                                                </span>
-                                            </div>
-
-                                            {/* Comment — click to expand */}
-                                            <p className={`text-xs text-gray-600 leading-relaxed ${isExpanded ? "" : "line-clamp-2"}`}>
-                                                {r.comment}
-                                            </p>
-                                            {r.comment && r.comment.length > 100 && (
-                                                <p className="text-[10px] text-purple-500 font-medium mt-1">
-                                                    {isExpanded ? "Show less" : "Read more…"}
-                                                </p>
-                                            )}
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                {/* ── RIGHT ── */}
+                <Sidebar {...sidebarProps} />
             </div>
         </form>
     )
