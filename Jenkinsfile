@@ -14,18 +14,18 @@ pipeline {
         CONTAINER_NAME = "frontend-${TARGET_BRANCH}"
         
         // --- Target Infrastructure ---
-        TARGET_EC2_HOST = "frontend.aabhar.top"
+        TARGET_EC2_HOST = "aabhar.top"
         HOST_PORT = "3000"
 
         // --- Frontend API Routing Variables ---
-        NEXT_PUBLIC_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_RECOGNITION_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_EMPLOYEE_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_WALLET_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_REWARDS_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_ANALYTICS_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_ORG_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_ROLES_API_URL = "https://test.aabhar.top"
+        NEXT_PUBLIC_API_URL = "https://aabhar.top"
+        NEXT_PUBLIC_RECOGNITION_API_URL = "https://aabhar.top"
+        NEXT_PUBLIC_EMPLOYEE_API_URL = "https://aabhar.top"
+        NEXT_PUBLIC_WALLET_API_URL = "https://aabhar.top"
+        NEXT_PUBLIC_REWARDS_API_URL = "https://aabhar.top"
+        NEXT_PUBLIC_ANALYTICS_API_URL = "https://aabhar.top"
+        NEXT_PUBLIC_ORG_API_URL = "https://aabhar.top"
+        NEXT_PUBLIC_ROLES_API_URL = "https://aabhar.top"
     }
 
     options {
