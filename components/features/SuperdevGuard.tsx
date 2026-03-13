@@ -2,40 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isSuperDev } from "@/lib/role-utils";
+import { isAdminUser } from "@/lib/role-utils";
 
-interface SuperdevGuardProps {
+interface AdminGuardProps {
     children: React.ReactNode;
     /** Where to redirect if the guard fails. Defaults to /dashboard */
     fallbackUrl?: string;
 }
 
 /**
- * Protects children from rendering unless:
- *  1. The environment is NOT production
- *  2. The current user has role=SUPER_DEV AND permission=VIEW_INTERNAL_LOGGER
+ * Protects children from rendering unless the current user has an admin role
+ * (HR_ADMIN, ADMIN, or SUPER_ADMIN).
+ *
+ * Works in both development and production environments.
  */
 export default function SuperdevGuard({
     children,
     fallbackUrl = "/dashboard",
-}: SuperdevGuardProps) {
+}: AdminGuardProps) {
     const router = useRouter();
     const [status, setStatus] = useState<"loading" | "allowed" | "denied">(
         "loading"
     );
 
     useEffect(() => {
-        // Compute the guard decision synchronously, then defer the state update
-        // to satisfy the react-hooks/set-state-in-effect rule.
-        let nextStatus: "allowed" | "denied";
-
-        if (process.env.NODE_ENV === "production") {
-            nextStatus = "denied";
-        } else if (!isSuperDev()) {
-            nextStatus = "denied";
-        } else {
-            nextStatus = "allowed";
-        }
+        // Check if the current user has admin privileges
+        const nextStatus: "allowed" | "denied" = isAdminUser()
+            ? "allowed"
+            : "denied";
 
         const id = setTimeout(() => setStatus(nextStatus), 0);
         return () => clearTimeout(id);

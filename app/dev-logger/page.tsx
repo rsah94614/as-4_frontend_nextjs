@@ -24,6 +24,9 @@ import {
     AlertTriangle,
     Clock,
     ArrowUpDown,
+    BellOff,
+    Bell,
+    Search,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -299,7 +302,7 @@ function DevLoggerContent() {
                             <h1 className="text-lg font-bold text-white tracking-tight">
                                 Developer Logger
                             </h1>
-                            <p className="text-xs text-gray-500">SUPER_DEV internal tool</p>
+                            <p className="text-xs text-gray-500">Admin internal tool</p>
                         </div>
                     </div>
 
@@ -366,6 +369,35 @@ function DevLoggerContent() {
                                 {s}
                             </button>
                         ))}
+                    </div>
+
+                    {/* Hide Noise toggle */}
+                    <button
+                        onClick={() => setFilter({ hideNotifications: !filters.hideNotifications })}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border ${
+                            filters.hideNotifications
+                                ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                                : "bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300 hover:border-gray-700"
+                        }`}
+                    >
+                        {filters.hideNotifications ? (
+                            <BellOff className="w-3.5 h-3.5" />
+                        ) : (
+                            <Bell className="w-3.5 h-3.5" />
+                        )}
+                        {filters.hideNotifications ? "Noise Hidden" : "Show All"}
+                    </button>
+
+                    {/* URL Search */}
+                    <div className="flex items-center gap-1.5 flex-1 min-w-[200px] max-w-sm">
+                        <Search className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                        <input
+                            type="text"
+                            placeholder="Filter by URL..."
+                            value={filters.urlSearch}
+                            onChange={(e) => setFilter({ urlSearch: e.target.value })}
+                            className="w-full bg-gray-900 border border-gray-800 rounded-md px-3 py-1.5 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 transition-colors font-mono"
+                        />
                     </div>
                 </div>
 

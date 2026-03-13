@@ -1,5 +1,5 @@
-// lib/logger-store.ts — SUPER_DEV-only API logger Zustand store
-// This entire module is a no-op in production builds.
+
+// Access is controlled by DevLoggerProvider (admin role check) and the page guard.
 import { create } from "zustand";
 
 /* ------------------------------------------------------------------ */
@@ -28,6 +28,8 @@ export type StatusFilter = "ALL" | "2xx" | "4xx" | "5xx";
 interface LoggerFilters {
     method: MethodFilter;
     status: StatusFilter;
+    hideNotifications: boolean;
+    urlSearch: string;
 }
 
 interface LoggerState {
@@ -38,6 +40,18 @@ interface LoggerState {
     setFilter: (filters: Partial<LoggerFilters>) => void;
     getFilteredLogs: () => LogEntry[];
 }
+
+/* ------------------------------------------------------------------ */
+/*  Noise patterns — URLs that are excluded when "Hide Noise" is on    */
+/* ------------------------------------------------------------------ */
+
+const NOISE_PATTERNS = [
+    "/notifications/unread-count",
+    "/notifications",
+];
+
+const isNoiseUrl = (url: string) =>
+    NOISE_PATTERNS.some((pattern) => url.includes(pattern));
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -55,19 +69,14 @@ const matchesStatusFilter = (log: LogEntry, filter: StatusFilter) => {
     return true;
 };
 
-/* ------------------------------------------------------------------ */
-/*  Store (only meaningful in non-production)                          */
-/* ------------------------------------------------------------------ */
 
 const MAX_LOGS = 500; // cap to prevent memory bloat
-const IS_DEV = process.env.NODE_ENV !== "production";
 
 export const useLoggerStore = create<LoggerState>((set, get) => ({
     logs: [],
-    filters: { method: "ALL", status: "ALL" },
+    filters: { method: "ALL", status: "ALL", hideNotifications: true, urlSearch: "" },
 
     addLog: (entry) => {
-        if (!IS_DEV) return; // no-op in production
         set((state) => ({
             logs: [entry, ...state.logs].slice(0, MAX_LOGS),
         }));
@@ -82,10 +91,16 @@ export const useLoggerStore = create<LoggerState>((set, get) => ({
 
     getFilteredLogs: () => {
         const { logs, filters } = get();
-        return logs.filter(
-            (log) =>
-                matchesMethodFilter(log, filters.method) &&
-                matchesStatusFilter(log, filters.status)
-        );
+        return logs.filter((log) => {
+            // Method filter
+            if (!matchesMethodFilter(log, filters.method)) return false;
+            // Status filter
+            if (!matchesStatusFilter(log, filters.status)) return false;
+            // Hide notification noise
+            if (filters.hideNotifications && isNoiseUrl(log.url)) return false;
+            // URL search
+            if (filters.urlSearch && !log.url.toLowerCase().includes(filters.urlSearch.toLowerCase())) return false;
+            return true;
+        });
     },
 }));
