@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/providers/AuthProvider";
-import { isAdminUser, isSuperDev } from "@/lib/role-utils";
+import { isAdminUser } from "@/lib/role-utils";
 import {
   Dialog, DialogTrigger, DialogContent, DialogHeader,
   DialogTitle, DialogDescription, DialogFooter, DialogClose,
@@ -34,11 +34,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { logoutUser } = useAuth();
   const isAdmin = isAdminUser();
-  const [isSuper, setIsSuper] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const id = setTimeout(() => { setMounted(true); setIsSuper(isSuperDev()); }, 0);
+    const id = setTimeout(() => { setMounted(true); }, 0);
     return () => clearTimeout(id);
   }, [pathname]);
 
@@ -110,33 +109,55 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </ul>
         </nav>
 
-        {/* ── Dev Logger — styled to match sidebar, subtle separator ── */}
-        {mounted && process.env.NODE_ENV !== 'production' && isSuper && (
-          <div className="px-3 pb-2 shrink-0"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '8px' }}>
-            <Link
-              href="/dev-logger"
-              onClick={onClose}
-              className="flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer"
-              style={pathname.startsWith('/dev-logger')
-                ? { background: 'rgba(255,255,255,0.18)', color: '#fff', paddingLeft: '9px', borderLeft: '3px solid #E31837' }
-                : { color: 'rgba(255,255,255,0.45)', paddingLeft: '12px' }
-              }
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.75)'; }}
-              onMouseLeave={e => {
-                if (!pathname.startsWith('/dev-logger')) {
-                  (e.currentTarget as HTMLElement).style.background = 'transparent';
-                  (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.45)';
+        {/* Dev Logger — admin only */}
+        {mounted && isAdmin && (
+          <div className="px-3 py-2 shrink-0" style={{ background: '#004C8F' }}>
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: '8px' }}>
+              <Link
+                href="/dev-logger"
+                onClick={onClose}
+                className="flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all"
+                style={pathname.startsWith('/dev-logger')
+                  ? {
+                      background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.2))',
+                      color: '#fff',
+                      paddingLeft: '9px',
+                      borderLeft: '3px solid #a78bfa',
+                      boxShadow: '0 0 12px rgba(139,92,246,0.25)',
+                    }
+                  : {
+                      color: 'rgba(255,255,255,0.75)',
+                      paddingLeft: '12px',
+                    }
                 }
-              }}
-            >
-              <Bug className="w-4 h-4 shrink-0" style={{ color: 'inherit' }} />
-              <span>Dev Logger</span>
-              <span className="ml-auto text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded"
-                style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)' }}>
-                DEV
-              </span>
-            </Link>
+                onMouseEnter={e => {
+                  if (!pathname.startsWith('/dev-logger')) {
+                    (e.currentTarget as HTMLElement).style.background = 'rgba(139,92,246,0.15)';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!pathname.startsWith('/dev-logger')) {
+                    (e.currentTarget as HTMLElement).style.background = 'transparent';
+                  }
+                }}
+              >
+                <Bug
+                  className="w-4 h-4 shrink-0"
+                  style={{ color: pathname.startsWith('/dev-logger') ? '#c4b5fd' : 'rgba(255,255,255,0.5)' }}
+                />
+                <span>Dev Logger</span>
+                <span
+                  className="ml-auto text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                  style={{
+                    background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                    color: '#fff',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  API
+                </span>
+              </Link>
+            </div>
           </div>
         )}
 

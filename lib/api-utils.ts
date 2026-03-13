@@ -9,11 +9,19 @@ import { auth } from "@/services/auth-service";
 
 // ─── Axios Client Factory ─────────────────────────────────────────────────────
 
+import { type InternalAxiosRequestConfig } from "axios";
+import { useLoggerStore } from "@/lib/logger-store";
+
+interface LoggerMeta {
+    __loggerStartTime?: number;
+}
+
 /**
  * Creates an Axios instance with:
  *   • Content-Type: application/json
  *   • Request interceptor that attaches the Bearer token
  *   • Response interceptor that handles 401 → refresh → retry → redirect
+ *   • Built-in DevLogger interceptors that log every request/response
  *
  * Every API-client file can now be a one-liner.
  */
@@ -63,8 +71,102 @@ export function createAuthenticatedClient(baseURL: string): AxiosInstance {
         }
     );
 
+    // ── DevLogger: log every request/response to the logger store ─────────────
+    // Baked directly into every client — no separate provider needed.
+    client.interceptors.request.use(
+        (config: InternalAxiosRequestConfig & LoggerMeta) => {
+            config.__loggerStartTime = Date.now();
+            return config;
+        },
+        (error) => Promise.reject(error)
+    );
+
+    client.interceptors.response.use(
+        (response) => {
+            const config = response.config as InternalAxiosRequestConfig & LoggerMeta;
+            const startTime = config.__loggerStartTime ?? Date.now();
+            const duration = Date.now() - startTime;
+
+            const cfgBaseURL = config.baseURL ?? "";
+            const fullUrl = config.url?.startsWith("http")
+                ? config.url
+                : `${cfgBaseURL}${config.url ?? ""}`;
+
+            useLoggerStore.getState().addLog({
+                id: crypto.randomUUID(),
+                timestamp: new Date().toISOString(),
+                method: (config.method ?? "GET").toUpperCase(),
+                url: fullUrl,
+                requestHeaders: config.headers
+                    ? Object.fromEntries(
+                        Object.entries(config.headers).filter(
+                            ([, v]) => typeof v === "string"
+                        )
+                    )
+                    : {},
+                requestBody: config.data ?? null,
+                requestParams: config.params ?? {},
+                status: response.status,
+                responseData: response.data,
+                responseHeaders: response.headers
+                    ? Object.fromEntries(
+                        Object.entries(response.headers).filter(
+                            ([, v]) => typeof v === "string"
+                        )
+                    )
+                    : {},
+                duration,
+                error: null,
+                errorStack: null,
+            });
+
+            return response;
+        },
+        (error) => {
+            const config = (error.config ?? {}) as InternalAxiosRequestConfig & LoggerMeta;
+            const startTime = config.__loggerStartTime ?? Date.now();
+            const duration = Date.now() - startTime;
+
+            const cfgBaseURL = config.baseURL ?? "";
+            const fullUrl = config.url?.startsWith("http")
+                ? config.url
+                : `${cfgBaseURL}${config.url ?? ""}`;
+
+            useLoggerStore.getState().addLog({
+                id: crypto.randomUUID(),
+                timestamp: new Date().toISOString(),
+                method: (config.method ?? "GET").toUpperCase(),
+                url: fullUrl,
+                requestHeaders: config.headers
+                    ? Object.fromEntries(
+                        Object.entries(config.headers).filter(
+                            ([, v]) => typeof v === "string"
+                        )
+                    )
+                    : {},
+                requestBody: config.data ?? null,
+                requestParams: config.params ?? {},
+                status: error.response?.status ?? null,
+                responseData: error.response?.data ?? null,
+                responseHeaders: error.response?.headers
+                    ? (Object.fromEntries(
+                        Object.entries(error.response.headers).filter(
+                            ([, v]) => typeof v === "string"
+                        )
+                    ) as Record<string, string>)
+                    : {},
+                duration,
+                error: error.message ?? "Unknown error",
+                errorStack: error.stack ?? null,
+            });
+
+            return Promise.reject(error);
+        }
+    );
+
     return client;
 }
+
 
 // ─── Error Extraction ─────────────────────────────────────────────────────────
 
