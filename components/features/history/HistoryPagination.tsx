@@ -7,6 +7,10 @@ interface HistoryPaginationProps {
     onNext: () => void;
 }
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { PAG_BTN, PAG_NUM_BASE, PAG_NUM_ACTIVE, PAG_NUM_INACTIVE } from "./history-styles";
+
 export default function HistoryPagination({
     page,
     totalPages,
@@ -16,25 +20,31 @@ export default function HistoryPagination({
     if (totalPages <= 1) return null;
 
     return (
-        <div className="flex items-center justify-center gap-3 mt-6">
+        <div className="flex items-center justify-center gap-2 mt-8">
             <button
                 onClick={onPrev}
-                disabled={page === 1}
-                className="px-4 py-2 text-sm rounded-full border text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={page <= 1}
+                className={PAG_BTN}
             >
-                Previous
+                <ChevronLeft size={15} />
             </button>
 
-            <span className="text-sm text-gray-500">
-                Page {page} of {totalPages}
-            </span>
+            <div className="flex items-center gap-1">
+                <span className={cn(PAG_NUM_BASE, PAG_NUM_ACTIVE, "flex items-center justify-center")}>
+                    {page}
+                </span>
+                <span className="text-xs text-gray-400 font-medium px-1">of</span>
+                <span className={cn(PAG_NUM_BASE, PAG_NUM_INACTIVE, "flex items-center justify-center")}>
+                    {totalPages}
+                </span>
+            </div>
 
             <button
                 onClick={onNext}
-                disabled={page === totalPages}
-                className="px-4 py-2 text-sm rounded-full border text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={page >= totalPages}
+                className={PAG_BTN}
             >
-                Next
+                <ChevronRight size={15} />
             </button>
         </div>
     );

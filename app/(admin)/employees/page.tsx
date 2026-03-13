@@ -11,9 +11,9 @@ import Navbar from "@/components/layout/Navbar"
 import Sidebar from "@/components/layout/Sidebar"
 
 // ─── Proxy clients ────────────────────────────────────────────────────────────
-const employeeClient    = createAuthenticatedClient("/api/proxy/employees")
+const employeeClient = createAuthenticatedClient("/api/proxy/employees")
 const recognitionClient = createAuthenticatedClient("/api/proxy/recognition")
-const authClient        = createAuthenticatedClient("/api/proxy/auth")
+const authClient = createAuthenticatedClient("/api/proxy/auth")
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Employee {
@@ -334,6 +334,7 @@ function AddEmployeeModal({ onClose, onSuccess, allEmployees }: {
     username: "",
     email: "",
     password: "",
+    date_of_birth: "",
     designation_id: "",
     department_id: "",
     manager_id: "",
@@ -372,6 +373,7 @@ function AddEmployeeModal({ onClose, onSuccess, allEmployees }: {
         username: form.username,
         email: form.email,
         password: form.password,
+        date_of_birth: form.date_of_birth,
         designation_id: form.designation_id,
         department_id: form.department_id,
         manager_id: form.manager_id || null,
@@ -447,6 +449,17 @@ function AddEmployeeModal({ onClose, onSuccess, allEmployees }: {
                 className={fieldCls}
                 value={form.password}
                 onChange={e => setForm({ ...form, password: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Date of Birth</label>
+              <input
+                required
+                type="date"
+                className={fieldCls}
+                value={form.date_of_birth}
+                onChange={e => setForm({ ...form, date_of_birth: e.target.value })}
+                max={new Date().toISOString().split("T")[0]}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -769,11 +782,11 @@ export default function AdminTeamsPage() {
     } finally {
       setLoading(false)
     }
- }, [])
+  }, [])
 
- const refresh = fetchAll
+  const refresh = fetchAll
 
- useEffect(() => { fetchAll() }, [fetchAll])
+  useEffect(() => { fetchAll() }, [fetchAll])
 
   const filteredReviews = useMemo(() =>
     allReviews.filter(r => {
@@ -863,7 +876,7 @@ export default function AdminTeamsPage() {
                   Browse employees organised by team hierarchy.
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <button
                   onClick={() => setAddModalOpen(true)}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black text-white text-sm font-semibold hover:opacity-80 transition shadow-sm active:scale-95"
@@ -878,7 +891,7 @@ export default function AdminTeamsPage() {
                   <Upload className="w-4 h-4" />
                   Bulk Import
                 </button>
-              </div>
+              </div> */}
             </div>
 
             {/* Calendar & Period */}
@@ -957,12 +970,6 @@ export default function AdminTeamsPage() {
                 >
                   <Upload className="w-4 h-4" />
                   Bulk Import
-                </button>
-                <button
-                  onClick={fetchAll}
-                  className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-purple-600 hover:border-purple-300 transition"
-                >
-                  <RefreshCw className="w-4 h-4" />
                 </button>
               </div>
             </div>

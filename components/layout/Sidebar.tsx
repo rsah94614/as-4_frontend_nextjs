@@ -17,11 +17,11 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { label: "Dashboard",     href: "/dashboard",    icon: LayoutGrid },
-  { label: "Review",        href: "/review",        icon: FileText },
-  { label: "Redeem",        href: "/redeem",        icon: Trophy },
-  { label: "History",       href: "/history",       icon: Clock },
-  { label: "Wallet",        href: "/wallet",        icon: Wallet },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
+  { label: "Review", href: "/review", icon: FileText },
+  { label: "Redeem", href: "/redeem", icon: Trophy },
+  { label: "History", href: "/history", icon: Clock },
+  { label: "Wallet", href: "/wallet", icon: Wallet },
   { label: "Control Panel", href: "/control-panel", icon: SlidersHorizontal, adminOnly: true },
 ];
 
@@ -56,14 +56,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         `}
         style={{ background: '#004C8F', borderRight: '1px solid rgba(255,255,255,0.08)' }}
       >
-        {/* Close — mobile */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-md lg:hidden cursor-pointer"
-          style={{ color: 'rgba(255,255,255,0.6)' }}
-        >
-          <X className="w-4 h-4" />
-        </button>
 
         {/* ── Logo area ── */}
         <div className="flex flex-col items-center justify-center px-6 py-6 shrink-0"
@@ -119,16 +111,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className="flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all"
                 style={pathname.startsWith('/dev-logger')
                   ? {
-                      background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.2))',
-                      color: '#fff',
-                      paddingLeft: '9px',
-                      borderLeft: '3px solid #a78bfa',
-                      boxShadow: '0 0 12px rgba(139,92,246,0.25)',
-                    }
+                    background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.2))',
+                    color: '#fff',
+                    paddingLeft: '9px',
+                    borderLeft: '3px solid #a78bfa',
+                    boxShadow: '0 0 12px rgba(139,92,246,0.25)',
+                  }
                   : {
-                      color: 'rgba(255,255,255,0.75)',
-                      paddingLeft: '12px',
-                    }
+                    color: 'rgba(255,255,255,0.75)',
+                    paddingLeft: '12px',
+                  }
                 }
                 onMouseEnter={e => {
                   if (!pathname.startsWith('/dev-logger')) {

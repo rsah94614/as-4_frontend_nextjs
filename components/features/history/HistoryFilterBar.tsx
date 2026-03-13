@@ -4,6 +4,16 @@ import { ChevronDown } from "lucide-react";
 import { periodOptions, typeOptions } from "./constants";
 import type { PeriodFilter, TypeFilter } from "./types";
 
+import {
+    FILTER_BTN_BASE,
+    FILTER_BTN_ACTIVE,
+    CLEAR_BTN,
+    DROPDOWN_MENU,
+    DROPDOWN_ITEM,
+    DROPDOWN_ITEM_ACTIVE,
+    DROPDOWN_ITEM_INACTIVE
+} from "./history-styles";
+
 interface HistoryFilterBarProps {
     selectedPeriod: PeriodFilter;
     setSelectedPeriod: (v: PeriodFilter) => void;
@@ -35,7 +45,7 @@ export default function HistoryFilterBar({
         selectedPeriod !== "All History" || selectedType !== "All";
 
     return (
-        <div>
+        <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                 {/* Period Dropdown */}
                 <div
@@ -47,16 +57,19 @@ export default function HistoryFilterBar({
                             setPeriodDropdownOpen(!periodDropdownOpen);
                             setTypeDropdownOpen(false);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                        className={`${FILTER_BTN_BASE} ${selectedPeriod !== "All History" ? FILTER_BTN_ACTIVE : ""
+                            }`}
                     >
-                        {selectedPeriod}
+                        <span className="truncate max-w-[120px] sm:max-w-none">
+                            {selectedPeriod}
+                        </span>
                         <ChevronDown
-                            className={`w-4 h-4 transition-transform ${periodDropdownOpen ? "rotate-180" : ""}`}
+                            className={`w-4 h-4 shrink-0 transition-transform duration-200 ${periodDropdownOpen ? "rotate-180" : ""}`}
                         />
                     </button>
 
                     {periodDropdownOpen && (
-                        <div className="absolute top-full left-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-10">
+                        <div className={DROPDOWN_MENU}>
                             {periodOptions.map((option) => (
                                 <button
                                     key={option}
@@ -64,9 +77,9 @@ export default function HistoryFilterBar({
                                         setSelectedPeriod(option);
                                         setPeriodDropdownOpen(false);
                                     }}
-                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg ${selectedPeriod === option
-                                            ? "text-purple-700 font-semibold bg-purple-50"
-                                            : "text-gray-700"
+                                    className={`${DROPDOWN_ITEM} ${selectedPeriod === option
+                                        ? DROPDOWN_ITEM_ACTIVE
+                                        : DROPDOWN_ITEM_INACTIVE
                                         }`}
                                 >
                                     {option}
@@ -86,16 +99,19 @@ export default function HistoryFilterBar({
                             setTypeDropdownOpen(!typeDropdownOpen);
                             setPeriodDropdownOpen(false);
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                        className={`${FILTER_BTN_BASE} ${selectedType !== "All" ? FILTER_BTN_ACTIVE : ""
+                            }`}
                     >
-                        {selectedType === "All" ? "Transaction Type" : selectedType}
+                        <span className="truncate max-w-[120px] sm:max-w-none">
+                            {selectedType === "All" ? "Transaction Type" : selectedType}
+                        </span>
                         <ChevronDown
-                            className={`w-4 h-4 transition-transform ${typeDropdownOpen ? "rotate-180" : ""}`}
+                            className={`w-4 h-4 shrink-0 transition-transform duration-200 ${typeDropdownOpen ? "rotate-180" : ""}`}
                         />
                     </button>
 
                     {typeDropdownOpen && (
-                        <div className="absolute top-full left-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-10">
+                        <div className={DROPDOWN_MENU}>
                             {typeOptions.map((option) => (
                                 <button
                                     key={option}
@@ -103,9 +119,9 @@ export default function HistoryFilterBar({
                                         setSelectedType(option);
                                         setTypeDropdownOpen(false);
                                     }}
-                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg ${selectedType === option
-                                            ? "text-purple-700 font-semibold bg-purple-50"
-                                            : "text-gray-700"
+                                    className={`${DROPDOWN_ITEM} ${selectedType === option
+                                        ? DROPDOWN_ITEM_ACTIVE
+                                        : DROPDOWN_ITEM_INACTIVE
                                         }`}
                                 >
                                     {option}
@@ -119,7 +135,7 @@ export default function HistoryFilterBar({
                 {hasActiveFilter && (
                     <button
                         onClick={clearFilters}
-                        className="px-3 py-1.5 text-xs text-purple-700 border border-purple-200 rounded-full hover:bg-purple-50 transition-colors"
+                        className={CLEAR_BTN}
                     >
                         Clear filters
                     </button>
@@ -128,22 +144,26 @@ export default function HistoryFilterBar({
 
             {/* Result count chip */}
             {hasActiveFilter && !loading && (
-                <p className="mt-3 text-xs text-gray-400">
-                    Showing{" "}
-                    <span className="font-medium text-gray-600">{filteredCount}</span>{" "}
-                    result{filteredCount !== 1 ? "s" : ""} for{" "}
-                    {selectedPeriod !== "All History" && (
-                        <span className="font-medium text-gray-600">
-                            &quot;{selectedPeriod}&quot;
-                        </span>
-                    )}
-                    {selectedPeriod !== "All History" && selectedType !== "All" && " · "}
-                    {selectedType !== "All" && (
-                        <span className="font-medium text-gray-600">
-                            &quot;{selectedType}&quot;
-                        </span>
-                    )}
-                </p>
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 px-4 py-2 rounded-xl w-fit animate-in fade-in slide-in-from-left-2 duration-300">
+                    <p className="text-xs text-gray-500">
+                        Showing{" "}
+                        <span className="font-bold text-gray-700">{filteredCount}</span>{" "}
+                        result{filteredCount !== 1 ? "s" : ""} for{" "}
+                        {selectedPeriod !== "All History" && (
+                            <span className="font-semibold text-[#004C8F]">
+                                {selectedPeriod}
+                            </span>
+                        )}
+                        {selectedPeriod !== "All History" && selectedType !== "All" && (
+                            <span className="mx-1 text-gray-300">·</span>
+                        )}
+                        {selectedType !== "All" && (
+                            <span className="font-semibold text-[#004C8F]">
+                                {selectedType}
+                            </span>
+                        )}
+                    </p>
+                </div>
             )}
         </div>
     );

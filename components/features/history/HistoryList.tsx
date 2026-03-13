@@ -24,7 +24,7 @@ export default function HistoryList({
     onItemClick,
 }: HistoryListProps) {
     return (
-        <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
+        <div className="mt-8 space-y-4 sm:space-y-5">
             {/* Loading */}
             {loading && <HistoryListSkeleton />}
 
@@ -34,7 +34,7 @@ export default function HistoryList({
                     <p className="text-sm text-red-500">{error}</p>
                     <button
                         onClick={onRetry}
-                        className="mt-3 text-sm text-purple-700 hover:underline"
+                        className="mt-3 text-sm text-[#004C8F] font-semibold hover:underline"
                     >
                         Try again
                     </button>
@@ -56,7 +56,7 @@ export default function HistoryList({
                     </p>
                     <button
                         onClick={onClearFilters}
-                        className="mt-3 text-sm text-purple-700 hover:underline"
+                        className="mt-3 text-sm text-[#004C8F] font-semibold hover:underline"
                     >
                         Clear filters
                     </button>
