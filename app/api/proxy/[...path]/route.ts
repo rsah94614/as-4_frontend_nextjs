@@ -56,33 +56,26 @@ function extractToken(req: NextRequest): string | null {
     return auth?.startsWith("Bearer ") ? auth.slice(7) : null;
 }
 
-async function proxyRequest(
-    targetUrl: string,
-    req: NextRequest,
-    token: string | null
-): Promise<Response> {
+async function proxyRequest(targetUrl: string, req: NextRequest, token: string | null) {
+    const url = new URL(targetUrl);
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        // FIX: Forward the Accept header so microservices that do content
-        // negotiation don't fall back to an unexpected format.
         "Accept": "application/json",
+        // CRITICAL: Next.js must "pretend" to be the backend domain
+        "Host": url.host, 
     };
     if (token) headers["Authorization"] = `Bearer ${token}`;
-
-    // Forward the original search params
-    const url = new URL(targetUrl);
-    req.nextUrl.searchParams.forEach((v, k) => url.searchParams.set(k, v));
 
     const body = req.method !== "GET" && req.method !== "HEAD"
         ? await req.text()
         : undefined;
 
-  return fetch(url.toString(), {
-      method:  req.method,
-      headers,
-      body,
-      keepalive: true,
-  });
+    return fetch(url.toString(), {
+        method: req.method,
+        headers,
+        body,
+        keepalive: true,
+    });
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────
@@ -119,47 +112,43 @@ async function handleProxy(req: NextRequest, pathSegments: string[]): Promise<Ne
     const [service, ...rest] = pathSegments;
     const token = extractToken(req);
 
-    // ── Special case: dashboard aggregate ────────────────────────────────────
-    if (service === "dashboard" && req.method === "GET") {
-        return handleDashboardAggregate(token);
-    }
-
-    // ── Normal proxy ──────────────────────────────────────────────────────────
     const baseUrl = SERVICE_MAP[service];
     if (!baseUrl) {
-        return NextResponse.json(
-            { detail: `Unknown service: ${service}` },
-            { status: 404 }
-        );
+        console.error(`[Proxy] ❌ Service Not Found: ${service}`);
+        return NextResponse.json({ detail: "Unknown service" }, { status: 404 });
+    }
+
+    // ── ADD THIS: Special case for dashboard aggregate ────────────────────────
+    if (service === "dashboard" && req.method === "GET") {
+        console.log(`[Proxy] 📊 Intercepting Dashboard Aggregate Request`);
+        return handleDashboardAggregate(token);
     }
 
     const targetPath = rest.join("/");
     const targetUrl = `${baseUrl}${targetPath}`;
 
+    // --- DEBUG LOGS ---
+    console.log("---------------- Proxy Debug ----------------");
+    console.log(`Method: ${req.method}`);
+    console.log(`Service: ${service}`);
+    console.log(`Target URL: ${targetUrl}`);
+    console.log(`Original Host Header: ${req.headers.get("host")}`);
+    console.log("---------------------------------------------");
+
     try {
         const upstream = await proxyRequest(targetUrl, req, token);
+        const status = upstream.status;
 
-        // FIX: Forward the upstream status faithfully. Previously this always
-        // called upstream.json() and re-wrapped in NextResponse.json(), which:
-        //   1. Swallowed non-JSON error bodies (e.g. HTML 502 pages from nginx)
-        //   2. Lost the upstream Content-Type for non-JSON responses
-        //   3. Caused a crash if the body was empty (e.g. 204 No Content)
-        //
-        // Now we check Content-Type and handle empty bodies gracefully.
+        console.log(`[Proxy] Upstream Response: ${status} for ${targetUrl}`);
+
+        if (status === 204) return new NextResponse(null, { status: 204 });
+
         const contentType = upstream.headers.get("content-type") ?? "";
-        const status      = upstream.status;
-
-        // 204 No Content — body must be empty
-        if (status === 204) {
-            return new NextResponse(null, { status: 204 });
-        }
-
         if (contentType.includes("application/json")) {
             const data = await upstream.json().catch(() => null);
             return NextResponse.json(data, { status });
         }
 
-        // Non-JSON upstream response (e.g. plain text error from a gateway)
         const text = await upstream.text().catch(() => "");
         return new NextResponse(text, {
             status,
@@ -167,11 +156,8 @@ async function handleProxy(req: NextRequest, pathSegments: string[]): Promise<Ne
         });
 
     } catch (err) {
-        console.error(`[proxy] ${service}${targetPath} failed:`, err);
-        return NextResponse.json(
-            { detail: "Upstream service unavailable" },
-            { status: 502 }
-        );
+        console.error(`[Proxy] 🛑 CRITICAL ERROR fetching ${targetUrl}:`, err);
+        return NextResponse.json({ detail: "Gateway Error" }, { status: 502 });
     }
 }
 
