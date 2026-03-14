@@ -22,7 +22,7 @@ export type PlatformStatsResponse = {
 export interface RecentReview {
     review_id: string;
     reviewer_name: string;
-    rating: number;
+    tags: string[];
     comment: string;
     review_at: string;
 }
@@ -30,7 +30,7 @@ export interface RecentReview {
 export type RecentReviewResponse = {
     review_id: string;
     reviewer_name: string;
-    rating: number;
+    tags: string[];
     comment: string;
     review_at: string;
 };

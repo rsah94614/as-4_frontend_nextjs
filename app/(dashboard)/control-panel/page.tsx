@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
     Trophy, Building2, UserRound, Users, Tags, Star,
-    ShieldAlert, Loader2, Shield, ClipboardList, TrendingUp,
+    ShieldAlert, Loader2, Shield, ClipboardList,
     Activity, ArrowUpRight, LayoutGrid
 } from 'lucide-react';
 import { auth } from '@/services/auth-service';
@@ -76,14 +76,14 @@ const categories = [
         accent: '#0F766E',
         lightBg: '#F0FDFA',
     },
-    {
-        title: 'Seasonal Multipliers',
-        description: 'Configure point multipliers for seasonal reward campaigns.',
-        href: '/seasonal-multipliers',
-        icon: TrendingUp,
-        accent: '#BE185D',
-        lightBg: '#FDF2F8',
-    },
+    // {
+    //     title: 'Seasonal Multipliers',
+    //     description: 'Configure point multipliers for seasonal reward campaigns.',
+    //     href: '/seasonal-multipliers',
+    //     icon: TrendingUp,
+    //     accent: '#BE185D',
+    //     lightBg: '#FDF2F8',
+    // },
     {
         title: 'Statuses',
         description: 'Define and manage employee and reward status types.',

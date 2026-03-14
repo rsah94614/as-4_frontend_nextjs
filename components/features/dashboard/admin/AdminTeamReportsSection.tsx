@@ -73,7 +73,7 @@ function TeamsErrorState({ onRetry }: { onRetry: () => void }) {
             <Button
                 size="sm"
                 onClick={onRetry}
-                className="gap-2 font-bold rounded-lg bg-gray-900 text-white hover:bg-gray-700 px-5"
+                className="gap-2 font-bold rounded-lg bg-[#004C8F] text-white hover:bg-[#003A70] px-5"
             >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Try again
@@ -160,7 +160,7 @@ export default function AdminTeamReportsSection() {
                             variant="outline"
                             onClick={downloadAllReports}
                             disabled={downloadingAll}
-                            className="gap-2 font-semibold rounded-lg border-gray-300 hover:border-gray-500 hover:bg-gray-50 h-9"
+                            className="gap-2 font-semibold rounded-lg border-[#004C8F] text-[#004C8F] hover:bg-[#EEF4FB] h-9"
                         >
                             {downloadingAll
                                 ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Downloading…</>
