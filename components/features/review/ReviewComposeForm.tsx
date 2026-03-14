@@ -120,7 +120,7 @@ export default function ReviewComposeForm({
                             <div>
                                 <div className="flex items-center justify-between mb-3">
                                     <Label className="flex items-center text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
-                                        <span className="text-[#E31837] mr-1.5 text-xs">02</span>Recognition categories
+                                        <span className="text-[#E31837] mr-1.5 text-xs">02</span>Recognition categories<span className="text-[#E31837] mr-1.5 text-xs">*</span>
                                     </Label>
                                     <span className="text-[11px] text-gray-400 tabular-nums">{categoryIds.length}/{Math.min(5, categories.length)} selected</span>
                                 </div>
@@ -140,7 +140,7 @@ export default function ReviewComposeForm({
                             {/* 03 */}
                             <div>
                                 <Label className="flex items-center text-[11px] font-bold text-[#004C8F] uppercase tracking-widest mb-3" htmlFor="comment">
-                                    <span className="text-[#E31837] mr-1.5 text-xs">03</span>Your feedback
+                                    <span className="text-[#E31837] mr-1.5 text-xs">03</span>Your feedback<span className="text-[#E31837] mr-1.5 text-xs">*</span>
                                 </Label>
                                 <div className="relative">
                                     <Textarea
