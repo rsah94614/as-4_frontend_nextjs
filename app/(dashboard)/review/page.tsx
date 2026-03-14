@@ -27,7 +27,7 @@ export default function ReviewPage() {
           </div>
           <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
             <span style={{ color: '#E31837' }}>A</span>
-            <span style={{ color: '#004C8F' }}>abhar</span>
+            <span style={{ color: '#004C8F' }}>Aabhar</span>
           </span>
         </div>
       </div>
