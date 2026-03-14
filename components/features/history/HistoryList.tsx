@@ -2,7 +2,7 @@
 
 import HistoryCard from "./HistoryCard";
 import HistoryListSkeleton from "./HistoryListSkeleton";
-import type { HistoryItem } from "./types";
+import type { HistoryItem } from "../../../types/history-types";
 
 interface HistoryListProps {
     items: HistoryItem[];

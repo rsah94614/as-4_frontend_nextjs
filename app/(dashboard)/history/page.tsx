@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useHistoryData } from "@/components/features/history/useHistoryData";
+import { useHistoryData } from "@/hooks/useHistoryData";
 import HistoryFilterBar from "@/components/features/history/HistoryFilterBar";
 import HistoryList from "@/components/features/history/HistoryList";
 import HistoryPagination from "@/components/features/history/HistoryPagination";
 import TransactionDetailModal from "@/components/features/history/TransactionDetailModal";
-import type { HistoryItem } from "@/components/features/history/types";
+import type { HistoryItem } from "@/types/history-types";
 
 import {
     PAGE_WRAPPER,
