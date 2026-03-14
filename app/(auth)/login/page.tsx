@@ -152,7 +152,7 @@ export default function LoginPage() {
             <div className="h-10 w-px bg-gray-300"></div>
             <span className="text-[#E31837] text-2xl font-black tracking-widest uppercase">A</span>
           </div>
-          <span className="text-[#004C8F] text-2xl font-black tracking-widest">abhar</span>
+          <span className="text-[#004C8F] text-2xl font-black tracking-widest">Aabhar</span>
         </div>
 
         {/* Typography */}
@@ -173,7 +173,6 @@ export default function LoginPage() {
               </div>
               <div className="pt-1">
                 <h3 className="font-bold text-gray-900 text-lg">Peer Recognition</h3>
-                <p className="text-sm text-gray-600 font-medium">(Send a Kudo)</p>
               </div>
             </div>
 
@@ -184,7 +183,6 @@ export default function LoginPage() {
               </div>
               <div className="pt-1">
                 <h3 className="font-bold text-gray-900 text-lg">Points to Rewards</h3>
-                <p className="text-sm text-gray-600 font-medium">(Redeem for Gift Cards)</p>
               </div>
             </div>
 
@@ -195,7 +193,6 @@ export default function LoginPage() {
               </div>
               <div className="pt-1">
                 <h3 className="font-bold text-gray-900 text-lg">Achievement Badges</h3>
-                <p className="text-sm text-gray-600 font-medium">(Automated Milestones)</p>
               </div>
             </div>
 
@@ -206,7 +203,6 @@ export default function LoginPage() {
               </div>
               <div className="pt-1">
                 <h3 className="font-bold text-gray-900 text-lg">R&R Dashboard</h3>
-                <p className="text-sm text-gray-600 font-medium">(View Progress)</p>
               </div>
             </div>
           </div>
@@ -239,7 +235,7 @@ export default function LoginPage() {
               />
               <h1 className="flex items-center text-3xl font-black tracking-tight select-none justify-center mb-4">
                 <span style={{ color: '#E31837' }}>A</span>
-                <span style={{ color: '#004C8F' }}>abhar</span>
+                <span style={{ color: '#004C8F' }}>Aabhar</span>
               </h1>
               <h2 className="text-xl md:text-2xl text-gray-800 font-bold text-center">
                 Welcome back!
