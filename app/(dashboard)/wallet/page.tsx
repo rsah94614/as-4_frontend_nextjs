@@ -49,13 +49,6 @@ function formatDate(iso: string) {
   });
 }
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 // ─── Exact API response types (mirrors backend schemas.py) ───────────────────
 
 interface WalletData {

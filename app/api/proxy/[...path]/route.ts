@@ -5,33 +5,49 @@
  *
  * WHY THIS EXISTS
  * ───────────────
- * Without this, the browser opens 8 separate TCP connections (one per
- * microservice port), fires a CORS preflight on each, and exposes the
- * Bearer token to the network on every request.
- *
- * With this proxy:
+ * Without this, the browser opens separate TCP connections per microservice
+ * port and exposes the Bearer token on the wire. With this proxy:
  *  • Browser makes ONE connection to Next.js (same origin — no CORS)
  *  • Next.js fans out to microservices over localhost (sub-millisecond)
- *  • Bearer token never leaves the server
+ *  • Bearer token is forwarded server-side; never exposed in the network tab
  *  • HTTP/2 multiplexing available between browser ↔ Next.js
  *
- * USAGE (from any service file)
- * ──────────────────────────────
- * Change your base URLs from:
- *   http://localhost:8005/v1/reviews
- * to:
- *   /api/proxy/recognition/v1/reviews
+ * TOKEN STRATEGY
+ * ───────────────
+ * Tokens are stored in localStorage (not httpOnly cookies) and managed by
+ * auth-service.ts. Every client-side fetch() through this proxy MUST attach:
  *
- * SERVICE MAP (add new services here as you scale)
- * ─────────────────────────────────────────────────
- *   /api/proxy/auth/**          → http://localhost:8001/v1/auth/**
- *   /api/proxy/roles/**         → http://localhost:8002/v1/roles/**
- *   /api/proxy/employees/**     → http://localhost:8003/v1/employees/**
- *   /api/proxy/wallet/**        → http://localhost:8004/v1/wallets/**
- *   /api/proxy/recognition/**   → http://localhost:8005/v1/recognitions/**  (root_path used by auth middleware for route matching)
- *   /api/proxy/rewards/**       → http://localhost:8006/v1/rewards/**
- *   /api/proxy/org/**           → http://localhost:8007/v1/organizations/**
- *   /api/proxy/analytics/**     → http://localhost:8008/v1/analytics/**
+ *   Authorization: Bearer <token>
+ *
+ * The proxy reads this header and forwards it to the upstream microservice.
+ * The notification-store and any other client that uses raw fetch() must call
+ * getAuthHeaders() before constructing requests — axiosClient does this
+ * automatically via its request interceptor.
+ *
+ * SERVICE MAP
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Segment        Env var                          Upstream base          Port
+ *  ─────────────  ───────────────────────────────  ────────────────────── ────
+ *  auth           NEXT_PUBLIC_API_URL              .../v1/auth            8001
+ *  roles          NEXT_PUBLIC_ROLES_API_URL        .../v1/roles           8002
+ *  employees      NEXT_PUBLIC_EMPLOYEE_API_URL     .../v1/employees       8003
+ *  wallet         NEXT_PUBLIC_WALLET_API_URL       .../v1/wallets         8004
+ *  recognition    NEXT_PUBLIC_RECOGNITION_API_URL  .../v1/recognitions    8005
+ *  rewards        NEXT_PUBLIC_REWARDS_API_URL      .../v1/rewards         8006
+ *  org            NEXT_PUBLIC_ORG_API_URL          .../v1/organizations   8007
+ *  analytics      NEXT_PUBLIC_ANALYTICS_API_URL    .../v1/analytics       8008
+ *
+ * ROUTE EXAMPLES
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Browser                                               Upstream
+ *  ────────────────────────────────────────────────────  ──────────────────────────────────────────────────────
+ *  GET  /api/proxy/employees/notifications               → EMPLOYEE_URL/v1/employees/notifications
+ *  GET  /api/proxy/employees/notifications/unread-count  → EMPLOYEE_URL/v1/employees/notifications/unread-count
+ *  PUT  /api/proxy/employees/notifications/{id}/read     → EMPLOYEE_URL/v1/employees/notifications/{id}/read
+ *  PUT  /api/proxy/employees/notifications/read-all      → EMPLOYEE_URL/v1/employees/notifications/read-all
+ *  POST /api/proxy/employees/notifications/announcements → EMPLOYEE_URL/v1/employees/notifications/announcements
+ *  GET  /api/proxy/recognition/digest                    → RECOGNITION_URL/v1/recognitions/digest
+ *  POST /api/proxy/recognition/digest/send               → RECOGNITION_URL/v1/recognitions/digest/send
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -49,7 +65,17 @@ const SERVICE_MAP: Record<string, string> = {
     analytics:   (process.env.NEXT_PUBLIC_ANALYTICS_API_URL ) + "/v1/analytics/",
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Token extraction ─────────────────────────────────────────────────────────
+//
+// Tokens live in localStorage (see auth-service.ts → STORAGE_KEYS.ACCESS_TOKEN).
+// The proxy can only see what the browser sends as HTTP headers — it has no
+// access to the browser's localStorage. Callers are therefore responsible for
+// reading the token from localStorage and attaching it as:
+//
+//   Authorization: Bearer <token>
+//
+// This is what axiosClient does automatically via its request interceptor.
+// Raw fetch() callers must use getAuthHeaders() from notification-store.ts.
 
 function extractToken(req: NextRequest): string | null {
     const auth = req.headers.get("authorization");
@@ -64,7 +90,6 @@ async function proxyRequest(targetUrl: string, req: NextRequest, token: string |
         // CRITICAL: Next.js must "pretend" to be the backend domain
         "Host": url.host, 
     };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
 
     const body = req.method !== "GET" && req.method !== "HEAD"
         ? await req.text()
@@ -78,7 +103,7 @@ async function proxyRequest(targetUrl: string, req: NextRequest, token: string |
     });
 }
 
-// ─── Route handler ────────────────────────────────────────────────────────────
+// ─── Route handlers ───────────────────────────────────────────────────────────
 
 // Next.js 15: params is a Promise and must be awaited
 type RouteParams = { params: Promise<{ path: string[] }> };
@@ -108,7 +133,10 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     return handleProxy(req, path);
 }
 
-async function handleProxy(req: NextRequest, pathSegments: string[]): Promise<NextResponse> {
+async function handleProxy(
+    req: NextRequest,
+    pathSegments: string[],
+): Promise<NextResponse> {
     const [service, ...rest] = pathSegments;
     const token = extractToken(req);
 
@@ -154,7 +182,6 @@ async function handleProxy(req: NextRequest, pathSegments: string[]): Promise<Ne
             status,
             headers: { "Content-Type": contentType || "text/plain" },
         });
-
     } catch (err) {
         console.error(`[Proxy] 🛑 CRITICAL ERROR fetching ${targetUrl}:`, err);
         return NextResponse.json({ detail: "Gateway Error" }, { status: 502 });
@@ -164,8 +191,7 @@ async function handleProxy(req: NextRequest, pathSegments: string[]): Promise<Ne
 // ─── Dashboard aggregate ──────────────────────────────────────────────────────
 // Fans out to all 4 analytics endpoints in parallel.
 // Each is individually error-isolated — one failing endpoint does NOT cause
-// the entire dashboard to return 502. The failed panel gets null and the
-// rest render normally.
+// the entire dashboard to return 502.
 
 async function handleDashboardAggregate(token: string | null): Promise<NextResponse> {
     const analyticsBase = SERVICE_MAP.analytics;
@@ -176,24 +202,16 @@ async function handleDashboardAggregate(token: string | null): Promise<NextRespo
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
 
-    // FIX: Each fetch is individually wrapped so a single failing endpoint
-    // doesn't reject the whole Promise.allSettled isn't needed — we catch
-    // per-request. This also gives us the HTTP status of each so we can
-    // distinguish "service down (network error)" from "403 Forbidden", etc.
     async function safeFetch(url: string): Promise<unknown> {
         try {
             const res = await fetch(url, { headers });
             if (!res.ok) {
-                // Upstream returned an error status — log it and return null
-                // so the dashboard panel shows a graceful empty state rather
-                // than a 502 cascade.
                 const body = await res.text().catch(() => "");
                 console.error(`[proxy/dashboard] ${url} → ${res.status}: ${body}`);
                 return null;
             }
             return await res.json();
         } catch (err) {
-            // Network error — service is down
             console.error(`[proxy/dashboard] ${url} unreachable:`, err);
             return null;
         }
@@ -206,12 +224,5 @@ async function handleDashboardAggregate(token: string | null): Promise<NextRespo
         safeFetch(`${analyticsBase}/dashboard/teams`),
     ]);
 
-    // Always return 200 — individual nulls signal to the UI which panels
-    // failed, without making the whole page error out.
-    return NextResponse.json({
-        platformStats,
-        recentReviews,
-        leaderboard,
-        teams,
-    });
+    return NextResponse.json({ platformStats, recentReviews, leaderboard, teams });
 }

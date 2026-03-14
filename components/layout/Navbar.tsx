@@ -4,15 +4,27 @@ import { Bell, Menu } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { auth } from '@/services/auth-service';
 import { useRouter, usePathname } from 'next/navigation';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotificationStore } from '@/lib/notification-store';
+
+// The Navbar reads directly from the Zustand store instead of going through
+// useNotifications(). This means:
+//   - It shares the same unreadCount and notifications list as every other
+//     component (including the notifications page) — one source of truth.
+//   - The poll that drives updates lives in useNotifications on the
+//     notifications page. When that page isn't mounted (e.g. user is on the
+//     dashboard), the Navbar starts its own lightweight poll here so the
+//     badge stays live regardless of which page is active.
+//   - No duplicate full-list fetches: the Navbar only calls fetchUnreadCount()
+//     on its poll ticks. If the count goes up it also calls fetchNotifications()
+//     so the dropdown preview is fresh.
+
+const POLL_INTERVAL_MS = 30_000;
 
 const TYPE_ICON: Record<string, string> = {
-    REVIEW: "📋",
-    REWARD: "🏅",
-    REWARD_REDEEMED: "🎁",
-    POINTS_CREDIT: "⚡",
-    SYSTEM: "⚙️",
-    CELEBRATION: "🎉",
+    REVIEW:       "📋",
+    REWARD:       "🏅",
+    SYSTEM:       "⚙️",
+    CELEBRATION:  "🎉",
     ANNOUNCEMENT: "📣",
 };
 
@@ -33,16 +45,46 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     const [user] = useState(() => auth.getUser());
     const [showNotifications, setShowNotifications] = useState(false);
     const notificationRef = useRef<HTMLDivElement | null>(null);
+    const prevUnreadRef   = useRef<number>(0);
     const pathname = usePathname();
     const router = useRouter();
-    const { notifications, unreadCount, markOne } = useNotifications(10);
-    const hasUnread = unreadCount > 0;
 
+    // Read directly from the global Zustand store — shared with notifications page.
+    const { notifications, unreadCount, fetchNotifications, fetchUnreadCount } =
+        useNotificationStore();
+
+    const hasUnread    = unreadCount > 0;
+    const previewItems = notifications.slice(0, 5);
+
+    // ── Bootstrap + poll ─────────────────────────────────────────────────────
+    // Do an initial load when the Navbar mounts so the badge and dropdown
+    // preview are populated immediately (e.g. on first page load / refresh).
+    useEffect(() => {
+        fetchNotifications(10).then(() => {
+            prevUnreadRef.current = useNotificationStore.getState().unreadCount;
+        });
+
+        const timer = setInterval(async () => {
+            await fetchUnreadCount();
+            const latest = useNotificationStore.getState().unreadCount;
+            // New notifications arrived → refresh the preview list too.
+            if (latest > prevUnreadRef.current) {
+                await fetchNotifications(10);
+            }
+            prevUnreadRef.current = latest;
+        }, POLL_INTERVAL_MS);
+
+        return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // mount once — store actions are stable references
+
+    // ── Close dropdown on route change ────────────────────────────────────────
     useEffect(() => {
         const t = setTimeout(() => setShowNotifications(false), 0);
         return () => clearTimeout(t);
     }, [pathname]);
 
+    // ── Close on outside click ────────────────────────────────────────────────
     useEffect(() => {
         function handleOut(e: MouseEvent) {
             if (notificationRef.current && !notificationRef.current.contains(e.target as Node))
@@ -52,6 +94,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         return () => document.removeEventListener('pointerdown', handleOut);
     }, [showNotifications]);
 
+    // ── Close on small screens when resized ───────────────────────────────────
     useEffect(() => {
         function onResize() { if (window.innerWidth < 1024) setShowNotifications(false); }
         window.addEventListener('resize', onResize);
@@ -72,10 +115,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     }, [user]);
 
     const username = user?.username || '';
-    const previewItems = notifications.slice(0, 5);
 
     return (
-        /* HDFC blue — matches their site header exactly */
         <nav className="w-full shrink-0" style={{ background: '#004C8F' }}>
             <div className="px-4 sm:px-6">
                 <div className="flex items-center justify-between h-14 gap-2">
@@ -106,24 +147,29 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                             >
                                 <Bell className="h-5 w-5" />
                                 {hasUnread && (
-                                    <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[17px] h-[17px] px-1 text-white text-[9px] font-bold rounded-full border-2 pointer-events-none"
-                                        style={{ background: '#E31837', borderColor: '#004C8F' }}>
+                                    <span
+                                        className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[17px] h-[17px] px-1 text-white text-[9px] font-bold rounded-full border-2 pointer-events-none"
+                                        style={{ background: '#E31837', borderColor: '#004C8F' }}
+                                    >
                                         {unreadCount > 9 ? '9+' : unreadCount}
                                     </span>
                                 )}
                             </button>
 
-                            {/* Dropdown — desktop */}
+                            {/* Dropdown — desktop only */}
                             {showNotifications && (
-                                <div className="absolute right-0 top-12 w-96 rounded-xl shadow-2xl border z-50 hidden lg:flex flex-col overflow-hidden"
-                                    style={{ background: '#fff', borderColor: '#dde3ea' }}>
-
+                                <div
+                                    className="absolute right-0 top-12 w-96 rounded-xl shadow-2xl border z-50 hidden lg:flex flex-col overflow-hidden"
+                                    style={{ background: '#fff', borderColor: '#dde3ea' }}
+                                >
                                     {/* Header */}
                                     <div className="flex items-center justify-between px-5 py-3" style={{ background: '#004C8F' }}>
                                         <span className="font-semibold text-white text-sm">Notifications</span>
                                         {hasUnread && (
-                                            <span className="text-[10px] font-bold text-white rounded-full px-2 py-0.5"
-                                                style={{ background: '#E31837' }}>
+                                            <span
+                                                className="text-[10px] font-bold text-white rounded-full px-2 py-0.5"
+                                                style={{ background: '#E31837' }}
+                                            >
                                                 {unreadCount > 99 ? '99+' : unreadCount} unread
                                             </span>
                                         )}
@@ -142,11 +188,15 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                                             previewItems.map(n => (
                                                 <button
                                                     key={n.notification_id}
-                                                    onClick={() => { if (!n.is_read) markOne(n.notification_id); }}
+                                                    onClick={() => {
+                                                        if (!n.is_read) {
+                                                            useNotificationStore.getState().markOneAsRead(n.notification_id);
+                                                        }
+                                                    }}
                                                     className="w-full text-left flex items-start gap-3 px-5 py-3.5 transition-colors border-b last:border-0"
                                                     style={{
-                                                        background: !n.is_read ? '#EEF4FB' : '#fff',
-                                                        borderColor: '#f0f4f8',
+                                                        background:   !n.is_read ? '#EEF4FB' : '#fff',
+                                                        borderColor:  '#f0f4f8',
                                                     }}
                                                     onMouseEnter={e => (e.currentTarget.style.background = '#EEF4FB')}
                                                     onMouseLeave={e => (e.currentTarget.style.background = !n.is_read ? '#EEF4FB' : '#fff')}
@@ -155,8 +205,13 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                                                         {TYPE_ICON[n.type] ?? '🔔'}
                                                     </span>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-sm leading-snug truncate"
-                                                            style={{ fontWeight: !n.is_read ? 600 : 400, color: !n.is_read ? '#003366' : '#6b7280' }}>
+                                                        <p
+                                                            className="text-sm leading-snug truncate"
+                                                            style={{
+                                                                fontWeight: !n.is_read ? 600 : 400,
+                                                                color:      !n.is_read ? '#003366' : '#6b7280',
+                                                            }}
+                                                        >
                                                             {n.title}
                                                         </p>
                                                         <p className="text-[11px] mt-0.5" style={{ color: '#9ca3af' }}>
@@ -164,7 +219,10 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                                                         </p>
                                                     </div>
                                                     {!n.is_read && (
-                                                        <span className="w-2 h-2 rounded-full shrink-0 mt-1.5" style={{ background: '#E31837' }} />
+                                                        <span
+                                                            className="w-2 h-2 rounded-full shrink-0 mt-1.5"
+                                                            style={{ background: '#E31837' }}
+                                                        />
                                                     )}
                                                 </button>
                                             ))
@@ -193,8 +251,10 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                             className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
                             onClick={() => router.push('/profile')}
                         >
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                                style={{ background: '#E31837' }}>
+                            <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+                                style={{ background: '#E31837' }}
+                            >
                                 <span className="text-white font-bold text-xs">{initials || '??'}</span>
                             </div>
                             {username && (

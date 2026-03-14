@@ -7,9 +7,9 @@ import axiosClient from './api-client'
  * Storage keys for authentication tokens
  */
 const STORAGE_KEYS = {
-    ACCESS_TOKEN: 'access_token',
-    REFRESH_TOKEN: 'refresh_token',
-    USER: 'user',
+    ACCESS_TOKEN:     'access_token',
+    REFRESH_TOKEN:    'refresh_token',
+    USER:             'user',
     TOKEN_EXPIRES_AT: 'token_expires_at',
 } as const
 
@@ -50,7 +50,7 @@ export const auth = {
         return localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
     },
 
-    getUser: () => {
+    getUser: (): User | null => {
         if (typeof window === 'undefined') return null
         const userStr = localStorage.getItem(STORAGE_KEYS.USER)
         return userStr ? JSON.parse(userStr) : null
@@ -90,7 +90,7 @@ export const auth = {
                 // 5. Use BARE axios, NOT axiosClient, to avoid infinite 401 loops!
                 // We must provide the full proxy path since bare axios doesn't have the baseURL.
                 const response = await axios.post(
-                    '/api/proxy/auth/refresh', 
+                    '/api/proxy/auth/refresh',
                     { refresh_token: refreshToken },
                     { headers: { "Content-Type": "application/json" } }
                 )
@@ -106,7 +106,7 @@ export const auth = {
             } catch (error) {
                 console.error('Token refresh error:', error)
                 auth.clearTokens()
-                
+
                 // If refresh completely fails, gracefully kick the user to login
                 if (typeof window !== 'undefined') window.location.href = '/login';
                 return false
@@ -225,18 +225,33 @@ export async function resetPassword(token: string, newPassword: string) {
     }
 }
 
+/**
+ * The User object stored in localStorage after login / token refresh.
+ * Matches the `employee` field returned by the auth service on every
+ * successful login or refresh response.
+ *
+ * FIX: Added `roles` — the backend includes the employee's role codes
+ * (e.g. ["SUPER_ADMIN", "HR_ADMIN"] or ["EMPLOYEE"]) in the employee
+ * payload. Without this field, useAuth() returned a user with no roles,
+ * making every role check in page.tsx evaluate to false and hiding the
+ * admin controls for all users regardless of their actual permissions.
+ */
 export interface User {
-    employee_id: string
-    username: string
-    email: string
+    employee_id:    string
+    username:       string
+    email:          string
     designation_id: string | null
-    department_id: string | null
+    department_id:  string | null
+    // Role codes assigned to this employee, e.g. ["SUPER_ADMIN", "EMPLOYEE"].
+    // Populated from the login / refresh response and persisted in localStorage
+    // so role-gating works without a separate API call on every page load.
+    roles:          string[]
 }
 
 export interface LoginResponse {
-    access_token: string
+    access_token:  string
     refresh_token: string
-    token_type: string
-    expires_in: number
-    employee: User
+    token_type:    string
+    expires_in:    number
+    employee:      User
 }
