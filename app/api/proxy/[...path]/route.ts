@@ -87,8 +87,9 @@ async function proxyRequest(targetUrl: string, req: NextRequest, token: string |
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        // CRITICAL: Next.js must "pretend" to be the backend domain
         "Host": url.host, 
+        // ✅ Add this line to forward the token
+        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
     };
 
     const body = req.method !== "GET" && req.method !== "HEAD"
@@ -97,7 +98,7 @@ async function proxyRequest(targetUrl: string, req: NextRequest, token: string |
 
     return fetch(url.toString(), {
         method: req.method,
-        headers,
+        headers, // Now includes the token
         body,
         keepalive: true,
     });
@@ -152,8 +153,11 @@ async function handleProxy(
         return handleDashboardAggregate(token);
     }
 
+    const searchParams = req.nextUrl.search; 
+
+    // Append it to your target URL
     const targetPath = rest.join("/");
-    const targetUrl = `${baseUrl}${targetPath}`;
+    const targetUrl = `${baseUrl}${targetPath}${searchParams}`;
 
     // --- DEBUG LOGS ---
     console.log("---------------- Proxy Debug ----------------");
