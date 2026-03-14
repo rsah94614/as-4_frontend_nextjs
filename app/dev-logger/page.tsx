@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import SuperdevGuard from "@/components/features/SuperdevGuard";
 import {
     useLoggerStore,
@@ -27,6 +28,7 @@ import {
     BellOff,
     Bell,
     Search,
+    X,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -281,11 +283,19 @@ export default function DevLoggerPage() {
 }
 
 function DevLoggerContent() {
+    const router = useRouter();
     const logs = useLoggerStore((s) => s.logs);
     const filters = useLoggerStore((s) => s.filters);
     const setFilter = useLoggerStore((s) => s.setFilter);
     const clearLogs = useLoggerStore((s) => s.clearLogs);
     const getFilteredLogs = useLoggerStore((s) => s.getFilteredLogs);
+
+    // Silent auto-refresh: tick every 1 s to force re-render
+    const [, setTick] = useState(0);
+    useEffect(() => {
+        const id = setInterval(() => setTick((t) => t + 1), 1000);
+        return () => clearInterval(id);
+    }, []);
 
     const filteredLogs = getFilteredLogs();
 
@@ -295,6 +305,15 @@ function DevLoggerContent() {
             <header className="sticky top-0 z-10 bg-gray-950/80 backdrop-blur-xl border-b border-gray-800">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
+                        {/* Back / Close button */}
+                        <button
+                            onClick={() => router.back()}
+                            className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 flex items-center justify-center transition-colors"
+                            title="Go back"
+                        >
+                            <X className="w-5 h-5 text-gray-400" />
+                        </button>
+
                         <div className="w-9 h-9 rounded-lg bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
                             <Terminal className="w-5 h-5 text-violet-400" />
                         </div>
@@ -315,6 +334,7 @@ function DevLoggerContent() {
                                 / {logs.length} logs
                             </span>
                         </span>
+
 
                         {/* Clear */}
                         <button
