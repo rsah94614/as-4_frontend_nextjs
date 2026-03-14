@@ -152,7 +152,7 @@ export default function LoginPage() {
             <div className="h-10 w-px bg-gray-300"></div>
             <span className="text-[#E31837] text-2xl font-black tracking-widest uppercase">A</span>
           </div>
-          <span className="text-[#004C8F] text-2xl font-black tracking-widest">Aabhar</span>
+          <span className="text-[#004C8F] text-2xl font-black tracking-widest">abhar</span>
         </div>
 
         {/* Typography */}
@@ -235,7 +235,7 @@ export default function LoginPage() {
               />
               <h1 className="flex items-center text-3xl font-black tracking-tight select-none justify-center mb-4">
                 <span style={{ color: '#E31837' }}>A</span>
-                <span style={{ color: '#004C8F' }}>Aabhar</span>
+                <span style={{ color: '#004C8F' }}>abhar</span>
               </h1>
               <h2 className="text-xl md:text-2xl text-gray-800 font-bold text-center">
                 Welcome back!
