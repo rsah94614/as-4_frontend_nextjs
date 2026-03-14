@@ -19,13 +19,13 @@ export const SECTION_HEADER = "flex items-center justify-between mb-5";
 // ── Gradients ────────────────────────────────────────────────────────────────
 
 export const GRADIENT_PRIMARY =
-    "bg-gradient-to-r from-purple-700 to-fuchsia-600";
+    "bg-[#004C8F] border-r border-white/10";
 
 export const GRADIENT_PRIMARY_HOVER =
-    "hover:from-purple-800 hover:to-fuchsia-700";
+    "hover:bg-[#004C8F] hover:border-r hover:border-white/10";
 
 export const GRADIENT_SECONDARY =
-    "bg-gradient-to-r from-fuchsia-500 to-purple-600";
+    "bg-[#004C8F] border-r border-white/10";
 
 // ── Category pills ───────────────────────────────────────────────────────────
 
@@ -43,24 +43,24 @@ export const PILL_INACTIVE =
 // ── Pagination ───────────────────────────────────────────────────────────────
 
 export const PAG_BTN_BASE =
-    "rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed";
+    "rounded-lg px-3 py-1.5 text-sm font-bold text-slate-800 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed";
 
 export const PAG_NUM_BASE =
     "rounded-lg min-w-[36px] px-2 py-1.5 text-sm font-medium transition-all";
 
 export const PAG_NUM_ACTIVE =
-    "bg-purple-700 text-white shadow-sm hover:bg-purple-800";
+    "bg-[#004C8F] text-white shadow-sm hover:bg-[#003d73]";
 
 export const PAG_NUM_INACTIVE =
-    "text-slate-600 hover:bg-slate-100 border-slate-200";
+    "text-slate-800 font-bold hover:bg-slate-100 border-slate-200";
 
 // ── Reward card ──────────────────────────────────────────────────────────────
 
 export const CARD_CONTAINER =
-    "group relative rounded-3xl border bg-white flex flex-col overflow-hidden transition-all duration-200";
+    "group relative rounded-lg border border-slate-200 bg-white flex flex-col overflow-hidden transition-all duration-200";
 
 export const CARD_ENABLED =
-    "cursor-pointer hover:shadow-lg hover:-translate-y-0.5 hover:border-purple-200 border-slate-100 shadow-sm";
+    "cursor-pointer hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 shadow-sm";
 
 export const CARD_DISABLED = "opacity-60 cursor-not-allowed border-slate-100";
 
@@ -113,4 +113,4 @@ export const SHIMMER_BOX = "rounded-xl animate-shimmer";
 export const SHIMMER_CIRCLE = "rounded-full animate-shimmer";
 
 export const SKELETON_CARD =
-    "rounded-2xl border border-slate-100 p-4 space-y-3 animate-fade-in";
+    "rounded-lg border border-slate-200 p-4 space-y-3 animate-fade-in";

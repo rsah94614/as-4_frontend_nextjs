@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Plus, Search, LayoutGrid, RefreshCw } from "lucide-react";
+import { Plus, Search, LayoutGrid,ArrowUpRight } from "lucide-react";
 
 // 1. Swap fetchWithAuth for our Axios client builder
 import { createAuthenticatedClient } from "@/lib/api-utils";
@@ -25,7 +25,7 @@ export default function RewardsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
-  const [activeOnly, setActiveOnly] = useState(false);
+  const [filterState, setFilterState] = useState<"all" | "active" | "inactive">("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -41,7 +41,7 @@ export default function RewardsPage() {
       // 3. Use the Axios client with relative paths!
       const [catRes, itemRes] = await Promise.all([
         rewardsClient.get(`/categories?active_only=false`),
-        rewardsClient.get(`/catalog?active_only=${activeOnly}&page=${page}&size=12`),
+        rewardsClient.get(`/catalog?active_only=${filterState === "active"}&page=${page}&size=12`),
       ]);
       
       // Axios automatically parses JSON into the .data property
@@ -54,7 +54,7 @@ export default function RewardsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, activeOnly]);
+  }, [page, filterState]);
 
   useEffect(() => {
     load();
@@ -63,12 +63,18 @@ export default function RewardsPage() {
   // ─── Filtering ────────────────────────────────────────────────────────────
   const filtered = useMemo(
     () =>
-      items.filter(
-        (i) =>
-          i.reward_name.toLowerCase().includes(search.toLowerCase()) ||
-          i.reward_code.toLowerCase().includes(search.toLowerCase())
-      ),
-    [items, search]
+      items
+        .filter((i) => {
+          if (filterState === "active") return i.is_active;
+          if (filterState === "inactive") return !i.is_active;
+          return true;
+        })
+        .filter(
+          (i) =>
+            i.reward_name.toLowerCase().includes(search.toLowerCase()) ||
+            i.reward_code.toLowerCase().includes(search.toLowerCase())
+        ),
+    [items, search, filterState]
   );
 
   // ─── Modal Helpers ────────────────────────────────────────────────────────
@@ -87,76 +93,79 @@ export default function RewardsPage() {
 
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
+        <div className="h-[6px] shrink-0" style={{ background: '#a11027' }} />
 
-        <main className="flex-1 overflow-y-auto">
-          {/* Header */}
-          <div className="bg-slate-50 border-b border-slate-200 px-8 py-8 animate-in fade-in slide-in-from-top-2 duration-300">
-            <div className="max-w-7xl mx-auto flex items-end justify-between gap-4">
-              <div>
-                <h1 className="text-4xl font-black tracking-tight text-black">
-                  Reward Catalog
-                </h1>
-                <p className="text-slate-500 font-bold mt-1 uppercase tracking-widest text-[11px]">
-                  Manage all reward items and stock levels
-                </p>
+        <main className="flex-1 overflow-y-auto p-8 lg:p-12 space-y-10 scroll-smooth">
+          {/* Top Header Section */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-slate-100 animate-in fade-in slide-in-from-top-4 duration-700">
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-[#004C8F] rounded-xl flex items-center justify-center shadow-xl shadow-blue-100/50 group hover:rotate-6 transition-transform duration-500">
+                  <LayoutGrid className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+                </div>
+                <div>
+                  <h1 className="text-5xl font-semibold tracking-tighter text-slate-900 leading-none">
+                    Reward <span className="text-[#004C8F]">Catalog</span>
+                  </h1>
+                  <p className="text-[11px] font-semibold text-slate-600 mt-2 uppercase tracking-wider">
+                    Create and Manage individual items in your reward list
+                  </p>
+                </div>
               </div>
-              <Button
-                onClick={() => setModal("create")}
-                className="h-12 px-7 rounded-2xl bg-black text-white text-xs font-black tracking-widest uppercase shadow-xl hover:bg-slate-800 transition-all active:scale-95 border-none"
-              >
-                <Plus className="w-4 h-4" />
-                Add Reward
-              </Button>
             </div>
-          </div>
 
-          <div className="max-w-7xl mx-auto px-8 py-8 space-y-6">
+            <Button
+              onClick={() => setModal("create")}
+              className="h-16 px-10 bg-[#004C8F] text-white rounded-xl text-xs font-semibold tracking-wider shadow-xl shadow-blue-100 hover:bg-[#003d73] transition-all hover:-translate-y-1 active:scale-95 group uppercase flex items-center gap-3 overflow-hidden border-none"
+            >
+              <Plus className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+              Build New Reward
+              <ArrowUpRight className="w-4 h-4 translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300" />
+            </Button>
+          </div>
             {/* Toolbar */}
             <div className="flex items-center gap-4 flex-wrap animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
               <div className="relative max-w-xs flex-1 group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-purple-600 transition-colors pointer-events-none z-10" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#004C8F] transition-colors pointer-events-none z-10" />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search by name or code…"
-                  className="w-full h-11 pl-11 pr-4 rounded-2xl border border-slate-200 text-sm font-bold text-black focus-visible:ring-purple-50 focus-visible:border-purple-300 bg-white shadow-sm transition-all"
+                  className="w-full h-11 pl-11 pr-4 rounded-xl border border-slate-200 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white shadow-sm transition-all"
                 />
               </div>
 
-              <label className="flex items-center gap-3 cursor-pointer select-none bg-white rounded-2xl border border-slate-200 px-5 h-11 shadow-sm hover:border-purple-200 transition-all">
-                <input
-                  type="checkbox"
-                  checked={activeOnly}
-                  onChange={(e) => {
-                    setActiveOnly(e.target.checked);
-                    setPage(1);
-                  }}
-                  className="peer h-4 w-4 cursor-pointer appearance-none rounded bg-slate-200 transition-all checked:bg-purple-600 focus:outline-none"
-                />
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest peer-checked:text-purple-700 transition-colors">
-                  Active only
-                </span>
-              </label>
+              <div className="flex bg-white p-1 rounded-xl border border-slate-200 gap-1 shadow-sm h-11 w-full lg:max-w-max transition-all">
+                {(["all", "active", "inactive"] as const).map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => {
+                        setFilterState(filter);
+                        setPage(1);
+                      }}
+                      className={`px-6 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all duration-300 flex-1 whitespace-nowrap text-center ${
+                        filterState === filter
+                          ? "bg-slate-100 text-[#004C8F] shadow-inner"
+                          : "text-slate-400 hover:text-slate-900 hover:bg-slate-100"
+                      }`}
+                    >
+                      {filter === "all" ? "All" : filter}
+                    </button>
+                ))}
+              </div>
 
               {pagination && (
-                <div className="ml-auto flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <div className="ml-auto flex items-center gap-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                   <LayoutGrid className="w-3.5 h-3.5" />
                   <span>{pagination.total} items</span>
-                  <span className="text-slate-200">·</span>
+                  <span className="text-slate-300">·</span>
                   <span>
                     Page {pagination.current_page} of {pagination.total_pages}
                   </span>
                 </div>
               )}
 
-              <Button
-                variant="default"
-                size="icon"
-                onClick={load}
-                className="h-11 w-11 rounded-2xl bg-black text-white hover:bg-slate-800 transition-all shadow-md active:rotate-180 duration-500 active:scale-95 border-none"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </Button>
+
             </div>
 
             {/* Grid / Empty / Error / Loading */}
@@ -180,7 +189,6 @@ export default function RewardsPage() {
                 onCreateNew={() => setModal("create")}
               />
             </div>
-          </div>
 
           {/* Modals */}
           <RewardModal

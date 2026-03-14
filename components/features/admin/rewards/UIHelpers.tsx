@@ -10,10 +10,10 @@ export function RewardBadge({ active }: { active: boolean }) {
         <Badge
             variant={active ? "secondary" : "destructive"}
             className={cn(
-                "rounded-full text-[10px] font-bold tracking-wider px-3 py-1 border shadow-sm",
+                "rounded-full text-[10px] font-semibold tracking-wider px-3 py-1 border shadow-sm",
                 active
-                    ? "bg-green-50 text-green-700 border-green-100"
-                    : "bg-red-50 text-red-700 border-red-100"
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                    : "bg-red-100 text-red-800 border-red-200"
             )}
         >
             <span
@@ -57,7 +57,7 @@ export function SkeletonRow() {
 export function RewardField({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div className="space-y-1.5 mb-5 group">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-purple-500 transition-colors">
+            <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1 group-focus-within:text-[#004C8F] transition-colors">
                 {label}
             </label>
             {children}
@@ -75,7 +75,7 @@ export function RewardStats({
     inactive: number;
 }) {
     const stats = [
-        { label: "Total", value: total, color: "bg-purple-500", shadow: "shadow-purple-100" },
+        { label: "Total", value: total, color: "bg-[#004C8F]", shadow: "shadow-blue-100" },
         { label: "Active", value: active, color: "bg-green-500", shadow: "shadow-green-100" },
         { label: "Inactive", value: inactive, color: "bg-red-500", shadow: "shadow-red-100" },
     ];
@@ -85,14 +85,14 @@ export function RewardStats({
             {stats.map((s) => (
                 <Card
                     key={s.label}
-                    className="px-6 py-4 flex items-center gap-4 flex-1 border-2 border-slate-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 rounded-2xl"
+                    className="py-6 flex flex-col items-center justify-center gap-2 flex-1 border-2 border-slate-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 rounded-xl"
                 >
-                    <div className={cn("w-3 h-3 rounded-full shadow-lg", s.color, s.shadow)} />
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <div className={cn("w-4 h-4 rounded-full shadow-lg mb-2", s.color, s.shadow)} />
+                    <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
                             {s.label}
                         </span>
-                        <span className="text-2xl font-black text-slate-800 leading-tight">
+                        <span className="text-5xl font-black text-slate-800 leading-none">
                             {s.value}
                         </span>
                     </div>
@@ -108,10 +108,10 @@ export function StatusBadge({ active }: { active: boolean }) {
         <Badge
             variant={active ? "secondary" : "destructive"}
             className={cn(
-                "rounded-full text-[10px] font-bold tracking-wider px-3 py-1 border shadow-sm",
+                "rounded-full text-[10px] font-semibold tracking-wider px-3 py-1 border shadow-sm",
                 active
-                    ? "bg-green-50 text-green-700 border-green-100"
-                    : "bg-red-50 text-red-700 border-red-100"
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                    : "bg-red-100 text-red-800 border-red-200"
             )}
         >
             <span
@@ -133,13 +133,13 @@ export function StockBadge({ stock }: { stock: number }) {
             ? { cls: "bg-red-50 text-red-700 border-red-100", label: "Out of stock" }
             : low
                 ? { cls: "bg-amber-50 text-amber-700 border-amber-200", label: `Low stock · ${stock}` }
-                : { cls: "bg-purple-50 text-purple-700 border-purple-100", label: `${stock} in stock` };
+                : { cls: "bg-blue-50 text-[#004C8F] border-blue-100", label: `${stock} in stock` };
 
     return (
         <Badge
             variant="secondary"
             className={cn(
-                "rounded-full text-[10px] font-bold tracking-wider px-3 py-1 border shadow-sm",
+                "rounded-full text-[10px] font-semibold tracking-wider px-3 py-1 border shadow-sm",
                 config.cls
             )}
         >
@@ -151,7 +151,7 @@ export function StockBadge({ stock }: { stock: number }) {
 // ─── Skeleton Card ────────────────────────────────────────────────────────────
 export function SkeletonCard() {
     return (
-        <Card className="rounded-2xl border border-slate-100 p-6 space-y-4 shadow-sm">
+        <Card className="rounded-xl border border-slate-100 p-6 space-y-4 shadow-sm">
             {[55, 85, 100, 65, 40].map((w, i) => (
                 <div
                     key={i}
