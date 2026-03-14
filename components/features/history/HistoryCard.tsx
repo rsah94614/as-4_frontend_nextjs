@@ -1,6 +1,6 @@
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
-import { getMessage } from "./history-utils";
-import type { HistoryItem } from "./types";
+import { getMessage } from "../../../lib/history-utils";
+import type { HistoryItem } from "../../../types/history-types";
 import { cn } from "@/lib/utils";
 
 import {
@@ -16,7 +16,7 @@ interface HistoryCardProps {
 
 export default function HistoryCard({ item, onClick }: HistoryCardProps) {
     const isRedemption = !!item.reward_catalog;
-    
+
     // Mimic the ReviewCard top-stripe and direction badge logic
     const stripeColor = isRedemption ? HDFC_RED : HDFC_BLUE;
     const badgeBg = isRedemption ? "bg-[#E31837]/8 text-[#E31837]" : "bg-[#004C8F]/8 text-[#004C8F]";
@@ -28,11 +28,11 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
             className={CARD_CONTAINER}
         >
             {/* Top accent stripe */}
-            <div 
+            <div
                 className="h-0.5 w-full transition-colors"
                 style={{ backgroundColor: stripeColor }}
             />
-            
+
             <div className="p-5 flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -47,7 +47,7 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
                             }
                             {isRedemption ? "Redeemed" : "Earned"}
                         </span>
-                        
+
                         <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
                             {new Date(item.granted_at).toLocaleDateString("en-US", {
                                 year: "numeric",

@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { periodOptions, typeOptions } from "./constants";
-import type { PeriodFilter, TypeFilter } from "./types";
+import type { PeriodFilter, TypeFilter } from "../../../types/history-types";
 
 import {
     FILTER_BTN_BASE,

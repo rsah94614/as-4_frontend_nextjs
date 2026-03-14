@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import DashboardLeaderboardSection from "@/components/features/dashboard/DashboardLeaderboardSection";
+import DashboardLeaderboardSection from "@/components/features/dashboard/user/DashboardLeaderboardSection";
 import type { LeaderboardEntry } from "@/services/analytics-service";
 
 const mockEntries: LeaderboardEntry[] = [

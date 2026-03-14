@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import DashboardRecognitionCard from "@/components/features/dashboard/DashboardRecognitionCard";
+import DashboardRecognitionCard from "@/components/features/dashboard/user/DashboardRecognitionCard";
 
 describe("DashboardRecognitionCard", () => {
     const defaultProps = {

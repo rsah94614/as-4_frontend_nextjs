@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import DashboardCard from "@/components/features/dashboard/DashboardCard";
+import DashboardCard from "@/components/features/dashboard/user/DashboardCard";
 import { Trophy } from "lucide-react";
 
 describe("DashboardCard", () => {

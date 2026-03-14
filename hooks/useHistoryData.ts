@@ -3,14 +3,14 @@
 import { useState, useEffect, useMemo } from "react";
 // 1. Swap fetchWithAuth for our Axios client builder
 import { createAuthenticatedClient } from "@/lib/api-utils";
-import { matchesPeriod, matchesType } from "./history-utils";
-import { PAGE_SIZE } from "./constants";
+import { matchesPeriod, matchesType } from "../lib/history-utils";
+import { PAGE_SIZE } from "../components/features/history/constants";
 import type {
     HistoryItem,
     PaginatedHistoryResponse,
     PeriodFilter,
     TypeFilter,
-} from "./types";
+} from "../types/history-types";
 
 // 2. Create the proxy client
 const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
@@ -50,7 +50,7 @@ export function useHistoryData() {
             // and throws an error automatically if the status is not 2xx.
             setAllHistory(res.data.data);
             setTotalItems(res.data.total_items);
-            
+
         } catch (err: unknown) {
             // 4. Handle Axios errors properly to extract backend details
             const e = err as { response?: { data?: { detail?: string } }, message?: string };

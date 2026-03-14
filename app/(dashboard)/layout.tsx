@@ -14,7 +14,7 @@ export default function DashboardLayout({
 
   return (
     <ProtectedRoute>
-      <div className="flex min-h-screen bg-gray-100">
+      <div className="flex min-h-screen bg-[#F0F4F8]">
         {/* Left Sidebar */}
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 

@@ -68,7 +68,7 @@ export default function AdminTeamsSection({
               onClick={() => onSortChange(opt.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150
                 ${sortBy === opt.value
-                  ? "bg-white text-gray-900 shadow-sm border border-[#e0e0e0]"
+                  ? "bg-[#004C8F] text-white shadow-sm"
                   : "text-gray-400 hover:text-gray-600"
                 }`}
             >
@@ -88,15 +88,16 @@ export default function AdminTeamsSection({
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-52 rounded-3xl" />
+            <Skeleton key={i} className="h-52 rounded-2xl" />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map((team) => (
+          {filtered.map((team, i) => (
             <AdminTeamReportCard
               key={team.department_id}
               team={team}
+              index={i}
               onClick={() => router.push(`/team-report/${team.department_id}`)}
             />
           ))}

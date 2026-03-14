@@ -77,7 +77,7 @@ export function isAdminUser(): boolean {
     const user = auth.getUser();
     if (!user) return false;
 
-    const userRoles = user.roles.map(r => r.toUpperCase());
+    const userRoles = (user.roles || []).map(r => r.toUpperCase());
     return userRoles.some(r => (ADMIN_ROLES as readonly string[]).includes(r));
 }
 
