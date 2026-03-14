@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
     Trophy, Building2, UserRound, Users, Tags, Star,
-    ShieldAlert, Loader2, Shield, ClipboardList, TrendingUp,
+    ShieldAlert, Loader2, Shield, ClipboardList,
     Activity, ArrowUpRight, LayoutGrid
 } from 'lucide-react';
 import { auth } from '@/services/auth-service';
@@ -77,12 +77,12 @@ const categories = [
         lightBg: '#F0FDFA',
     },
     {
-        title: 'Seasonal Multipliers',
-        description: 'Configure point multipliers for seasonal reward campaigns.',
-        href: '/seasonal-multipliers',
-        icon: TrendingUp,
-        accent: '#BE185D',
-        lightBg: '#FDF2F8',
+        title: 'Review Categories',
+        description: 'Manage review category tags and their point multipliers.',
+        href: '/review-categories',
+        icon: Tags,
+        accent: '#7C3AED',
+        lightBg: '#F5F3FF',
     },
     {
         title: 'Statuses',

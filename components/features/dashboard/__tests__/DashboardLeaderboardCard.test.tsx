@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import DashboardLeaderboardCard from "@/components/features/dashboard/DashboardLeaderboardCard";
+import DashboardLeaderboardCard from "@/components/features/dashboard/user/DashboardLeaderboardCard";
 
 describe("DashboardLeaderboardCard", () => {
     const defaultProps = {

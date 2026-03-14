@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { fetchParticipation } from "@/services/analytics-service";
 import type { ParticipationResponse } from "@/types/dashboard-types";
 
-const DEPT_COLORS = ["#7c3aed", "#3b82f6", "#14b8a6", "#f97316", "#ec4899", "#6366f1", "#10b981", "#f59e0b"];
+const DEPT_COLORS = ["#004C8F", "#1D6EC5", "#5B9BD5", "#93C5FD", "#1E40AF", "#2563EB", "#3B82F6", "#60A5FA"];
 
 function ParticipationSkeleton() {
     return (
@@ -66,7 +66,7 @@ function ParticipationError({ onRetry }: { onRetry: () => void }) {
                     <p className="text-base font-bold text-gray-900">Could not load participation data</p>
                     <p className="text-sm text-gray-500 max-w-xs">Check your connection or try again.</p>
                 </div>
-                <Button size="sm" onClick={onRetry} className="gap-2 font-bold rounded-lg bg-gray-900 text-white hover:bg-gray-700 px-5">
+                <Button size="sm" onClick={onRetry} className="gap-2 font-bold rounded-lg bg-[#004C8F] text-white hover:bg-[#003A70] px-5">
                     <RefreshCw className="w-3.5 h-3.5" />
                     Try again
                 </Button>
@@ -104,7 +104,7 @@ export default function AdminParticipationSection() {
     const s = data.stats;
     const activePct = Math.round(s.participation_rate);
 
-    const PIE_COLORS = ["#7c3aed", "#a78bfa", "#c4b5fd", "#e5e7eb"];
+    const PIE_COLORS = ["#004C8F", "#1D6EC5", "#93C5FD", "#e5e7eb"];
     const pieData = (data.pie ?? []).map((slice, i) => ({
         name:  slice.name,
         value: slice.value,
@@ -113,17 +113,17 @@ export default function AdminParticipationSection() {
 
     const avgDelta = s.avg_reviews_per_employee - s.avg_reviews_last_month;
     const stats = [
-        { label: "Total Employees",        value: s.total_employees,          sub: "across all teams",                                                icon: Users,      color: "bg-purple-100 text-purple-600" },
-        { label: "Active Participants",    value: s.active_participants,      sub: `${activePct}% participation`,                                     icon: UserCheck,  color: "bg-green-100 text-green-600"  },
+        { label: "Total Employees",        value: s.total_employees,          sub: "across all teams",                                                icon: Users,      color: "bg-[#EEF4FB] text-[#004C8F]" },
+        { label: "Active Participants",    value: s.active_participants,      sub: `${activePct}% participation`,                                     icon: UserCheck,  color: "bg-[#DBEAFE] text-[#1D6EC5]" },
         { label: "Non-Participants",       value: s.non_participants,         sub: `${100 - activePct}% of workforce`,                                icon: UserX,      color: "bg-red-100 text-red-600"      },
-        { label: "Avg Reviews / Employee", value: s.avg_reviews_per_employee, sub: `${avgDelta >= 0 ? "+" : ""}${avgDelta.toFixed(1)} vs last month`, icon: TrendingUp, color: "bg-blue-100 text-blue-600"   },
+        { label: "Avg Reviews / Employee", value: s.avg_reviews_per_employee, sub: `${avgDelta >= 0 ? "+" : ""}${avgDelta.toFixed(1)} vs last month`, icon: TrendingUp, color: "bg-[#BFDBFE] text-[#004C8F]" },
     ];
 
     return (
         <Card className="rounded-3xl border-0 shadow-none h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm uppercase tracking-wide">
-                    <Activity className="w-4 h-4 text-purple-500" />
+                    <Activity className="w-4 h-4 text-[#004C8F]" />
                     Participation Overview
                 </CardTitle>
             </CardHeader>
