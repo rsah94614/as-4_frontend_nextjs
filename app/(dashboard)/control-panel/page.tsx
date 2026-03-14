@@ -76,14 +76,14 @@ const categories = [
         accent: '#0F766E',
         lightBg: '#F0FDFA',
     },
-    // {
-    //     title: 'Seasonal Multipliers',
-    //     description: 'Configure point multipliers for seasonal reward campaigns.',
-    //     href: '/seasonal-multipliers',
-    //     icon: TrendingUp,
-    //     accent: '#BE185D',
-    //     lightBg: '#FDF2F8',
-    // },
+    {
+        title: 'Review Categories',
+        description: 'Manage review category tags and their point multipliers.',
+        href: '/review-categories',
+        icon: Tags,
+        accent: '#7C3AED',
+        lightBg: '#F5F3FF',
+    },
     {
         title: 'Statuses',
         description: 'Define and manage employee and reward status types.',
