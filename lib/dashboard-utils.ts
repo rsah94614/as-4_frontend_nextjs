@@ -46,4 +46,10 @@ export function formatTime(iso: string): string {
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}h ago`;
     return date.toLocaleDateString();
-}
+    }
+
+    export function formatGrowth(pct: number | null): string | undefined {
+    if (pct === null) return undefined;
+    const sign = pct >= 0 ? "+" : "";
+    return `${sign}${pct.toFixed(0)}%`;
+    }
