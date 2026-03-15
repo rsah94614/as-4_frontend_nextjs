@@ -1,103 +1,60 @@
 "use client";
 
 import React from "react";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─── Calendar Strip ───────────────────────────────────────────────────────────
 export function CalendarStrip({
-    month,
-    year,
-    onChange,
+    month, year, onChange,
 }: {
-    month: number;
-    year: number;
+    month: number; year: number;
     onChange: (m: number, y: number) => void;
 }) {
-    const MONTHS = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
-    const prev = () =>
-        month === 0 ? onChange(11, year - 1) : onChange(month - 1, year);
-    const next = () =>
-        month === 11 ? onChange(0, year + 1) : onChange(month + 1, year);
+    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const prev = () => month === 0 ? onChange(11, year - 1) : onChange(month - 1, year);
+    const next = () => month === 11 ? onChange(0, year + 1) : onChange(month + 1, year);
+
     return (
-        <div className="flex items-center gap-2 flex-wrap text-black">
-            <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={prev}
-                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition h-8 w-8"
-            >
-                <ChevronLeft className="w-4 h-4" />
-            </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={prev}
+                className="w-7 h-7 rounded-lg flex items-center justify-center border border-gray-200 bg-white text-gray-500 hover:bg-[#004C8F] hover:text-white hover:border-[#004C8F] transition-all">
+                <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+
             <div className="flex items-center gap-1 flex-wrap">
                 {MONTHS.map((m, i) => (
-                    <Button
-                        key={m}
-                        variant={i === month ? "default" : "ghost"}
-                        size="xs"
-                        onClick={() => onChange(i, year)}
+                    <button key={m} onClick={() => onChange(i, year)}
                         className={cn(
-                            "px-2.5 py-1 rounded-lg text-xs font-semibold transition",
+                            "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all",
                             i === month
-                                ? "bg-purple-700 text-white shadow font-bold hover:bg-purple-800"
-                                : "text-slate-500 hover:bg-slate-100"
+                                ? "text-white"
+                                : "text-gray-500 hover:bg-gray-100"
                         )}
-                    >
+                        style={i === month ? { background: "#004C8F" } : {}}>
                         {m}
-                    </Button>
+                    </button>
                 ))}
             </div>
-            <Button
-                variant="ghost"
-                size="icon-xs"
-                onClick={next}
-                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition h-8 w-8"
-            >
-                <ChevronRight className="w-4 h-4" />
-            </Button>
-            <div className="flex items-center gap-1 ml-1">
-                <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => onChange(month, year - 1)}
-                    className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 text-xs font-bold transition h-8 w-6"
-                >
+
+            <button onClick={next}
+                className="w-7 h-7 rounded-lg flex items-center justify-center border border-gray-200 bg-white text-gray-500 hover:bg-[#004C8F] hover:text-white hover:border-[#004C8F] transition-all">
+                <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+
+            <div className="flex items-center gap-1 ml-1 border-l border-gray-100 pl-2">
+                <button onClick={() => onChange(month, year - 1)}
+                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 text-xs font-bold transition-all">
                     ◂
-                </Button>
-                <span className="text-sm font-bold text-black px-1 leading-none">
+                </button>
+                <span className="text-sm font-bold px-1 select-none" style={{ color: "#004C8F" }}>
                     {year}
                 </span>
-                <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => onChange(month, year + 1)}
-                    className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 text-xs font-bold transition h-8 w-6"
-                >
+                <button onClick={() => onChange(month, year + 1)}
+                    className="w-6 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 text-xs font-bold transition-all">
                     ▸
-                </Button>
+                </button>
             </div>
-        </div>
-    );
-}
-
-// ─── Stars ────────────────────────────────────────────────────────────────────
-export function Stars({ value, size = "sm" }: { value: number; size?: "sm" | "md" }) {
-    const cls = size === "md" ? "w-4 h-4" : "w-3 h-3";
-    return (
-        <div className="flex items-center gap-0.5">
-            {[1, 2, 3, 4, 5].map((i) => (
-                <Star
-                    key={i}
-                    className={`${cls} ${i <= value
-                        ? "text-amber-400 fill-amber-400"
-                        : "text-slate-200 fill-slate-200"
-                        }`}
-                />
-            ))}
         </div>
     );
 }
