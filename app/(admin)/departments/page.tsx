@@ -6,10 +6,6 @@ import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import { useDepartments } from "@/hooks/useDepartments";
 import { Department } from "@/types/department-types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
-// Modular Components
 import { DepartmentStats } from "@/components/features/admin/departments/DepartmentStats";
 import { DepartmentTable } from "@/components/features/admin/departments/DepartmentTable";
 import { DepartmentModal } from "@/components/features/admin/departments/DepartmentModal";
@@ -53,97 +49,110 @@ export default function DepartmentsPage() {
         setPage(1);
     };
 
-    // Summary stats calculation
     const totalCount = pagination?.total ?? departments.length;
     const activeCount = departments.filter(d => d.is_active).length;
     const typeCount = new Set(departments.map(d => d.department_type?.type_code).filter(Boolean)).size;
 
     return (
-        <div className="flex h-screen bg-slate-50 overflow-hidden">
+        <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#eef0f8" }}>
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
             <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
                 <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
                 <main className="flex-1 overflow-y-auto p-6 space-y-5">
-                    {/* Header */}
-                    <div className="flex items-start justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight text-black">Departments</h1>
-                            <p className="text-slate-500 font-medium">
-                                Manage organisational departments and internal structure.
-                            </p>
-                        </div>
-                        <Button
+
+                    {/* Blue header bar */}
+                    <div
+                        className="flex items-center justify-between px-6 py-4 rounded-xl"
+                        style={{ backgroundColor: "#1a4ab5" }}
+                    >
+                        <h1 className="text-2xl font-bold text-white tracking-wide">
+                            Departments
+                        </h1>
+                        <button
                             onClick={openCreate}
-                            className="bg-black text-white hover:bg-slate-800 rounded-xl px-5 h-11"
+                            className="flex items-center gap-2 font-semibold text-white px-5 py-2.5 rounded-lg transition-all hover:opacity-90 active:scale-95"
+                            style={{ backgroundColor: "#e8192c" }}
                         >
-                            <Plus className="w-4 h-4 mr-2" /> Add Department
-                        </Button>
+                            <Plus className="w-4 h-4" />
+                            Add Department
+                        </button>
                     </div>
 
-                    {/* Summary stats */}
+                    {/* Stats */}
                     <DepartmentStats
                         total={totalCount}
                         active={activeCount}
                         types={typeCount}
                     />
 
-                    {/* Toolbar */}
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <div className="relative max-w-xs flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
-                            <Input
-                                value={searchInput}
-                                onChange={e => setSearchInput(e.target.value)}
-                                onKeyDown={e => e.key === "Enter" && handleSearch()}
-                                placeholder="Search by name or code..."
-                                className="pl-9 bg-white border-slate-200 rounded-xl h-11"
-                            />
-                        </div>
-                        <Button
-                            onClick={handleSearch}
-                            className="bg-black text-white hover:bg-slate-800 rounded-xl h-11 px-6"
-                        >
-                            Search
-                        </Button>
-                        {search && (
-                            <Button
-                                variant="outline"
-                                onClick={clearSearch}
-                                className="bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200 rounded-xl h-11"
+                    {/* White content card */}
+                    <div className="bg-white rounded-xl shadow-sm px-6 py-5 space-y-4">
+
+                        {/* Toolbar */}
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <div className="relative flex-1 max-w-sm">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9ca3af" }} />
+                                <input
+                                    value={searchInput}
+                                    onChange={e => setSearchInput(e.target.value)}
+                                    onKeyDown={e => e.key === "Enter" && handleSearch()}
+                                    placeholder="Search by name or code..."
+                                    className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg outline-none transition-all"
+                                    style={{ border: "1.5px solid #d1d5db", color: "#374151" }}
+                                    onFocus={e => (e.currentTarget.style.borderColor = "#1a4ab5")}
+                                    onBlur={e => (e.currentTarget.style.borderColor = "#d1d5db")}
+                                />
+                            </div>
+                            <button
+                                onClick={handleSearch}
+                                className="px-5 py-2.5 text-sm font-semibold text-white rounded-lg transition-all hover:opacity-90 active:scale-95"
+                                style={{ backgroundColor: "#1a4ab5" }}
                             >
-                                <X className="w-3 h-3 mr-2" /> Clear
-                            </Button>
-                        )}
-                        <Button
-                            variant="outline"
-                            onClick={refresh}
-                            className="border-slate-200 bg-white text-slate-500 hover:text-purple-600 hover:border-purple-300 rounded-xl h-11 w-11 p-0 ml-auto"
-                        >
-                            <RefreshCw className="w-4 h-4" />
-                        </Button>
-                    </div>
-
-                    {/* Error banner */}
-                    {error && (
-                        <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
-                            {error}
+                                Search
+                            </button>
+                            {search && (
+                                <button
+                                    onClick={clearSearch}
+                                    className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-lg transition-all hover:bg-slate-100"
+                                    style={{ border: "1.5px solid #d1d5db", color: "#6b7280" }}
+                                >
+                                    <X className="w-3 h-3" /> Clear
+                                </button>
+                            )}
+                            <button
+                                onClick={refresh}
+                                className="ml-auto w-10 h-10 flex items-center justify-center rounded-lg transition-all hover:bg-slate-100"
+                                style={{ border: "1.5px solid #d1d5db", color: "#6b7280" }}
+                                title="Refresh"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                            </button>
                         </div>
-                    )}
 
-                    {/* Table */}
-                    <DepartmentTable
-                        departments={departments}
-                        loading={loading}
-                        pagination={pagination}
-                        onPageChange={setPage}
-                        onEdit={openEdit}
-                    />
+                        {/* Error */}
+                        {error && (
+                            <div
+                                className="px-4 py-3 rounded-lg text-sm"
+                                style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c" }}
+                            >
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Table */}
+                        <DepartmentTable
+                            departments={departments}
+                            loading={loading}
+                            pagination={pagination}
+                            onPageChange={setPage}
+                            onEdit={openEdit}
+                        />
+                    </div>
                 </main>
             </div>
 
-            {/* Modal */}
             <DepartmentModal
                 open={modalOpen}
                 onClose={() => setModalOpen(false)}

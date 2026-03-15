@@ -33,7 +33,7 @@ export function useDepartments() {
         try {
             const res: DepartmentListResponse = await departmentService.list({
                 page,
-                limit: 20,
+                limit: 5,
                 search: search || undefined,
             });
             setDepartments(res.data);
