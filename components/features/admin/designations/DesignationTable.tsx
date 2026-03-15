@@ -3,7 +3,7 @@
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Designation } from "@/types/designation-types";
 import { PaginationMeta } from "@/types/pagination";
-import { LevelBadge } from "./UIHelpers";
+import { Button } from "@/components/ui/button";
 
 interface DesignationTableProps {
     designations: Designation[];
@@ -18,68 +18,92 @@ export function DesignationTable({
     loading,
     pagination,
     onPageChange,
-    onEdit
+    onEdit,
 }: DesignationTableProps) {
     return (
         <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-100">
-                        <tr>
-                            <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-widest">Designation</th>
-                            <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-widest">Code</th>
-                            <th className="p-4 text-center text-xs font-semibold text-slate-500 uppercase tracking-widest">Level</th>
-                            <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-widest">Status</th>
-                            <th className="p-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-widest">Action</th>
+                    <thead>
+                        <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
+                            {["Name", "Code", "Level", "Status", "Action"].map(col => (
+                                <th
+                                    key={col}
+                                    className="text-left py-3 px-4 font-semibold text-sm"
+                                    style={{ color: "#374151" }}
+                                >
+                                    {col}
+                                </th>
+                            ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan={5} className="py-24 text-center">
-                                    <Loader2 className="w-8 h-8 animate-spin text-slate-300 mx-auto" />
+                                <td colSpan={5} className="py-20 text-center">
+                                    <Loader2 className="w-6 h-6 animate-spin mx-auto" style={{ color: "#1a4ab5" }} />
                                 </td>
                             </tr>
                         ) : designations.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="py-24 text-center text-slate-400 text-sm">
+                                <td colSpan={5} className="py-20 text-center text-sm" style={{ color: "#9ca3af" }}>
                                     No designations found.
                                 </td>
                             </tr>
                         ) : (
-                            designations.map(desig => (
-                                <tr key={desig.designation_id} className="hover:bg-slate-50/60 transition group">
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:bg-purple-600 group-hover:text-white transition-colors duration-200">
-                                                {desig.designation_name.charAt(0).toUpperCase()}
-                                            </div>
-                                            <span className="font-semibold text-black">{desig.designation_name}</span>
-                                        </div>
+                            designations.map((desig, idx) => (
+                                <tr
+                                    key={desig.designation_id}
+                                    className="transition-colors"
+                                    style={{ borderBottom: idx < designations.length - 1 ? "1px solid #f3f4f6" : "none" }}
+                                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#eff6ff")}
+                                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
+                                >
+                                    {/* Name */}
+                                    <td className="py-3.5 px-4 font-semibold" style={{ color: "#111827" }}>
+                                        {desig.designation_name}
                                     </td>
-                                    <td className="p-4">
-                                        <span className="font-mono text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">
+
+                                    {/* Code */}
+                                    <td className="py-3.5 px-4">
+                                        <span
+                                            className="font-mono text-xs px-2.5 py-1 rounded"
+                                            style={{ backgroundColor: "#f1f5f9", color: "#475569", border: "1px solid #e2e8f0" }}
+                                        >
                                             {desig.designation_code}
                                         </span>
                                     </td>
-                                    <td className="p-4 text-center">
-                                        <LevelBadge level={desig.level} />
+
+                                    {/* Level */}
+                                    <td className="py-3.5 px-4">
+                                        <span
+                                            className="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white"
+                                            style={{ backgroundColor: "#1a4ab5" }}
+                                        >
+                                            {desig.level}
+                                        </span>
                                     </td>
-                                    <td className="p-4">
-                                        <span className={`px-3 py-1 text-xs rounded-full font-semibold ${desig.is_active
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-red-100 text-red-700"
-                                            }`}>
+
+                                    {/* Status */}
+                                    <td className="py-3.5 px-4">
+                                        <span
+                                            className="inline-flex items-center px-3 py-1 rounded text-xs font-semibold text-white"
+                                            style={{ backgroundColor: desig.is_active ? "#14a882" : "#6b7280" }}
+                                        >
                                             {desig.is_active ? "Active" : "Inactive"}
                                         </span>
                                     </td>
-                                    <td className="p-4 text-right">
-                                        <button
+
+                                    {/* Action */}
+                                    <td className="py-3.5 px-4">
+                                        <Button
+                                            size="sm"
                                             onClick={() => onEdit(desig)}
-                                            className="text-sm font-semibold text-black hover:text-purple-600 transition underline decoration-transparent hover:decoration-purple-600 underline-offset-4"
+                                            className="h-8 px-4 text-xs font-semibold text-white rounded hover:opacity-90"
+                                            style={{ backgroundColor: "#1a4ab5", border: "none" }}
                                         >
                                             Edit
-                                        </button>
+                                        </Button>
                                     </td>
                                 </tr>
                             ))
@@ -88,31 +112,63 @@ export function DesignationTable({
                 </table>
             </div>
 
-            {/* Pagination */}
-            {pagination && pagination.total_pages > 1 && (
-                <div className="flex items-center justify-between text-sm text-slate-600 bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-3">
-                    <span className="text-xs text-slate-500 font-medium tracking-tight">
-                        Showing <span className="text-black font-semibold">{(pagination.current_page - 1) * pagination.per_page + 1}</span>–
-                        <span className="text-black font-semibold">{Math.min(pagination.current_page * pagination.per_page, pagination.total)}</span> of <span className="text-black font-semibold">{pagination.total}</span>
+            {/* Pagination — always visible */}
+            {pagination && (
+                <div
+                    className="flex items-center justify-between pt-4"
+                    style={{ borderTop: "1px solid #e5e7eb" }}
+                >
+                    <span className="text-xs" style={{ color: "#6b7280" }}>
+                        Showing {(pagination.current_page - 1) * pagination.per_page + 1}–
+                        {Math.min(pagination.current_page * pagination.per_page, pagination.total)} of {pagination.total}
                     </span>
-                    <div className="flex items-center gap-2.5">
-                        <button
-                            disabled={!pagination.has_previous}
+
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => onPageChange(pagination.current_page - 1)}
-                            className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 disabled:opacity-40 transition-all active:scale-95"
+                            disabled={!pagination.has_previous}
+                            className="h-8 w-8 p-0 rounded border-slate-300"
                         >
                             <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <span className="px-4 py-1.5 text-xs font-bold bg-slate-50 rounded-lg border border-slate-100 text-black">
-                            {pagination.current_page} / {pagination.total_pages}
+                        </Button>
+
+                        <span
+                            className="text-xs font-semibold px-3 py-1 rounded"
+                            style={{ border: "1.5px solid #d1d5db", color: "#374151" }}
+                        >
+                            {pagination.current_page} of {pagination.total_pages}
                         </span>
-                        <button
-                            disabled={!pagination.has_next}
+
+                        <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => onPageChange(pagination.current_page + 1)}
-                            className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 disabled:opacity-40 transition-all active:scale-95"
+                            disabled={!pagination.has_next}
+                            className="h-8 w-8 p-0 rounded border-slate-300"
                         >
                             <ChevronRight className="w-4 h-4" />
-                        </button>
+                        </Button>
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onPageChange(pagination.current_page - 1)}
+                            disabled={!pagination.has_previous}
+                            className="h-8 px-4 rounded border-slate-300 text-slate-700"
+                        >
+                            Previous
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={() => onPageChange(pagination.current_page + 1)}
+                            disabled={!pagination.has_next}
+                            className="h-8 px-4 rounded font-semibold text-white hover:opacity-90"
+                            style={{ backgroundColor: "#1a4ab5", border: "none" }}
+                        >
+                            Next
+                        </Button>
                     </div>
                 </div>
             )}
