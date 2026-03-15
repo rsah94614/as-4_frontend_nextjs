@@ -48,13 +48,13 @@ export default function RewardCard({ item, canAfford, onRedeem, staggerIndex = 0
         <div className="flex items-start justify-between mb-3">
           <div
             className={`${ICON_BOX} transition-transform duration-200 group-hover:scale-110 ${
-              isVoucher ? "bg-fuchsia-50" : "bg-purple-50"
+              isVoucher ? "bg-fuchsia-50" : "bg-blue-50"
             }`}
           >
             {isVoucher ? (
               <TicketPercent size={22} className="text-fuchsia-600" />
             ) : (
-              <Package size={22} className="text-purple-600" />
+              <Package size={22} className="text-blue-600" />
             )}
           </div>
           <StockBadge status={item.stock_status} />
@@ -83,19 +83,13 @@ export default function RewardCard({ item, canAfford, onRedeem, staggerIndex = 0
                 Points required
               </p>
               <p className={`text-lg font-bold text-slate-800 transition-all duration-300 ${
-                canAfford && !outOfStock ? "group-hover:text-purple-700" : ""
+                canAfford && !outOfStock ? "group-hover:text-[#004C8F]" : ""
               }`}>
                 {item.default_points.toLocaleString()}
                 <span className="text-xs font-normal text-slate-400 ml-1">
                   pts
                 </span>
               </p>
-              {item.min_points !== item.max_points && (
-                <p className="text-[10px] text-slate-400">
-                  {item.min_points.toLocaleString()} –{" "}
-                  {item.max_points.toLocaleString()} range
-                </p>
-              )}
             </div>
 
             <button
@@ -104,7 +98,7 @@ export default function RewardCard({ item, canAfford, onRedeem, staggerIndex = 0
               className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
                 disabled
                   ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                  : `${GRADIENT_PRIMARY} text-white ${GRADIENT_PRIMARY_HOVER} active:scale-95 hover:shadow-md hover:shadow-purple-200`
+                  : `${GRADIENT_PRIMARY} text-white ${GRADIENT_PRIMARY_HOVER} active:scale-95 hover:shadow-md hover:shadow-blue-200`
               }`}
             >
               {outOfStock

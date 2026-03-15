@@ -119,8 +119,8 @@ export function AuditTable({
                                 </td>
                                 <td className="px-5 py-4">
                                     <div>
-                                        <span className="text-xs font-medium text-gray-700">{new Date(log.performed_at).toLocaleDateString()}</span>
-                                        <span className="text-xs text-gray-400 ml-1.5">
+                                        <span className="text-xs font-bold text-gray-800">{new Date(log.performed_at).toLocaleDateString()}</span>
+                                        <span className="text-xs font-bold text-gray-600 ml-1.5">
                                             {new Date(log.performed_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                         </span>
                                     </div>
@@ -162,8 +162,8 @@ export function AuditTable({
             {/* Pagination */}
             {pagination && pagination.total_pages > 1 && (
                 <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50/40">
-                    <p className="text-xs text-gray-400">
-                        Showing page <span className="font-semibold text-gray-600">{pagination.current_page}</span> of <span className="font-semibold text-gray-600">{pagination.total_pages}</span>
+                    <p className="text-xs font-semibold text-gray-600">
+                        Showing page <span className="font-bold text-gray-900">{pagination.current_page}</span> of <span className="font-bold text-gray-900">{pagination.total_pages}</span>
                         <span className="hidden sm:inline"> · {pagination.total.toLocaleString()} total entries</span>
                     </p>
                     <div className="flex items-center gap-1">

@@ -54,14 +54,14 @@ export function RestockModal({ item, isOpen, onClose, onSave }: RestockModalProp
 
     return (
         <Dialog open={isOpen} onOpenChange={(val) => !val && onClose()}>
-            <DialogContent className="max-w-md p-0 border-none bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <DialogContent className="max-w-md p-0 border-none bg-white rounded-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
                 <DialogHeader className="flex flex-row items-center justify-between px-8 py-6 border-b border-slate-50 bg-slate-50/50">
                     <div className="flex items-center gap-3 text-left">
-                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-amber-100 text-amber-600 shadow-inner">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-100 text-[#004C8F] shadow-inner">
                             <Archive className="w-5 h-5" />
                         </div>
                         <div>
-                            <DialogTitle className="text-xl font-black text-slate-800 tracking-tight leading-none mb-1">
+                            <DialogTitle className="text-xl font-semibold text-slate-800 tracking-tight leading-none mb-1">
                                 Add Stock
                             </DialogTitle>
                             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
@@ -76,30 +76,30 @@ export function RestockModal({ item, isOpen, onClose, onSave }: RestockModalProp
                         Restocking{" "}
                         <strong className="text-slate-800">{item.reward_name}</strong>.{" "}
                         Current inventory:{" "}
-                        <strong className="text-purple-700">{item.available_stock}</strong> units.
+                        <strong className="text-[#004C8F]">{item.available_stock}</strong> units.
                     </p>
 
                     <RewardField label="UNITS TO ADD">
                         <Input
                             type="number"
-                            className="w-full h-12 px-5 rounded-2xl border-2 border-slate-100 text-sm font-bold text-black focus-visible:ring-purple-50 focus-visible:border-purple-300 bg-white transition-all"
+                            className="w-full h-12 px-5 rounded-xl border-2 border-slate-100 text-sm font-bold text-black focus-visible:ring-blue-50 focus-visible:border-blue-300 bg-white transition-all"
                             value={amount}
                             min={1}
                             onChange={(e) => setAmount(Math.max(1, Number(e.target.value)))}
                         />
                     </RewardField>
 
-                    <Card className="flex items-center justify-between p-5 rounded-2xl border-2 border-slate-100 bg-slate-50">
-                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                    <Card className="flex items-center justify-between p-5 rounded-xl border-2 border-slate-100 bg-slate-50">
+                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                             New stock level
                         </span>
-                        <span className="text-3xl font-black text-purple-700 tracking-tight">
+                        <span className="text-3xl font-bold text-[#004C8F] tracking-tight">
                             {item.available_stock + amount}
                         </span>
                     </Card>
 
                     {error && (
-                        <div className="p-4 bg-red-50 border-2 border-red-100 rounded-2xl text-red-600 text-[10px] font-black animate-in shake-in duration-300 uppercase tracking-widest">
+                        <div className="p-4 bg-red-50 border-2 border-red-100 rounded-xl text-red-600 text-[10px] font-semibold animate-in shake-in duration-300 uppercase tracking-wider">
                             ⚠️ {error}
                         </div>
                     )}
@@ -109,14 +109,14 @@ export function RestockModal({ item, isOpen, onClose, onSave }: RestockModalProp
                             type="button"
                             variant="ghost"
                             onClick={onClose}
-                            className="flex-1 h-14 rounded-2xl text-xs font-black text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all tracking-widest uppercase"
+                            className="flex-1 h-14 rounded-2xl text-xs font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all tracking-wider uppercase"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={saving}
-                            className="flex-1 h-14 rounded-2xl text-xs font-black text-white bg-black hover:bg-slate-800 transition-all tracking-widest uppercase flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 disabled:shadow-none"
+                            className="flex-1 h-14 rounded-2xl text-xs font-semibold text-white bg-black hover:bg-slate-800 transition-all tracking-wider uppercase flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 disabled:shadow-none"
                         >
                             {saving ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

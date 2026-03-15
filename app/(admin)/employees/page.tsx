@@ -612,7 +612,7 @@ function StatsPanel({ manager, members, statsMap, month, year }: {
         </div>
         <div>
           <p className="text-xs font-bold text-black">{manager.username}&apos;s Team</p>
-          <p className="text-[10px] text-slate-400">{MONTH_NAMES[month]} {year}</p>
+          <p className="text-xs font-bold text-slate-800">{MONTH_NAMES[month]} {year}</p>
         </div>
       </div>
 

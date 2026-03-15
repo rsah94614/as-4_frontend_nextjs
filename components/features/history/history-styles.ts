@@ -12,8 +12,8 @@ export const PAGE_HEADER_INNER =
 
 export const PAGE_CONTENT = "px-8 md:px-10 py-8 max-w-[1200px] mx-auto";
 
-export const HDFC_RED = "#E31837";
-export const HDFC_BLUE = "#004C8F";
+export const HDFC_RED = "#c41230";
+export const HDFC_BLUE = "#003366";
 
 // ── Dropdown Buttons ────────────────────────────────────────────────────────
 
