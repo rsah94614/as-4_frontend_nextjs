@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useRef, useEffect } from "react"
 import { Tag, Clock, Image as ImageIcon, Video, Zap, ArrowUpRight, ArrowDownLeft } from "lucide-react"
 import type { Review, ReviewCategory } from "@/types/review-types"
 import { fmtDate } from "@/lib/review-utils"
@@ -15,6 +16,9 @@ interface ReviewCardProps {
 
 export default function ReviewCard({ review, myId, categories }: ReviewCardProps) {
     const isMine = review.reviewer_id === myId
+    const [expanded, setExpanded] = useState(false)
+    const [isClamped, setIsClamped] = useState(false)
+    const commentRef = useRef<HTMLParagraphElement>(null)
 
     const catCodes: string[] =
         review.category_codes ??
@@ -23,6 +27,14 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
             .filter(Boolean) as string[]
 
     const rawPts = review.raw_points != null ? review.raw_points : null
+
+    // Detect if the comment text overflows 3 lines
+    useEffect(() => {
+        const el = commentRef.current
+        if (el) {
+            setIsClamped(el.scrollHeight > el.clientHeight)
+        }
+    }, [review.comment])
 
     return (
         <Card className="rounded-xl overflow-hidden hover:border-gray-300 hover:shadow-md transition-all duration-200 group border-gray-200">
@@ -80,8 +92,28 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
                     </div>
                 )}
 
-                {/* Comment */}
-                <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{review.comment}</p>
+                {/* Comment with See more / See less */}
+                <div>
+                    <p
+                        ref={commentRef}
+                        className={cn(
+                            "text-sm text-gray-600 leading-relaxed transition-all duration-300",
+                            expanded
+                                ? "max-h-[200px] overflow-y-auto pr-1"
+                                : "line-clamp-3"
+                        )}
+                    >
+                        {review.comment}
+                    </p>
+                    {isClamped && (
+                        <button
+                            onClick={() => setExpanded((prev) => !prev)}
+                            className="mt-1 text-xs font-semibold text-[#004C8F] hover:text-[#E31837] transition-colors cursor-pointer"
+                        >
+                            {expanded ? "See less" : "See more"}
+                        </button>
+                    )}
+                </div>
 
                 {/* Media links */}
                 {(review.image_url || review.video_url) && (

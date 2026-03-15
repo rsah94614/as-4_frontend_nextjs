@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AuditLog, OperationType } from "@/types/audit-types";
+import { AuditLog } from "@/types/audit-types";
 import { PaginationMeta } from "@/types/pagination";
 
 interface AuditTableProps {
@@ -100,7 +100,7 @@ export function AuditTable({
                         </tr>
                     ) : (
                         logs.map((log, idx) => {
-                            const employeeName = (log as any).employee_name || (log as any).performed_by_name || "Admin";
+                            const employeeName = (log as AuditLog & { employee_name?: string; performed_by_name?: string }).employee_name || (log as AuditLog & { employee_name?: string; performed_by_name?: string }).performed_by_name || "Admin";
                             return (
                                 <tr
                                     key={log.audit_id}
