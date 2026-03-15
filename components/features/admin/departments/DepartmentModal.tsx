@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
-    DialogTitle
+    DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
     Select,
     SelectContent,
@@ -22,10 +20,9 @@ import {
     DepartmentDetail,
     DepartmentType,
     CreateDepartmentPayload,
-    UpdateDepartmentPayload
+    UpdateDepartmentPayload,
 } from "@/types/department-types";
 import { departmentService } from "@/services/department-service";
-import { Field } from "./UIHelpers";
 
 interface DepartmentModalProps {
     open: boolean;
@@ -61,7 +58,6 @@ export function DepartmentModal({
             setError(null);
             return;
         }
-
         if (selectedDepartment) {
             const loadDetail = async () => {
                 setDetailLoading(true);
@@ -116,98 +112,151 @@ export function DepartmentModal({
         }
     };
 
+    const inputStyle = {
+        width: "100%",
+        padding: "10px 14px",
+        fontSize: "14px",
+        borderRadius: "8px",
+        border: "1.5px solid #d1d5db",
+        outline: "none",
+        color: "#374151",
+        backgroundColor: "#ffffff",
+        transition: "border-color 0.15s",
+    } as React.CSSProperties;
+
     return (
         <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-            <DialogContent className="max-w-md p-7">
-                <DialogHeader className="flex flex-row justify-between items-start border-b border-gray-100 pb-4 mb-4">
+            <DialogContent className="max-w-md p-0 overflow-hidden rounded-xl [&>button]:hidden" style={{ border: "none" }}>
+
+                {/* Modal header — blue bar */}
+                <div
+                    className="flex items-center justify-between px-6 py-4"
+                    style={{ backgroundColor: "#1a4ab5" }}
+                >
                     <div>
-                        <DialogTitle className="text-xl font-bold text-black">
-                            {selectedDepartment ? "Edit Department" : "Create Department"}
+                        <DialogTitle className="text-lg font-bold text-white">
+                            {selectedDepartment ? "Edit Department" : "Add Department"}
                         </DialogTitle>
                         {detail && (
-                            <span className="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg font-medium mt-1 inline-block">
+                            <span className="text-xs text-blue-200 mt-0.5 block">
                                 {detail.employee_count} employee{detail.employee_count !== 1 ? "s" : ""}
                             </span>
                         )}
                     </div>
-                </DialogHeader>
+                    <button
+                        onClick={onClose}
+                        className="text-white hover:text-blue-200 transition-colors"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
 
-                {error && (
-                    <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
-                        {error}
-                    </div>
-                )}
-
-                {detailLoading ? (
-                    <div className="py-10 text-center">
-                        <Loader2 className="w-6 h-6 animate-spin text-slate-300 mx-auto" />
-                    </div>
-                ) : (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <Field label="Department Name *">
-                            <Input
-                                value={form.department_name}
-                                onChange={e => setForm({ ...form, department_name: e.target.value })}
-                                placeholder="e.g. Engineering"
-                                required
-                                maxLength={255}
-                            />
-                        </Field>
-
-                        <Field label="Department Code *">
-                            <Input
-                                value={form.department_code}
-                                onChange={e => setForm({ ...form, department_code: e.target.value.toUpperCase() })}
-                                placeholder="e.g. ENG"
-                                className="font-mono"
-                                required
-                                maxLength={20}
-                            />
-                        </Field>
-
-                        <Field label="Department Type *">
-                            <Select
-                                value={form.department_type_id}
-                                onValueChange={val => setForm({ ...form, department_type_id: val })}
-                                required
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a type…" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {departmentTypes.map(t => (
-                                        <SelectItem key={t.department_type_id} value={t.department_type_id}>
-                                            {t.type_name} ({t.type_code})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            {departmentTypes.length === 0 && (
-                                <p className="text-xs text-amber-500 mt-1">
-                                    No department types loaded — check your connection.
-                                </p>
-                            )}
-                        </Field>
-
-                        <div className="flex justify-end gap-3 pt-4">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={onClose}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={submitting}
-                                className="bg-black text-white hover:bg-slate-800"
-                            >
-                                {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />}
-                                {submitting ? "Saving…" : selectedDepartment ? "Save Changes" : "Create"}
-                            </Button>
+                {/* Modal body */}
+                <div className="bg-white px-6 py-6">
+                    {error && (
+                        <div
+                            className="mb-4 px-4 py-3 rounded-lg text-sm"
+                            style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c" }}
+                        >
+                            {error}
                         </div>
-                    </form>
-                )}
+                    )}
+
+                    {detailLoading ? (
+                        <div className="py-12 flex justify-center">
+                            <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#1a4ab5" }} />
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-5">
+
+                            {/* Department Name */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#6b7280" }}>
+                                    Department Name *
+                                </label>
+                                <input
+                                    style={inputStyle}
+                                    value={form.department_name}
+                                    onChange={e => setForm({ ...form, department_name: e.target.value })}
+                                    onFocus={e => (e.currentTarget.style.borderColor = "#1a4ab5")}
+                                    onBlur={e => (e.currentTarget.style.borderColor = "#d1d5db")}
+                                    placeholder="e.g. Engineering"
+                                    required
+                                    maxLength={255}
+                                />
+                            </div>
+
+                            {/* Department Code */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#6b7280" }}>
+                                    Department Code *
+                                </label>
+                                <input
+                                    style={{ ...inputStyle, fontFamily: "monospace", textTransform: "uppercase" }}
+                                    value={form.department_code}
+                                    onChange={e => setForm({ ...form, department_code: e.target.value.toUpperCase() })}
+                                    onFocus={e => (e.currentTarget.style.borderColor = "#1a4ab5")}
+                                    onBlur={e => (e.currentTarget.style.borderColor = "#d1d5db")}
+                                    placeholder="e.g. ENG001"
+                                    required
+                                    maxLength={20}
+                                />
+                            </div>
+
+                            {/* Department Type */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#6b7280" }}>
+                                    Department Type *
+                                </label>
+                                <Select
+                                    value={form.department_type_id}
+                                    onValueChange={val => setForm({ ...form, department_type_id: val })}
+                                    required
+                                >
+                                    <SelectTrigger
+                                        className="w-full h-10 rounded-lg text-sm"
+                                        style={{ border: "1.5px solid #d1d5db", color: "#374151" }}
+                                    >
+                                        <SelectValue placeholder="Select a type…" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {departmentTypes.map(t => (
+                                            <SelectItem key={t.department_type_id} value={t.department_type_id}>
+                                                {t.type_name} ({t.type_code})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {departmentTypes.length === 0 && (
+                                    <p className="text-xs mt-1" style={{ color: "#d97706" }}>
+                                        No department types loaded — check your connection.
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    className="px-5 py-2.5 text-sm font-medium rounded-lg transition-all hover:bg-slate-50"
+                                    style={{ border: "1.5px solid #d1d5db", color: "#374151" }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white rounded-lg transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
+                                    style={{ backgroundColor: "#1a4ab5" }}
+                                >
+                                    {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                    {submitting ? "Saving…" : selectedDepartment ? "Save Changes" : "Create"}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                </div>
             </DialogContent>
         </Dialog>
     );
