@@ -8,7 +8,6 @@ import { Eye, EyeOff, Loader2, Mail, LockKeyhole, ThumbsUp, Gift, Award, LineCha
 import { useAuth } from '@/providers/AuthProvider'
 
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 
 export default function LoginPage() {
