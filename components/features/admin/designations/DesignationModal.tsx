@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
-    DialogTitle
+    DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
     Designation,
     DesignationDetail,
     CreateDesignationPayload,
-    UpdateDesignationPayload
+    UpdateDesignationPayload,
 } from "@/types/designation-types";
 import { designationService } from "@/services/designation-service";
 import { Field } from "./UIHelpers";
@@ -53,7 +53,6 @@ export function DesignationModal({
             setError(null);
             return;
         }
-
         if (selectedDesignation) {
             const loadDetail = async () => {
                 setDetailLoading(true);
@@ -94,7 +93,6 @@ export function DesignationModal({
                 level: Number(form.level),
                 description: form.description || undefined,
             };
-
             if (selectedDesignation) {
                 await designationService.update(selectedDesignation.designation_id, payload as UpdateDesignationPayload);
             } else {
@@ -112,106 +110,119 @@ export function DesignationModal({
 
     return (
         <Dialog open={open} onOpenChange={(val) => !val && onClose()}>
-            <DialogContent className="max-w-md p-7 rounded-2xl">
-                <DialogHeader className="flex flex-row justify-between items-start border-b border-gray-100 pb-4 mb-4">
+            <DialogContent className="max-w-md p-0 overflow-hidden rounded-xl [&>button]:hidden" style={{ border: "none" }}>
+
+                {/* Blue header */}
+                <div
+                    className="flex items-center justify-between px-6 py-4"
+                    style={{ backgroundColor: "#1a4ab5" }}
+                >
                     <div>
-                        <DialogTitle className="text-xl font-bold text-black tracking-tight">
-                            {selectedDesignation ? "Edit Designation" : "Create Designation"}
+                        <DialogTitle className="text-lg font-bold text-white">
+                            {selectedDesignation ? "Edit Designation" : "Add Designation"}
                         </DialogTitle>
                         {detail && (
-                            <span className="text-xs text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg font-medium mt-1.5 inline-block border border-slate-200">
-                                {detail.employee_count} employee{detail.employee_count !== 1 ? "s" : ""} active
+                            <span className="text-xs text-blue-200 mt-0.5 block">
+                                {detail.employee_count} employee{detail.employee_count !== 1 ? "s" : ""} assigned
                             </span>
                         )}
                     </div>
-                </DialogHeader>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onClose}
+                        className="text-white hover:text-blue-200 hover:bg-transparent p-1 h-auto"
+                    >
+                        <X className="w-5 h-5" />
+                    </Button>
+                </div>
 
-                {error && (
-                    <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-medium">
-                        {error}
-                    </div>
-                )}
-
-                {detailLoading ? (
-                    <div className="py-14 text-center">
-                        <Loader2 className="w-8 h-8 animate-spin text-purple-300 mx-auto" />
-                        <p className="text-xs text-slate-400 mt-2 font-medium">Fetching details...</p>
-                    </div>
-                ) : (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <Field label="Designation Name *">
-                            <Input
-                                value={form.designation_name}
-                                onChange={e => setForm({ ...form, designation_name: e.target.value })}
-                                placeholder="e.g. Senior Software Engineer"
-                                className="rounded-xl"
-                                required
-                                maxLength={100}
-                            />
-                        </Field>
-
-                        <Field label="Designation Code *">
-                            <Input
-                                value={form.designation_code}
-                                onChange={e => setForm({ ...form, designation_code: e.target.value.toUpperCase() })}
-                                placeholder="e.g. SR_SWE"
-                                className="rounded-xl font-mono"
-                                required
-                                maxLength={50}
-                            />
-                        </Field>
-
-                        <Field
-                            label="Hierarchy Level *"
-                            hint="1 = Highest (CXO), Higher numbers = Lower levels"
+                {/* Body */}
+                <div className="bg-white px-6 py-6">
+                    {error && (
+                        <div
+                            className="mb-4 px-4 py-3 rounded-lg text-sm"
+                            style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c" }}
                         >
-                            <Input
-                                type="number"
-                                min={1}
-                                max={50}
-                                value={form.level}
-                                onChange={e => setForm({ ...form, level: Number(e.target.value) })}
-                                className="rounded-xl text-black font-bold"
-                                required
-                            />
-                        </Field>
-
-                        <Field label="Description (optional)">
-                            <Textarea
-                                value={form.description}
-                                onChange={e => setForm({ ...form, description: e.target.value })}
-                                placeholder="Brief summary of the role's responsibilities…"
-                                rows={2}
-                                className="rounded-xl resize-none bg-slate-50/50 border-slate-200 focus:bg-white"
-                            />
-                        </Field>
-
-                        <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={onClose}
-                                className="rounded-xl px-6 text-slate-500 font-bold tracking-tight hover:bg-slate-50"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={submitting}
-                                className="bg-black text-white hover:bg-slate-800 rounded-xl px-8 font-bold tracking-tight shadow-md hover:shadow-lg transition-all"
-                            >
-                                {submitting ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                        Saving…
-                                    </>
-                                ) : (
-                                    selectedDesignation ? "Update Designation" : "Create"
-                                )}
-                            </Button>
+                            {error}
                         </div>
-                    </form>
-                )}
+                    )}
+
+                    {detailLoading ? (
+                        <div className="py-12 flex flex-col items-center gap-2">
+                            <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#1a4ab5" }} />
+                            <p className="text-xs" style={{ color: "#9ca3af" }}>Fetching details...</p>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-5">
+
+                            <Field label="Designation Name *">
+                                <Input
+                                    value={form.designation_name}
+                                    onChange={e => setForm({ ...form, designation_name: e.target.value })}
+                                    placeholder="e.g. Senior Software Engineer"
+                                    className="h-10 rounded-lg border-slate-300 focus-visible:ring-0 focus-visible:border-[#1a4ab5]"
+                                    required
+                                    maxLength={100}
+                                />
+                            </Field>
+
+                            <Field label="Designation Code *">
+                                <Input
+                                    value={form.designation_code}
+                                    onChange={e => setForm({ ...form, designation_code: e.target.value.toUpperCase() })}
+                                    placeholder="e.g. SR_SWE"
+                                    className="h-10 rounded-lg border-slate-300 focus-visible:ring-0 focus-visible:border-[#1a4ab5] font-mono"
+                                    required
+                                    maxLength={50}
+                                />
+                            </Field>
+
+                            <Field label="Hierarchy Level *" hint="1 = Highest (CXO), higher numbers = lower levels">
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    max={50}
+                                    value={form.level}
+                                    onChange={e => setForm({ ...form, level: Number(e.target.value) })}
+                                    className="h-10 rounded-lg border-slate-300 focus-visible:ring-0 focus-visible:border-[#1a4ab5] font-bold"
+                                    required
+                                />
+                            </Field>
+
+                            <Field label="Description (optional)">
+                                <Textarea
+                                    value={form.description}
+                                    onChange={e => setForm({ ...form, description: e.target.value })}
+                                    placeholder="Brief summary of the role's responsibilities…"
+                                    rows={3}
+                                    className="rounded-lg border-slate-300 focus-visible:ring-0 focus-visible:border-[#1a4ab5] resize-none"
+                                />
+                            </Field>
+
+                            {/* Actions */}
+                            <div className="flex justify-end gap-3 pt-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={onClose}
+                                    className="h-10 px-5 rounded-lg border-slate-300 text-slate-700"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="h-10 px-5 rounded-lg font-semibold text-white hover:opacity-90"
+                                    style={{ backgroundColor: "#1a4ab5", border: "none" }}
+                                >
+                                    {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />}
+                                    {submitting ? "Saving…" : selectedDesignation ? "Save Changes" : "Create"}
+                                </Button>
+                            </div>
+                        </form>
+                    )}
+                </div>
             </DialogContent>
         </Dialog>
     );

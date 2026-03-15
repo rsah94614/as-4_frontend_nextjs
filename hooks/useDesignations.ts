@@ -22,7 +22,7 @@ export function useDesignations() {
         try {
             const res: DesignationListResponse = await designationService.list({
                 page,
-                limit: 20,
+                limit: 5,
             });
             setDesignations(res.data);
             setPagination(res.pagination);
