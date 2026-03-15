@@ -84,17 +84,24 @@ function extractToken(req: NextRequest): string | null {
 
 async function proxyRequest(targetUrl: string, req: NextRequest, token: string | null) {
     const url = new URL(targetUrl);
+    const contentType = req.headers.get("content-type") || "";
+    const isMultipart = contentType.includes("multipart/form-data");
+
     const headers: Record<string, string> = {
-        "Content-Type": "application/json",
+        "Content-Type": isMultipart ? contentType : "application/json",
         "Accept": "application/json",
-        "Host": url.host, 
-        // ✅ Add this line to forward the token
+        "Host": url.host,
         ...(token ? { "Authorization": `Bearer ${token}` } : {}),
     };
 
-    const body = req.method !== "GET" && req.method !== "HEAD"
-        ? await req.text()
-        : undefined;
+    let body: BodyInit | undefined;
+    if (req.method !== "GET" && req.method !== "HEAD") {
+        if (isMultipart) {
+            body = await req.arrayBuffer();
+        } else {
+            body = await req.text();
+        }
+    }
 
     return fetch(url.toString(), {
         method: req.method,
@@ -141,16 +148,16 @@ async function handleProxy(
     const [service, ...rest] = pathSegments;
     const token = extractToken(req);
 
+    // ── Special case for dashboard aggregate ────────────────────────
+    if (service === "dashboard" && req.method === "GET") {
+        console.log(`[Proxy] 📊 Intercepting Dashboard Aggregate Request`);
+        return handleDashboardAggregate(token);
+    }
+
     const baseUrl = SERVICE_MAP[service];
     if (!baseUrl) {
         console.error(`[Proxy] ❌ Service Not Found: ${service}`);
         return NextResponse.json({ detail: "Unknown service" }, { status: 404 });
-    }
-
-    // ── ADD THIS: Special case for dashboard aggregate ────────────────────────
-    if (service === "dashboard" && req.method === "GET") {
-        console.log(`[Proxy] 📊 Intercepting Dashboard Aggregate Request`);
-        return handleDashboardAggregate(token);
     }
 
     const searchParams = req.nextUrl.search; 

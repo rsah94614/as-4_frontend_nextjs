@@ -123,8 +123,8 @@ export default function RedeemPage() {
                 <h2 className="text-[22px] font-semibold text-slate-800">
                   Products
                 </h2>
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <Layers size={13} />
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                  <Layers size={13} className="text-slate-500" />
                   {redeem.activeCategory === "ALL" && redeem.pagination
                     ? redeem.pagination.total
                     : redeem.productItems.length} items
@@ -175,7 +175,7 @@ export default function RedeemPage() {
 
                     return pages.map((p, idx) =>
                       typeof p === "string" ? (
-                        <span key={`ellipsis-${idx}`} className="px-2 text-slate-400 text-sm">
+                        <span key={`ellipsis-${idx}`} className="px-2 text-slate-600 font-bold text-sm">
                           {p}
                         </span>
                       ) : (

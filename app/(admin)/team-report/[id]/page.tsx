@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "@/components/features/dashboard/AdminTeamDetailSection";
+import AdminTeamDetailSection, { AdminTeamDetailSkeleton } from "@/components/features/admin/team-report/AdminTeamDetailSection";
 import { fetchTeamReport } from "@/services/analytics-service";
 import type { TeamReportResponse } from "@/types/dashboard-types";
 
@@ -16,7 +16,6 @@ type FetchState =
 export default function TeamReportPage() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
-
     const [state, setState] = useState<FetchState>({ status: "loading" });
 
     useEffect(() => {
@@ -34,46 +33,31 @@ export default function TeamReportPage() {
     }, [id]);
 
     return (
-        <div className="space-y-6 p-4 sm:p-6">
-            {/* Back + header */}
-            <div className="flex items-center gap-3">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.back()}
-                    className="gap-1.5 rounded-lg border-gray-300 font-semibold h-9"
-                >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back
-                </Button>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                        {state.status === "loading"
-                            ? "Loading…"
-                            : state.status === "ok"
-                                ? (state.data.department_name ?? "Team Report")
-                                : "Team Report"}
-                    </h1>
-                    <p className="text-sm text-muted-foreground font-medium">Team Performance Report</p>
-                </div>
-            </div>
+        <div className="p-4 sm:p-6 space-y-5">
+            {/* Back button */}
+            <button
+                onClick={() => router.back()}
+                className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors group"
+            >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                Back
+            </button>
 
-            {/* Content */}
             {state.status === "loading" && <AdminTeamDetailSkeleton />}
 
             {state.status === "error" && (
-                <div className="flex flex-col items-center justify-center py-24 gap-5 text-center">
-                    <div className="p-4 rounded-xl bg-red-50 border border-red-200">
-                        <AlertTriangle className="w-8 h-8 text-red-500" />
+                <div className="flex flex-col items-center justify-center py-32 gap-5 text-center">
+                    <div className="p-4 rounded-2xl bg-red-50 border border-red-100">
+                        <AlertTriangle className="w-8 h-8 text-red-400" />
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                         <p className="text-base font-bold text-gray-900">Something went wrong</p>
-                        <p className="text-sm text-gray-500 max-w-xs">{state.message}</p>
+                        <p className="text-sm text-gray-400 max-w-xs">{state.message}</p>
                     </div>
                     <Button
                         size="sm"
                         onClick={() => router.back()}
-                        className="gap-2 font-bold rounded-lg bg-gray-900 text-white hover:bg-gray-700 px-5"
+                        className="gap-2 rounded-xl bg-[#004C8F] hover:bg-[#003A70] text-white font-semibold px-5"
                     >
                         Go back
                     </Button>

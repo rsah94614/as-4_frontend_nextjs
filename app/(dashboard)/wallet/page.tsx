@@ -19,7 +19,6 @@ import {
   ArrowDownCircle,
   TrendingUp,
   Star,
-  Wallet as WalletIcon,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -180,46 +179,39 @@ function ActivityRow({ txn }: { txn: Transaction }) {
   const isCredit = txn.transaction_type.is_credit;
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0 group hover:bg-red-50/20 px-2 rounded-xl transition-colors">
+    <div className="flex items-center gap-3 py-3 border-b border-[#d9e4f2] last:border-0 group hover:bg-[#f6faff] px-3 rounded-xl transition-colors">
       {/* Icon circle */}
       <div
-        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${isCredit ? "bg-red-50" : "bg-gray-100"
+        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isCredit ? "bg-[#e9f2ff]" : "bg-[#fdecef]"
           }`}
       >
         {isCredit ? (
-          <TrendingUp size={16} className="text-[#E31837]" />
+          <TrendingUp size={16} className="text-[#0b5b9f]" />
         ) : (
-          <Ticket size={16} className="text-gray-400" />
+          <Ticket size={16} className="text-[#E31837]" />
         )}
       </div>
 
       {/* Description */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-[#E31837] transition-colors">
+        <p className="text-xs sm:text-sm font-bold text-[#1f2630] truncate transition-colors">
           {txn.description || txn.transaction_type.name}
         </p>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-xs text-gray-500 mt-0.5">
           {isCredit
             ? `Received ${txn.amount.toLocaleString()} Points`
             : `Redeemed ${txn.amount.toLocaleString()} Points`}
         </p>
       </div>
 
-      {/* Date + progress */}
+      {/* Date + status */}
       <div className="flex-shrink-0 text-right">
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-[#6a7684]">
           {formatDate(txn.transaction_at)}
         </p>
-        {/* Mini progress indicator */}
-        <div className="mt-1.5 w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{
-              width: `${Math.min(100, (txn.amount / 500) * 100)}%`,
-              background: isCredit ? "#004C8F" : "#E31837",
-            }}
-          />
-        </div>
+        <p className={`mt-0.5 text-xs font-bold ${isCredit ? "text-[#167e3f]" : "text-[#E31837]"}`}>
+          {isCredit ? "SUCCESS" : "REDEEMED"}
+        </p>
       </div>
     </div>
   );
@@ -320,10 +312,10 @@ export default function Wallet() {
       <div className={PAGE_HEADER}>
         <div className={PAGE_HEADER_INNER}>
           <div>
-            <h1 className="text-2xl font-bold leading-tight" style={{ color: HDFC_BLUE }}>
+            <h1 className="text-xl sm:text-2xl font-bold leading-tight" style={{ color: HDFC_BLUE }}>
               Wallet
             </h1>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-xs sm:text-sm text-gray-400 mt-1">
               Manage your points balance and transactions
             </p>
           </div>
@@ -339,64 +331,39 @@ export default function Wallet() {
 
       {/* ── Main content ── */}
       <div className={PAGE_CONTENT}>
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
 
           {/* ── Hero Balance Banner ─────────────────────────────────────────────── */}
           <div
-            className="rounded-2xl overflow-hidden shadow-lg relative"
+            className="rounded-2xl border border-[#0a5b9c] overflow-hidden shadow-sm relative px-5 py-5 lg:px-6 lg:py-6"
             style={{
-              background: "linear-gradient(135deg, #1a3a6e 0%, #004C8F 40%, #2d3a8c 75%, #4c3a9e 100%)",
+              background: "linear-gradient(130deg, #0d5f9f 0%, #0a4f89 52%, #083f73 100%)",
             }}
           >
-            {/* Decorative circles */}
-            <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10"
-              style={{ background: "radial-gradient(circle, #fff 0%, transparent 70%)", transform: "translate(30%, -30%)" }} />
-            <div className="absolute bottom-0 left-1/3 w-40 h-40 rounded-full opacity-5"
-              style={{ background: "radial-gradient(circle, #fff 0%, transparent 70%)", transform: "translateY(50%)" }} />
-
-            <div className="relative px-4 py-3 border-b border-white/20" style={{ background: "rgba(227,24,55,0.25)" }}>
-              <p className="text-white font-bold text-sm tracking-widest uppercase">Wallet Balance</p>
-            </div>
-
-            <div className="relative flex flex-col lg:flex-row">
-              {/* Left — Balance info */}
-              <div className="flex-1 px-6 py-6 flex items-center gap-6">
-                {/* Wallet illustration */}
-                <div className="flex-shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center"
-                  style={{ background: "rgba(255,255,255,0.12)", backdropFilter: "blur(8px)" }}>
-                  <WalletIcon size={40} className="text-yellow-300" />
-                </div>
-
-                {/* Points Balance */}
-                <div>
-                  <p className="text-white/70 text-xs font-medium uppercase tracking-widest">
-                    Points Balance
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] items-center gap-6">
+              <div>
+                <p className="text-xs sm:text-sm text-white/80 font-bold uppercase tracking-[0.2em]">Points Balance</p>
+                {loadingWallet ? (
+                  <SkeletonLight className="h-10 w-44 mt-2" />
+                ) : (
+                  <p className="text-lg sm:text-xl font-bold text-white leading-tight mt-1.5">
+                    {(wallet?.available_points ?? 0).toLocaleString()}
                   </p>
-                  {loadingWallet ? (
-                    <Skeleton className="h-9 w-28 mt-1" />
-                  ) : (
-                    <p className="text-white text-4xl font-bold mt-1">
-                      {(wallet?.available_points ?? 0).toLocaleString()}
-                    </p>
-                  )}
-                </div>
+                )}
+              </div>
 
-                {/* Redeem button */}
-                <div className="ml-auto">
-                  <Link href="/redeem">
-                    <button
-                      className="px-6 py-3 rounded-xl font-bold text-white text-sm shadow-lg transition-all duration-200 active:scale-95"
-                      style={{
-                        background: "#E31837",
-                        boxShadow: "0 4px 15px rgba(227,24,55,0.4)",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "#c41230")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "#E31837")}
-                    >
-                      Redeem Reward
-                    </button>
-                  </Link>
-                </div>
+              <div className="justify-self-start lg:justify-self-end">
+                <Link href="/redeem">
+                  <button
+                    className="px-7 py-2.5 rounded-xl font-bold text-white text-sm leading-none shadow-md transition-all duration-200 active:scale-95 hover:brightness-95"
+                    style={{
+                      background: "linear-gradient(180deg, #ef2445 0%, #d71130 100%)",
+                      boxShadow: "0 10px 18px rgba(227,24,55,0.35)",
+                    }}
+                  >
+                    Redeem Reward
+                  </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -414,33 +381,31 @@ export default function Wallet() {
                   label: "Lifetime Points Earned",
                   value: wallet.total_earned_points,
                   icon: Gift,
-                  bg: "#FDEAED",
-                  color: HDFC_RED,
-                  border: HDFC_RED,
                 },
                 {
                   label: "Points Redeemed",
                   value: wallet.redeemed_points,
                   icon: Ticket,
-                  bg: "#f0f4ff",
-                  color: "#6366f1",
-                  border: "#6366f1",
                 },
-              ].map(({ label, value, icon: Icon, bg, color, border }) => (
+              ].map(({ label, value, icon: Icon }) => (
                 <div
                   key={label}
-                  className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow"
-                  style={{ borderTop: `3px solid ${border}` }}
+                  className="rounded-2xl p-4 border shadow-sm flex items-center gap-3 transition-all"
+                  style={{
+                    borderColor: "#b7cde6",
+                    background: "linear-gradient(130deg, #ffffff 0%, #f4f8fd 100%)",
+                    boxShadow: "inset 0 0 0 1px rgba(10,76,143,0.06)",
+                  }}
                 >
                   <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: bg }}
+                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border"
+                    style={{ background: "#eaf2fb", borderColor: "#c8dbef" }}
                   >
-                    <Icon size={22} style={{ color }} />
+                    <Icon size={18} className="text-[#0a4f89]" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium" style={{ color }}>{label}</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-0.5">
+                    <p className="text-xs sm:text-sm font-bold text-[#0a4f89]">{label}</p>
+                    <p className="text-base sm:text-lg font-bold text-[#13365a] leading-tight mt-0.5">
                       {value.toLocaleString()}
                     </p>
                   </div>
@@ -459,21 +424,22 @@ export default function Wallet() {
           )}
 
           {/* ── Main content: Activity + Side Panel ─────────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
             {/* ── Left: Recent Wallet Activity ─────────────────────────────────── */}
             <div
               id="txn-section"
-              className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+              className="lg:col-span-2 rounded-2xl shadow-sm border border-[#b7cde6] overflow-hidden"
+              style={{ background: "linear-gradient(130deg, #ffffff 0%, #f4f8fd 100%)" }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50" style={{ borderLeft: "3px solid #E31837" }}>
+              <div className="flex items-center justify-between px-5 py-3 border-b border-[#d9e4f2]" style={{ borderLeft: "3px solid #E31837" }}>
                 <div>
-                  <h3 className="text-base font-bold" style={{ color: HDFC_BLUE }}>
+                  <h3 className="text-sm sm:text-base font-bold leading-tight" style={{ color: HDFC_BLUE }}>
                     Recent Wallet Activity
                   </h3>
                   {txnData && (
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs sm:text-sm text-gray-400 mt-1">
                       {txnData.total.toLocaleString()} total transactions
                     </p>
                   )}
@@ -486,7 +452,7 @@ export default function Wallet() {
                   }}
                   disabled={loadingTxns || !wallet}
                   size="sm"
-                  className="text-[#E31837] bg-red-50 border-red-100 hover:bg-red-100 hover:text-red-800 shadow-none transition-all"
+                  className="text-[#E31837] bg-[#fff0f3] border border-[#f6c2cc] hover:bg-[#ffe5ea] hover:text-[#bf122e] shadow-none transition-all text-xs sm:text-sm font-bold"
                 >
                   <RefreshCw
                     size={13}
@@ -497,7 +463,7 @@ export default function Wallet() {
               </div>
 
               {/* Transaction list */}
-              <div className="px-4 py-2">
+              <div className="px-3 py-2">
                 {txnError && (
                   <div className="mb-4 px-2">
                     <ErrorBanner
@@ -518,7 +484,7 @@ export default function Wallet() {
                 ) : txnData?.transactions.length === 0 ? (
                   <div className="flex flex-col items-center py-14 gap-3 text-gray-400">
                     <ArrowDownCircle size={32} strokeWidth={1.2} />
-                    <p className="text-sm">No transactions yet.</p>
+                    <p className="text-xs sm:text-sm">No transactions yet.</p>
                   </div>
                 ) : (
                   <div className="py-1">
@@ -531,7 +497,7 @@ export default function Wallet() {
 
               {/* Pagination footer */}
               {!loadingTxns && txnData && txnData.total > TXN_PAGE_SIZE && (
-                <div className="flex items-center justify-between px-6 py-3 border-t border-gray-50">
+                <div className="flex items-center justify-between px-6 py-3 border-t border-[#d9e4f2]">
                   <span className="text-xs text-gray-400">
                     Page <b className="text-gray-700">{txnPage}</b> of{" "}
                     <b className="text-gray-700">{totalPages}</b>
@@ -562,10 +528,10 @@ export default function Wallet() {
               )}
 
               {/* View All Activity link */}
-              <div className="px-6 py-3 border-t border-gray-50 flex justify-center">
+              <div className="px-5 py-2.5 border-t border-[#d9e4f2] flex justify-center">
                 <Link
                   href="/history"
-                  className="text-sm font-semibold flex items-center gap-1 transition-colors hover:opacity-80"
+                  className="text-xs sm:text-sm font-bold flex items-center gap-1 transition-colors hover:opacity-80"
                   style={{ color: HDFC_RED }}
                 >
                   View All Activity
@@ -576,48 +542,46 @@ export default function Wallet() {
 
             {/* ── Right: Period Summary Panel ───────────────────────────── */}
             <div className="flex flex-col gap-4">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5" style={{ borderTop: "3px solid #004C8F" }}>
-                <div className="flex items-center gap-2 mb-4">
+              <div
+                className="rounded-2xl shadow-sm p-4"
+                style={{
+                  background: "linear-gradient(130deg, #ffffff 0%, #f4f8fd 100%)",
+                  border: "1px solid #b7cde6",
+                  borderTop: "3px solid #E31837",
+                }}
+              >
+                <div className="flex items-center gap-2 mb-3">
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ background: "#E8F1FA" }}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ background: "#fdecef" }}
                   >
-                    <Star size={15} style={{ color: HDFC_BLUE }} />
+                    <Star size={14} className="text-[#E31837]" />
                   </div>
-                  <h4 className="font-bold text-sm" style={{ color: HDFC_BLUE }}>Period Summary</h4>
+                  <h4 className="text-sm sm:text-base font-bold leading-tight" style={{ color: HDFC_BLUE }}>Period Summary</h4>
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between bg-gray-50 px-3 py-2.5 rounded-xl">
-                    <span className="text-xs font-medium text-gray-600">This Month</span>
+                  <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border"
+                    style={{ background: "#fbfdff", borderColor: "#d9e4f2" }}>
+                    <span className="text-xs sm:text-sm font-bold text-gray-500">This Month</span>
                     {loadingWallet ? (
-                      <SkeletonLight className="h-5 w-12" />
+                      <Skeleton className="h-5 w-16" />
                     ) : (
-                      <span className="font-bold text-gray-900 text-sm">
+                      <span className="text-sm sm:text-base font-bold leading-tight" style={{ color: HDFC_BLUE }}>
                         {(summary?.points_this_month ?? 0).toLocaleString()}
-                        <span className="text-xs font-normal text-gray-400 ml-1">pts</span>
+                        <span className="text-xs sm:text-sm font-normal text-gray-400 ml-1">pts</span>
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center justify-between bg-gray-50 px-3 py-2.5 rounded-xl">
-                    <span className="text-xs font-medium text-gray-600">This Year</span>
+                  <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border"
+                    style={{ background: "#fbfdff", borderColor: "#d9e4f2" }}>
+                    <span className="text-xs sm:text-sm font-bold text-gray-500">This Year</span>
                     {loadingWallet ? (
-                      <SkeletonLight className="h-5 w-12" />
+                      <Skeleton className="h-5 w-16" />
                     ) : (
-                      <span className="font-bold text-gray-900 text-sm">
+                      <span className="text-sm sm:text-base font-bold leading-tight" style={{ color: HDFC_BLUE }}>
                         {(summary?.points_this_year ?? 0).toLocaleString()}
-                        <span className="text-xs font-normal text-gray-400 ml-1">pts</span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between bg-gray-50 px-3 py-2.5 rounded-xl">
-                    <span className="text-xs font-medium text-gray-600">Lifetime Total</span>
-                    {loadingWallet ? (
-                      <SkeletonLight className="h-5 w-12" />
-                    ) : (
-                      <span className="font-bold text-gray-900 text-sm">
-                        {(wallet?.total_earned_points ?? 0).toLocaleString()}
-                        <span className="text-xs font-normal text-gray-400 ml-1">pts</span>
+                        <span className="text-xs sm:text-sm font-normal text-gray-400 ml-1">pts</span>
                       </span>
                     )}
                   </div>

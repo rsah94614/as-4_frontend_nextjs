@@ -73,8 +73,8 @@ function RedeemDialogBody({
       <>
         <div className="px-7 pt-7 pb-5">
           <DialogHeader className="flex-row items-start gap-4 mb-5">
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center shrink-0">
-              <ShoppingBag size={22} className="text-purple-700" />
+            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+              <ShoppingBag size={22} className="text-[#004C8F]" />
             </div>
             <div className="flex-1 text-left">
               <DialogTitle className="text-lg font-bold text-slate-800">
@@ -88,7 +88,7 @@ function RedeemDialogBody({
           </DialogHeader>
 
           {/* Item summary */}
-          <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 mb-4">
+          <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 mb-4">
             <p className="font-semibold text-slate-800 text-sm mb-1">
               {item.reward_name}
             </p>
@@ -148,7 +148,7 @@ function RedeemDialogBody({
           </Button>
           <Button
             onClick={handleConfirm}
-            className="flex-1 rounded-xl bg-gradient-to-r from-purple-700 to-fuchsia-600 hover:from-purple-800 hover:to-fuchsia-700 active:scale-[0.98] transition-all"
+            className="flex-1 rounded-xl bg-[#004C8F] hover:bg-[#003d73] active:scale-[0.98] transition-all"
           >
             Confirm
           </Button>
@@ -161,7 +161,7 @@ function RedeemDialogBody({
   if (phase === "loading") {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-7">
-        <Loader2 size={36} className="text-purple-600 animate-spin mb-4" />
+        <Loader2 size={36} className="text-[#004C8F] animate-spin mb-4" />
         <p className="text-sm text-slate-500 font-medium">
           Processing redemption…
         </p>
@@ -188,7 +188,7 @@ function RedeemDialogBody({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="w-full rounded-2xl bg-slate-50 border border-slate-100 p-4 mb-6 text-left">
+        <div className="w-full rounded-lg bg-slate-50 border border-slate-200 p-4 mb-6 text-left">
           <div className="flex justify-between text-xs text-slate-500 mb-1.5">
             <span>Points spent</span>
             <span className="font-bold text-slate-800">
@@ -261,7 +261,7 @@ export default function RedeemDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="sm:max-w-md rounded-3xl p-0 gap-0 overflow-hidden"
+        className="sm:max-w-md rounded-xl p-0 gap-0 overflow-hidden border-slate-200"
         showCloseButton={false}
       >
         {/*

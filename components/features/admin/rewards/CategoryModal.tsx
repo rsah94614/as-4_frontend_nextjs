@@ -77,17 +77,17 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
 
     return (
         <Dialog open={isOpen} onOpenChange={(val) => !val && onClose()}>
-            <DialogContent className="max-w-lg p-0 border-none bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <DialogContent className="max-w-lg p-0 border-none bg-white rounded-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
                 <DialogHeader className="flex flex-row items-center justify-between px-8 py-6 border-b border-slate-50 bg-slate-50/50">
                     <div className="flex items-center gap-3 text-left">
-                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${isEdit ? "bg-purple-100 text-purple-600" : "bg-green-100 text-green-600"} shadow-inner`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isEdit ? "bg-blue-100 text-[#004C8F]" : "bg-green-100 text-green-600"} shadow-inner`}>
                             <Tag className="w-5 h-5" />
                         </div>
                         <div>
-                            <DialogTitle className="text-xl font-black text-slate-800 tracking-tight leading-none mb-1">
+                            <DialogTitle className="text-xl font-semibold text-slate-800 tracking-tight leading-none mb-1">
                                 {isEdit ? "Update Category" : "Build Category"}
                             </DialogTitle>
-                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
+                            <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
                                 REWARD MANAGEMENT SYSTEM
                             </p>
                         </div>
@@ -98,7 +98,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
                     {!isEdit && (
                         <RewardField label="CATEGORY CODE">
                             <Input
-                                className="w-full h-12 px-5 rounded-2xl border-2 border-slate-100 text-sm font-bold text-black focus-visible:ring-purple-50 focus-visible:border-purple-300 bg-white placeholder:text-slate-300 transition-all uppercase"
+                                className="w-full h-12 px-5 rounded-xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white placeholder:text-slate-300 transition-all uppercase"
                                 value={form.category_code}
                                 onChange={(e) => setForm({ ...form, category_code: e.target.value.toUpperCase() })}
                                 placeholder="e.g. CAT-GIFT"
@@ -109,7 +109,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
 
                     <RewardField label="CATEGORY NAME">
                         <Input
-                            className="w-full h-12 px-5 rounded-2xl border-2 border-slate-100 text-sm font-bold text-black focus-visible:ring-purple-50 focus-visible:border-purple-300 bg-white placeholder:text-slate-300 transition-all"
+                            className="w-full h-12 px-5 rounded-xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white placeholder:text-slate-300 transition-all"
                             value={form.category_name}
                             onChange={(e) => setForm({ ...form, category_name: e.target.value })}
                             placeholder="e.g. Amazon Gift Cards"
@@ -119,7 +119,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
 
                     <RewardField label="DESCRIPTION">
                         <Textarea
-                            className="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-100 text-sm font-bold text-black focus-visible:ring-purple-50 focus-visible:border-purple-300 bg-white placeholder:text-slate-300 transition-all min-h-[120px] resize-none"
+                            className="w-full px-5 py-3.5 rounded-xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white placeholder:text-slate-300 transition-all min-h-[120px] resize-none"
                             value={form.description}
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
                             placeholder="Tell us what this category covers..."
@@ -128,28 +128,28 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
 
                     {isEdit && (
                         <RewardField label="CATEGORY STATUS">
-                            <label className="flex items-center gap-4 cursor-pointer select-none bg-slate-50 p-4 rounded-2xl border border-slate-100 group">
+                            <label className="flex items-center gap-4 cursor-pointer select-none bg-slate-50 p-4 rounded-xl border border-slate-100 group">
                                 <div className="relative flex items-center">
                                     <input
                                         type="checkbox"
                                         checked={form.is_active}
                                         onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-                                        className="peer h-6 w-11 cursor-pointer appearance-none rounded-full bg-slate-300 transition-all focus:outline-none checked:bg-purple-600"
+                                        className="peer h-6 w-11 cursor-pointer appearance-none rounded-full bg-slate-300 transition-all focus:outline-none checked:bg-[#004C8F]"
                                     />
                                     <div className="absolute left-1 h-4 w-4 transform rounded-full bg-white transition-transform peer-checked:translate-x-5" />
                                 </div>
-                                <span className={`text-sm font-bold transition-colors ${form.is_active ? "text-purple-700" : "text-slate-400"}`}>
+                                <span className={`text-sm font-semibold transition-colors ${form.is_active ? "text-[#004C8F]" : "text-slate-400"}`}>
                                     {form.is_active ? "CATEGORY IS ACTIVE" : "CATEGORY IS HIDDEN"}
                                 </span>
                                 {form.is_active && (
-                                    <CheckCircle2 className="w-5 h-5 text-purple-600 ml-auto animate-in zoom-in" />
+                                    <CheckCircle2 className="w-5 h-5 text-[#004C8F] ml-auto animate-in zoom-in" />
                                 )}
                             </label>
                         </RewardField>
                     )}
 
                     {error && (
-                        <div className="p-4 bg-red-50 border-2 border-red-100 rounded-2xl text-red-600 text-[10px] font-black animate-in shake-in duration-300 uppercase tracking-widest">
+                        <div className="p-4 bg-red-50 border-2 border-red-100 rounded-xl text-red-600 text-[10px] font-semibold animate-in shake-in duration-300 uppercase tracking-wider">
                             ⚠️ {error}
                         </div>
                     )}
@@ -159,14 +159,14 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
                             type="button"
                             variant="ghost"
                             onClick={onClose}
-                            className="flex-1 h-14 rounded-2xl text-xs font-black text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all tracking-widest uppercase"
+                            className="flex-1 h-14 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all tracking-wider uppercase"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={saving}
-                            className="flex-1 h-14 rounded-2xl text-xs font-black text-white bg-black hover:bg-slate-800 transition-all tracking-widest uppercase flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 disabled:shadow-none"
+                            className="flex-1 h-14 rounded-xl text-xs font-semibold text-white bg-[#004C8F] hover:bg-[#003d73] transition-all tracking-wider uppercase flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 disabled:shadow-none"
                         >
                             {saving ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

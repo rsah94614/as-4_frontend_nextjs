@@ -17,7 +17,7 @@ type Range = "3m" | "6m" | "1y";
 const RANGES: { value: Range; label: string }[] = [
     { value: "3m", label: "3 Months" },
     { value: "6m", label: "6 Months" },
-    { value: "1y", label: "1 Year"   },
+    { value: "1y", label: "1 Year" },
 ];
 
 // Pre-computed stable skeleton bar heights — avoids Math.random() during render
@@ -81,11 +81,10 @@ export default function AdminRecognitionTrendSection() {
                             <button
                                 key={r.value}
                                 onClick={() => setRange(r.value)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                    range === r.value
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${range === r.value
                                         ? "bg-white text-gray-900 shadow-sm"
                                         : "text-muted-foreground hover:text-gray-700"
-                                }`}
+                                    }`}
                             >
                                 {r.label}
                             </button>
@@ -110,11 +109,11 @@ export default function AdminRecognitionTrendSection() {
                         <AreaChart data={trendState.data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="gradGiven" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%"  stopColor="#7c3aed" stopOpacity={0.2} />
+                                    <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.2} />
                                     <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
                                 </linearGradient>
                                 <linearGradient id="gradReceived" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.2} />
+                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
                                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
@@ -123,7 +122,7 @@ export default function AdminRecognitionTrendSection() {
                             <YAxis tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
                             <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e4e4e7", fontSize: 12 }} />
                             <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-                            <Area type="monotone" dataKey="given"    name="Given"    stroke="#7c3aed" strokeWidth={2} fill="url(#gradGiven)"    dot={false} isAnimationActive animationDuration={600} />
+                            <Area type="monotone" dataKey="given" name="Given" stroke="#7c3aed" strokeWidth={2} fill="url(#gradGiven)" dot={false} isAnimationActive animationDuration={600} />
                             <Area type="monotone" dataKey="received" name="Received" stroke="#3b82f6" strokeWidth={2} fill="url(#gradReceived)" dot={false} isAnimationActive animationDuration={600} />
                         </AreaChart>
                     </ResponsiveContainer>

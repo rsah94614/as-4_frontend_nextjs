@@ -9,26 +9,32 @@ interface DesignationStatsProps {
 }
 
 export function DesignationStats({ total, active, avgLevel }: DesignationStatsProps) {
+    const stats = [
+        { label: "Total Designations", value: total, icon: Layers, accent: "#1a4ab5" },
+        { label: "Active", value: active, icon: Users, accent: "#14a882" },
+        { label: "Avg Level", value: avgLevel, icon: TrendingUp, accent: "#e8192c" },
+    ];
+
     return (
-        <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 transition hover:shadow-md">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <Layers className="w-3 h-3 text-purple-400" /> Total
-                </p>
-                <p className="text-3xl font-bold text-black tracking-tight">{total}</p>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 transition hover:shadow-md">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <Users className="w-3 h-3 text-emerald-400" /> Active
-                </p>
-                <p className="text-3xl font-bold text-black tracking-tight">{active}</p>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 transition hover:shadow-md">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3 text-blue-400" /> Avg Level
-                </p>
-                <p className="text-3xl font-bold text-black tracking-tight font-mono">{avgLevel}</p>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {stats.map(({ label, value, icon: Icon, accent }) => (
+                <div
+                    key={label}
+                    className="bg-white rounded-xl px-5 py-4 flex items-center gap-4 shadow-sm"
+                    style={{ border: "1px solid #e5e7eb" }}
+                >
+                    <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: accent + "1a" }}
+                    >
+                        <Icon className="w-5 h-5" style={{ color: accent }} />
+                    </div>
+                    <div>
+                        <p className="text-xs font-medium" style={{ color: "#6b7280" }}>{label}</p>
+                        <p className="text-2xl font-bold" style={{ color: "#111827" }}>{value}</p>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }

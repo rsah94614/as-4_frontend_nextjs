@@ -7,6 +7,12 @@ export function formatNumber(n: number | null): string {
     return n.toLocaleString();
 }
 
+export function getGreeting(): string {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
+}
 
 export function formatMonthComparison(
     thisMonth: number | null,

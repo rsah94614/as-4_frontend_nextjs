@@ -16,8 +16,8 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import type { HistoryItem } from "./types";
-import { getMessage } from "./history-utils";
+import type { HistoryItem } from "../../../types/history-types";
+import { getMessage } from "../../../lib/history-utils";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 

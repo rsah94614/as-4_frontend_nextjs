@@ -57,21 +57,21 @@ export function RewardGrid({
     // Error
     if (error && !loading) {
         return (
-            <Card className="flex flex-col items-center justify-center py-24 gap-4 bg-red-50 border border-red-100 rounded-[3rem] shadow-sm">
-                <div className="w-16 h-16 rounded-[2rem] bg-red-100 flex items-center justify-center text-red-600 shadow-inner">
+            <Card className="flex flex-col items-center justify-center py-24 gap-4 bg-red-50 border border-red-100 rounded-xl shadow-sm">
+                <div className="w-16 h-16 rounded-lg bg-red-100 flex items-center justify-center text-red-600 shadow-inner">
                     <AlertCircle className="w-8 h-8" />
                 </div>
                 <div className="text-center">
-                    <p className="text-red-900 font-black text-xl tracking-tight">
+                    <p className="text-red-900 font-semibold text-xl tracking-tight">
                         Connection Interrupt
                     </p>
-                    <p className="text-red-600/80 font-bold text-[11px] tracking-wide mt-1 uppercase">
+                    <p className="text-red-600/80 font-semibold text-[11px] tracking-wide mt-1 uppercase">
                         {error}
                     </p>
                 </div>
                 <Button
                     onClick={onRetry}
-                    className="px-8 py-6 h-12 bg-red-600 text-white rounded-2xl text-sm font-black shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95 border-none"
+                    className="px-8 py-6 h-12 bg-red-600 text-white rounded-2xl text-sm font-semibold shadow-lg shadow-red-200 hover:bg-red-700 transition-all active:scale-95 border-none"
                 >
                     <RefreshCw className="w-4 h-4" />
                     RETRY SYNC
@@ -90,8 +90,8 @@ export function RewardGrid({
                     ))}
                 </div>
                 <div className="flex flex-col items-center justify-center py-8 gap-3">
-                    <Loader2 className="w-8 h-8 animate-spin text-purple-300" />
-                    <p className="text-xs font-black text-slate-300 uppercase tracking-widest animate-pulse">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-200" />
+                    <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider animate-pulse">
                         Loading catalog...
                     </p>
                 </div>
@@ -102,12 +102,12 @@ export function RewardGrid({
     // Empty
     if (items.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-40 text-slate-400 text-sm bg-white rounded-[40px] border border-dashed border-slate-200 gap-6 group hover:border-purple-200 transition-all cursor-default">
-                <div className="w-24 h-24 rounded-[32px] bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-purple-50 group-hover:border-purple-100 transition-colors shadow-inner">
-                    <Package className="w-10 h-10 opacity-20 group-hover:text-purple-400 group-hover:opacity-100 transition-all duration-700" />
+            <div className="flex flex-col items-center justify-center py-40 text-slate-400 text-sm bg-white rounded-xl border border-dashed border-slate-200 gap-6 group hover:border-blue-200 transition-all cursor-default">
+                <div className="w-24 h-24 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors shadow-inner">
+                    <Package className="w-10 h-10 opacity-20 group-hover:text-blue-400 group-hover:opacity-100 transition-all duration-700" />
                 </div>
                 <div className="text-center group-hover:scale-105 transition-transform">
-                    <p className="font-black text-slate-300 uppercase tracking-[0.3em] mb-2 group-hover:text-purple-400 transition-colors">
+                    <p className="font-semibold text-slate-300 uppercase tracking-wide mb-2 group-hover:text-blue-400 transition-colors">
                         No Rewards Found
                     </p>
                     <p className="font-bold text-slate-400/60 lowercase tracking-widest text-xs leading-relaxed max-w-xs">
@@ -117,7 +117,7 @@ export function RewardGrid({
                 </div>
                 <Button
                     onClick={onCreateNew}
-                    className="mt-4 px-10 py-4 bg-black text-white rounded-2xl text-[11px] font-black tracking-widest shadow-2xl shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95 uppercase flex items-center gap-2 group-hover:bg-purple-700 group-hover:shadow-purple-200"
+                    className="mt-4 px-10 py-4 bg-black text-white rounded-xl text-[11px] font-semibold tracking-wider shadow-2xl shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95 uppercase flex items-center gap-2 group-hover:bg-[#004C8F] group-hover:shadow-blue-200"
                 >
                     <Plus className="w-3.5 h-3.5" />
                     New Reward
@@ -148,7 +148,8 @@ export function RewardGrid({
                         size="sm"
                         onClick={() => setPage(page - 1)}
                         disabled={!pagination.has_previous}
-                        className="h-10 px-5 rounded-xl text-[10px] font-black tracking-widest uppercase border-slate-200 disabled:opacity-40 active:scale-95 transition-all"
+                        className="h-10 px-5 rounded-xl text-[10px] font-semibold tracking-wider uppercase border-slate-200 disabled:opacity-40 active:scale-95 transition-all"
+
                     >
                         <ChevronLeft className="w-3.5 h-3.5" />
                         Prev
@@ -169,9 +170,9 @@ export function RewardGrid({
                                 size="icon"
                                 onClick={() => setPage(p as number)}
                                 className={cn(
-                                    "w-10 h-10 rounded-xl text-xs font-black transition-all active:scale-95",
+                                    "w-10 h-10 rounded-xl text-xs font-semibold transition-all active:scale-95",
                                     p === page
-                                        ? "bg-black text-white shadow-lg border-none hover:bg-slate-800"
+                                        ? "bg-[#004C8F] text-white shadow-lg border-none hover:bg-[#003d73]"
                                         : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
                                 )}
                             >
@@ -185,7 +186,8 @@ export function RewardGrid({
                         size="sm"
                         onClick={() => setPage(page + 1)}
                         disabled={!pagination.has_next}
-                        className="h-10 px-5 rounded-xl text-[10px] font-black tracking-widest uppercase border-slate-200 disabled:opacity-40 active:scale-95 transition-all"
+                        className="h-10 px-5 rounded-xl text-[10px] font-semibold tracking-wider uppercase border-slate-200 disabled:opacity-40 active:scale-95 transition-all"
+
                     >
                         Next
                         <ChevronRight className="w-3.5 h-3.5" />

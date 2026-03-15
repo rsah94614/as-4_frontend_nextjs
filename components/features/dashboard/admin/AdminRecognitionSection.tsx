@@ -14,7 +14,7 @@ type Range    = "week" | "month" | "quarter" | "year";
 type Layout   = "user" | "team";
 type UserSort = "givers" | "receivers";
 
-const TEAM_COLORS = ["#7c3aed", "#3b82f6", "#14b8a6", "#f97316", "#ec4899", "#6366f1", "#10b981", "#f59e0b"];
+const TEAM_COLORS = ["#004C8F", "#1D6EC5", "#5B9BD5", "#93C5FD", "#1E40AF", "#2563EB", "#3B82F6", "#60A5FA"];
 
 const DATE_RANGES: { value: Range; label: string }[] = [
     { value: "week",    label: "This Week"     },
@@ -68,8 +68,8 @@ function UserTable({ users, sort, onSortChange }: {
         : [...users].sort((a, b) => b.received - a.received);
 
     const sortOptions: { value: UserSort; label: string; icon: React.ElementType; activeClass: string }[] = [
-        { value: "givers",    label: "Top Givers",    icon: ArrowUpRight,   activeClass: "bg-purple-600 text-white shadow-sm" },
-        { value: "receivers", label: "Top Receivers", icon: ArrowDownRight, activeClass: "bg-blue-600 text-white shadow-sm"   },
+        { value: "givers",    label: "Top Givers",    icon: ArrowUpRight,   activeClass: "bg-[#004C8F] text-white shadow-sm" },
+        { value: "receivers", label: "Top Receivers", icon: ArrowDownRight, activeClass: "bg-[#1D6EC5] text-white shadow-sm" },
     ];
 
     return (
@@ -96,17 +96,17 @@ function UserTable({ users, sort, onSortChange }: {
                     <div key={u.employee_id} className="grid grid-cols-12 gap-2 items-center px-3 py-2 rounded-xl hover:bg-muted/40 transition-colors animate-in fade-in duration-200" style={{ animationDelay: `${i * 30}ms` }}>
                         <div className="col-span-5 flex items-center gap-2 min-w-0">
                             <span className="text-[10px] text-muted-foreground w-4 flex-shrink-0">{i + 1}</span>
-                            <div className="w-6 h-6 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                            <div className="w-6 h-6 rounded-md bg-[#EEF4FB] text-[#004C8F] flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                                 {u.username.charAt(0).toUpperCase()}
                             </div>
                             <span className="text-xs font-semibold text-gray-900 truncate">{u.username}</span>
                         </div>
                         <span className="col-span-3 text-[10px] text-muted-foreground text-center truncate">{u.department}</span>
                         <div className="col-span-2 flex justify-end">
-                            <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">{u.given}</span>
+                            <span className="text-xs font-bold text-[#004C8F] bg-[#EEF4FB] px-2 py-0.5 rounded-full">{u.given}</span>
                         </div>
                         <div className="col-span-2 flex justify-end">
-                            <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">{u.received}</span>
+                            <span className="text-xs font-bold text-[#1D6EC5] bg-[#DBEAFE] px-2 py-0.5 rounded-full">{u.received}</span>
                         </div>
                     </div>
                 ))}
@@ -196,10 +196,10 @@ export default function AdminRecognitionSection() {
     const receiverCount = users.filter(u => u.received > 0).length;
 
     const aggCards = [
-        { label: "Total Given",      value: totalGiven,    icon: ArrowUpRight,   color: "bg-purple-100 text-purple-600"  },
-        { label: "Total Received",   value: totalReceived, icon: ArrowDownRight, color: "bg-blue-100 text-blue-600"      },
-        { label: "Unique Givers",    value: giverCount,    icon: UserCheck,      color: "bg-green-100 text-green-600"    },
-        { label: "Unique Receivers", value: receiverCount, icon: Users,          color: "bg-orange-100 text-orange-600"  },
+        { label: "Total Given",      value: totalGiven,    icon: ArrowUpRight,   color: "bg-[#EEF4FB] text-[#004C8F]"  },
+        { label: "Total Received",   value: totalReceived, icon: ArrowDownRight, color: "bg-[#DBEAFE] text-[#1D6EC5]"   },
+        { label: "Unique Givers",    value: giverCount,    icon: UserCheck,      color: "bg-[#BFDBFE] text-[#004C8F]"   },
+        { label: "Unique Receivers", value: receiverCount, icon: Users,          color: "bg-[#EEF4FB] text-[#1D6EC5]"   },
     ];
 
     return (
@@ -207,7 +207,7 @@ export default function AdminRecognitionSection() {
             <CardHeader className="pb-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
                     <CardTitle className="flex items-center gap-2 text-sm uppercase tracking-wide">
-                        <Trophy className="w-4 h-4 text-amber-500" />
+                        <Trophy className="w-4 h-4 text-[#004C8F]" />
                         Recognition
                     </CardTitle>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -254,7 +254,7 @@ export default function AdminRecognitionSection() {
                             <AlertTriangle className="w-6 h-6 text-red-500" />
                         </div>
                         <p className="text-sm text-gray-500">Could not load recognition data.</p>
-                        <Button size="sm" onClick={() => loadAll(range)} className="gap-2 font-bold rounded-lg bg-gray-900 text-white hover:bg-gray-700 px-4">
+                        <Button size="sm" onClick={() => loadAll(range)} className="gap-2 font-bold rounded-lg bg-[#004C8F] text-white hover:bg-[#003A70] px-4">
                             <RefreshCw className="w-3.5 h-3.5" />
                             Retry
                         </Button>

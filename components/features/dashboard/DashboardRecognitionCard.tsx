@@ -46,7 +46,7 @@ export default function DashboardRecognitionCard({
                                 {" recognised "}
                                 <span className="font-bold">{to}</span>
                             </p>
-                            <span className="text-xs text-gray-400">{time}</span>
+                            <span className="text-xs font-semibold text-gray-600">{time}</span>
                         </div>
 
                         <p className="text-sm text-gray-600 line-clamp-2">{message}</p>
