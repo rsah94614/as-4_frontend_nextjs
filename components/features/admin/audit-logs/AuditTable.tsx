@@ -164,10 +164,10 @@ export function AuditTable({
                 >
                     <span className="text-xs" style={{ color: "#6b7280" }}>
                         {(() => {
-                            const perPage = pagination.per_page || logs.length || 10;
+                            const perPage = pagination.per_page ?? logs.length ?? 10;
                             const from = (pagination.current_page - 1) * perPage + 1;
                             const to = Math.min(pagination.current_page * perPage, pagination.total);
-                            return `Showing ${from}–${to} of ${pagination.total.toLocaleString()}`;
+                            return `Showing ${isNaN(from) ? 1 : from}–${isNaN(to) ? logs.length : to} of ${pagination.total.toLocaleString()}`;
                         })()}
                     </span>
 

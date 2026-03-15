@@ -1,28 +1,16 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { RefreshCw, Plus, Filter, X } from "lucide-react";
+import { RefreshCw, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
-import { AuditLog, AuditFilters, OperationType } from "@/types/audit-types";
+import { AuditLog, AuditFilters } from "@/types/audit-types";
 import { PaginationMeta } from "@/types/pagination";
 import orgApiClient from "@/services/org-api-client";
 import { AuditTable } from "@/components/features/admin/audit-logs/AuditTable";
 import { AuditDetailModal } from "@/components/features/admin/audit-logs/AuditDetailModal";
 import { AuditFilterPanel } from "@/components/features/admin/audit-logs/AuditFilters";
-
-interface ApiPagination {
-    total: number;
-    page?: number;
-    limit?: number;
-    current_page?: number;
-    per_page?: number;
-    total_pages?: number;
-    has_next?: boolean;
-    has_previous?: boolean;
-}
 
 export default function AuditLogsPage() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,8 +20,8 @@ export default function AuditLogsPage() {
     const [error, setError] = useState<string | null>(null);
     const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
     const [filtersOpen, setFiltersOpen] = useState(false);
-
     const [page, setPage] = useState(1);
+
     const [filters, setFilters] = useState<AuditFilters>({
         tableName: "",
         operationType: "",
@@ -54,30 +42,21 @@ export default function AuditLogsPage() {
             const params: Record<string, string | number> = { page, limit: 10 };
             if (filters.tableName)     params.table_name     = filters.tableName;
             if (filters.operationType) params.operation_type = filters.operationType;
+            // performed_by filter is UUID — only send if it looks like a UUID
             if (filters.performedBy)   params.performed_by   = filters.performedBy;
             if (filters.startDate)     params.start_date     = new Date(filters.startDate).toISOString();
             if (filters.endDate)       params.end_date       = new Date(filters.endDate).toISOString();
 
-            const res = await orgApiClient.get<{ data: AuditLog[]; pagination: ApiPagination }>("/audit-logs", { params });
+            const res = await orgApiClient.get<{
+                data: AuditLog[];
+                // Backend returns PaginationMeta directly (current_page, per_page, total, total_pages, has_next, has_previous)
+                pagination: PaginationMeta;
+            }>("/audit-logs", { params });
+
             setLogs(res.data.data ?? []);
-            const p = res.data.pagination;
-            if (p) {
-                // Handle both {page, limit} and {current_page, per_page} shapes
-                const currentPage  = p.current_page  ?? p.page  ?? 1;
-                const perPage      = p.per_page       ?? p.limit ?? 10;
-                const total        = p.total          ?? 0;
-                const totalPages   = p.total_pages    ?? Math.max(1, Math.ceil(total / perPage));
-                setPagination({
-                    current_page:  currentPage,
-                    per_page:      perPage,
-                    total:         total,
-                    total_pages:   totalPages,
-                    has_next:      p.has_next      ?? currentPage < totalPages,
-                    has_previous:  p.has_previous  ?? currentPage > 1,
-                });
-            } else {
-                setPagination(null);
-            }
+            // Backend already returns the correct PaginationMeta shape — use it directly, no remapping
+            setPagination(res.data.pagination ?? null);
+
         } catch (e: unknown) {
             const s = (e as { response?: { status?: number } })?.response?.status;
             setError(s === 401
@@ -117,7 +96,12 @@ export default function AuditLogsPage() {
                         className="flex items-center justify-between px-6 py-4 rounded-xl"
                         style={{ backgroundColor: "#1a4ab5" }}
                     >
-                        <h1 className="text-2xl font-bold text-white tracking-wide">Audit Logs</h1>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white tracking-wide">Audit Logs</h1>
+                            <p className="text-blue-200 text-xs mt-0.5">
+                                {pagination ? `${pagination.total.toLocaleString()} total records` : "System activity history"}
+                            </p>
+                        </div>
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="outline"
@@ -126,14 +110,13 @@ export default function AuditLogsPage() {
                             >
                                 <Filter className="w-4 h-4 mr-2" />
                                 {filtersOpen ? "Hide Filters" : "Filter"}
-                                {hasActiveFilters && (
-                                    <span className="ml-2 w-2 h-2 rounded-full bg-red-400 inline-block" />
-                                )}
+                                {hasActiveFilters && <span className="ml-2 w-2 h-2 rounded-full bg-red-400 inline-block" />}
                             </Button>
                             <Button
                                 variant="outline"
                                 onClick={fetchLogs}
                                 className="h-10 w-10 p-0 rounded-lg border-white/30 text-white bg-white/10 hover:bg-white/20"
+                                title="Refresh"
                             >
                                 <RefreshCw className="w-4 h-4" />
                             </Button>
@@ -155,7 +138,7 @@ export default function AuditLogsPage() {
                             <span className="text-xs font-medium" style={{ color: "#6b7280" }}>Active filters:</span>
                             {filters.tableName && (
                                 <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}>
-                                    Table: {filters.tableName}
+                                    Module: {filters.tableName}
                                 </span>
                             )}
                             {filters.operationType && (
@@ -165,7 +148,7 @@ export default function AuditLogsPage() {
                             )}
                             {filters.performedBy && (
                                 <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}>
-                                    Employee: {filters.performedBy}
+                                    Employee ID: {filters.performedBy.slice(0, 8)}…
                                 </span>
                             )}
                             {filters.startDate && (
@@ -195,7 +178,7 @@ export default function AuditLogsPage() {
                         </div>
                     )}
 
-                    {/* White content card + table */}
+                    {/* Table */}
                     <div className="bg-white rounded-xl shadow-sm">
                         <AuditTable
                             logs={logs}
