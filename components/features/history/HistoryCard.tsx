@@ -28,13 +28,10 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
             className={CARD_CONTAINER}
         >
             {/* Top accent stripe */}
-<<<<<<< Updated upstream
             <div
-                className="h-0.5 w-full transition-colors"
-=======
-            <div 
-                className="h-1 w-full transition-colors"
->>>>>>> Stashed changes
+
+              className="h-1 w-full transition-colors"
+
                 style={{ backgroundColor: stripeColor }}
             />
 
@@ -52,13 +49,11 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
                             }
                             {isRedemption ? "Redeemed" : "Earned"}
                         </span>
-<<<<<<< Updated upstream
 
-                        <span className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
-=======
+
                         
                         <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">
->>>>>>> Stashed changes
+
                             {new Date(item.granted_at).toLocaleDateString("en-US", {
                                 year: "numeric",
                                 month: "short",

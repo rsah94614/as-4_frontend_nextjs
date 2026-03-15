@@ -1,1061 +1,1043 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Search, RefreshCw, ChevronLeft, ChevronRight, Loader2,
-  Users, ChevronDown, ChevronUp, Star, Award, Calendar, Filter, X,
-  Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Download, Plus
-} from "lucide-react"
-import { createAuthenticatedClient, extractApiError } from "@/lib/api-utils"
-import Navbar from "@/components/layout/Navbar"
-import Sidebar from "@/components/layout/Sidebar"
+    Users, UserPlus, ChevronLeft, Search, Loader2,
+    Building2, Briefcase, Calendar, MoreHorizontal,
+    CheckCircle2, XCircle, Info, ChevronDown, Upload,
+    X, Eye, EyeOff, FileSpreadsheet, Download,
+} from "lucide-react";
+import Link from "next/link";
+import Navbar from "@/components/layout/Navbar";
+import Sidebar from "@/components/layout/Sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+    Dialog, DialogContent, DialogHeader,
+    DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useToast, ToastContainer } from "@/components/features/admin/roles/UIHelpers";
+import { createAuthenticatedClient } from "@/lib/api-utils";
+import { auth } from "@/services/auth-service";
 
-// ─── Proxy clients ────────────────────────────────────────────────────────────
-const employeeClient = createAuthenticatedClient("/api/proxy/employees")
-const recognitionClient = createAuthenticatedClient("/api/proxy/recognition")
-const authClient = createAuthenticatedClient("/api/proxy/auth")
+// ─── API clients ──────────────────────────────────────────────────────────────
+const empClient  = createAuthenticatedClient("/api/proxy/employees");
+
+// Auth bulk-import needs multipart — we call fetch directly with the token.
+async function authBulkImport(file: File) {
+    const token = auth.getAccessToken();
+    const form  = new FormData();
+    form.append("file", file);
+    const res = await fetch("/api/proxy/auth/bulk-import", {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: form,
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { detail?: string }).detail ?? `HTTP ${res.status}`);
+    }
+    return res.json() as Promise<BulkImportResponse>;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+interface Designation { designation_id: string; designation_name: string; }
+interface Department  { department_id: string;  department_name: string;  }
+interface Status      { status_id: string;      status_code: string;      status_name: string; }
+
 interface Employee {
-  employee_id: string
-  username: string
-  email: string
-  designation_id?: string
-  designation_name?: string
-  department_id?: string
-  department_name?: string
-  manager_id?: string
-  is_active: boolean
-  date_of_joining: string
+    employee_id: string;
+    username: string;
+    email: string;
+    designation_id?: string;
+    designation_name?: string;
+    department_id?: string;
+    department_name?: string;
+    manager_id?: string;
+    manager_name?: string;
+    date_of_joining: string;
+    date_of_birth?: string;
+    status_id?: string;
+    status_name?: string;
+    // is_active is the reliable field from the list endpoint
+    is_active: boolean;
+    created_at: string;
 }
 
-interface Review {
-  review_id: string
-  reviewer_id: string
-  receiver_id: string
-  rating: number
-  comment: string
-  review_at: string
+interface PaginationMeta {
+    current_page: number; per_page: number; total: number;
+    total_pages: number;  has_next: boolean; has_previous: boolean;
 }
 
-interface MemberStats {
-  avg_rating: number
-  review_count: number
+interface BulkImportRow {
+    row: number; username?: string; email?: string;
+    status: "success" | "error";
+    error?: string; employee_id?: string;
+}
+interface BulkImportResponse {
+    total: number; succeeded: number; failed: number;
+    results: BulkImportRow[];
 }
 
-interface BulkRowResult {
-  row: number
-  username?: string
-  email?: string
-  status: "success" | "error"
-  error?: string
-  employee_id?: string
+type Tab = "list" | "bulk";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const AVATAR_COLORS = ["#004C8F", "#1E3A5F", "#14532D", "#7C2D12", "#6D28D9", "#0F766E"];
+
+function initials(name: string) {
+    return name.split(/[\s._-]/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+}
+function formatDate(d?: string) {
+    if (!d) return "—";
+    return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-interface BulkImportResult {
-  total: number
-  succeeded: number
-  failed: number
-  results: BulkRowResult[]
-}
-
-// ─── Bulk Import Modal ────────────────────────────────────────────────────────
-function BulkImportModal({ onClose, onSuccess }: {
-  onClose: () => void
-  onSuccess: () => void
-}) {
-  const fileRef = useRef<HTMLInputElement>(null)
-  const [file, setFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [result, setResult] = useState<BulkImportResult | null>(null)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const [dragOver, setDragOver] = useState(false)
-
-  function downloadTemplate() {
-    const csv = [
-      "username,email,password,designation_id,department_id,manager_id",
-      "jdoe,jdoe@company.com,Password123,550e8400-e29b-41d4-a716-446655440001,550e8400-e29b-41d4-a716-446655440002,",
-    ].join("\n")
-    const blob = new Blob([csv], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = "bulk_import_template.csv"
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  function pickFile(f: File) {
-    const name = f.name.toLowerCase()
-    if (!name.endsWith(".csv") && !name.endsWith(".xlsx")) {
-      setUploadError("Only .csv and .xlsx files are supported.")
-      return
-    }
-    setFile(f)
-    setUploadError(null)
-    setResult(null)
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setDragOver(false)
-    const dropped = e.dataTransfer.files[0]
-    if (dropped) pickFile(dropped)
-  }
-
-  async function handleUpload() {
-    if (!file) return
-    setUploading(true)
-    setUploadError(null)
-    setResult(null)
-    try {
-      const formData = new FormData()
-      formData.append("file", file)
-      // FIX: was axiosClient.post(`${AUTH_API}/v1/auth/bulk-import`, ...)
-      // Now routes through proxy. Note: override Content-Type so axios sets
-      // multipart boundary correctly for FormData.
-      const res = await authClient.post("/bulk-import", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      const data = res.data
-      setResult(data as BulkImportResult)
-      if (data.succeeded > 0) onSuccess()
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { detail?: string | { msg?: string; loc?: string[] }[] } }; message?: string }
-      const detail = axiosErr.response?.data?.detail
-      if (Array.isArray(detail)) {
-        setUploadError(
-          detail
-            .map((e: { msg?: string; loc?: string[] }) =>
-              [e.loc?.slice(1).join(" → "), e.msg].filter(Boolean).join(": ")
-            )
-            .join(" | ")
-        )
-      } else if (typeof detail === "string") {
-        setUploadError(detail)
-      } else {
-        setUploadError(extractApiError(err, "Upload failed"))
-      }
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  function reset() {
-    setFile(null)
-    setResult(null)
-    setUploadError(null)
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center">
-              <FileSpreadsheet className="w-4 h-4 text-purple-700" />
-            </div>
-            <div>
-              <p className="font-bold text-black text-sm">Bulk Import Employees</p>
-              <p className="text-[11px] text-slate-400">Upload a CSV or XLSX file</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-
-          {/* Required columns + template download */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-black">Required columns</p>
-              <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
-                username, email, password, designation_id, department_id
-              </p>
-              <p className="text-[11px] text-slate-400 font-mono">
-                optional: manager_id
-              </p>
-            </div>
-            <button
-              onClick={downloadTemplate}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-600 hover:border-purple-300 hover:text-purple-700 transition flex-shrink-0"
-            >
-              <Download className="w-3 h-3" /> Template
-            </button>
-          </div>
-
-          {/* Drop zone */}
-          {!result && (
-            <div
-              onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              onClick={() => fileRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition ${dragOver
-                ? "border-purple-400 bg-purple-50"
-                : file
-                  ? "border-green-300 bg-green-50"
-                  : "border-slate-200 hover:border-purple-300 hover:bg-purple-50/40"
-                }`}
-            >
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".csv,.xlsx"
-                className="hidden"
-                onChange={e => e.target.files?.[0] && pickFile(e.target.files[0])}
-              />
-              {file ? (
-                <>
-                  <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-black truncate max-w-[260px]">{file.name}</p>
-                    <p className="text-xs text-slate-400">{(file.size / 1024).toFixed(1)} KB · click to change</p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
-                    <Upload className="w-5 h-5 text-slate-400" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-slate-600">Drop file here or click to browse</p>
-                    <p className="text-xs text-slate-400">.csv or .xlsx</p>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Error banner */}
-          {uploadError && (
-            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-red-600">{uploadError}</p>
-            </div>
-          )}
-
-          {/* Results */}
-          {result && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-3 py-1.5 rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
-                  Total <span className="text-black">{result.total}</span>
-                </span>
-                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-100 text-xs font-semibold text-green-700">
-                  <CheckCircle2 className="w-3 h-3" /> {result.succeeded} succeeded
-                </span>
-                {result.failed > 0 && (
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-100 text-xs font-semibold text-red-600">
-                    <AlertCircle className="w-3 h-3" /> {result.failed} failed
-                  </span>
-                )}
-              </div>
-              <div className="border border-slate-100 rounded-xl divide-y divide-slate-50 max-h-56 overflow-y-auto">
-                {result.results.map(r => (
-                  <div
-                    key={r.row}
-                    className={`flex items-start gap-3 px-4 py-2.5 ${r.status === "error" ? "bg-red-50/50" : ""}`}
-                  >
-                    <span className="text-[10px] font-bold text-slate-300 w-8 flex-shrink-0 pt-0.5">
-                      R{r.row}
-                    </span>
-                    {r.status === "success"
-                      ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" />
-                      : <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
-                    }
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-black truncate">
-                        {r.username || "—"}{" "}
-                        <span className="font-normal text-slate-400">{r.email}</span>
-                      </p>
-                      {r.status === "error" && (
-                        <p className="text-[11px] text-red-500 mt-0.5">{r.error}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 flex items-center gap-3 flex-shrink-0">
-          {result ? (
-            <>
-              <button onClick={reset} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
-                Import Another
-              </button>
-              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-purple-700 text-white text-sm font-semibold hover:bg-purple-800 transition">
-                Done
-              </button>
-            </>
-          ) : (
-            <>
-              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
-                Cancel
-              </button>
-              <button
-                onClick={handleUpload}
-                disabled={!file || uploading}
-                className="flex-1 py-2.5 rounded-xl bg-purple-700 text-white text-sm font-semibold hover:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
-              >
-                {uploading
-                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Importing…</>
-                  : <><Upload className="w-4 h-4" /> Import</>
-                }
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Add Employee Modal ───────────────────────────────────────────────────────
-function AddEmployeeModal({ onClose, onSuccess, allEmployees }: {
-  onClose: () => void
-  onSuccess: () => void
-  allEmployees: Employee[]
-}) {
-  const [form, setForm] = useState({
-    username: "",
-    email: "",
-    password: "",
-    date_of_birth: "",
-    designation_id: "",
-    department_id: "",
-    manager_id: "",
-  })
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const designations = useMemo(() => {
-    const map = new Map<string, { id: string, name: string }>()
-    allEmployees.forEach(emp => {
-      if (emp.designation_id && emp.designation_name) {
-        map.set(emp.designation_id, { id: emp.designation_id, name: emp.designation_name })
-      }
-    })
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
-  }, [allEmployees])
-
-  const departments = useMemo(() => {
-    const map = new Map<string, { id: string, name: string }>()
-    allEmployees.forEach(emp => {
-      if (emp.department_id && emp.department_name) {
-        map.set(emp.department_id, { id: emp.department_id, name: emp.department_name })
-      }
-    })
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
-  }, [allEmployees])
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setSubmitting(true)
-    setError(null)
-    try {
-      // FIX: was fetchWithAuth(`${AUTH_API}/v1/auth/signup`, ...)
-      // Now routes through proxy: /api/proxy/auth/signup
-      await authClient.post("/signup", {
-        username: form.username,
-        email: form.email,
-        password: form.password,
-        date_of_birth: form.date_of_birth,
-        designation_id: form.designation_id,
-        department_id: form.department_id,
-        manager_id: form.manager_id || null,
-      })
-      onSuccess()
-      onClose()
-    } catch (err: unknown) {
-      setError(extractApiError(err, "Failed to add employee"))
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const fieldCls = "block w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-purple-300 outline-none bg-white text-black transition-all"
-  const labelCls = "block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1"
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-      onClick={e => e.target === e.currentTarget && onClose()}
-    >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center">
-              <Users className="w-4 h-4 text-purple-700" />
-            </div>
-            <div>
-              <p className="font-bold text-black text-sm">Add New Employee</p>
-              <p className="text-[11px] text-slate-400">Fill in the details to register</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          {error && (
-            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-              <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-red-600">{error}</p>
-            </div>
-          )}
-
-          <form id="add-employee-form" onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className={labelCls}>Username</label>
-              <input
-                required
-                placeholder="e.g. johndoe"
-                className={fieldCls}
-                value={form.username}
-                onChange={e => setForm({ ...form, username: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Email Address</label>
-              <input
-                required
-                type="email"
-                placeholder="john@company.com"
-                className={fieldCls}
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Temporary Password</label>
-              <input
-                required
-                type="password"
-                placeholder="••••••••"
-                className={fieldCls}
-                value={form.password}
-                onChange={e => setForm({ ...form, password: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>Date of Birth</label>
-              <input
-                required
-                type="date"
-                className={fieldCls}
-                value={form.date_of_birth}
-                onChange={e => setForm({ ...form, date_of_birth: e.target.value })}
-                max={new Date().toISOString().split("T")[0]}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls}>Department</label>
-                <select
-                  required
-                  className={fieldCls}
-                  value={form.department_id}
-                  onChange={e => setForm({ ...form, department_id: e.target.value })}
-                >
-                  <option value="">Select...</option>
-                  {departments.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelCls}>Designation</label>
-                <select
-                  required
-                  className={fieldCls}
-                  value={form.designation_id}
-                  onChange={e => setForm({ ...form, designation_id: e.target.value })}
-                >
-                  <option value="">Select...</option>
-                  {designations.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className={labelCls}>Manager (Optional)</label>
-              <select
-                className={fieldCls}
-                value={form.manager_id}
-                onChange={e => setForm({ ...form, manager_id: e.target.value })}
-              >
-                <option value="">No Manager</option>
-                {allEmployees.filter(e => e.is_active).map(e => (
-                  <option key={e.employee_id} value={e.employee_id}>
-                    {e.username} ({e.department_name})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </form>
-        </div>
-
-        <div className="px-6 py-4 border-t border-slate-100 flex items-center gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
-            Cancel
-          </button>
-          <button
-            form="add-employee-form"
-            type="submit"
-            disabled={submitting}
-            className="flex-1 py-2.5 rounded-xl bg-purple-700 text-white text-sm font-semibold hover:bg-purple-800 disabled:opacity-50 transition flex items-center justify-center gap-2"
-          >
-            {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Adding…</> : "Add Employee"}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Calendar Strip ───────────────────────────────────────────────────────────
-function CalendarStrip({ month, year, onChange }: {
-  month: number; year: number; onChange: (m: number, y: number) => void
-}) {
-  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-  const prev = () => month === 0 ? onChange(11, year - 1) : onChange(month - 1, year)
-  const next = () => month === 11 ? onChange(0, year + 1) : onChange(month + 1, year)
-  return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <button onClick={prev} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition">
-        <ChevronLeft className="w-4 h-4" />
-      </button>
-      <div className="flex items-center gap-1 flex-wrap">
-        {MONTHS.map((m, i) => (
-          <button key={m} onClick={() => onChange(i, year)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${i === month ? "bg-purple-700 text-white shadow" : "text-slate-500 hover:bg-slate-100"}`}>
-            {m}
-          </button>
-        ))}
-      </div>
-      <button onClick={next} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600 transition">
-        <ChevronRight className="w-4 h-4" />
-      </button>
-      <div className="flex items-center gap-1 ml-1">
-        <button onClick={() => onChange(month, year - 1)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 text-xs font-bold transition">◂</button>
-        <span className="text-sm font-bold text-black px-1">{year}</span>
-        <button onClick={() => onChange(month, year + 1)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 text-xs font-bold transition">▸</button>
-      </div>
-    </div>
-  )
-}
-
-// ─── Stars ────────────────────────────────────────────────────────────────────
-function Stars({ value }: { value: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map(i => (
-        <Star key={i} className={`w-3 h-3 ${i <= Math.round(value) ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"}`} />
-      ))}
-      <span className="text-xs font-semibold text-black ml-1">
-        {value > 0 ? value.toFixed(1) : "—"}
-      </span>
-    </div>
-  )
-}
-
-// ─── Stats Panel ──────────────────────────────────────────────────────────────
-function StatsPanel({ manager, members, statsMap, month, year }: {
-  manager: Employee | null
-  members: Employee[]
-  statsMap: Record<string, MemberStats>
-  month: number
-  year: number
-}) {
-  const MONTH_NAMES = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ]
-
-  if (!manager) {
+// StatusBadge uses is_active (boolean) — the list endpoint returns this reliably.
+// status_code is NOT returned by the list endpoint, so never rely on it here.
+function StatusBadge({ isActive }: { isActive: boolean }) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3 p-6 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
-          <Users className="w-6 h-6 text-slate-300" />
-        </div>
-        <p className="text-sm text-slate-400 font-medium">Click a team to view stats</p>
-      </div>
-    )
-  }
-
-  const all = [manager, ...members]
-  const rated = all.filter(m => (statsMap[m.employee_id]?.review_count ?? 0) > 0)
-  const teamAvg = rated.length > 0
-    ? rated.reduce((s, m) => s + (statsMap[m.employee_id]?.avg_rating ?? 0), 0) / rated.length
-    : 0
-
-  return (
-    <div className="flex flex-col gap-4 p-5">
-      <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-        <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
-          {manager.username.charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <p className="text-xs font-bold text-black">{manager.username}&apos;s Team</p>
-          <p className="text-xs font-bold text-slate-800">{MONTH_NAMES[month]} {year}</p>
-        </div>
-      </div>
-
-      <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
-        <p className="text-[10px] text-amber-600 font-semibold uppercase tracking-wide mb-1">Team Avg Rating</p>
-        <Stars value={Number(teamAvg.toFixed(1))} />
-        <p className="text-[10px] text-slate-400 mt-1">
-          {rated.length} of {all.length} member{all.length !== 1 ? "s" : ""} reviewed
-        </p>
-      </div>
-
-      <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Members</p>
-
-      <div className="space-y-2">
-        {all.map((m, idx) => {
-          const s = statsMap[m.employee_id]
-          return (
-            <div key={m.employee_id} className="bg-white border border-slate-100 rounded-xl p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${idx === 0 ? "bg-purple-100 text-purple-700" : "bg-slate-100 text-slate-500"}`}>
-                  {m.username.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-black truncate">{m.username}</p>
-                  <p className="text-[10px] text-slate-400 truncate">{m.designation_name || "—"}</p>
-                </div>
-                {idx === 0 && (
-                  <span className="text-[9px] font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full flex-shrink-0">Lead</span>
-                )}
-              </div>
-              <div className="bg-slate-50 rounded-lg p-2">
-                <p className="text-[9px] text-slate-400 mb-0.5">
-                  Avg Rating {s?.review_count ? `(${s.review_count} reviews)` : "(no reviews)"}
-                </p>
-                <Stars value={s?.avg_rating ?? 0} />
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
+        <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold"
+            style={
+                isActive
+                    ? { background: "#D1FAE5", color: "#065F46" }
+                    : { background: "#F3F4F6", color: "#6B7280" }
+            }
+        >
+            {isActive ? <CheckCircle2 size={9} /> : <XCircle size={9} />}
+            {isActive ? "Active" : "Inactive"}
+        </span>
+    );
 }
 
-// ─── Team Card ────────────────────────────────────────────────────────────────
-function TeamCard({ manager, members, expanded, selected, onToggle, onSelect }: {
-  manager: Employee; members: Employee[]
-  expanded: boolean; selected: boolean
-  onToggle: () => void; onSelect: () => void
+// ─── HowItWorks ───────────────────────────────────────────────────────────────
+const HOW_IT_WORKS_LIST = [
+    { n: "01", title: "Create Employee",  desc: "Add employees individually via the form, providing all required profile details." },
+    { n: "02", title: "Assign Manager",   desc: "Set manager_id to build the hierarchy used by digest and recognition scoping." },
+    { n: "03", title: "Set DOB",          desc: "Date of birth enables birthday celebration notifications from the celebration worker." },
+    { n: "04", title: "Manage Status",    desc: "Deactivate an employee via the detail panel — soft-deletes without losing history." },
+];
+const HOW_IT_WORKS_BULK = [
+    { n: "01", title: "Download Template", desc: "Download the CSV template with correct column headers pre-filled." },
+    { n: "02", title: "Fill Data",         desc: "Required: username, email, password, designation_id, department_id. Optional: manager_id, date_of_birth." },
+    { n: "03", title: "Upload File",       desc: "Upload your completed CSV or XLSX file. Each row is processed independently." },
+    { n: "04", title: "Review Results",    desc: "Successful rows are created immediately. Errors are listed per-row — fix and re-upload." },
+];
+
+function HowItWorks({ steps }: { steps: typeof HOW_IT_WORKS_LIST }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
+            <button
+                type="button"
+                onClick={() => setOpen((o) => !o)}
+                className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-colors"
+            >
+                <div className="flex items-center gap-2">
+                    <Info size={13} className="text-[#E31837]" />
+                    <span className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</span>
+                </div>
+                <ChevronDown size={15} className={cn("text-gray-400 transition-transform duration-200", open && "rotate-180")} />
+            </button>
+            {open && (
+                <div className="border-t border-gray-100">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                        {steps.map((s) => (
+                            <div key={s.n} className="flex gap-3 px-5 py-4">
+                                <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
+                                <div>
+                                    <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
+                                    <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Shared SelectField ───────────────────────────────────────────────────────
+function SelectField({ id, label, value, onChange, options, placeholder, required }: {
+    id: string; label: string; value: string;
+    onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    options: { value: string; label: string }[];
+    placeholder: string; required?: boolean;
 }) {
-  return (
-    <div className={`bg-white rounded-2xl border transition-all ${selected ? "border-purple-300 shadow-md" : "border-slate-100 shadow-sm"}`}>
-      <div className="flex items-center gap-3 p-4 cursor-pointer" onClick={() => { onSelect(); onToggle() }}>
-        <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold flex-shrink-0">
-          {manager.username.charAt(0).toUpperCase()}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-bold text-black truncate">{manager.username}</p>
-            <span className="text-[10px] font-semibold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full flex-shrink-0">Manager</span>
-          </div>
-          <p className="text-xs text-slate-500 truncate">
-            {manager.designation_name || "—"} · {manager.department_name || "—"}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full">
-            <Users className="w-3 h-3" />{members.length}
-          </span>
-          {expanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-        </div>
-      </div>
-
-      {expanded && (
-        <div className="border-t border-slate-100 divide-y divide-slate-50">
-          {members.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-4">No direct reports</p>
-          ) : members.map(emp => (
-            <div key={emp.employee_id} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50/60 transition">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                {emp.username.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-black truncate">{emp.username}</p>
-                <p className="text-xs text-slate-400 truncate">{emp.email}</p>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-xs font-semibold text-black">{emp.designation_name || "—"}</p>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${emp.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-500"}`}>
-                  {emp.is_active ? "Active" : "Inactive"}
-                </span>
-              </div>
+    return (
+        <div className="space-y-1.5">
+            <Label htmlFor={id} className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
+                {label} {required && <span style={{ color: "#E31837" }}>*</span>}
+            </Label>
+            <div className="relative">
+                <select id={id} value={value} onChange={onChange}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white appearance-none pr-9
+                        focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium transition-all">
+                    <option value="">{placeholder}</option>
+                    {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
-          ))}
         </div>
-      )}
-    </div>
-  )
+    );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
-export default function AdminTeamsPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [allEmployees, setAllEmployees] = useState<Employee[]>([])
-  const [allReviews, setAllReviews] = useState<Review[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState("")
-  const [deptFilter, setDeptFilter] = useState("")
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
-  const [selectedMgrId, setSelectedMgrId] = useState<string | null>(null)
-  const [month, setMonth] = useState(new Date().getMonth())
-  const [year, setYear] = useState(new Date().getFullYear())
-  const [bulkModalOpen, setBulkModalOpen] = useState(false)
-  const [addModalOpen, setAddModalOpen] = useState(false)
-
-  async function fetchAllEmployees(): Promise<Employee[]> {
-    const PAGE_SIZE = 100
-    const all: Employee[] = []
-    let page = 1
-    while (true) {
-      // FIX: was fetchWithAuth(`${EMPLOYEE_API}/v1/employees?...`) — direct call + wrong path
-      // Employee list route is /list, not /. Now uses proxy client.
-      const res = await employeeClient.get<{ data: Employee[]; pagination: { total_pages: number } }>(
-        `/list?limit=${PAGE_SIZE}&page=${page}`
-      )
-      const rows = res.data.data ?? []
-      all.push(...rows)
-      if (page >= (res.data.pagination?.total_pages ?? 1)) break
-      page++
-    }
-    return all
-  }
-
-  async function fetchAllReviews(): Promise<Review[]> {
-    const PAGE_SIZE = 100
-    const all: Review[] = []
-    let page = 1
-    while (true) {
-      try {
-        // FIX: was fetchWithAuth(`${RECOGNITION_API}/v1/reviews?...`) — direct call
-        // Now uses proxy client.
-        const res = await recognitionClient.get<{ data: Review[]; pagination: { total_pages: number } }>(
-          `/reviews?page=${page}&page_size=${PAGE_SIZE}`
-        )
-        const rows = res.data.data ?? []
-        all.push(...rows)
-        if (page >= (res.data.pagination?.total_pages ?? 1)) break
-        page++
-      } catch (e) {
-        console.warn("Reviews fetch failed:", e)
-        break
-      }
-    }
-    return all
-  }
-
-  const fetchAll = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const [employees, reviews] = await Promise.all([fetchAllEmployees(), fetchAllReviews()])
-      setAllEmployees(employees)
-      setAllReviews(reviews)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Something went wrong")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const refresh = fetchAll
-
-  useEffect(() => { fetchAll() }, [fetchAll])
-
-  const filteredReviews = useMemo(() =>
-    allReviews.filter(r => {
-      const d = new Date(r.review_at)
-      return d.getMonth() === month && d.getFullYear() === year
-    }), [allReviews, month, year])
-
-  const statsMap = useMemo((): Record<string, MemberStats> => {
-    const map: Record<string, MemberStats> = {}
-    filteredReviews.forEach(r => {
-      if (!map[r.receiver_id]) map[r.receiver_id] = { avg_rating: 0, review_count: 0 }
-      const prev = map[r.receiver_id]
-      const total = prev.avg_rating * prev.review_count + r.rating
-      prev.review_count += 1
-      prev.avg_rating = total / prev.review_count
-    })
-    return map
-  }, [filteredReviews])
-
-  const { managers, getTeam, deptOptions } = useMemo(() => {
-    const managersSet = new Set(allEmployees.map(e => e.manager_id).filter((id): id is string => !!id))
-    const mgrs = allEmployees.filter(e => managersSet.has(e.employee_id))
-    const get = (id: string) => allEmployees.filter(e => e.manager_id === id)
-    const opts = Array.from(new Set(allEmployees.map(e => e.department_name).filter((d): d is string => !!d)))
-    return { managers: mgrs, getTeam: get, deptOptions: opts }
-  }, [allEmployees])
-
-  const filteredManagers = useMemo(() => {
-    const term = search.toLowerCase();
-    return managers.filter((m) => {
-      const team = getTeam(m.employee_id);
-      const match =
-        !term ||
-        m.username.toLowerCase().includes(term) ||
-        m.designation_name?.toLowerCase().includes(term) ||
-        team.some(
-          (e) =>
-            e.username.toLowerCase().includes(term) ||
-            e.designation_name?.toLowerCase().includes(term)
-        );
-      const dept =
-        !deptFilter ||
-        m.department_name === deptFilter ||
-        team.some((e) => e.department_name === deptFilter);
-      return match && dept;
+// ─── Create Employee Dialog ───────────────────────────────────────────────────
+function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, departments, employees }: {
+    open: boolean; onClose: () => void; onCreated: () => void;
+    toast: (msg: string, t?: "success" | "error") => void;
+    designations: Designation[]; departments: Department[]; employees: Employee[];
+}) {
+    const [submitting, setSub] = useState(false);
+    const [showPwd, setShowPwd] = useState(false);
+    const [form, setForm] = useState({
+        username: "", email: "", password: "",
+        designation_id: "", department_id: "", manager_id: "",
+        date_of_joining: "", date_of_birth: "",
     });
-  }, [managers, getTeam, search, deptFilter]);
 
-  const selectedManager = useMemo(
-    () => allEmployees.find((e) => e.employee_id === selectedMgrId) ?? null,
-    [allEmployees, selectedMgrId]
-  );
+    const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+        setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const selectedTeam = useMemo(
-    () => (selectedMgrId ? getTeam(selectedMgrId) : []),
-    [selectedMgrId, getTeam]
-  );
+    const handleCreate = async () => {
+        if (!form.username || !form.email || !form.password || !form.designation_id || !form.department_id || !form.date_of_joining) {
+            toast("All required fields must be filled", "error"); return;
+        }
+        try {
+            setSub(true);
+            const token = auth.getAccessToken();
+            await fetch("/api/proxy/auth/signup", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({
+                    username:       form.username,
+                    email:          form.email,
+                    password:       form.password,
+                    designation_id: form.designation_id,
+                    department_id:  form.department_id,
+                    manager_id:     form.manager_id   || undefined,
+                    date_of_birth:  form.date_of_birth || undefined,
+                }),
+            }).then(async (res) => {
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error((err as { detail?: string }).detail ?? `HTTP ${res.status}`);
+                }
+            });
+            toast("Employee created successfully");
+            onClose();
+            setForm({ username: "", email: "", password: "", designation_id: "", department_id: "", manager_id: "", date_of_joining: "", date_of_birth: "" });
+            onCreated();
+        } catch (e: unknown) {
+            toast((e as Error).message ?? "Failed to create employee", "error");
+        } finally {
+            setSub(false);
+        }
+    };
 
-  const toggleExpand = (id: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-lg p-0 overflow-hidden rounded-xl border-0">
+                <div className="px-6 py-4" style={{ background: "#004C8F" }}>
+                    <DialogHeader>
+                        <DialogTitle className="text-white font-bold text-sm">Create New Employee</DialogTitle>
+                        <DialogDescription className="text-blue-200 text-xs mt-0.5">Add a new employee to the platform</DialogDescription>
+                    </DialogHeader>
+                </div>
+                <div className="h-0.5" style={{ background: "#E31837" }} />
 
-  return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Navbar onMenuClick={() => setSidebarOpen(true)} />
-
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="flex flex-col gap-4">
-            {/* Header */}
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight text-black">
-                  Teams
-                </h1>
-                <p className="text-slate-500 font-medium">
-                  Browse employees organised by team hierarchy.
-                </p>
-              </div>
-              {/* <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setAddModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-black text-white text-sm font-semibold hover:opacity-80 transition shadow-sm active:scale-95"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Employee
-                </button>
-                <button
-                  onClick={() => setBulkModalOpen(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-purple-200 bg-purple-50 text-purple-700 text-sm font-semibold hover:bg-purple-100 transition shadow-sm active:scale-95"
-                >
-                  <Upload className="w-4 h-4" />
-                  Bulk Import
-                </button>
-              </div> */}
-            </div>
-
-            {/* Calendar & Period */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm px-5 py-3.5 flex items-center gap-3 flex-wrap animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Calendar className="w-4 h-4 text-slate-400" />
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-                  Period
-                </span>
-              </div>
-              <CalendarStrip
-                month={month}
-                year={year}
-                onChange={(m, y) => {
-                  setMonth(m);
-                  setYear(y);
-                }}
-              />
-              <button
-                onClick={refresh}
-                className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-purple-600 hover:border-purple-300 transition-all ml-auto active:rotate-180 duration-500"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Filters */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="relative max-w-xs flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search name or designation..."
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-black focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white transition-all shadow-sm"
-                />
-              </div>
-              <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                <select
-                  value={deptFilter}
-                  onChange={(e) => setDeptFilter(e.target.value)}
-                  className="pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 text-sm text-black focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white appearance-none transition-all shadow-sm"
-                >
-                  <option value="">All Departments</option>
-                  {deptOptions.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {(search || deptFilter) && (
-                <button
-                  onClick={() => {
-                    setSearch("");
-                    setDeptFilter("");
-                  }}
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold border bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 transition active:scale-95"
-                >
-                  <X className="w-3 h-3" /> Clear
-                </button>
-              )}
-
-              <div className="flex items-center gap-2 ml-auto">
-                <button
-                  onClick={() => setAddModalOpen(true)}
-                  className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-black text-white text-sm font-semibold hover:opacity-80 transition"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Employee
-                </button>
-                <button
-                  onClick={() => setBulkModalOpen(true)}
-                  className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-purple-200 bg-purple-50 text-purple-700 text-sm font-semibold hover:bg-purple-100 hover:border-purple-300 transition"
-                >
-                  <Upload className="w-4 h-4" />
-                  Bulk Import
-                </button>
-              </div>
-            </div>
-
-            {/* Content Layout */}
-            <div className="flex gap-4 items-start">
-              {/* Left: Team List */}
-              <div className="flex-1 min-w-0 space-y-3">
-                {loading ? (
-                  <div className="flex flex-col items-center justify-center py-32 gap-4">
-                    <Loader2 className="w-10 h-10 animate-spin text-purple-400" />
-                    <p className="text-slate-400 font-medium text-sm animate-pulse">Loading team hierarchy...</p>
-                  </div>
-                ) : error ? (
-                  <div className="flex flex-col items-center justify-center py-24 gap-4 bg-red-50/50 rounded-3xl border border-red-100">
-                    <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center text-red-600">
-                      <X className="w-6 h-6" />
+                <div className="p-6 space-y-4 bg-white max-h-[70vh] overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="username" className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
+                                Username <span style={{ color: "#E31837" }}>*</span>
+                            </Label>
+                            <Input id="username" placeholder="john.doe" value={form.username} onChange={set("username")}
+                                className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F]" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="email" className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
+                                Email <span style={{ color: "#E31837" }}>*</span>
+                            </Label>
+                            <Input id="email" type="email" placeholder="john@company.com" value={form.email} onChange={set("email")}
+                                className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F]" />
+                        </div>
                     </div>
-                    <div className="text-center">
-                      <p className="text-red-900 font-bold">Failed to load teams</p>
-                      <p className="text-red-600 text-sm mt-1">{error}</p>
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="password" className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
+                            Password <span style={{ color: "#E31837" }}>*</span>
+                        </Label>
+                        <div className="relative">
+                            <Input id="password" type={showPwd ? "text" : "password"}
+                                placeholder="Min 8 chars, upper, lower, number, special"
+                                value={form.password} onChange={set("password")}
+                                className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F] pr-10" />
+                            <button type="button" onClick={() => setShowPwd((v) => !v)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
+                            </button>
+                        </div>
                     </div>
-                    <button
-                      onClick={refresh}
-                      className="px-6 py-2 bg-red-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-200 hover:bg-red-700 transition active:scale-95"
-                    >
-                      Try again
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <SelectField id="designation_id" label="Designation" required value={form.designation_id}
+                            onChange={set("designation_id")} placeholder="Select…"
+                            options={designations.map((d) => ({ value: d.designation_id, label: d.designation_name }))} />
+                        <SelectField id="department_id" label="Department" required value={form.department_id}
+                            onChange={set("department_id")} placeholder="Select…"
+                            options={departments.map((d) => ({ value: d.department_id, label: d.department_name }))} />
+                    </div>
+
+                    <SelectField id="manager_id" label="Manager" value={form.manager_id}
+                        onChange={set("manager_id")} placeholder="No manager (optional)"
+                        options={employees.map((e) => ({ value: e.employee_id, label: `${e.username} (${e.email})` }))} />
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="doj" className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
+                                Date of Joining <span style={{ color: "#E31837" }}>*</span>
+                            </Label>
+                            <Input id="doj" type="date" value={form.date_of_joining} onChange={set("date_of_joining")}
+                                className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F]" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="dob" className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">Date of Birth</Label>
+                            <Input id="dob" type="date" value={form.date_of_birth} onChange={set("date_of_birth")}
+                                className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F]" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+                    <Button variant="outline" onClick={onClose} disabled={submitting} className="border-gray-200 text-xs font-semibold">Cancel</Button>
+                    <button onClick={handleCreate} disabled={submitting}
+                        className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                        style={{ background: "#004C8F" }}>
+                        {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                        Create Employee
                     </button>
-                  </div>
-                ) : filteredManagers.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-32 bg-white rounded-3xl border border-dashed border-slate-200 gap-3">
-                    <Users className="w-10 h-10 text-slate-200" />
-                    <p className="text-slate-400 font-medium">No teams match your criteria.</p>
-                  </div>
-                ) : (
-                  filteredManagers.map((mgr) => (
-                    <TeamCard
-                      key={mgr.employee_id}
-                      manager={mgr}
-                      members={getTeam(mgr.employee_id)}
-                      expanded={expandedIds.has(mgr.employee_id)}
-                      selected={selectedMgrId === mgr.employee_id}
-                      onToggle={() => toggleExpand(mgr.employee_id)}
-                      onSelect={() => setSelectedMgrId(mgr.employee_id)}
-                    />
-                  ))
-                )}
-              </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
-              {/* Right: Stats Panel */}
-              <div className="w-80 flex-shrink-0 sticky top-6 self-start bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col max-h-[calc(100vh-6rem)]">
-                <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                  <div className="flex items-center gap-2">
-                    <Award className="w-4 h-4 text-purple-600" />
-                    <span className="font-bold text-black text-sm tracking-tight">Team Performance</span>
-                  </div>
+// ─── Employee Detail Dialog ───────────────────────────────────────────────────
+function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, designations, departments, statuses, employees: allEmployees }: {
+    employee: Employee | null; open: boolean; onClose: () => void; onUpdated: () => void;
+    toast: (msg: string, t?: "success" | "error") => void;
+    designations: Designation[]; departments: Department[]; statuses: Status[]; employees: Employee[];
+}) {
+    const [editing, setEditing]   = useState(false);
+    const [submitting, setSub]    = useState(false);
+    const [deactivating, setDeact] = useState(false);
+    const [form, setForm] = useState({ username: "", email: "", designation_id: "", department_id: "", manager_id: "", status_id: "", date_of_birth: "" });
+
+    useEffect(() => {
+        if (employee) {
+            setForm({
+                username:       employee.username       ?? "",
+                email:          employee.email          ?? "",
+                designation_id: employee.designation_id ?? "",
+                department_id:  employee.department_id  ?? "",
+                manager_id:     employee.manager_id     ?? "",
+                status_id:      employee.status_id      ?? "",
+                date_of_birth:  employee.date_of_birth  ? employee.date_of_birth.split("T")[0] : "",
+            });
+            setEditing(false);
+        }
+    }, [employee]);
+
+    if (!employee) return null;
+
+    const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+        setForm((f) => ({ ...f, [k]: e.target.value }));
+
+    const handleUpdate = async () => {
+        try {
+            setSub(true);
+            const payload: Record<string, string | undefined> = {};
+            if (form.username       !== employee.username)       payload.username       = form.username;
+            if (form.email          !== employee.email)          payload.email          = form.email;
+            if (form.designation_id !== employee.designation_id) payload.designation_id = form.designation_id;
+            if (form.department_id  !== employee.department_id)  payload.department_id  = form.department_id;
+            if (form.manager_id     !== (employee.manager_id ?? "")) payload.manager_id = form.manager_id || undefined;
+            if (form.status_id      !== employee.status_id)      payload.status_id      = form.status_id;
+            const formDob = form.date_of_birth || undefined;
+            const empDob  = employee.date_of_birth ? employee.date_of_birth.split("T")[0] : undefined;
+            if (formDob !== empDob) payload.date_of_birth = formDob;
+            await empClient.put(`/${employee.employee_id}`, payload);
+            toast("Employee updated successfully");
+            setEditing(false);
+            onUpdated();
+        } catch (e: unknown) {
+            const err = e as { response?: { data?: { detail?: string } }; message?: string };
+            toast(err.response?.data?.detail || err.message || "Update failed", "error");
+        } finally { setSub(false); }
+    };
+
+    const handleDeactivate = async () => {
+        try {
+            setDeact(true);
+            await empClient.patch(`/${employee.employee_id}`);
+            toast("Employee deactivated");
+            onClose(); onUpdated();
+        } catch (e: unknown) {
+            const err = e as { response?: { data?: { detail?: string } }; message?: string };
+            toast(err.response?.data?.detail || err.message || "Deactivation failed", "error");
+        } finally { setDeact(false); }
+    };
+
+    const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
+        <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{label}</p>
+            <p className="text-sm font-medium text-gray-800">{value || "—"}</p>
+        </div>
+    );
+
+    const colorIdx = employee.username.charCodeAt(0) % AVATAR_COLORS.length;
+
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-lg p-0 overflow-hidden rounded-xl border-0">
+                <VisuallyHidden.Root><DialogTitle>Employee Details</DialogTitle></VisuallyHidden.Root>
+                <div className="px-6 py-5" style={{ background: "#004C8F" }}>
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-base font-bold text-white shrink-0"
+                            style={{ background: AVATAR_COLORS[colorIdx] }}>
+                            {initials(employee.username)}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-white font-bold truncate">{employee.username}</p>
+                            <p className="text-blue-200 text-xs truncate">{employee.email}</p>
+                        </div>
+                        <div className="ml-auto shrink-0">
+                            <StatusBadge isActive={employee.is_active} />
+                        </div>
+                    </div>
                 </div>
-                <div className="overflow-y-auto flex-1 custom-scrollbar">
-                  <StatsPanel
-                    manager={selectedManager}
-                    members={selectedTeam}
-                    statsMap={statsMap}
-                    month={month}
-                    year={year}
-                  />
+                <div className="h-0.5" style={{ background: "#E31837" }} />
+
+                <div className="p-6 bg-white max-h-[60vh] overflow-y-auto">
+                    {!editing ? (
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                            <Field label="Employee ID" value={<span className="font-mono text-xs break-all">{employee.employee_id}</span>} />
+                            <Field label="Designation"   value={employee.designation_name} />
+                            <Field label="Department"    value={employee.department_name} />
+                            <Field label="Manager"       value={employee.manager_name} />
+                            <Field label="Date of Join"  value={formatDate(employee.date_of_joining)} />
+                            <Field label="Date of Birth" value={formatDate(employee.date_of_birth)} />
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <Label htmlFor="e_un" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Username</Label>
+                                    <Input id="e_un" value={form.username} onChange={set("username")}
+                                        className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F] text-sm" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="e_em" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Email</Label>
+                                    <Input id="e_em" type="email" value={form.email} onChange={set("email")}
+                                        className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F] text-sm" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <SelectField id="e_dsg" label="Designation" value={form.designation_id} onChange={set("designation_id")}
+                                    placeholder="Select…" options={designations.map((d) => ({ value: d.designation_id, label: d.designation_name }))} />
+                                <SelectField id="e_dpt" label="Department" value={form.department_id} onChange={set("department_id")}
+                                    placeholder="Select…" options={departments.map((d) => ({ value: d.department_id, label: d.department_name }))} />
+                            </div>
+                            <SelectField id="e_mgr" label="Manager" value={form.manager_id} onChange={set("manager_id")}
+                                placeholder="No manager"
+                                options={allEmployees.filter((e) => e.employee_id !== employee.employee_id).map((e) => ({ value: e.employee_id, label: `${e.username} (${e.email})` }))} />
+                            <div className="grid grid-cols-2 gap-3">
+                                <SelectField id="e_sts" label="Status" value={form.status_id} onChange={set("status_id")}
+                                    placeholder="Select…" options={statuses.map((s) => ({ value: s.status_id, label: s.status_name }))} />
+                                <div className="space-y-1">
+                                    <Label htmlFor="e_dob" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date of Birth</Label>
+                                    <Input id="e_dob" type="date" value={form.date_of_birth} onChange={set("date_of_birth")}
+                                        className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F] text-sm" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-              </div>
+
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
+                    <div>
+                        {!editing && employee.is_active && (
+                            <button onClick={handleDeactivate} disabled={deactivating}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all hover:bg-red-50 disabled:opacity-40"
+                                style={{ color: "#E31837" }}>
+                                {deactivating ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle size={13} />}
+                                Deactivate
+                            </button>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {editing ? (
+                            <>
+                                <Button variant="outline" onClick={() => setEditing(false)} disabled={submitting} className="border-gray-200 text-xs font-semibold">Cancel</Button>
+                                <button onClick={handleUpdate} disabled={submitting}
+                                    className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                                    style={{ background: "#004C8F" }}>
+                                    {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                    Save Changes
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <Button variant="outline" onClick={onClose} className="border-gray-200 text-xs font-semibold">Close</Button>
+                                <button onClick={() => setEditing(true)}
+                                    className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
+                                    style={{ background: "#004C8F" }}>
+                                    Edit
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+// ─── Bulk Import Section ──────────────────────────────────────────────────────
+// Required columns (from auth/router.py): username, email, password, designation_id, department_id
+// Optional columns: manager_id, date_of_birth
+const REQUIRED_COLS = ["username", "email", "password", "designation_id", "department_id"];
+const OPTIONAL_COLS = ["manager_id", "date_of_birth"];
+const CSV_TEMPLATE  = [
+    [...REQUIRED_COLS, ...OPTIONAL_COLS].join(","),
+    "john.doe,john.doe@company.com,Passw0rd!,<designation_uuid>,<department_uuid>,<manager_uuid>,1990-05-20",
+].join("\n");
+
+function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "error") => void }) {
+    const inputRef               = useRef<HTMLInputElement>(null);
+    const [file, setFile]        = useState<File | null>(null);
+    const [uploading, setUpl]    = useState(false);
+    const [result, setResult]    = useState<BulkImportResponse | null>(null);
+    const [resultFilter, setFlt] = useState<"all" | "success" | "error">("all");
+
+    const handleFile = (f: File) => {
+        const ext = f.name.split(".").pop()?.toLowerCase();
+        if (ext !== "csv" && ext !== "xlsx") {
+            toast("Only .csv and .xlsx files are supported", "error"); return;
+        }
+        setFile(f); setResult(null);
+    };
+
+    const handleUpload = async () => {
+        if (!file) return;
+        try {
+            setUpl(true);
+            const res = await authBulkImport(file);
+            setResult(res);
+            if (res.failed === 0) toast(`All ${res.succeeded} employees created successfully`);
+            else toast(`${res.succeeded} created, ${res.failed} failed — review errors below`, "error");
+        } catch (e: unknown) {
+            toast((e as Error).message ?? "Upload failed", "error");
+        } finally { setUpl(false); }
+    };
+
+    const downloadTemplate = () => {
+        const blob = new Blob([CSV_TEMPLATE], { type: "text/csv" });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href = url; a.download = "employee_import_template.csv"; a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const filtered = result?.results.filter((r) =>
+        resultFilter === "all" ? true : r.status === resultFilter
+    ) ?? [];
+
+    return (
+        <div className="w-full">
+            <HowItWorks steps={HOW_IT_WORKS_BULK} />
+
+            {/* Template download + upload card */}
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-4">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <FileSpreadsheet size={14} className="text-[#004C8F]" />
+                        <h2 className="text-sm font-bold text-[#004C8F]">Bulk Import Employees</h2>
+                    </div>
+                    <button onClick={downloadTemplate}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-[#004C8F] hover:text-white hover:border-[#004C8F] transition-all">
+                        <Download size={12} /> Download Template
+                    </button>
+                </div>
+
+                <div className="p-6">
+                    {/* Required columns info */}
+                    <div className="mb-5 p-4 rounded-lg border border-gray-100 bg-gray-50">
+                        <p className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest mb-2">Column Reference</p>
+                        <div className="flex flex-wrap gap-1.5">
+                            {REQUIRED_COLS.map((c) => (
+                                <span key={c} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold font-mono"
+                                    style={{ background: "#E8F1FA", color: "#004C8F" }}>
+                                    {c} <span style={{ color: "#E31837" }}>*</span>
+                                </span>
+                            ))}
+                            {OPTIONAL_COLS.map((c) => (
+                                <span key={c} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-gray-100 text-gray-500">
+                                    {c}
+                                </span>
+                            ))}
+                        </div>
+                        <p className="text-[11px] text-gray-400 mt-2">
+                            <span style={{ color: "#E31837" }}>*</span> Required &nbsp;·&nbsp;
+                            <span className="font-mono">date_of_birth</span> format: YYYY-MM-DD &nbsp;·&nbsp;
+                            IDs must be valid UUIDs from your system
+                        </p>
+                    </div>
+
+                    {/* Drop zone */}
+                    <div
+                        className={cn(
+                            "border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer",
+                            file ? "border-[#004C8F] bg-blue-50/40" : "border-gray-200 hover:border-[#004C8F]/40 hover:bg-gray-50"
+                        )}
+                        onClick={() => inputRef.current?.click()}
+                        onDragOver={(e) => { e.preventDefault(); }}
+                        onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+                    >
+                        <input ref={inputRef} type="file" accept=".csv,.xlsx" className="hidden"
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+
+                        {file ? (
+                            <div className="flex items-center justify-center gap-3">
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#E8F1FA" }}>
+                                    <FileSpreadsheet size={20} style={{ color: "#004C8F" }} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-sm font-semibold text-[#004C8F]">{file.name}</p>
+                                    <p className="text-[11px] text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); if (inputRef.current) inputRef.current.value = ""; }}
+                                    className="ml-2 w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 hover:bg-red-100 transition-colors"
+                                    style={{ color: "#E31837" }}
+                                >
+                                    <X size={12} />
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 bg-gray-100">
+                                    <Upload size={22} className="text-gray-400" />
+                                </div>
+                                <p className="text-sm font-semibold text-gray-600 mb-1">Drop your CSV or XLSX here</p>
+                                <p className="text-[11px] text-gray-400">or click to browse</p>
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                    <p className="text-xs text-gray-500">
+                        {file ? `Ready to import: ${file.name}` : "No file selected"}
+                    </p>
+                    <button onClick={handleUpload} disabled={!file || uploading}
+                        className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-40"
+                        style={{ background: "#E31837" }}>
+                        {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload size={13} />}
+                        {uploading ? "Importing…" : "Import Employees"}
+                    </button>
+                </div>
             </div>
-          </div>
-        </main>
-      </div>
 
-      {bulkModalOpen && (
-        <BulkImportModal
-          onClose={() => setBulkModalOpen(false)}
-          onSuccess={refresh}
-        />
-      )}
+            {/* Results */}
+            {result && (
+                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                    {/* Summary bar */}
+                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <p className="text-sm font-bold text-[#004C8F]">Import Results</p>
+                            <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full tabular-nums">
+                                {result.total} rows
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1 text-xs font-bold" style={{ color: "#065F46" }}>
+                                <CheckCircle2 size={13} /> {result.succeeded} succeeded
+                            </span>
+                            {result.failed > 0 && (
+                                <span className="flex items-center gap-1 text-xs font-bold" style={{ color: "#B91C1C" }}>
+                                    <XCircle size={13} /> {result.failed} failed
+                                </span>
+                            )}
+                        </div>
+                    </div>
 
-      {addModalOpen && (
-        <AddEmployeeModal
-          onClose={() => setAddModalOpen(false)}
-          onSuccess={refresh}
-          allEmployees={allEmployees}
-        />
-      )}
-    </div>
-  );
+                    {/* Filter tabs */}
+                    <div className="px-6 pt-3 pb-0 flex gap-1 border-b border-gray-100">
+                        {(["all", "success", "error"] as const).map((f) => (
+                            <button key={f} onClick={() => setFlt(f)}
+                                className="px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-all capitalize"
+                                style={resultFilter === f
+                                    ? { color: "#004C8F", borderColor: "#E31837" }
+                                    : { color: "#9CA3AF", borderColor: "transparent" }}>
+                                {f === "all" ? `All (${result.total})` : f === "success" ? `Success (${result.succeeded})` : `Failed (${result.failed})`}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Result rows */}
+                    <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                        {filtered.map((row) => (
+                            <div key={row.row} className="flex items-center px-6 py-3 gap-4">
+                                <span className="text-[10px] font-black text-gray-400 tabular-nums w-8 shrink-0">#{row.row}</span>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold text-gray-700 truncate">{row.username ?? "—"}</p>
+                                    <p className="text-[11px] text-gray-400 truncate">{row.email ?? "—"}</p>
+                                </div>
+                                {row.status === "success" ? (
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: "#D1FAE5", color: "#065F46" }}>
+                                            Created
+                                        </span>
+                                        <span className="font-mono text-[10px] text-gray-400 hidden sm:block">{row.employee_id}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2 shrink-0 max-w-[240px]">
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded shrink-0" style={{ background: "#FEE2E2", color: "#B91C1C" }}>
+                                            Error
+                                        </span>
+                                        <span className="text-[11px] text-red-600 truncate">{row.error}</span>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Employee List Section ────────────────────────────────────────────────────
+function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "error") => void }) {
+    const [employees, setEmployees]       = useState<Employee[]>([]);
+    const [loading, setLoading]           = useState(true);
+    const [pagination, setPagination]     = useState<PaginationMeta | null>(null);
+    const [page, setPage]                 = useState(1);
+    const [search, setSearch]             = useState("");
+    const [debouncedSearch, setDebounced] = useState("");
+    const [createOpen, setCreateOpen]     = useState(false);
+    const [selected, setSelected]         = useState<Employee | null>(null);
+    const [detailOpen, setDetailOpen]     = useState(false);
+    const [designations, setDesignations] = useState<Designation[]>([]);
+    const [departments,  setDepartments]  = useState<Department[]>([]);
+    const [statuses,     setStatuses]     = useState<Status[]>([]);
+    const [filterDept,   setFilterDept]   = useState("");
+    const [filterStatus, setFilterStatus] = useState("");
+
+    useEffect(() => {
+        const t = setTimeout(() => { setDebounced(search); setPage(1); }, 400);
+        return () => clearTimeout(t);
+    }, [search]);
+
+    // Designations, departments and statuses live on the org service.
+    // Statuses are derived from the paginated employee list since there is no
+    // dedicated status endpoint — we accumulate them across pages as employees load.
+    const orgClient = createAuthenticatedClient("/api/proxy/org");
+
+    const loadMeta = useCallback(async () => {
+        try {
+            const [dsgRes, dptRes] = await Promise.allSettled([
+                orgClient.get("/designations"),
+                orgClient.get("/departments"),
+            ]);
+            if (dsgRes.status === "fulfilled") {
+                const d = dsgRes.value.data;
+                const arr: Designation[] = Array.isArray(d) ? d : (d as { data?: Designation[] }).data ?? [];
+                setDesignations(arr.sort((a, b) => a.designation_name.localeCompare(b.designation_name)));
+            }
+            if (dptRes.status === "fulfilled") {
+                const d = dptRes.value.data;
+                const arr: Department[] = Array.isArray(d) ? d : (d as { data?: Department[] }).data ?? [];
+                setDepartments(arr.sort((a, b) => a.department_name.localeCompare(b.department_name)));
+            }
+        } catch {/* best-effort */}
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const load = useCallback(async () => {
+        try {
+            setLoading(true);
+            const params: Record<string, string | number> = { page, limit: 20 };
+            if (debouncedSearch) params.search      = debouncedSearch;
+            if (filterDept)      params.department_id = filterDept;
+            if (filterStatus)    params.status_id   = filterStatus;
+            const res = await empClient.get<{ data: Employee[]; pagination: PaginationMeta }>("/list", { params });
+            const emps = res.data.data;
+            setEmployees(emps);
+            setPagination(res.data.pagination);
+            // Accumulate statuses from whatever the current page returned
+            setStatuses((prev) => {
+                const map = new Map(prev.map((s) => [s.status_id, s]));
+                for (const e of emps) {
+                    if (e.status_id && e.status_name && !map.has(e.status_id))
+                        map.set(e.status_id, { status_id: e.status_id, status_code: e.is_active ? "ACTIVE" : "INACTIVE", status_name: e.status_name });
+                }
+                return [...map.values()];
+            });
+        } catch (e: unknown) {
+            toast((e as Error).message, "error");
+        } finally { setLoading(false); }
+    }, [page, debouncedSearch, filterDept, filterStatus, toast]);
+
+    useEffect(() => { loadMeta(); }, [loadMeta]);
+    useEffect(() => { load(); }, [load]);
+
+    return (
+        <div className="w-full">
+            <HowItWorks steps={HOW_IT_WORKS_LIST} />
+
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Users size={14} className="text-[#004C8F]" />
+                        <h2 className="text-sm font-bold text-[#004C8F]">Employees</h2>
+                        {!loading && pagination && (
+                            <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full tabular-nums">
+                                {pagination.total}
+                            </span>
+                        )}
+                    </div>
+                    <button onClick={() => setCreateOpen(true)}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
+                        style={{ background: "#E31837" }}>
+                        <UserPlus size={13} /> New Employee
+                    </button>
+                </div>
+
+                {/* Filters */}
+                <div className="px-6 py-3 border-b border-gray-100 flex flex-wrap items-center gap-3">
+                    <div className="relative flex-1 min-w-[200px] max-w-sm">
+                        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input placeholder="Search name or email…" value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm
+                                placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 transition-all" />
+                        {search && (
+                            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <X size={13} />
+                            </button>
+                        )}
+                    </div>
+                    {departments.length > 0 && (
+                        <div className="relative">
+                            <select value={filterDept} onChange={(e) => { setFilterDept(e.target.value); setPage(1); }}
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8
+                                    focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium text-gray-600">
+                                <option value="">All Departments</option>
+                                {departments.map((d) => <option key={d.department_id} value={d.department_id}>{d.department_name}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                        </div>
+                    )}
+                    {statuses.length > 0 && (
+                        <div className="relative">
+                            <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
+                                className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8
+                                    focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium text-gray-600">
+                                <option value="">All Statuses</option>
+                                {statuses.map((s) => <option key={s.status_id} value={s.status_id}>{s.status_name}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                        </div>
+                    )}
+                </div>
+
+                {/* Table */}
+                {loading ? (
+                    <div className="p-6 space-y-3">
+                        {[0,1,2,3,4].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
+                    </div>
+                ) : employees.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 gap-3">
+                        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+                            <Users size={24} className="text-gray-300" />
+                        </div>
+                        <p className="text-sm font-semibold text-gray-500">
+                            {debouncedSearch || filterDept || filterStatus ? "No matching employees" : "No employees yet"}
+                        </p>
+                    </div>
+                ) : (
+                    <div>
+                        <div className="grid px-6 py-2.5 bg-gray-50 border-b border-gray-100"
+                            style={{ gridTemplateColumns: "1fr 150px 150px 100px 80px 36px" }}>
+                            {["Employee", "Designation", "Department", "Joined", "Status", ""].map((h) => (
+                                <span key={h} className="text-[10px] font-black uppercase tracking-widest text-gray-400">{h}</span>
+                            ))}
+                        </div>
+                        <div className="divide-y divide-gray-100">
+                            {employees.map((emp, i) => (
+                                <div key={emp.employee_id}
+                                    className="grid px-6 py-3.5 items-center hover:bg-gray-50 transition-colors cursor-pointer"
+                                    style={{ gridTemplateColumns: "1fr 150px 150px 100px 80px 36px" }}
+                                    onClick={() => { setSelected(emp); setDetailOpen(true); }}>
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                                            style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>
+                                            {initials(emp.username)}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-semibold text-[#004C8F] truncate">{emp.username}</p>
+                                            <p className="text-[11px] text-gray-400 truncate">{emp.email}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <Briefcase size={11} className="text-gray-400 shrink-0" />
+                                        <span className="text-[12px] text-gray-600 truncate">{emp.designation_name ?? "—"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <Building2 size={11} className="text-gray-400 shrink-0" />
+                                        <span className="text-[12px] text-gray-600 truncate">{emp.department_name ?? "—"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Calendar size={11} className="text-gray-400 shrink-0" />
+                                        <span className="text-[11px] text-gray-400">{formatDate(emp.date_of_joining)}</span>
+                                    </div>
+                                    {/* Use is_active boolean — NOT status_code which isn't in list response */}
+                                    <StatusBadge isActive={emp.is_active} />
+                                    <div className="flex justify-end">
+                                        <MoreHorizontal size={15} className="text-gray-400" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Pagination footer */}
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                    <p className="text-xs text-gray-500">
+                        {loading ? "Loading…" : pagination
+                            ? `Showing ${((page-1)*20)+1}–${Math.min(page*20, pagination.total)} of ${pagination.total} employees`
+                            : ""}
+                    </p>
+                    {pagination && pagination.total_pages > 1 && (
+                        <div className="flex items-center gap-1">
+                            <button disabled={!pagination.has_previous} onClick={() => setPage((p) => p-1)}
+                                className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-white disabled:opacity-40 transition-colors">
+                                Prev
+                            </button>
+                            <span className="px-3 py-1.5 text-xs font-bold text-[#004C8F]">{page} / {pagination.total_pages}</span>
+                            <button disabled={!pagination.has_next} onClick={() => setPage((p) => p+1)}
+                                className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-white disabled:opacity-40 transition-colors">
+                                Next
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <CreateEmployeeDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={load}
+                toast={toast} designations={designations} departments={departments} employees={employees} />
+            <EmployeeDetailDialog employee={selected} open={detailOpen} onClose={() => setDetailOpen(false)}
+                onUpdated={load} toast={toast} designations={designations} departments={departments}
+                statuses={statuses} employees={employees} />
+        </div>
+    );
+}
+
+// ─── Tab config ───────────────────────────────────────────────────────────────
+const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: "list", label: "Employees",    icon: <Users          className="w-4 h-4" /> },
+    { id: "bulk", label: "Bulk Import",  icon: <FileSpreadsheet className="w-4 h-4" /> },
+];
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+export default function EmployeesPage() {
+    const { toasts, show: toast } = useToast();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [tab, setTab] = useState<Tab>("list");
+
+    return (
+        <div className="flex h-screen overflow-hidden bg-white">
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+            <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+                <Navbar onMenuClick={() => setSidebarOpen(true)} />
+
+                <main className="flex-1 overflow-y-auto bg-white">
+
+                    {/* Page Header */}
+                    <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+                        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+                            <div>
+                                <Link href="/control-panel"
+                                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-[#004C8F] hover:text-white hover:border-[#004C8F] transition-all duration-150 mb-3 group">
+                                    <ChevronLeft size={13} className="group-hover:-translate-x-0.5 transition-transform duration-150" />
+                                    Back to Control Panel
+                                </Link>
+                                <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#E31837" }}>
+                                    Admin · Control Panel
+                                </p>
+                                <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
+                                    Employee Management
+                                </h1>
+                                <p className="text-sm text-gray-400 mt-1">
+                                    Create employees · Bulk import · Manage profiles &amp; hierarchy
+                                </p>
+                            </div>
+                            <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
+                                <span style={{ color: "#E31837" }}>A</span>
+                                <span style={{ color: "#004C8F" }}>abhar</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Red accent line */}
+                    <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+
+                    {/* Tab bar */}
+                    <div className="bg-white border-b border-gray-200 px-8 md:px-10">
+                        <div className="max-w-[1200px] mx-auto flex">
+                            {TABS.map((t) => {
+                                const active = tab === t.id;
+                                return (
+                                    <button key={t.id} onClick={() => setTab(t.id)}
+                                        className="flex items-center gap-2 px-5 py-4 text-sm font-semibold border-b-2 transition-all -mb-px"
+                                        style={active
+                                            ? { color: "#004C8F", borderColor: "#E31837" }
+                                            : { color: "#9CA3AF", borderColor: "transparent" }}>
+                                        {t.icon}{t.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
+                        <div className="max-w-[1200px] mx-auto">
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                                {tab === "list" && <EmployeeListSection toast={toast} />}
+                                {tab === "bulk" && <BulkImportSection   toast={toast} />}
+                            </div>
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+
+            <ToastContainer toasts={toasts} />
+        </div>
+    );
 }
