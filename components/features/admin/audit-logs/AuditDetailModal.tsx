@@ -1,12 +1,13 @@
 "use client";
 
+import { X } from "lucide-react";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { AuditLog } from "@/types/audit-types";
 import { OperationBadge } from "./AuditTable";
 
@@ -15,19 +16,55 @@ interface AuditDetailModalProps {
     onClose: () => void;
 }
 
-function JsonBlock({ label, data, hint }: { label: string; data: unknown; hint?: string }) {
-    if (!data) return (
-        <div className="mb-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{label}</p>
-            <p className="text-xs text-gray-300 italic px-3 py-2 bg-gray-50 rounded-xl border border-gray-100">{hint ?? "No data"}</p>
-        </div>
-    );
+// Renders a key-value object in a human-readable way
+function ChangeTable({ data, emptyMessage }: { data: unknown; emptyMessage: string }) {
+    if (!data || typeof data !== "object" || Object.keys(data as object).length === 0) {
+        return (
+            <p className="text-sm italic py-3 px-4 rounded-lg" style={{ color: "#9ca3af", backgroundColor: "#f9fafb", border: "1px solid #f3f4f6" }}>
+                {emptyMessage}
+            </p>
+        );
+    }
+
+    const entries = Object.entries(data as Record<string, unknown>);
+
     return (
-        <div className="mb-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{label}</p>
-            <pre className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-xs text-gray-700 overflow-x-auto whitespace-pre-wrap break-all leading-relaxed font-mono">
-                {JSON.stringify(data, null, 2)}
-            </pre>
+        <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #e5e7eb" }}>
+            <table className="w-full text-sm">
+                <thead>
+                    <tr style={{ backgroundColor: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
+                        <th className="text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wide" style={{ color: "#6b7280", width: "40%" }}>Field</th>
+                        <th className="text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wide" style={{ color: "#6b7280" }}>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {entries.map(([key, value], idx) => {
+                        // Format the key nicely
+                        const label = key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+                        // Format the value nicely
+                        let displayValue: string;
+                        if (value === null || value === undefined) {
+                            displayValue = "—";
+                        } else if (typeof value === "boolean") {
+                            displayValue = value ? "Yes" : "No";
+                        } else if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
+                            displayValue = new Date(value).toLocaleString();
+                        } else {
+                            displayValue = String(value);
+                        }
+
+                        return (
+                            <tr
+                                key={key}
+                                style={{ borderBottom: idx < entries.length - 1 ? "1px solid #f3f4f6" : "none" }}
+                            >
+                                <td className="px-4 py-2.5 font-medium text-sm" style={{ color: "#374151" }}>{label}</td>
+                                <td className="px-4 py-2.5 text-sm" style={{ color: "#111827" }}>{displayValue}</td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
         </div>
     );
 }
@@ -35,49 +72,110 @@ function JsonBlock({ label, data, hint }: { label: string; data: unknown; hint?:
 export function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
     if (!log) return null;
 
+    const employeeName = (log as any).employee_name || (log as any).performed_by_name || "Admin";
+
     return (
         <Dialog open={!!log} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
-                <DialogHeader className="px-6 py-5 border-b border-gray-100 shrink-0 bg-white sticky top-0 z-10">
-                    <DialogTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
-                        <OperationBadge op={log.operation_type} /> on &quot;{log.table_name}&quot;
-                    </DialogTitle>
-                    <DialogDescription className="text-xs text-gray-400 mt-0.5 font-mono">
-                        Log ID: {log.audit_id}
-                    </DialogDescription>
-                </DialogHeader>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 rounded-xl [&>button]:hidden" style={{ border: "none" }}>
 
-                <div className="p-6">
-                    {/* Summary grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                        {[
-                            { label: "When", value: new Date(log.performed_at).toLocaleString([], { dateStyle: "long", timeStyle: "medium" }) },
-                            { label: "Record ID", value: log.record_id, mono: true },
-                            { label: "Done by (Employee ID)", value: log.performed_by, mono: true },
-                            { label: "IP Address", value: log.ip_address ?? "Not recorded" },
-                        ].map(({ label, value, mono }) => (
-                            <div key={label} className="bg-slate-50 border border-slate-100 rounded-xl p-3.5">
-                                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">{label}</p>
-                                <p className={`text-sm text-gray-800 break-all ${mono ? "font-mono text-xs" : "font-medium"}`}>{value}</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="border-t border-gray-100 pt-4 space-y-4">
-                        <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
-                            What changed — <span className="normal-case font-normal text-gray-400">Before &amp; After comparison</span>
+                {/* Blue header */}
+                <div
+                    className="flex items-center justify-between px-6 py-4 sticky top-0 z-10"
+                    style={{ backgroundColor: "#1a4ab5" }}
+                >
+                    <div>
+                        <DialogTitle className="text-lg font-bold text-white">
+                            Activity Detail
+                        </DialogTitle>
+                        <p className="text-blue-200 text-xs mt-0.5">
+                            What happened and what changed
                         </p>
-                        <JsonBlock
-                            label="Before (Old Values)"
-                            data={log.old_values}
-                            hint="No previous values — this was a new record creation."
-                        />
-                        <JsonBlock
-                            label="After (New Values)"
-                            data={log.new_values}
-                            hint="No new values — this record was deleted."
-                        />
                     </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onClose}
+                        className="text-white hover:text-blue-200 hover:bg-transparent p-1 h-auto"
+                    >
+                        <X className="w-5 h-5" />
+                    </Button>
+                </div>
+
+                <div className="bg-white px-6 py-6 space-y-6">
+
+                    {/* Summary cards */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="rounded-lg px-4 py-3" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
+                            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#6b7280" }}>Done by</p>
+                            <p className="text-sm font-semibold" style={{ color: "#111827" }}>{employeeName}</p>
+                        </div>
+                        <div className="rounded-lg px-4 py-3" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
+                            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#6b7280" }}>Action</p>
+                            <OperationBadge op={log.operation_type} tableName={log.table_name} />
+                        </div>
+                        <div className="rounded-lg px-4 py-3" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
+                            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#6b7280" }}>Date & Time</p>
+                            <p className="text-sm font-semibold" style={{ color: "#111827" }}>
+                                {new Date(log.performed_at).toLocaleString([], { dateStyle: "long", timeStyle: "short" })}
+                            </p>
+                        </div>
+                        <div className="rounded-lg px-4 py-3" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
+                            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#6b7280" }}>IP Address</p>
+                            <p className="text-sm font-semibold font-mono" style={{ color: "#111827" }}>
+                                {log.ip_address ?? "Not recorded"}
+                            </p>
+                        </div>
+                        <div className="rounded-lg px-4 py-3 col-span-2" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
+                            <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#6b7280" }}>Section / Module</p>
+                            <p className="text-sm font-semibold" style={{ color: "#111827" }}>
+                                {log.table_name.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Before & After — human readable */}
+                    <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "1.25rem" }}>
+                        <p className="text-sm font-semibold mb-4" style={{ color: "#374151" }}>What changed</p>
+
+                        <div className="space-y-4">
+                            {log.operation_type !== "INSERT" && (
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#6b7280" }}>
+                                        Before the change
+                                    </p>
+                                    <ChangeTable
+                                        data={log.old_values}
+                                        emptyMessage="No previous data — this was a brand new record."
+                                    />
+                                </div>
+                            )}
+
+                            {log.operation_type !== "DELETE" && (
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#6b7280" }}>
+                                        {log.operation_type === "INSERT" ? "What was created" : "After the change"}
+                                    </p>
+                                    <ChangeTable
+                                        data={log.new_values}
+                                        emptyMessage="No new data recorded."
+                                    />
+                                </div>
+                            )}
+
+                            {log.operation_type === "DELETE" && (
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: "#6b7280" }}>
+                                        What was deleted
+                                    </p>
+                                    <ChangeTable
+                                        data={log.old_values}
+                                        emptyMessage="No data recorded for this deletion."
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
                 </div>
             </DialogContent>
         </Dialog>
