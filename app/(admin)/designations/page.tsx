@@ -64,24 +64,29 @@ export default function DesignationsPage() {
 
     return (
         <>
-            <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
-                <div
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 lg:px-6 py-4 rounded-xl"
-                    style={{ backgroundColor: "#1a4ab5" }}
-                >
-                    <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white tracking-wide">
-                        Manage Designations
-                    </h1>
-                    <Button
-                        onClick={openCreate}
-                        className="h-10 w-full sm:w-auto px-5 rounded-lg font-semibold text-white hover:opacity-90"
-                        style={{ backgroundColor: "#e8192c", border: "none" }}
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Designation
-                    </Button>
+            <main className="flex-1 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5">
+                {/* ─── Page Header (matches Employee page) ─── */}
+                <div>
+                    <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+                        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+                            <div>
+                                <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
+                                    Designations
+                                </h1>
+                                <p className="text-sm text-gray-400 mt-1">
+                                    Create and manage employee designations
+                                </p>
+                            </div>
+                            <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
+                                <span style={{ color: "#E31837" }}>A</span>
+                                <span style={{ color: "#004C8F" }}>abhar</span>
+                            </span>
+                        </div>
+                    </div>
+                    {/* Red accent line */}
+                    <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
                 </div>
-
+                <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
                 <DesignationStats total={totalCount} active={activeCount} avgLevel={avgLevel} />
 
                 <div className="bg-white rounded-xl shadow-sm px-3 sm:px-4 lg:px-6 py-4 sm:py-5 space-y-4">
@@ -113,6 +118,14 @@ export default function DesignationsPage() {
                             </Button>
                         )}
                         <Button
+                            onClick={openCreate}
+                            className="h-10 w-full sm:w-auto px-5 rounded-lg font-semibold text-white hover:opacity-90"
+                            style={{ backgroundColor: "#e8192c", border: "none" }}
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Designation
+                        </Button>
+                        <Button
                             variant="outline"
                             onClick={refresh}
                             className="h-10 w-full sm:w-10 sm:ml-auto p-0 rounded-lg border-slate-300 text-slate-500 hover:bg-slate-100"
@@ -141,6 +154,7 @@ export default function DesignationsPage() {
                         onPageChange={setPage}
                         onEdit={openEdit}
                     />
+                </div>
                 </div>
             </main>
 

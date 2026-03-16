@@ -25,8 +25,27 @@ export default function RolesPage() {
         <>
             <main className="flex-1 overflow-y-auto bg-white">
 
-                {/* Red accent line */}
-                {/* <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} /> */}
+                {/* ─── Page Header (matches Employee page) ─── */}
+                <div>
+                    <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+                        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+                            <div>
+                                <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
+                                    Roles &amp; Permissions
+                                </h1>
+                                <p className="text-sm text-gray-400 mt-1">
+                                    Manage roles, assignments and route permissions
+                                </p>
+                            </div>
+                            <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
+                                <span style={{ color: "#E31837" }}>A</span>
+                                <span style={{ color: "#004C8F" }}>abhar</span>
+                            </span>
+                        </div>
+                    </div>
+                    {/* Red accent line */}
+                    <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+                </div>
 
                 {/* ── Tab bar ── */}
                 <div className="bg-white border-b border-gray-200 px-3 sm:px-5 lg:px-8">
