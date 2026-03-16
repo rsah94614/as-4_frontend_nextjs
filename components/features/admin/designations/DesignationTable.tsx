@@ -32,7 +32,7 @@ export function DesignationTable({
                 </div>
             ) : (
                 <>
-                    <div className="space-y-3 md:hidden overflow-x-hidden">
+                    <div className="space-y-3 xl:hidden overflow-x-hidden">
                         {designations.map(desig => (
                             <div
                                 key={desig.designation_id}
@@ -92,7 +92,7 @@ export function DesignationTable({
                         ))}
                     </div>
 
-                    <div className="hidden md:block overflow-x-auto">
+                    <div className="hidden xl:block overflow-x-auto">
                         <table className="w-full min-w-[720px] text-sm">
                             <thead>
                                 <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
@@ -212,7 +212,7 @@ export function DesignationTable({
                             size="sm"
                             onClick={() => onPageChange(pagination.current_page - 1)}
                             disabled={!pagination.has_previous}
-                            className="hidden md:inline-flex h-8 px-4 rounded border-slate-300 text-slate-700"
+                            className="hidden xl:inline-flex h-8 px-4 rounded border-slate-300 text-slate-700"
                         >
                             Previous
                         </Button>
@@ -220,7 +220,7 @@ export function DesignationTable({
                             size="sm"
                             onClick={() => onPageChange(pagination.current_page + 1)}
                             disabled={!pagination.has_next}
-                            className="hidden md:inline-flex h-8 px-4 rounded font-semibold text-white hover:opacity-90"
+                            className="hidden xl:inline-flex h-8 px-4 rounded font-semibold text-white hover:opacity-90"
                             style={{ backgroundColor: "#1a4ab5", border: "none" }}
                         >
                             Next

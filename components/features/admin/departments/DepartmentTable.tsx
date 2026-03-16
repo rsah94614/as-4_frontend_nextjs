@@ -31,7 +31,7 @@ export function DepartmentTable({
                 </div>
             ) : (
                 <>
-                    <div className="space-y-3 md:hidden overflow-x-hidden">
+                    <div className="space-y-3 xl:hidden overflow-x-hidden">
                         {departments.map(dept => (
                             <div
                                 key={dept.department_id}
@@ -110,7 +110,7 @@ export function DepartmentTable({
                         ))}
                     </div>
 
-                    <div className="hidden md:block overflow-x-auto">
+                    <div className="hidden xl:block overflow-x-auto">
                         <table className="w-full min-w-[860px] text-sm">
                             <thead>
                                 <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
@@ -240,7 +240,7 @@ export function DepartmentTable({
                         <button
                             onClick={() => onPageChange(pagination.current_page - 1)}
                             disabled={!pagination.has_previous}
-                            className="hidden md:inline-flex px-4 py-1.5 text-sm font-medium rounded transition-all disabled:opacity-40 hover:bg-slate-50"
+                            className="hidden xl:inline-flex px-4 py-1.5 text-sm font-medium rounded transition-all disabled:opacity-40 hover:bg-slate-50"
                             style={{ border: "1.5px solid #d1d5db", color: "#374151", backgroundColor: "#fff" }}
                         >
                             Previous
@@ -248,7 +248,7 @@ export function DepartmentTable({
                         <button
                             onClick={() => onPageChange(pagination.current_page + 1)}
                             disabled={!pagination.has_next}
-                            className="hidden md:inline-flex px-4 py-1.5 text-sm font-semibold text-white rounded transition-all disabled:opacity-40 hover:opacity-90"
+                            className="hidden xl:inline-flex px-4 py-1.5 text-sm font-semibold text-white rounded transition-all disabled:opacity-40 hover:opacity-90"
                             style={{ backgroundColor: "#1a4ab5" }}
                         >
                             Next
