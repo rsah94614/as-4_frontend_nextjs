@@ -71,7 +71,7 @@ function ChangeTable({ data, emptyMessage }: { data: unknown; emptyMessage: stri
 export function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
     if (!log) return null;
 
-    const employeeName = log.employee_name || log.performed_by_name || "Admin";
+    const employeeName = (log as AuditLog & { employee_name?: string; performed_by_name?: string }).employee_name || (log as AuditLog & { employee_name?: string; performed_by_name?: string }).performed_by_name || "Admin";
 
     return (
         <Dialog open={!!log} onOpenChange={(open) => !open && onClose()}>

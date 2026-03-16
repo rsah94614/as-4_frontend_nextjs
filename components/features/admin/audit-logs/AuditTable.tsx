@@ -100,7 +100,7 @@ export function AuditTable({
                         </tr>
                     ) : (
                         logs.map((log, idx) => {
-                            const employeeName = log.employee_name || log.performed_by_name || "Admin";
+                            const employeeName = (log as AuditLog & { employee_name?: string; performed_by_name?: string }).employee_name || (log as AuditLog & { employee_name?: string; performed_by_name?: string }).performed_by_name || "Admin";
                             return (
                                 <tr
                                     key={log.audit_id}
