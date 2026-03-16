@@ -105,7 +105,7 @@ export default function ProtectedRoute({
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4 justify-center">
             <button
-               onClick={() => router.back()}
+              onClick={() => router.back()}
               className="px-6 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors shadow-sm"
             >
               <ArrowLeft size={16} />
