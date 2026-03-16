@@ -1,10 +1,9 @@
 "use client";
 
-import { Tags, Search, X, Plus, ArrowUpRight } from "lucide-react";
-
+import React, { useState } from "react";
+import { Search, X, Plus, ChevronDown } from "lucide-react";
 import { useRewardCategories } from "@/hooks/useRewardCategories";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 // Modular Components
 import { RewardStats } from "@/components/features/admin/rewards/UIHelpers";
@@ -32,113 +31,121 @@ export default function CategoriesPage() {
   } = useRewardCategories();
 
   return (
-    <>
-      <div className="h-[6px] shrink-0" style={{ background: '#a11027' }} />
-      <main className="flex-1 overflow-y-auto p-8 lg:p-12 space-y-10 scroll-smooth">
-        {/* Top Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-slate-100 animate-in fade-in slide-in-from-top-4 duration-700">
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-[#004C8F] rounded-xl flex items-center justify-center shadow-xl shadow-blue-100/50 group hover:rotate-6 transition-transform duration-500">
-                <Tags className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
-              </div>
-              <div>
-                <h1 className="text-5xl font-semibold tracking-tighter text-slate-900 leading-none">
-                  Reward <span className="text-[#004C8F]">Categories</span>
-                </h1>
-                <p className="text-[11px] font-semibold text-slate-600 mt-2 uppercase tracking-wider">
-                  Create and Manage the categories for reward items
-                </p>
-              </div>
-            </div>
-          </div>
+    <main className="flex-1 overflow-y-auto bg-white">
 
-          <Button
-            onClick={openCreate}
-            className="h-16 px-10 bg-[#004C8F] text-white rounded-xl text-xs font-semibold tracking-wider shadow-xl shadow-blue-100 hover:bg-[#003d73] transition-all hover:-translate-y-1 active:scale-95 group uppercase flex items-center gap-3 overflow-hidden border-none"
-          >
-            <Plus className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-            Build New Category
-            <ArrowUpRight className="w-4 h-4 translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
-          </Button>
+      {/* ─── Page Header ─── */}
+      <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
+              Reward Categories
+            </h1>
+            <p className="text-sm text-gray-400 mt-1">
+              Create and manage the categories for reward items
+            </p>
+          </div>
+          <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
+            <span style={{ color: "#E31837" }}>A</span>
+            <span style={{ color: "#004C8F" }}>abhar</span>
+          </span>
         </div>
+      </div>
 
-        {/* Stats Bar Container */}
-        <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-          {!loading && categories.length > 0 && (
-            <RewardStats
-              total={categories.length}
-              active={activeCount}
-              inactive={categories.length - activeCount}
-            />
-          )}
-        </div>
+      {/* Red accent line */}
+      <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
 
-        {/* Error Banner with Premium Styling */}
-        {error && !loading && (
-          <div className="bg-red-50 border-2 border-red-100/50 rounded-[32px] p-6 flex items-center justify-between gap-6 shadow-xl shadow-red-100/20 border-l-[12px] border-l-red-600 animate-in shake-in duration-500">
-            <div className="flex items-center gap-4 text-red-700">
-              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
-                <X className="w-6 h-6" />
+      {/* ─── Content Area ─── */}
+      <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
+        <div className="max-w-[1200px] mx-auto">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+
+            {/* Stats */}
+            {!loading && categories.length > 0 && (
+              <div className="mb-6">
+                <RewardStats
+                  total={categories.length}
+                  active={activeCount}
+                  inactive={categories.length - activeCount}
+                />
               </div>
-              <div className="space-y-1">
-                <p className="font-semibold text-lg tracking-tight">System Interrupt</p>
-                <p className="text-xs font-semibold uppercase tracking-wider opacity-80">{error}</p>
+            )}
+
+            {/* Error Banner */}
+            {error && !loading && (
+              <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 text-red-700">
+                  <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
+                    <X size={16} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold">Error</p>
+                    <p className="text-xs text-red-600">{error}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={refresh}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
+                  style={{ background: "#E31837" }}
+                >
+                  Retry
+                </button>
               </div>
-            </div>
-            <Button
-              onClick={refresh}
-              className="h-14 px-8 bg-red-600 text-white rounded-2xl text-[10px] font-semibold tracking-wider hover:bg-red-700 transition-all shadow-lg active:scale-95 border-none"
-            >
-              RE-INITIALIZE SYNC
-            </Button>
-          </div>
-        )}
+            )}
 
-        {/* Interactive Filtering Toolbar */}
-        <div className="flex flex-col lg:flex-row items-center gap-6 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
-          <div className="relative max-w-xs flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#004C8F] transition-colors pointer-events-none z-10" />
-            <Input
-              placeholder="Identify Category by Name or Logic Code..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-11 pl-11 pr-4 rounded-xl border border-slate-200 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white shadow-sm transition-all"
-            />
-          </div>
+            {/* ─── Toolbar ─── */}
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              {/* Search */}
+              <div className="relative flex-1 min-w-[200px] max-w-sm">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name or code…"
+                  className="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 transition-all"
+                />
+                {search && (
+                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
 
-          <div className="flex bg-white p-1 rounded-xl border border-slate-200 gap-1 shadow-sm h-11 w-full lg:max-w-max transition-all">
-            {(["all", "active", "inactive"] as const).map((filter) => (
+              {/* Filter dropdown */}
+              <div className="relative">
+                <select
+                  value={filterState}
+                  onChange={(e) => setFilterState(e.target.value as "all" | "active" | "inactive")}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium text-gray-600"
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Create button */}
               <button
-                key={filter}
-                onClick={() => setFilterState(filter)}
-                className={`px-6 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all duration-300 flex-1 whitespace-nowrap text-center ${filterState === filter
-                  ? "bg-slate-100 text-[#004C8F] shadow-inner"
-                  : "text-slate-400 hover:text-slate-900 hover:bg-slate-100"
-                  }`}
+                onClick={openCreate}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
+                style={{ background: "#E31837" }}
               >
-                {filter === "all" ? "All" : filter}
+                <Plus size={13} />
+                Build New Category
               </button>
-            ))}
+            </div>
+
+            {/* ─── Category Table ─── */}
+            <CategoryTable
+              categories={filtered}
+              loading={loading}
+              onEdit={openEdit}
+              openCreate={openCreate}
+              filterState={filterState}
+            />
           </div>
-
-
-
-
         </div>
-
-        {/* Central Grid System */}
-        <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
-          <CategoryTable
-            categories={filtered}
-            loading={loading}
-            onEdit={openEdit}
-            openCreate={openCreate}
-          />
-        </div>
-
-        <div className="h-20" /> {/* Bottom Spacing */}
-      </main>
+      </div>
 
       {/* Modal Logic */}
       {modal && (
@@ -149,6 +156,7 @@ export default function CategoriesPage() {
           onSave={handleSaved}
         />
       )}
-    </>
+    </main>
   );
 }
+
