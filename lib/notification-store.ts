@@ -42,8 +42,7 @@ import type { Notification } from "@/types/notification-types";
  * is only available in the browser, not during SSR.
  */
 function getAuthHeaders(): Record<string, string> {
-    if (typeof window === "undefined") return {};
-    const token = localStorage.getItem("access_token");
+    const token = auth.getAccessToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

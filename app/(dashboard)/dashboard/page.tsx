@@ -9,15 +9,13 @@ import UserDashboard from "@/components/layout/UserDashboard";
 
 
 export default function DashboardPage() {
-    const [isAdmin, setIsAdmin] = useState(false);
-
+    const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
     useEffect(() => {
         Promise.resolve().then(() => setIsAdmin(isAdminUser()));
     }, []);
 
+    if (isAdmin === null) return null;
     if (isAdmin) return <AdminDashboard />;
-
-
     return <UserDashboard />;
 }

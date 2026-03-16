@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { Loader2, Save, Package, CheckCircle2 } from "lucide-react";
-import { fetchWithAuth } from "@/services/auth-service";
+import { createAuthenticatedClient } from "@/lib/api-utils";
+
+const rewardsApiClient = createAuthenticatedClient("/api/proxy/rewards");
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Category, RewardItem } from "@/types/reward-types";
 import { RewardField } from "./UIHelpers";
@@ -23,7 +25,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-const API = process.env.NEXT_PUBLIC_REWARDS_API_URL ?? "http://localhost:8006";
 
 interface RewardModalProps {
     item?: RewardItem;
@@ -74,17 +75,13 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
         setSaving(true);
         setError(null);
         try {
-            const url = isEdit
-                ? `${API}/v1/rewards/catalog/${item!.catalog_id}`
-                : `${API}/v1/rewards/catalog`;
-            const method = isEdit ? "PATCH" : "POST";
             const body = isEdit
                 ? {
                     reward_name: form.reward_name,
                     description: form.description,
                     default_points: form.default_points,
-                    min_points: form.default_points, // Auto-sync
-                    max_points: form.default_points, // Auto-sync
+                    min_points: form.default_points,
+                    max_points: form.default_points,
                     is_active: form.is_active,
                 }
                 : {
@@ -93,19 +90,15 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
                     description: form.description,
                     category_id: form.category_id,
                     default_points: form.default_points,
-                    min_points: form.default_points, // Auto-sync
-                    max_points: form.default_points, // Auto-sync
+                    min_points: form.default_points,
+                    max_points: form.default_points,
                     available_stock: form.available_stock,
                 };
 
-            const r = await fetchWithAuth(url, { method, body: JSON.stringify(body) });
-            if (!r.ok) {
-                const d = await r.json();
-                throw new Error(
-                    Array.isArray(d.detail)
-                        ? d.detail.map((e: { msg?: string }) => e.msg).join(", ")
-                        : d.detail ?? "Request failed"
-                );
+            if (isEdit) {
+                await rewardsApiClient.patch(`/catalog/${item!.catalog_id}`, body);
+            } else {
+                await rewardsApiClient.post(`/catalog`, body);
             }
             onSave();
         } catch (e: unknown) {

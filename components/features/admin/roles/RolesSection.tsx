@@ -15,7 +15,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { rolesApi, type Role } from "@/services/roles-client";
+import { rolesApi, type Role } from "@/services/roles-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import type { ToastType } from "./UIHelpers";
 

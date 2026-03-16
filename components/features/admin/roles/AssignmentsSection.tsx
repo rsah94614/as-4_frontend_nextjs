@@ -19,7 +19,7 @@ import {
     employeeRolesApi,
     type Role,
     type EmployeeRole,
-} from "@/services/roles-client";
+} from "@/services/roles-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import type { ToastType } from "./UIHelpers";
 

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 import { AuditLog, AuditFilters } from "@/types/audit-types";
 import { PaginationMeta } from "@/types/pagination";
-import orgApiClient from "@/services/org-api-client";
+import { fetchAuditLogs } from "@/services/org-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { AuditTable } from "@/components/features/admin/audit-logs/AuditTable";
 import { AuditDetailModal } from "@/components/features/admin/audit-logs/AuditDetailModal";
@@ -41,20 +41,17 @@ export default function AuditLogsPage() {
         setLoading(true);
         setError(null);
         try {
-            const params: Record<string, string | number> = { page, limit: 10 };
-            if (filters.tableName) params.table_name = filters.tableName;
-            if (filters.operationType) params.operation_type = filters.operationType;
-            if (filters.performedBy) params.performed_by = filters.performedBy;
-            if (filters.startDate) params.start_date = new Date(filters.startDate).toISOString();
-            if (filters.endDate) params.end_date = new Date(filters.endDate).toISOString();
-
-            const res = await orgApiClient.get<{
-                data: AuditLog[];
-                pagination: PaginationMeta;
-            }>("/audit-logs", { params });
-
-            setLogs(res.data.data ?? []);
-            setPagination(res.data.pagination ?? null);
+            const { data, pagination } = await fetchAuditLogs({
+                page,
+                limit: 10,
+                ...(filters.tableName      && { table_name:      filters.tableName }),
+                ...(filters.operationType  && { operation_type:  filters.operationType }),
+                ...(filters.performedBy    && { performed_by:    filters.performedBy }),
+                ...(filters.startDate      && { start_date:      new Date(filters.startDate).toISOString() }),
+                ...(filters.endDate        && { end_date:        new Date(filters.endDate).toISOString() }),
+            });
+            setLogs(data);
+            setPagination(pagination ?? null);
         } catch (e: unknown) {
             setError(extractErrorMessage(e, "Could not load audit logs. Please check that the service is running."));
             setLogs([]);

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import orgApiClient from "@/services/org-api-client";
+import { fetchAuditLogs } from "@/services/org-service";
 import { extractErrorMessage } from "@/lib/error-utils";
-import { AuditLog, AuditFilters, AuditLogsResponse } from "@/types/audit-types";
+import { AuditLog, AuditFilters } from "@/types/audit-types";
 import { PaginationMeta } from "@/types/pagination";
 
 export function useAuditLogs() {
@@ -27,16 +27,17 @@ export function useAuditLogs() {
         setLoading(true);
         setError(null);
         try {
-            const params: Record<string, string | number> = { page, limit: 50 };
-            if (filters.tableName) params.table_name = filters.tableName;
-            if (filters.operationType) params.operation_type = filters.operationType;
-            if (filters.performedBy) params.performed_by = filters.performedBy;
-            if (filters.startDate) params.start_date = new Date(filters.startDate).toISOString();
-            if (filters.endDate) params.end_date = new Date(filters.endDate).toISOString();
-
-            const res = await orgApiClient.get<AuditLogsResponse>("/audit-logs", { params });
-            setLogs(res.data.data ?? []);
-            setPagination(res.data.pagination ?? null);
+            const { data, pagination } = await fetchAuditLogs({
+                page,
+                limit: 50,
+                ...(filters.tableName      && { table_name:      filters.tableName }),
+                ...(filters.operationType  && { operation_type:  filters.operationType }),
+                ...(filters.performedBy    && { performed_by:    filters.performedBy }),
+                ...(filters.startDate      && { start_date:      new Date(filters.startDate).toISOString() }),
+                ...(filters.endDate        && { end_date:        new Date(filters.endDate).toISOString() }),
+            });
+            setLogs(data);
+            setPagination(pagination ?? null);
         } catch (err) {
             const detail = extractErrorMessage(err, "Failed to load audit logs.");
             const s = (err as { response?: { status?: number } })?.response?.status;

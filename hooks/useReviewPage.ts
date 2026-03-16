@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { createAuthenticatedClient } from "@/lib/api-utils"
-import { uploadToStorage } from "@/services/s3"
+import { uploadToStorage } from "@/lib/s3"
 import { getTeamMembersForUI, type TeamMember } from "@/services/employee-service"
 import { requireAuthenticatedUserId } from "@/lib/api-utils"
 import { extractErrorMessage } from "@/lib/error-utils"
@@ -60,30 +60,30 @@ export function useReviewPage(): ReviewPageState {
         try { return requireAuthenticatedUserId() } catch { return "" }
     })
 
-    const [reviews, setReviews]         = useState<Review[]>([])
-    const [categories, setCategories]   = useState<ReviewCategory[]>([])
+    const [reviews, setReviews] = useState<Review[]>([])
+    const [categories, setCategories] = useState<ReviewCategory[]>([])
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
-    const [teamLeader, setTeamLeader]   = useState<TeamMember | null>(null)
+    const [teamLeader, setTeamLeader] = useState<TeamMember | null>(null)
     const [totalReviews, setTotalReviews] = useState(0)
-    const [page, setPage]               = useState(1)
-    const [totalPages, setTotalPages]   = useState(1)
+    const [page, setPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
     const [loadingData, setLoadingData] = useState(true)
-    const [dataError, setDataError]     = useState<string | null>(null)
+    const [dataError, setDataError] = useState<string | null>(null)
 
-    const [view, setView]                     = useState<ViewMode>("compose")
-    const [editingReview, setEditingReview]   = useState<Review | null>(null)
+    const [view, setView] = useState<ViewMode>("compose")
+    const [editingReview, setEditingReview] = useState<Review | null>(null)
 
     const [receiverId, setReceiverId] = useState("")
     const [categoryIds, setCategoryIds] = useState<string[]>([])
-    const [comment, setComment]         = useState("")
-    const [files, setFiles]             = useState<File[]>([])
+    const [comment, setComment] = useState("")
+    const [files, setFiles] = useState<File[]>([])
     const fileRef = useRef<HTMLInputElement>(null)
 
-    const [submitting, setSubmitting]     = useState(false)
-    const [toast, setToast]               = useState<ToastState | null>(null)
-    const [listTab, setListTabRaw]        = useState<"all" | "given" | "received">("all")
+    const [submitting, setSubmitting] = useState(false)
+    const [toast, setToast] = useState<ToastState | null>(null)
+    const [listTab, setListTabRaw] = useState<"all" | "given" | "received">("all")
     const [submittedData, setSubmittedData] = useState<SubmittedReviewData | null>(null)
-    const [filteredPage, setFilteredPage]   = useState(1)
+    const [filteredPage, setFilteredPage] = useState(1)
 
     // Reset filtered page when tab changes
     const setListTab = useCallback((tab: "all" | "given" | "received") => {
@@ -223,9 +223,9 @@ export function useReviewPage(): ReviewPageState {
                 setToast({ msg: "Review updated. Points recalculated automatically.", kind: "success" })
             } else {
                 await recognitionClient.post(`/reviews`, {
-                    receiver_id:  receiverId,
+                    receiver_id: receiverId,
                     category_ids: categoryIds,
-                    comment:      comment.trim(),
+                    comment: comment.trim(),
                     ...(imageUrl && { image_url: imageUrl }),
                     ...(videoUrl && { video_url: videoUrl }),
                 })
@@ -261,7 +261,7 @@ export function useReviewPage(): ReviewPageState {
     // Filter reviews by tab
     const allFilteredReviews = useMemo(() => {
         return reviews.filter((r) => {
-            if (listTab === "given")    return r.reviewer_id === myId
+            if (listTab === "given") return r.reviewer_id === myId
             if (listTab === "received") return r.receiver_id === myId
             return true
         })

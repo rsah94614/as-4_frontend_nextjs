@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { redeemReward } from "@/services/redeem-api";
+import { redeemReward } from "@/services/rewards-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { DialogState, RedemptionResponse } from "@/types/redeem-types";
 

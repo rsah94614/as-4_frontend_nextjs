@@ -8,19 +8,19 @@ import { createErrorResponse } from '@/lib/error-utils'
  * Storage keys for authentication tokens
  */
 const STORAGE_KEYS = {
-    ACCESS_TOKEN:     'access_token',
-    REFRESH_TOKEN:    'refresh_token',
-    USER:             'user',
+    ACCESS_TOKEN: 'access_token',
+    REFRESH_TOKEN: 'refresh_token',
+    USER: 'user',
     TOKEN_EXPIRES_AT: 'token_expires_at',
 } as const
 
 export const AUTH_ENDPOINTS = {
-    LOGIN:           '/login',
-    LOGOUT:          '/logout',
-    REFRESH:         '/refresh',
-    VALIDATE:        '/validate',
+    LOGIN: '/login',
+    LOGOUT: '/logout',
+    REFRESH: '/refresh',
+    VALIDATE: '/validate',
     FORGOT_PASSWORD: '/forgot-password',
-    RESET_PASSWORD:  '/reset-password',
+    RESET_PASSWORD: '/reset-password',
 } as const
 
 // 2. Create a module-level lock for concurrency
@@ -214,33 +214,19 @@ export async function resetPassword(token: string, newPassword: string) {
     }
 }
 
-/**
- * The User object stored in localStorage after login / token refresh.
- * Matches the `employee` field returned by the auth service on every
- * successful login or refresh response.
- *
- * FIX: Added `roles` — the backend includes the employee's role codes
- * (e.g. ["SUPER_ADMIN", "HR_ADMIN"] or ["EMPLOYEE"]) in the employee
- * payload. Without this field, useAuth() returned a user with no roles,
- * making every role check in page.tsx evaluate to false and hiding the
- * admin controls for all users regardless of their actual permissions.
- */
 export interface User {
-    employee_id:    string
-    username:       string
-    email:          string
+    employee_id: string
+    username: string
+    email: string
     designation_id: string | null
-    department_id:  string | null
-    // Role codes assigned to this employee, e.g. ["SUPER_ADMIN", "EMPLOYEE"].
-    // Populated from the login / refresh response and persisted in localStorage
-    // so role-gating works without a separate API call on every page load.
-    roles:          string[]
+    department_id: string | null
+    roles: string[]
 }
 
 export interface LoginResponse {
-    access_token:  string
+    access_token: string
     refresh_token: string
-    token_type:    string
-    expires_in:    number
-    employee:      User
+    token_type: string
+    expires_in: number
+    employee: User
 }
