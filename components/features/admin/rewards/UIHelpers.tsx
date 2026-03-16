@@ -81,22 +81,20 @@ export function RewardStats({
     ];
 
     return (
-        <div className="flex gap-4 mb-8">
+        <div className="flex flex-wrap items-center gap-2 mb-6">
             {stats.map((s) => (
-                <Card
+                <div
                     key={s.label}
-                    className="py-6 flex flex-col items-center justify-center gap-2 flex-1 border-2 border-slate-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 rounded-xl"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50"
                 >
-                    <div className={cn("w-4 h-4 rounded-full shadow-lg mb-2", s.color, s.shadow)} />
-                    <div className="flex flex-col items-center gap-2">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
-                            {s.label}
-                        </span>
-                        <span className="text-5xl font-black text-slate-800 leading-none">
-                            {s.value}
-                        </span>
-                    </div>
-                </Card>
+                    <div className={cn("w-2 h-2 rounded-full shrink-0", s.color)} />
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                        {s.label}
+                    </span>
+                    <span className="text-xs font-black text-gray-800 tabular-nums">
+                        {s.value}
+                    </span>
+                </div>
             ))}
         </div>
     );

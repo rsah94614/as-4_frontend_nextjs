@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Plus, Search, LayoutGrid, ArrowUpRight } from "lucide-react";
+import { Plus, Search, LayoutGrid, ChevronLeft, ChevronDown, X } from "lucide-react";
+import Link from "next/link";
 
 // 1. Swap fetchWithAuth for our Axios client builder
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Category, RewardItem, Pagination } from "@/types/reward-types";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 // Modular Components
@@ -87,98 +87,110 @@ export default function RewardsPage() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-8 lg:p-12 space-y-10 scroll-smooth">
-      {/* Top Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-slate-100 animate-in fade-in slide-in-from-top-4 duration-700">
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-[#004C8F] rounded-xl flex items-center justify-center shadow-xl shadow-blue-100/50 group hover:rotate-6 transition-transform duration-500">
-              <LayoutGrid className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
-            </div>
-            <div>
-              <h1 className="text-5xl font-semibold tracking-tighter text-slate-900 leading-none">
-                Reward <span className="text-[#004C8F]">Catalog</span>
-              </h1>
-              <p className="text-[11px] font-semibold text-slate-600 mt-2 uppercase tracking-wider">
-                Create and Manage individual items in your reward list
-              </p>
-            </div>
+    <main className="flex-1 overflow-y-auto bg-white">
+
+      {/* ─── Page Header (matches Employee page) ─── */}
+      <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
+              Reward Catalog
+            </h1>
+            <p className="text-sm text-gray-400 mt-1">
+              Create and manage individual items in your reward list
+            </p>
           </div>
+          <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
+            <span style={{ color: "#E31837" }}>A</span>
+            <span style={{ color: "#004C8F" }}>abhar</span>
+          </span>
         </div>
-
-        <Button
-          onClick={() => setModal("create")}
-          className="h-16 px-10 bg-[#004C8F] text-white rounded-xl text-xs font-semibold tracking-wider shadow-xl shadow-blue-100 hover:bg-[#003d73] transition-all hover:-translate-y-1 active:scale-95 group uppercase flex items-center gap-3 overflow-hidden border-none"
-        >
-          <Plus className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
-          Build New Reward
-          <ArrowUpRight className="w-4 h-4 translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300" />
-        </Button>
       </div>
-      {/* Toolbar */}
-      <div className="flex items-center gap-4 flex-wrap animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
-        <div className="relative max-w-xs flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#004C8F] transition-colors pointer-events-none z-10" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or code…"
-            className="w-full h-11 pl-11 pr-4 rounded-xl border border-slate-200 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white shadow-sm transition-all"
-          />
-        </div>
 
-        <div className="flex bg-white p-1 rounded-xl border border-slate-200 gap-1 shadow-sm h-11 w-full lg:max-w-max transition-all">
-          {(["all", "active", "inactive"] as const).map((filter) => (
-            <button
-              key={filter}
-              onClick={() => {
-                setFilterState(filter);
-                setPage(1);
+      {/* Red accent line */}
+      <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+
+      {/* ─── Content Area ─── */}
+      <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
+        <div className="max-w-[1200px] mx-auto">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+
+            {/* ─── Toolbar ─── */}
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              {/* Search */}
+              <div className="relative flex-1 min-w-[200px] max-w-sm">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name or code…"
+                  className="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 transition-all"
+                />
+                {search && (
+                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+
+              {/* Filter tabs */}
+              <div className="relative">
+                <select
+                  value={filterState}
+                  onChange={(e) => {
+                    setFilterState(e.target.value as "all" | "active" | "inactive");
+                    setPage(1);
+                  }}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium text-gray-600"
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Item count */}
+              {pagination && (
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full tabular-nums">
+                    {pagination.total} items
+                  </span>
+                </div>
+              )}
+
+              {/* Create button */}
+              <button
+                onClick={() => setModal("create")}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
+                style={{ background: "#E31837" }}
+              >
+                <Plus size={13} />
+                Build New Reward
+              </button>
+            </div>
+
+            {/* ─── Grid / Empty / Error / Loading ─── */}
+            <RewardGrid
+              items={filtered}
+              loading={loading}
+              error={error}
+              pagination={pagination}
+              page={page}
+              setPage={setPage}
+              onRetry={load}
+              onEdit={(item) => {
+                setSelected(item);
+                setModal("edit");
               }}
-              className={`px-6 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all duration-300 flex-1 whitespace-nowrap text-center ${filterState === filter
-                ? "bg-slate-100 text-[#004C8F] shadow-inner"
-                : "text-slate-400 hover:text-slate-900 hover:bg-slate-100"
-                }`}
-            >
-              {filter === "all" ? "All" : filter}
-            </button>
-          ))}
-        </div>
-
-        {pagination && (
-          <div className="ml-auto flex items-center gap-2 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span>{pagination.total} items</span>
-            <span className="text-slate-300">·</span>
-            <span>
-              Page {pagination.current_page} of {pagination.total_pages}
-            </span>
+              onRestock={(item) => {
+                setSelected(item);
+                setModal("restock");
+              }}
+              onCreateNew={() => setModal("create")}
+            />
           </div>
-        )}
-
-
-      </div>
-
-      {/* Grid / Empty / Error / Loading */}
-      <div className="animate-in fade-in duration-700 delay-200">
-        <RewardGrid
-          items={filtered}
-          loading={loading}
-          error={error}
-          pagination={pagination}
-          page={page}
-          setPage={setPage}
-          onRetry={load}
-          onEdit={(item) => {
-            setSelected(item);
-            setModal("edit");
-          }}
-          onRestock={(item) => {
-            setSelected(item);
-            setModal("restock");
-          }}
-          onCreateNew={() => setModal("create")}
-        />
+        </div>
       </div>
 
       {/* Modals */}
