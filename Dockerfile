@@ -1,10 +1,8 @@
 # Stage 1: Base image using Node 20 (matching your CI/CD tools)
-FROM node:20-alpine AS base
+FROM node:20-bookworm-slim AS base
 
 # Stage 2: Install dependencies
 FROM base AS deps
-# libc6-compat is required by some Node modules on Alpine Linux
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
