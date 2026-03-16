@@ -12,7 +12,7 @@ export default function ReviewPage() {
   const { weight: reviewerWeight } = useReviewerWeight()
 
   return (
-    <div className="flex-1 w-full min-h-screen bg-white">
+    <div className="flex-1 w-full bg-white rounded-[20px] overflow-hidden min-h-[calc(100vh-2rem)] sm:min-h-[calc(100vh-3rem)]">
 
       {/* ── Page Header ── */}
       <div className="bg-white border-b border-gray-200 px-4 sm:px-6 md:px-10 py-4 sm:py-5">
