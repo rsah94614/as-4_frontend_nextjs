@@ -31,7 +31,7 @@ function HowItWorks() {
             <button
                 type="button"
                 onClick={() => setOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-4 sm:px-6 py-3.5 hover:bg-gray-50 transition-colors"
             >
                 <div className="flex items-center gap-2">
                     <Info size={13} className="text-[#E31837]" />
@@ -43,7 +43,7 @@ function HowItWorks() {
                 <div className="border-t border-gray-100">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
                         {HOW_IT_WORKS.map((s) => (
-                            <div key={s.n} className="flex gap-3 px-5 py-4">
+                            <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-4">
                                 <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
                                 <div>
                                     <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
@@ -164,7 +164,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
 
             {/* Role selector card */}
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-4">
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-wrap items-center gap-2">
                     <Lock size={14} className="text-[#004C8F]" />
                     <h2 className="text-sm font-bold text-[#004C8F]">Route Permissions</h2>
                     {!loading && selectedRole && (
@@ -174,7 +174,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
                     )}
                 </div>
 
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                     {loading ? (
                         <div className="flex gap-2 flex-wrap">
                             {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-9 w-28 rounded-lg" />)}
@@ -224,11 +224,11 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
 
             {/* Two-panel editor — full width, 50/50 split */}
             {!loading && selectedRole && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     {/* ── Assigned panel ── */}
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                        <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+                        <div className="px-4 sm:px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-bold text-[#004C8F]">Assigned Routes</p>
                                 <p className="text-[10px] text-gray-400 mt-0.5 font-mono">{selectedRole.role_code}</p>
@@ -239,7 +239,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
                         </div>
 
                         {/* Search */}
-                        <div className="px-4 py-2.5 border-b border-gray-100">
+                        <div className="px-3 sm:px-4 py-2.5 border-b border-gray-100">
                             <div className="relative">
                                 <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
@@ -261,7 +261,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
                             ) : assignedFiltered.map((routeKey) => (
                                 <div
                                     key={routeKey}
-                                    className="flex items-center justify-between px-4 py-2.5 hover:bg-red-50/40 group transition-colors"
+                                    className="flex items-center justify-between px-3 sm:px-4 py-2.5 hover:bg-red-50/40 group transition-colors"
                                 >
                                     <div className="flex flex-col min-w-0 gap-0.5">
                                         {titleMap[routeKey] && (
@@ -274,7 +274,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
                                         disabled={removing === routeKey}
                                         aria-label={`Remove ${routeKey}`}
                                         className="ml-2 shrink-0 w-6 h-6 rounded flex items-center justify-center
-                                            opacity-0 group-hover:opacity-100 transition-all disabled:opacity-40 hover:bg-red-100"
+                                            opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all disabled:opacity-40 hover:bg-red-100"
                                         style={{ color: "#E31837" }}
                                     >
                                         {removing === routeKey
@@ -288,7 +288,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
 
                     {/* ── Available panel ── */}
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                        <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+                        <div className="px-4 sm:px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-bold text-gray-700">Available Routes</p>
                                 <p className="text-[10px] text-gray-400 mt-0.5">Click + to grant access</p>
@@ -299,7 +299,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
                         </div>
 
                         {/* Search */}
-                        <div className="px-4 py-2.5 border-b border-gray-100">
+                        <div className="px-3 sm:px-4 py-2.5 border-b border-gray-100">
                             <div className="relative">
                                 <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <input
@@ -321,7 +321,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
                             ) : availableFiltered.map((routeKey) => (
                                 <div
                                     key={routeKey}
-                                    className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 group transition-colors"
+                                    className="flex items-center justify-between px-3 sm:px-4 py-2.5 hover:bg-gray-50 group transition-colors"
                                 >
                                     <div className="flex flex-col min-w-0 gap-0.5">
                                         {titleMap[routeKey] && (
@@ -334,7 +334,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
                                         disabled={adding === routeKey}
                                         aria-label={`Add ${routeKey}`}
                                         className="ml-2 shrink-0 w-6 h-6 rounded flex items-center justify-center
-                                            opacity-0 group-hover:opacity-100 transition-all disabled:opacity-40
+                                            opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all disabled:opacity-40
                                             hover:bg-green-100 text-emerald-600"
                                     >
                                         {adding === routeKey

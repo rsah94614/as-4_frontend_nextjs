@@ -46,7 +46,7 @@ function HowItWorks() {
             <button
                 type="button"
                 onClick={() => setOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-4 sm:px-6 py-3.5 hover:bg-gray-50 transition-colors"
             >
                 <div className="flex items-center gap-2">
                     <Info size={13} className="text-[#E31837]" />
@@ -61,7 +61,7 @@ function HowItWorks() {
                 <div className="border-t border-gray-100">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
                         {HOW_IT_WORKS.map((s) => (
-                            <div key={s.n} className="flex gap-3 px-5 py-4">
+                            <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-4">
                                 <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
                                 <div>
                                     <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
@@ -121,7 +121,7 @@ export function RolesSection({ toast }: RolesSectionProps) {
 
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                 {/* Card header */}
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-2">
                         <Shield size={14} className="text-[#004C8F]" />
                         <h2 className="text-sm font-bold text-[#004C8F]">System Roles</h2>
@@ -133,14 +133,14 @@ export function RolesSection({ toast }: RolesSectionProps) {
                     </div>
                     <button
                         onClick={() => setOpen(true)}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
+                        className="flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
                         style={{ background: "#E31837" }}
                     >
                         <Plus size={13} /> New Role
                     </button>
                 </div>
 
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                     {loading ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
@@ -159,7 +159,7 @@ export function RolesSection({ toast }: RolesSectionProps) {
                             </button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 cursor-pointer">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 cursor-pointer">
                             {roles.map((role, i) => {
                                 const theme = CARD_THEMES[i % CARD_THEMES.length];
                                 return (
@@ -199,12 +199,12 @@ export function RolesSection({ toast }: RolesSectionProps) {
                                             </p>
 
                                             {/* Footer */}
-                                            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                                            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
                                                 <span className="text-[10px] font-bold uppercase tracking-widest"
                                                     style={{ color: theme.accent }}>
                                                     Role
                                                 </span>
-                                                <div className="h-1 w-8 rounded-full" style={{ background: theme.lightBg }}>
+                                                <div className="h-1 w-8 shrink-0 rounded-full" style={{ background: theme.lightBg }}>
                                                     <div className="h-1 w-0 rounded-full group-hover:w-full transition-all duration-300"
                                                         style={{ background: theme.accent }} />
                                                 </div>
@@ -218,13 +218,13 @@ export function RolesSection({ toast }: RolesSectionProps) {
                 </div>
 
                 {/* Footer bar */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <p className="text-xs text-gray-500">
                         {loading ? "Loading roles…" : `${roles.length} role${roles.length !== 1 ? "s" : ""} configured`}
                     </p>
                     <button
                         onClick={() => setOpen(true)}
-                        className="flex items-center gap-1 text-xs font-semibold text-[#004C8F] hover:text-[#E31837] transition-colors"
+                        className="flex items-center gap-1 text-xs font-semibold text-[#004C8F] hover:text-[#E31837] transition-colors w-fit"
                     >
                         <Plus size={12} /> Add another
                     </button>
@@ -244,7 +244,7 @@ export function RolesSection({ toast }: RolesSectionProps) {
                     </div>
                     <div className="h-0.5" style={{ background: "#E31837" }} />
 
-                    <div className="p-6 space-y-4 bg-white">
+                    <div className="p-4 sm:p-6 space-y-4 bg-white">
                         <div className="space-y-1.5">
                             <Label htmlFor="role_name" className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
                                 Role Name <span style={{ color: "#E31837" }}>*</span>
@@ -276,13 +276,13 @@ export function RolesSection({ toast }: RolesSectionProps) {
                         </div>
                     </div>
 
-                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+                    <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3">
                         <Button variant="outline" onClick={() => setOpen(false)} disabled={submitting}
-                            className="border-gray-200 text-xs font-semibold">
+                            className="border-gray-200 text-xs font-semibold w-full sm:w-auto">
                             Cancel
                         </Button>
                         <button onClick={handleCreate} disabled={submitting}
-                            className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                            className="flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 w-full sm:w-auto"
                             style={{ background: "#004C8F" }}>
                             {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                             Create Role

@@ -46,3 +46,5 @@ export interface Pagination {
     has_next: boolean;
     has_previous: boolean;
 }
+
+export type CategoryFilter = "all" | "active" | "inactive";

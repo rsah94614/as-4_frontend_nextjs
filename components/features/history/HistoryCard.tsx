@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 
 import {
     CARD_CONTAINER,
-    HDFC_BLUE,
-    HDFC_RED
+    SUCCESS_GREEN,
+    DESTRUCTIVE_RED
 } from "./history-styles";
 
 interface HistoryCardProps {
@@ -18,8 +18,11 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
     const isRedemption = !!item.reward_catalog;
 
     // Mimic the ReviewCard top-stripe and direction badge logic
-    const stripeColor = isRedemption ? HDFC_RED : HDFC_BLUE;
-    const badgeBg = isRedemption ? "bg-[#E31837]/8 text-[#E31837]" : "bg-[#004C8F]/8 text-[#004C8F]";
+    // Earned (Points) = Green, Redeemed = Red
+    const stripeColor = isRedemption ? DESTRUCTIVE_RED : SUCCESS_GREEN;
+    const badgeBg = isRedemption 
+        ? "bg-red-50 text-red-600 border-red-100" 
+        : "bg-green-50 text-green-600 border-green-100";
 
     return (
         <button
@@ -40,7 +43,7 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
                     <div className="flex items-center gap-2 mb-2">
                         {/* Direction badge mimicking ReviewCard */}
                         <span className={cn(
-                            "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded",
+                            "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded border",
                             badgeBg
                         )}>
                             {isRedemption

@@ -37,7 +37,7 @@ export function AuditFilterPanel({ onApply, onClear, initialFilters }: AuditFilt
     const inputClass = "h-10 rounded-lg border-slate-300 focus-visible:ring-0 focus-visible:border-[#1a4ab5]";
 
     return (
-        <div className="bg-white rounded-xl shadow-sm px-6 py-5 space-y-4" style={{ border: "1px solid #e5e7eb" }}>
+        <div className="bg-white rounded-xl shadow-sm px-3 sm:px-4 lg:px-6 py-4 sm:py-5 space-y-4 overflow-x-hidden" style={{ border: "1px solid #e5e7eb" }}>
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold" style={{ color: "#374151" }}>Filter Audit Logs</h3>
                 {hasStaged && (
@@ -54,7 +54,7 @@ export function AuditFilterPanel({ onApply, onClear, initialFilters }: AuditFilt
             {/* Info banner about employee filter */}
             <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg text-xs" style={{ backgroundColor: "#eff6ff", border: "1px solid #bfdbfe", color: "#1a4ab5" }}>
                 <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                <span>
+                <span className="break-words">
                     <strong>Note:</strong> To filter by a specific employee, paste their Employee ID (UUID) from the Employees page into the Employee ID field.
                 </span>
             </div>
