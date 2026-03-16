@@ -24,7 +24,7 @@ export default function ProtectedRoute({
 }: ProtectedRouteProps) {
   const router = useRouter()
   const [isChecking, setIsChecking] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [, setIsAuthenticated] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function ProtectedRoute({
       // 1. Check current token
       if (auth.isAuthenticated()) {
         authed = true
-      } 
+      }
       // 2. Try refresh if expired
       else if (auth.getRefreshToken()) {
         const refreshed = await auth.refreshAccessToken()
@@ -100,14 +100,14 @@ export default function ProtectedRoute({
               Access Restricted
             </h1>
             <p className="text-gray-500 text-sm leading-relaxed px-4">
-              It looks like you don&apos;t have the necessary administrative permissions to view this section. 
+              It looks like you don&apos;t have the necessary administrative permissions to view this section.
               Please contact your HR manager if you believe this is an error.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4 justify-center">
             <button
-               onClick={() => router.back()}
+              onClick={() => router.back()}
               className="px-6 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors shadow-sm"
             >
               <ArrowLeft size={16} />
@@ -131,4 +131,4 @@ export default function ProtectedRoute({
   }
 
   return <>{children}</>
-}
+}
