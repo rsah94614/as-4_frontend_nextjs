@@ -12,7 +12,7 @@
  */
 
 import { createAuthenticatedClient } from "@/lib/api-utils";
-import { uploadToStorage } from "@/services/cloudinary";
+import { uploadToStorage } from "@/services/s3";
 import { requireAuthenticatedUserId, categorizeFileUrls } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 import type { ReviewResponse, PaginatedReviewResponse } from "@/types/review";

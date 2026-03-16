@@ -3,7 +3,7 @@
 // NO rating field — points are derived entirely from category multipliers × reviewer weight.
 
 import { createAuthenticatedClient } from '@/lib/api-utils'
-import { uploadToStorage } from './cloudinary'
+import { uploadToStorage } from './s3'
 import { extractErrorMessage } from '@/lib/error-utils'
 
 const recognitionClient = createAuthenticatedClient('/api/proxy/recognition')
