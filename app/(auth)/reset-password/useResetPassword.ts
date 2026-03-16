@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { resetPassword } from '@/services/auth-service'
+import { extractErrorMessage } from '@/lib/error-utils'
 
 type Errors = {
   newPassword?: string
@@ -64,7 +65,7 @@ export function useResetPassword(
       setSuccess(true)
       onSuccess()
     } catch (err: unknown) {
-      setErrors({ general: err instanceof Error ? err.message : 'Something went wrong' })
+      setErrors({ general: extractErrorMessage(err, 'Something went wrong') })
     } finally {
       setLoading(false)
     }

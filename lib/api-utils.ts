@@ -6,6 +6,7 @@
 
 import axios, { type AxiosInstance } from "axios";
 import { auth } from "@/services/auth-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 
 // ─── Axios Client Factory ─────────────────────────────────────────────────────
 
@@ -178,11 +179,7 @@ export function extractApiError(
     error: unknown,
     fallback = "Request failed"
 ): string {
-    const axiosErr = error as {
-        response?: { data?: { detail?: string } };
-        message?: string;
-    };
-    return axiosErr.response?.data?.detail || axiosErr.message || fallback;
+    return extractErrorMessage(error, fallback);
 }
 
 // ─── Review Input Validation ──────────────────────────────────────────────────

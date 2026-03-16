@@ -2,6 +2,7 @@
 
 import axios from 'axios' // 1. Import bare axios to bypass interceptors!
 import axiosClient from './api-client'
+import { createErrorResponse } from '@/lib/error-utils'
 
 /**
  * Storage keys for authentication tokens
@@ -186,26 +187,18 @@ export async function login(email: string, password: string) {
             data.employee,
             data.expires_in
         )
-        return { success: true, data }
-    } catch (error: unknown) {
-        const axiosErr = error as { response?: { data?: { error?: { message?: string }; detail?: string } } };
-        return {
-            success: false,
-            error: axiosErr.response?.data?.error?.message || axiosErr.response?.data?.detail || 'Login failed'
-        }
+        return { success: true as const, data }
+    } catch (error) {
+        return createErrorResponse(error, 'Login failed');
     }
 }
 
 export async function forgotPassword(email: string) {
     try {
         const response = await axiosClient.post(AUTH_ENDPOINTS.FORGOT_PASSWORD, { email })
-        return { success: true, data: response.data }
-    } catch (error: unknown) {
-        const axiosErr = error as { response?: { data?: { error?: { message?: string }; detail?: string } } };
-        return {
-            success: false,
-            error: axiosErr.response?.data?.error?.message || axiosErr.response?.data?.detail || 'Failed to send reset email'
-        }
+        return { success: true as const, data: response.data }
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to send reset email');
     }
 }
 
@@ -215,13 +208,9 @@ export async function resetPassword(token: string, newPassword: string) {
             token,
             new_password: newPassword,
         })
-        return { success: true, data: response.data }
-    } catch (error: unknown) {
-        const axiosErr = error as { response?: { data?: { error?: { message?: string }; detail?: string } } };
-        return {
-            success: false,
-            error: axiosErr.response?.data?.error?.message || axiosErr.response?.data?.detail || 'Failed to reset password'
-        }
+        return { success: true as const, data: response.data }
+    } catch (error) {
+        return createErrorResponse(error, 'Failed to reset password');
     }
 }
 

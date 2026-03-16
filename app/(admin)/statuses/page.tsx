@@ -10,7 +10,7 @@ import {
   ENTITY_META,
 } from "@/types/status-types";
 import { Button } from "@/components/ui/button";
-import { extractApiError } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 // Modular Components
 import { PageShell, InfoBanner, FlashBanner } from "@/components/features/admin/statuses/UIHelpers";
 import { StatusTable, type EditForm } from "@/components/features/admin/statuses/StatusTable";
@@ -40,7 +40,7 @@ export default function StatusesPage() {
       const res = await orgApiClient.get<Status[]>("/statuses", { params });
       setStatuses(Array.isArray(res.data) ? res.data : []);
    } catch (e: unknown) {
-     showFlash(extractApiError(e, "Could not load statuses. Please refresh."), "error");
+     showFlash(extractErrorMessage(e, "Could not load statuses. Please refresh."), "error");
 } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export default function StatusesPage() {
       showFlash("Status created successfully.");
       fetchStatuses();
    } catch (e: unknown) {
-     showFlash(extractApiError(e, "Could not create status. Please try again."), "error");
+     showFlash(extractErrorMessage(e, "Could not create status. Please try again."), "error");
 } finally {
       setSaving(false);
     }
@@ -86,7 +86,7 @@ export default function StatusesPage() {
       showFlash("Status updated successfully.");
       fetchStatuses();
    } catch (e: unknown) {
-     showFlash(extractApiError(e, "Could not update status. Please try again."), "error");
+     showFlash(extractErrorMessage(e, "Could not update status. Please try again."), "error");
      } finally {
       setSaving(false);
     }

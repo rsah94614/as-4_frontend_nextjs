@@ -22,6 +22,7 @@ import {
     UpdateDepartmentPayload,
 } from "@/types/department-types";
 import { departmentService } from "@/services/department-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 
 interface DepartmentModalProps {
     open: boolean;
@@ -104,8 +105,7 @@ export function DepartmentModal({
             onSuccess();
             onClose();
         } catch (err: unknown) {
-            const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Operation failed.";
-            setError(detail);
+            setError(extractErrorMessage(err));
         } finally {
             setSubmitting(false);
         }

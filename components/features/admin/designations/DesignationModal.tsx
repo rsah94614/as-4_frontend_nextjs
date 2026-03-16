@@ -17,6 +17,7 @@ import {
     UpdateDesignationPayload,
 } from "@/types/designation-types";
 import { designationService } from "@/services/designation-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { Field } from "./UIHelpers";
 
 interface DesignationModalProps {
@@ -100,8 +101,7 @@ export function DesignationModal({
             onSuccess();
             onClose();
         } catch (err: unknown) {
-            const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Operation failed.";
-            setError(detail);
+            setError(extractErrorMessage(err));
         } finally {
             setSubmitting(false);
         }

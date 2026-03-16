@@ -17,6 +17,7 @@ import {
     Calendar,
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
+import { extractErrorMessage } from "@/lib/error-utils";
 import type {
     Notification,
     NotificationType,
@@ -130,8 +131,8 @@ async function postAnnouncement(payload: AnnouncementRequest): Promise<Announcem
         body: JSON.stringify(payload),
     });
     if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.detail ?? `Failed (${res.status})`);
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(errData, `Failed (${res.status})`));
     }
     return res.json();
 }
@@ -185,8 +186,8 @@ async function getDigest(weekStart?: string, managerId?: string): Promise<Weekly
         headers: { ...getAuthHeaders() },
     });
     if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.detail ?? `Failed (${res.status})`);
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(errData, `Failed (${res.status})`));
     }
     return res.json();
 }
@@ -206,8 +207,8 @@ async function postDigest(payload: DigestEmailRequest): Promise<DigestResponse> 
         body: JSON.stringify(body),
     });
     if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.detail ?? `Failed (${res.status})`);
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(errData, `Failed (${res.status})`));
     }
     return res.json();
 }
@@ -434,7 +435,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
             setDeptError(null);
             fetchDepartments()
                 .then(setDepartments)
-                .catch(e => setDeptError(e instanceof Error ? e.message : "Failed to load departments"))
+                .catch(e => setDeptError(extractErrorMessage(e, "Failed to load departments")))
                 .finally(() => setDeptLoading(false));
         }
     }
@@ -465,7 +466,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
             setEmpError(null);
             fetchEmployeeOptions(value.trim())
                 .then(setEmpResults)
-                .catch(e => setEmpError(e instanceof Error ? e.message : "Failed to search employees"))
+                .catch(e => setEmpError(extractErrorMessage(e, "Failed to search employees")))
                 .finally(() => setEmpLoading(false));
         }, 350);
     }
@@ -506,7 +507,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
             } catch (err: unknown) {
                 setResult({
                     type: "error",
-                    text: err instanceof Error ? err.message : "An unexpected error occurred.",
+                    text: extractErrorMessage(err, "An unexpected error occurred."),
                 });
             }
         });
@@ -810,7 +811,7 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
             } catch (err: unknown) {
                 setResult({
                     type: "error",
-                    text: err instanceof Error ? err.message : "Failed to fetch digest.",
+                    text: extractErrorMessage(err, "Failed to fetch digest."),
                 });
             }
         });
@@ -832,7 +833,7 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
             } catch (err: unknown) {
                 setResult({
                     type: "error",
-                    text: err instanceof Error ? err.message : "Failed to send digest.",
+                    text: extractErrorMessage(err, "Failed to send digest."),
                 });
             }
         });

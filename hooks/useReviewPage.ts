@@ -5,6 +5,7 @@ import { createAuthenticatedClient } from "@/lib/api-utils"
 import { uploadToStorage } from "@/services/cloudinary"
 import { getTeamMembersForUI, type TeamMember } from "@/services/employee-service"
 import { requireAuthenticatedUserId } from "@/lib/api-utils"
+import { extractErrorMessage } from "@/lib/error-utils"
 import type { Review, ReviewCategory, ViewMode, ToastState, SubmittedReviewData } from "@/types/review-types"
 
 const recognitionClient = createAuthenticatedClient("/api/proxy/recognition")
@@ -115,8 +116,8 @@ export function useReviewPage(): ReviewPageState {
             setTotalPages(res.data.pagination.total_pages)
             setPage(pg)
             setFilteredPage(1)
-        } catch {
-            setDataError("Failed to load reviews. Check your connection.")
+        } catch (err) {
+            setDataError(extractErrorMessage(err, "Failed to load reviews. Check your connection."))
         }
     }, [])
 
@@ -249,10 +250,8 @@ export function useReviewPage(): ReviewPageState {
             } else {
                 backToList()
             }
-        } catch (err: unknown) {
-            const detail =
-                (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
-                (err instanceof Error ? err.message : "Submission failed.")
+        } catch (err) {
+            const detail = extractErrorMessage(err, "Submission failed.");
             setToast({ msg: detail, kind: "error" })
         } finally {
             setSubmitting(false)

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AuditLog, AuditFilters } from "@/types/audit-types";
 import { PaginationMeta } from "@/types/pagination";
 import orgApiClient from "@/services/org-api-client";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { AuditTable } from "@/components/features/admin/audit-logs/AuditTable";
 import { AuditDetailModal } from "@/components/features/admin/audit-logs/AuditDetailModal";
 import { AuditFilterPanel } from "@/components/features/admin/audit-logs/AuditFilters";
@@ -54,13 +55,8 @@ export default function AuditLogsPage() {
             setLogs(res.data.data ?? []);
             // Backend already returns the correct PaginationMeta shape — use it directly, no remapping
             setPagination(res.data.pagination ?? null);
-
         } catch (e: unknown) {
-            const s = (e as { response?: { status?: number } })?.response?.status;
-            setError(s === 401
-                ? "Your session has expired. Please log in again."
-                : "Could not load audit logs. Please check that the service is running."
-            );
+            setError(extractErrorMessage(e, "Could not load audit logs. Please check that the service is running."));
             setLogs([]);
         } finally {
             setLoading(false);

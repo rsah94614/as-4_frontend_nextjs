@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { useToast, ToastContainer } from "@/components/features/admin/roles/UIHelpers";
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { auth } from "@/services/auth-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 
 // ─── API clients ──────────────────────────────────────────────────────────────
 const empClient = createAuthenticatedClient("/api/proxy/employees");
@@ -37,8 +38,8 @@ async function authBulkImport(file: File) {
         body: form,
     });
     if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error((err as { detail?: string }).detail ?? `HTTP ${res.status}`);
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(errorData, `HTTP ${res.status}`));
     }
     return res.json() as Promise<BulkImportResponse>;
 }
@@ -227,8 +228,8 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
                 }),
             }).then(async (res) => {
                 if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    throw new Error((err as { detail?: string }).detail ?? `HTTP ${res.status}`);
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(extractErrorMessage(errorData, `HTTP ${res.status}`));
                 }
             });
             toast("Employee created successfully");
@@ -236,7 +237,7 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
             setForm({ username: "", email: "", password: "", designation_id: "", department_id: "", manager_id: "", date_of_joining: "", date_of_birth: "" });
             onCreated();
         } catch (e: unknown) {
-            toast((e as Error).message ?? "Failed to create employee", "error");
+            toast(extractErrorMessage(e, "Failed to create employee"), "error");
         } finally {
             setSub(false);
         }
@@ -379,8 +380,7 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
             setEditing(false);
             onUpdated();
         } catch (e: unknown) {
-            const err = e as { response?: { data?: { detail?: string } }; message?: string };
-            toast(err.response?.data?.detail || err.message || "Update failed", "error");
+            toast(extractErrorMessage(e, "Update failed"), "error");
         } finally { setSub(false); }
     };
 
@@ -391,8 +391,7 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
             toast("Employee deactivated");
             onClose(); onUpdated();
         } catch (e: unknown) {
-            const err = e as { response?: { data?: { detail?: string } }; message?: string };
-            toast(err.response?.data?.detail || err.message || "Deactivation failed", "error");
+            toast(extractErrorMessage(e, "Deactivation failed"), "error");
         } finally { setDeact(false); }
     };
 
@@ -545,7 +544,7 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
             if (res.failed === 0) toast(`All ${res.succeeded} employees created successfully`);
             else toast(`${res.succeeded} created, ${res.failed} failed — review errors below`, "error");
         } catch (e: unknown) {
-            toast((e as Error).message ?? "Upload failed", "error");
+            toast(extractErrorMessage(e, "Upload failed"), "error");
         } finally { setUpl(false); }
     };
 
@@ -794,7 +793,7 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 return [...map.values()];
             });
         } catch (e: unknown) {
-            toast((e as Error).message, "error");
+            toast(extractErrorMessage(e), "error");
         } finally { setLoading(false); }
     }, [page, debouncedSearch, filterDept, filterStatus, toast]);
 

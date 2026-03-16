@@ -32,6 +32,7 @@ export type UploadResult = {
  * Throws if env vars are missing or the upload fails.
  */
 import axios from "axios";
+import { extractErrorMessage } from "@/lib/error-utils";
 
 export async function uploadToStorage(file: File): Promise<UploadResult> {
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
@@ -67,10 +68,7 @@ export async function uploadToStorage(file: File): Promise<UploadResult> {
             format: data.format as string,
             bytes: data.bytes as number,
         };
-    } catch (error: unknown) {
-        const axiosErr = error as { response?: { data?: { error?: { message?: string } } } };
-        throw new Error(
-            axiosErr.response?.data?.error?.message || `Cloudinary upload failed`
-        );
+    } catch (error) {
+        throw new Error(extractErrorMessage(error, "Cloudinary upload failed"));
     }
 }

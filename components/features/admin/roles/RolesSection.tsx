@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { rolesApi, type Role } from "@/services/roles-client";
+import { extractErrorMessage } from "@/lib/error-utils";
 import type { ToastType } from "./UIHelpers";
 
 interface RolesSectionProps {
@@ -87,7 +88,7 @@ export function RolesSection({ toast }: RolesSectionProps) {
             setLoading(true);
             setRoles(await rolesApi.listRoles());
         } catch (e: unknown) {
-            toast((e as Error).message, "error");
+            toast(extractErrorMessage(e), "error");
         } finally {
             setLoading(false);
         }
@@ -108,7 +109,7 @@ export function RolesSection({ toast }: RolesSectionProps) {
             setForm({ role_name: "", role_code: "", description: "" });
             load();
         } catch (e: unknown) {
-            toast((e as Error).message, "error");
+            toast(extractErrorMessage(e), "error");
         } finally {
             setSub(false);
         }

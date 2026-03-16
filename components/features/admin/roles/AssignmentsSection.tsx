@@ -20,6 +20,7 @@ import {
     type Role,
     type EmployeeRole,
 } from "@/services/roles-client";
+import { extractErrorMessage } from "@/lib/error-utils";
 import type { ToastType } from "./UIHelpers";
 
 interface AssignmentsSectionProps {
@@ -102,7 +103,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
             setRecords(emp);
             setRoles(r);
         } catch (e: unknown) {
-            toast((e as Error).message, "error");
+            toast(extractErrorMessage(e), "error");
         } finally {
             setLoading(false);
         }
@@ -123,7 +124,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
             setForm({ employee_id: "", role_id: "" });
             load();
         } catch (e: unknown) {
-            toast((e as Error).message, "error");
+            toast(extractErrorMessage(e), "error");
         } finally {
             setSub(false);
         }
@@ -136,7 +137,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
             toast("Role revoked");
             load();
         } catch (e: unknown) {
-            toast((e as Error).message, "error");
+            toast(extractErrorMessage(e), "error");
         } finally {
             setRevoking(null);
         }

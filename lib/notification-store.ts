@@ -29,6 +29,7 @@
 
 import { create } from "zustand";
 import { auth } from "@/services/auth-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 import type { Notification } from "@/types/notification-types";
 
 // ─── Auth header helper ───────────────────────────────────────────────────────
@@ -103,7 +104,7 @@ async function apiFetch<T>(url: string, init: RequestInit = {}): Promise<T> {
 
     if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body?.detail ?? `Request failed (${res.status})`);
+        throw new Error(extractErrorMessage(body, `Request failed (${res.status})`));
     }
 
     return res.json() as Promise<T>;
@@ -142,7 +143,7 @@ export const useNotificationStore = create<NotificationState>((set) => ({
         } catch (err) {
             set({
                 loading: false,
-                error:   err instanceof Error ? err.message : "Failed to load notifications",
+                error:   extractErrorMessage(err, "Failed to load notifications"),
             });
         }
     },
@@ -175,7 +176,7 @@ export const useNotificationStore = create<NotificationState>((set) => ({
                 unreadCount: Math.max(0, state.unreadCount - 1),
             }));
         } catch (err) {
-            set({ error: err instanceof Error ? err.message : "Failed to mark as read" });
+            set({ error: extractErrorMessage(err, "Failed to mark as read") });
         }
     },
 
@@ -191,7 +192,7 @@ export const useNotificationStore = create<NotificationState>((set) => ({
                 unreadCount:   0,
             }));
         } catch (err) {
-            set({ error: err instanceof Error ? err.message : "Failed to mark all as read" });
+            set({ error: extractErrorMessage(err, "Failed to mark all as read") });
         }
     },
 }));
