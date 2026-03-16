@@ -63,6 +63,7 @@ export default function ReviewPage() {
             submittedData={state.submittedData}
             onStartNew={state.startNewReview}
             reviewerWeight={reviewerWeight}
+            onToast={state.setToast}
           />
         )}
 

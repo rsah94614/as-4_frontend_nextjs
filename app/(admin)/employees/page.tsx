@@ -2,14 +2,12 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
-    Users, UserPlus, ChevronLeft, Search, Loader2,
+    Users, UserPlus,Search, Loader2,
     Building2, Briefcase, Calendar, MoreHorizontal,
     CheckCircle2, XCircle, Info, ChevronDown, Upload,
     X, Eye, EyeOff, FileSpreadsheet, Download,
 } from "lucide-react";
-import Link from "next/link";
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,14 +21,14 @@ import { cn } from "@/lib/utils";
 import { useToast, ToastContainer } from "@/components/features/admin/roles/UIHelpers";
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { auth } from "@/services/auth-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 
 // ─── API clients ──────────────────────────────────────────────────────────────
-const empClient  = createAuthenticatedClient("/api/proxy/employees");
+const empClient = createAuthenticatedClient("/api/proxy/employees");
 
-// Auth bulk-import needs multipart — we call fetch directly with the token.
 async function authBulkImport(file: File) {
     const token = auth.getAccessToken();
-    const form  = new FormData();
+    const form = new FormData();
     form.append("file", file);
     const res = await fetch("/api/proxy/auth/bulk-import", {
         method: "POST",
@@ -38,16 +36,16 @@ async function authBulkImport(file: File) {
         body: form,
     });
     if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error((err as { detail?: string }).detail ?? `HTTP ${res.status}`);
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(extractErrorMessage(errorData, `HTTP ${res.status}`));
     }
     return res.json() as Promise<BulkImportResponse>;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Designation { designation_id: string; designation_name: string; }
-interface Department  { department_id: string;  department_name: string;  }
-interface Status      { status_id: string;      status_code: string;      status_name: string; }
+interface Department { department_id: string; department_name: string; }
+interface Status { status_id: string; status_code: string; status_name: string; }
 
 interface Employee {
     employee_id: string;
@@ -63,14 +61,13 @@ interface Employee {
     date_of_birth?: string;
     status_id?: string;
     status_name?: string;
-    // is_active is the reliable field from the list endpoint
     is_active: boolean;
     created_at: string;
 }
 
 interface PaginationMeta {
     current_page: number; per_page: number; total: number;
-    total_pages: number;  has_next: boolean; has_previous: boolean;
+    total_pages: number; has_next: boolean; has_previous: boolean;
 }
 
 interface BulkImportRow {
@@ -96,12 +93,10 @@ function formatDate(d?: string) {
     return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-// StatusBadge uses is_active (boolean) — the list endpoint returns this reliably.
-// status_code is NOT returned by the list endpoint, so never rely on it here.
 function StatusBadge({ isActive }: { isActive: boolean }) {
     return (
         <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap"
             style={
                 isActive
                     ? { background: "#D1FAE5", color: "#065F46" }
@@ -116,38 +111,39 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
 
 // ─── HowItWorks ───────────────────────────────────────────────────────────────
 const HOW_IT_WORKS_LIST = [
-    { n: "01", title: "Create Employee",  desc: "Add employees individually via the form, providing all required profile details." },
-    { n: "02", title: "Assign Manager",   desc: "Set manager_id to build the hierarchy used by digest and recognition scoping." },
-    { n: "03", title: "Set DOB",          desc: "Date of birth enables birthday celebration notifications from the celebration worker." },
-    { n: "04", title: "Manage Status",    desc: "Deactivate an employee via the detail panel — soft-deletes without losing history." },
+    { n: "01", title: "Create Employee", desc: "Add employees individually via the form, providing all required profile details." },
+    { n: "02", title: "Assign Manager", desc: "Set manager_id to build the hierarchy used by digest and recognition scoping." },
+    { n: "03", title: "Set DOB", desc: "Date of birth enables birthday celebration notifications from the celebration worker." },
+    { n: "04", title: "Manage Status", desc: "Deactivate an employee via the detail panel — soft-deletes without losing history." },
 ];
 const HOW_IT_WORKS_BULK = [
     { n: "01", title: "Download Template", desc: "Download the CSV template with correct column headers pre-filled." },
-    { n: "02", title: "Fill Data",         desc: "Required: username, email, password, designation_id, department_id. Optional: manager_id, date_of_birth." },
-    { n: "03", title: "Upload File",       desc: "Upload your completed CSV or XLSX file. Each row is processed independently." },
-    { n: "04", title: "Review Results",    desc: "Successful rows are created immediately. Errors are listed per-row — fix and re-upload." },
+    { n: "02", title: "Fill Data", desc: "Required: username, email, password, designation_id, department_id. Optional: manager_id, date_of_birth." },
+    { n: "03", title: "Upload File", desc: "Upload your completed CSV or XLSX file. Each row is processed independently." },
+    { n: "04", title: "Review Results", desc: "Successful rows are created immediately. Errors are listed per-row — fix and re-upload." },
 ];
 
 function HowItWorks({ steps }: { steps: typeof HOW_IT_WORKS_LIST }) {
     const [open, setOpen] = useState(false);
     return (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-4 sm:mb-6">
             <button
                 type="button"
                 onClick={() => setOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-3.5 hover:bg-gray-50 transition-colors"
             >
                 <div className="flex items-center gap-2">
-                    <Info size={13} className="text-[#E31837]" />
+                    <Info size={13} className="text-[#E31837] shrink-0" />
                     <span className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</span>
                 </div>
-                <ChevronDown size={15} className={cn("text-gray-400 transition-transform duration-200", open && "rotate-180")} />
+                <ChevronDown size={15} className={cn("text-gray-400 transition-transform duration-200 shrink-0", open && "rotate-180")} />
             </button>
             {open && (
                 <div className="border-t border-gray-100">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                    {/* Mobile: stacked, Tablet: 2-col, Desktop: 4-col */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-gray-100 sm:divide-x">
                         {steps.map((s) => (
-                            <div key={s.n} className="flex gap-3 px-5 py-4">
+                            <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-3 sm:py-4">
                                 <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
                                 <div>
                                     <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
@@ -218,18 +214,18 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
                     ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },
                 body: JSON.stringify({
-                    username:       form.username,
-                    email:          form.email,
-                    password:       form.password,
+                    username: form.username,
+                    email: form.email,
+                    password: form.password,
                     designation_id: form.designation_id,
-                    department_id:  form.department_id,
-                    manager_id:     form.manager_id   || undefined,
-                    date_of_birth:  form.date_of_birth || undefined,
+                    department_id: form.department_id,
+                    manager_id: form.manager_id || undefined,
+                    date_of_birth: form.date_of_birth || undefined,
                 }),
             }).then(async (res) => {
                 if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    throw new Error((err as { detail?: string }).detail ?? `HTTP ${res.status}`);
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(extractErrorMessage(errorData, `HTTP ${res.status}`));
                 }
             });
             toast("Employee created successfully");
@@ -237,7 +233,7 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
             setForm({ username: "", email: "", password: "", designation_id: "", department_id: "", manager_id: "", date_of_joining: "", date_of_birth: "" });
             onCreated();
         } catch (e: unknown) {
-            toast((e as Error).message ?? "Failed to create employee", "error");
+            toast(extractErrorMessage(e, "Failed to create employee"), "error");
         } finally {
             setSub(false);
         }
@@ -245,8 +241,9 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-lg p-0 overflow-hidden rounded-xl border-0">
-                <div className="px-6 py-4" style={{ background: "#004C8F" }}>
+            {/* Full-width on mobile, max-lg on larger */}
+            <DialogContent className="w-full max-w-[95vw] sm:max-w-lg p-0 overflow-hidden rounded-xl border-0 [&>button]:hidden">
+                <div className="px-4 sm:px-6 py-4" style={{ background: "#004C8F" }}>
                     <DialogHeader>
                         <DialogTitle className="text-white font-bold text-sm">Create New Employee</DialogTitle>
                         <DialogDescription className="text-blue-200 text-xs mt-0.5">Add a new employee to the platform</DialogDescription>
@@ -254,8 +251,9 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
                 </div>
                 <div className="h-0.5" style={{ background: "#E31837" }} />
 
-                <div className="p-6 space-y-4 bg-white max-h-[70vh] overflow-y-auto">
-                    <div className="grid grid-cols-2 gap-3">
+                <div className="p-4 sm:p-6 space-y-4 bg-white max-h-[70vh] overflow-y-auto">
+                    {/* Stack on mobile, 2-col on sm+ */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                             <Label htmlFor="username" className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
                                 Username <span style={{ color: "#E31837" }}>*</span>
@@ -288,7 +286,7 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <SelectField id="designation_id" label="Designation" required value={form.designation_id}
                             onChange={set("designation_id")} placeholder="Select…"
                             options={designations.map((d) => ({ value: d.designation_id, label: d.designation_name }))} />
@@ -301,7 +299,7 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
                         onChange={set("manager_id")} placeholder="No manager (optional)"
                         options={employees.map((e) => ({ value: e.employee_id, label: `${e.username} (${e.email})` }))} />
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                             <Label htmlFor="doj" className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
                                 Date of Joining <span style={{ color: "#E31837" }}>*</span>
@@ -317,10 +315,10 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
                     </div>
                 </div>
 
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+                <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
                     <Button variant="outline" onClick={onClose} disabled={submitting} className="border-gray-200 text-xs font-semibold">Cancel</Button>
                     <button onClick={handleCreate} disabled={submitting}
-                        className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
                         style={{ background: "#004C8F" }}>
                         {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                         Create Employee
@@ -337,21 +335,21 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
     toast: (msg: string, t?: "success" | "error") => void;
     designations: Designation[]; departments: Department[]; statuses: Status[]; employees: Employee[];
 }) {
-    const [editing, setEditing]   = useState(false);
-    const [submitting, setSub]    = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [submitting, setSub] = useState(false);
     const [deactivating, setDeact] = useState(false);
     const [form, setForm] = useState({ username: "", email: "", designation_id: "", department_id: "", manager_id: "", status_id: "", date_of_birth: "" });
 
     useEffect(() => {
         if (employee) {
             setForm({
-                username:       employee.username       ?? "",
-                email:          employee.email          ?? "",
+                username: employee.username ?? "",
+                email: employee.email ?? "",
                 designation_id: employee.designation_id ?? "",
-                department_id:  employee.department_id  ?? "",
-                manager_id:     employee.manager_id     ?? "",
-                status_id:      employee.status_id      ?? "",
-                date_of_birth:  employee.date_of_birth  ? employee.date_of_birth.split("T")[0] : "",
+                department_id: employee.department_id ?? "",
+                manager_id: employee.manager_id ?? "",
+                status_id: employee.status_id ?? "",
+                date_of_birth: employee.date_of_birth ? employee.date_of_birth.split("T")[0] : "",
             });
             setEditing(false);
         }
@@ -366,22 +364,21 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
         try {
             setSub(true);
             const payload: Record<string, string | undefined> = {};
-            if (form.username       !== employee.username)       payload.username       = form.username;
-            if (form.email          !== employee.email)          payload.email          = form.email;
+            if (form.username !== employee.username) payload.username = form.username;
+            if (form.email !== employee.email) payload.email = form.email;
             if (form.designation_id !== employee.designation_id) payload.designation_id = form.designation_id;
-            if (form.department_id  !== employee.department_id)  payload.department_id  = form.department_id;
-            if (form.manager_id     !== (employee.manager_id ?? "")) payload.manager_id = form.manager_id || undefined;
-            if (form.status_id      !== employee.status_id)      payload.status_id      = form.status_id;
+            if (form.department_id !== employee.department_id) payload.department_id = form.department_id;
+            if (form.manager_id !== (employee.manager_id ?? "")) payload.manager_id = form.manager_id || undefined;
+            if (form.status_id !== employee.status_id) payload.status_id = form.status_id;
             const formDob = form.date_of_birth || undefined;
-            const empDob  = employee.date_of_birth ? employee.date_of_birth.split("T")[0] : undefined;
+            const empDob = employee.date_of_birth ? employee.date_of_birth.split("T")[0] : undefined;
             if (formDob !== empDob) payload.date_of_birth = formDob;
             await empClient.put(`/${employee.employee_id}`, payload);
             toast("Employee updated successfully");
             setEditing(false);
             onUpdated();
         } catch (e: unknown) {
-            const err = e as { response?: { data?: { detail?: string } }; message?: string };
-            toast(err.response?.data?.detail || err.message || "Update failed", "error");
+            toast(extractErrorMessage(e, "Update failed"), "error");
         } finally { setSub(false); }
     };
 
@@ -392,15 +389,14 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
             toast("Employee deactivated");
             onClose(); onUpdated();
         } catch (e: unknown) {
-            const err = e as { response?: { data?: { detail?: string } }; message?: string };
-            toast(err.response?.data?.detail || err.message || "Deactivation failed", "error");
+            toast(extractErrorMessage(e, "Deactivation failed"), "error");
         } finally { setDeact(false); }
     };
 
     const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
         <div>
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{label}</p>
-            <p className="text-sm font-medium text-gray-800">{value || "—"}</p>
+            <p className="text-sm font-medium text-gray-800 break-words">{value || "—"}</p>
         </div>
     );
 
@@ -408,38 +404,39 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-lg p-0 overflow-hidden rounded-xl border-0">
+            <DialogContent className="w-full max-w-[95vw] sm:max-w-lg p-0 overflow-hidden rounded-xl border-0 [&>button]:hidden">
                 <VisuallyHidden.Root><DialogTitle>Employee Details</DialogTitle></VisuallyHidden.Root>
-                <div className="px-6 py-5" style={{ background: "#004C8F" }}>
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-base font-bold text-white shrink-0"
+                <div className="px-4 sm:px-6 py-4 sm:py-5" style={{ background: "#004C8F" }}>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-sm sm:text-base font-bold text-white shrink-0"
                             style={{ background: AVATAR_COLORS[colorIdx] }}>
                             {initials(employee.username)}
                         </div>
-                        <div className="min-w-0">
-                            <p className="text-white font-bold truncate">{employee.username}</p>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-white font-bold truncate text-sm sm:text-base">{employee.username}</p>
                             <p className="text-blue-200 text-xs truncate">{employee.email}</p>
                         </div>
-                        <div className="ml-auto shrink-0">
+                        <div className="shrink-0">
                             <StatusBadge isActive={employee.is_active} />
                         </div>
                     </div>
                 </div>
                 <div className="h-0.5" style={{ background: "#E31837" }} />
 
-                <div className="p-6 bg-white max-h-[60vh] overflow-y-auto">
+                <div className="p-4 sm:p-6 bg-white max-h-[60vh] overflow-y-auto">
                     {!editing ? (
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                        /* 1-col on mobile, 2-col on sm+ */
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                             <Field label="Employee ID" value={<span className="font-mono text-xs break-all">{employee.employee_id}</span>} />
-                            <Field label="Designation"   value={employee.designation_name} />
-                            <Field label="Department"    value={employee.department_name} />
-                            <Field label="Manager"       value={employee.manager_name} />
-                            <Field label="Date of Join"  value={formatDate(employee.date_of_joining)} />
+                            <Field label="Designation" value={employee.designation_name} />
+                            <Field label="Department" value={employee.department_name} />
+                            <Field label="Manager" value={employee.manager_name} />
+                            <Field label="Date of Join" value={formatDate(employee.date_of_joining)} />
                             <Field label="Date of Birth" value={formatDate(employee.date_of_birth)} />
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="space-y-1">
                                     <Label htmlFor="e_un" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Username</Label>
                                     <Input id="e_un" value={form.username} onChange={set("username")}
@@ -451,7 +448,7 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                                         className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F] text-sm" />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <SelectField id="e_dsg" label="Designation" value={form.designation_id} onChange={set("designation_id")}
                                     placeholder="Select…" options={designations.map((d) => ({ value: d.designation_id, label: d.designation_name }))} />
                                 <SelectField id="e_dpt" label="Department" value={form.department_id} onChange={set("department_id")}
@@ -460,7 +457,7 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                             <SelectField id="e_mgr" label="Manager" value={form.manager_id} onChange={set("manager_id")}
                                 placeholder="No manager"
                                 options={allEmployees.filter((e) => e.employee_id !== employee.employee_id).map((e) => ({ value: e.employee_id, label: `${e.username} (${e.email})` }))} />
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <SelectField id="e_sts" label="Status" value={form.status_id} onChange={set("status_id")}
                                     placeholder="Select…" options={statuses.map((s) => ({ value: s.status_id, label: s.status_name }))} />
                                 <div className="space-y-1">
@@ -473,14 +470,15 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                     )}
                 </div>
 
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
+                <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
                     <div>
                         {!editing && employee.is_active && (
                             <button onClick={handleDeactivate} disabled={deactivating}
-                                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all hover:bg-red-50 disabled:opacity-40"
+                                className="flex items-center gap-1.5 px-2 sm:px-3 py-2 rounded-lg text-xs font-bold transition-all hover:bg-red-50 disabled:opacity-40"
                                 style={{ color: "#E31837" }}>
                                 {deactivating ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle size={13} />}
-                                Deactivate
+                                <span className="hidden xs:inline">Deactivate</span>
+                                <span className="xs:hidden">Off</span>
                             </button>
                         )}
                     </div>
@@ -489,7 +487,7 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                             <>
                                 <Button variant="outline" onClick={() => setEditing(false)} disabled={submitting} className="border-gray-200 text-xs font-semibold">Cancel</Button>
                                 <button onClick={handleUpdate} disabled={submitting}
-                                    className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
                                     style={{ background: "#004C8F" }}>
                                     {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                                     Save Changes
@@ -499,7 +497,7 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                             <>
                                 <Button variant="outline" onClick={onClose} className="border-gray-200 text-xs font-semibold">Close</Button>
                                 <button onClick={() => setEditing(true)}
-                                    className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
+                                    className="flex items-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
                                     style={{ background: "#004C8F" }}>
                                     Edit
                                 </button>
@@ -513,20 +511,18 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
 }
 
 // ─── Bulk Import Section ──────────────────────────────────────────────────────
-// Required columns (from auth/router.py): username, email, password, designation_id, department_id
-// Optional columns: manager_id, date_of_birth
 const REQUIRED_COLS = ["username", "email", "password", "designation_id", "department_id"];
 const OPTIONAL_COLS = ["manager_id", "date_of_birth"];
-const CSV_TEMPLATE  = [
+const CSV_TEMPLATE = [
     [...REQUIRED_COLS, ...OPTIONAL_COLS].join(","),
     "john.doe,john.doe@company.com,Passw0rd!,<designation_uuid>,<department_uuid>,<manager_uuid>,1990-05-20",
 ].join("\n");
 
 function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "error") => void }) {
-    const inputRef               = useRef<HTMLInputElement>(null);
-    const [file, setFile]        = useState<File | null>(null);
-    const [uploading, setUpl]    = useState(false);
-    const [result, setResult]    = useState<BulkImportResponse | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [file, setFile] = useState<File | null>(null);
+    const [uploading, setUpl] = useState(false);
+    const [result, setResult] = useState<BulkImportResponse | null>(null);
     const [resultFilter, setFlt] = useState<"all" | "success" | "error">("all");
 
     const handleFile = (f: File) => {
@@ -546,14 +542,14 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
             if (res.failed === 0) toast(`All ${res.succeeded} employees created successfully`);
             else toast(`${res.succeeded} created, ${res.failed} failed — review errors below`, "error");
         } catch (e: unknown) {
-            toast((e as Error).message ?? "Upload failed", "error");
+            toast(extractErrorMessage(e, "Upload failed"), "error");
         } finally { setUpl(false); }
     };
 
     const downloadTemplate = () => {
         const blob = new Blob([CSV_TEMPLATE], { type: "text/csv" });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
         a.href = url; a.download = "employee_import_template.csv"; a.click();
         URL.revokeObjectURL(url);
     };
@@ -566,22 +562,22 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
         <div className="w-full">
             <HowItWorks steps={HOW_IT_WORKS_BULK} />
 
-            {/* Template download + upload card */}
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-4">
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                {/* Header: stack on mobile, row on sm+ */}
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0 sm:justify-between">
                     <div className="flex items-center gap-2">
-                        <FileSpreadsheet size={14} className="text-[#004C8F]" />
+                        <FileSpreadsheet size={14} className="text-[#004C8F] shrink-0" />
                         <h2 className="text-sm font-bold text-[#004C8F]">Bulk Import Employees</h2>
                     </div>
                     <button onClick={downloadTemplate}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-[#004C8F] hover:text-white hover:border-[#004C8F] transition-all">
+                        className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold border border-gray-200 text-gray-600 hover:bg-[#004C8F] hover:text-white hover:border-[#004C8F] transition-all w-full sm:w-auto">
                         <Download size={12} /> Download Template
                     </button>
                 </div>
 
-                <div className="p-6">
-                    {/* Required columns info */}
-                    <div className="mb-5 p-4 rounded-lg border border-gray-100 bg-gray-50">
+                <div className="p-4 sm:p-6">
+                    {/* Column reference */}
+                    <div className="mb-4 sm:mb-5 p-3 sm:p-4 rounded-lg border border-gray-100 bg-gray-50">
                         <p className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest mb-2">Column Reference</p>
                         <div className="flex flex-wrap gap-1.5">
                             {REQUIRED_COLS.map((c) => (
@@ -596,17 +592,17 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
                                 </span>
                             ))}
                         </div>
-                        <p className="text-[11px] text-gray-400 mt-2">
+                        <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">
                             <span style={{ color: "#E31837" }}>*</span> Required &nbsp;·&nbsp;
                             <span className="font-mono">date_of_birth</span> format: YYYY-MM-DD &nbsp;·&nbsp;
-                            IDs must be valid UUIDs from your system
+                            IDs must be valid UUIDs
                         </p>
                     </div>
 
                     {/* Drop zone */}
                     <div
                         className={cn(
-                            "border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer",
+                            "border-2 border-dashed rounded-xl p-6 sm:p-8 text-center transition-all cursor-pointer",
                             file ? "border-[#004C8F] bg-blue-50/40" : "border-gray-200 hover:border-[#004C8F]/40 hover:bg-gray-50"
                         )}
                         onClick={() => inputRef.current?.click()}
@@ -617,18 +613,18 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
                             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
 
                         {file ? (
-                            <div className="flex items-center justify-center gap-3">
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#E8F1FA" }}>
-                                    <FileSpreadsheet size={20} style={{ color: "#004C8F" }} />
+                            <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+                                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#E8F1FA" }}>
+                                    <FileSpreadsheet size={18} style={{ color: "#004C8F" }} />
                                 </div>
-                                <div className="text-left">
-                                    <p className="text-sm font-semibold text-[#004C8F]">{file.name}</p>
+                                <div className="text-left min-w-0">
+                                    <p className="text-sm font-semibold text-[#004C8F] truncate max-w-[180px] sm:max-w-xs">{file.name}</p>
                                     <p className="text-[11px] text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); if (inputRef.current) inputRef.current.value = ""; }}
-                                    className="ml-2 w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 hover:bg-red-100 transition-colors"
+                                    className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 hover:bg-red-100 transition-colors shrink-0"
                                     style={{ color: "#E31837" }}
                                 >
                                     <X size={12} />
@@ -636,22 +632,23 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
                             </div>
                         ) : (
                             <>
-                                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 bg-gray-100">
-                                    <Upload size={22} className="text-gray-400" />
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mx-auto mb-3 bg-gray-100">
+                                    <Upload size={20} className="text-gray-400" />
                                 </div>
                                 <p className="text-sm font-semibold text-gray-600 mb-1">Drop your CSV or XLSX here</p>
-                                <p className="text-[11px] text-gray-400">or click to browse</p>
+                                <p className="text-[11px] text-gray-400">or tap to browse</p>
                             </>
                         )}
                     </div>
                 </div>
 
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                    <p className="text-xs text-gray-500">
-                        {file ? `Ready to import: ${file.name}` : "No file selected"}
+                {/* Footer: stack on mobile */}
+                <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <p className="text-xs text-gray-500 truncate max-w-full">
+                        {file ? `Ready: ${file.name}` : "No file selected"}
                     </p>
                     <button onClick={handleUpload} disabled={!file || uploading}
-                        className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-40"
+                        className="flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-40 w-full sm:w-auto"
                         style={{ background: "#E31837" }}>
                         {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload size={13} />}
                         {uploading ? "Importing…" : "Import Employees"}
@@ -662,15 +659,14 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
             {/* Results */}
             {result && (
                 <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    {/* Summary bar */}
-                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 sm:justify-between">
                         <div className="flex items-center gap-3">
                             <p className="text-sm font-bold text-[#004C8F]">Import Results</p>
                             <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full tabular-nums">
                                 {result.total} rows
                             </span>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
                             <span className="flex items-center gap-1 text-xs font-bold" style={{ color: "#065F46" }}>
                                 <CheckCircle2 size={13} /> {result.succeeded} succeeded
                             </span>
@@ -682,11 +678,11 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
                         </div>
                     </div>
 
-                    {/* Filter tabs */}
-                    <div className="px-6 pt-3 pb-0 flex gap-1 border-b border-gray-100">
+                    {/* Filter tabs — scrollable on small screens */}
+                    <div className="px-4 sm:px-6 pt-3 pb-0 flex gap-1 border-b border-gray-100 overflow-x-auto">
                         {(["all", "success", "error"] as const).map((f) => (
                             <button key={f} onClick={() => setFlt(f)}
-                                className="px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-all capitalize"
+                                className="px-3 sm:px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-all capitalize whitespace-nowrap"
                                 style={resultFilter === f
                                     ? { color: "#004C8F", borderColor: "#E31837" }
                                     : { color: "#9CA3AF", borderColor: "transparent" }}>
@@ -695,24 +691,23 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
                         ))}
                     </div>
 
-                    {/* Result rows */}
-                    <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                    <div className="divide-y divide-gray-100 max-h-72 sm:max-h-80 overflow-y-auto">
                         {filtered.map((row) => (
-                            <div key={row.row} className="flex items-center px-6 py-3 gap-4">
-                                <span className="text-[10px] font-black text-gray-400 tabular-nums w-8 shrink-0">#{row.row}</span>
+                            <div key={row.row} className="flex items-center px-4 sm:px-6 py-3 gap-3 sm:gap-4">
+                                <span className="text-[10px] font-black text-gray-400 tabular-nums w-7 sm:w-8 shrink-0">#{row.row}</span>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-xs font-semibold text-gray-700 truncate">{row.username ?? "—"}</p>
                                     <p className="text-[11px] text-gray-400 truncate">{row.email ?? "—"}</p>
                                 </div>
                                 {row.status === "success" ? (
-                                    <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: "#D1FAE5", color: "#065F46" }}>
                                             Created
                                         </span>
-                                        <span className="font-mono text-[10px] text-gray-400 hidden sm:block">{row.employee_id}</span>
+                                        <span className="font-mono text-[10px] text-gray-400 hidden md:block truncate max-w-[120px]">{row.employee_id}</span>
                                     </div>
                                 ) : (
-                                    <div className="flex items-center gap-2 shrink-0 max-w-[240px]">
+                                    <div className="flex items-center gap-1 sm:gap-2 shrink-0 max-w-[160px] sm:max-w-[240px]">
                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded shrink-0" style={{ background: "#FEE2E2", color: "#B91C1C" }}>
                                             Error
                                         </span>
@@ -730,19 +725,19 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
 
 // ─── Employee List Section ────────────────────────────────────────────────────
 function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "error") => void }) {
-    const [employees, setEmployees]       = useState<Employee[]>([]);
-    const [loading, setLoading]           = useState(true);
-    const [pagination, setPagination]     = useState<PaginationMeta | null>(null);
-    const [page, setPage]                 = useState(1);
-    const [search, setSearch]             = useState("");
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState("");
     const [debouncedSearch, setDebounced] = useState("");
-    const [createOpen, setCreateOpen]     = useState(false);
-    const [selected, setSelected]         = useState<Employee | null>(null);
-    const [detailOpen, setDetailOpen]     = useState(false);
+    const [createOpen, setCreateOpen] = useState(false);
+    const [selected, setSelected] = useState<Employee | null>(null);
+    const [detailOpen, setDetailOpen] = useState(false);
     const [designations, setDesignations] = useState<Designation[]>([]);
-    const [departments,  setDepartments]  = useState<Department[]>([]);
-    const [statuses,     setStatuses]     = useState<Status[]>([]);
-    const [filterDept,   setFilterDept]   = useState("");
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [statuses, setStatuses] = useState<Status[]>([]);
+    const [filterDept, setFilterDept] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
 
     useEffect(() => {
@@ -750,9 +745,6 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
         return () => clearTimeout(t);
     }, [search]);
 
-    // Designations, departments and statuses live on the org service.
-    // Statuses are derived from the paginated employee list since there is no
-    // dedicated status endpoint — we accumulate them across pages as employees load.
     const orgClient = createAuthenticatedClient("/api/proxy/org");
 
     const loadMeta = useCallback(async () => {
@@ -771,21 +763,20 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 const arr: Department[] = Array.isArray(d) ? d : (d as { data?: Department[] }).data ?? [];
                 setDepartments(arr.sort((a, b) => a.department_name.localeCompare(b.department_name)));
             }
-        } catch {/* best-effort */}
+        } catch {/* best-effort */ }
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const load = useCallback(async () => {
         try {
             setLoading(true);
             const params: Record<string, string | number> = { page, limit: 20 };
-            if (debouncedSearch) params.search      = debouncedSearch;
-            if (filterDept)      params.department_id = filterDept;
-            if (filterStatus)    params.status_id   = filterStatus;
+            if (debouncedSearch) params.search = debouncedSearch;
+            if (filterDept) params.department_id = filterDept;
+            if (filterStatus) params.status_id = filterStatus;
             const res = await empClient.get<{ data: Employee[]; pagination: PaginationMeta }>("/list", { params });
             const emps = res.data.data;
             setEmployees(emps);
             setPagination(res.data.pagination);
-            // Accumulate statuses from whatever the current page returned
             setStatuses((prev) => {
                 const map = new Map(prev.map((s) => [s.status_id, s]));
                 for (const e of emps) {
@@ -795,7 +786,7 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 return [...map.values()];
             });
         } catch (e: unknown) {
-            toast((e as Error).message, "error");
+            toast(extractErrorMessage(e), "error");
         } finally { setLoading(false); }
     }, [page, debouncedSearch, filterDept, filterStatus, toast]);
 
@@ -808,26 +799,28 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
 
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Users size={14} className="text-[#004C8F]" />
-                        <h2 className="text-sm font-bold text-[#004C8F]">Employees</h2>
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <Users size={14} className="text-[#004C8F] shrink-0" />
+                        <h2 className="text-sm font-bold text-[#004C8F] truncate">Employees</h2>
                         {!loading && pagination && (
-                            <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full tabular-nums">
+                            <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full tabular-nums shrink-0">
                                 {pagination.total}
                             </span>
                         )}
                     </div>
                     <button onClick={() => setCreateOpen(true)}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
+                        className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 shrink-0"
                         style={{ background: "#E31837" }}>
-                        <UserPlus size={13} /> New Employee
+                        <UserPlus size={13} />
+                        <span className="hidden xs:inline">New Employee</span>
+                        <span className="xs:hidden">New</span>
                     </button>
                 </div>
 
-                {/* Filters */}
-                <div className="px-6 py-3 border-b border-gray-100 flex flex-wrap items-center gap-3">
-                    <div className="relative flex-1 min-w-[200px] max-w-sm">
+                {/* Filters — wrap on smaller screens */}
+                <div className="px-4 sm:px-6 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2 sm:gap-3">
+                    <div className="relative w-full sm:flex-1 sm:min-w-[160px] sm:max-w-sm">
                         <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input placeholder="Search name or email…" value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -840,9 +833,9 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                         )}
                     </div>
                     {departments.length > 0 && (
-                        <div className="relative">
+                        <div className="relative flex-1 sm:flex-none">
                             <select value={filterDept} onChange={(e) => { setFilterDept(e.target.value); setPage(1); }}
-                                className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8
                                     focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium text-gray-600">
                                 <option value="">All Departments</option>
                                 {departments.map((d) => <option key={d.department_id} value={d.department_id}>{d.department_name}</option>)}
@@ -851,9 +844,9 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                         </div>
                     )}
                     {statuses.length > 0 && (
-                        <div className="relative">
+                        <div className="relative flex-1 sm:flex-none">
                             <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-                                className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8
                                     focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium text-gray-600">
                                 <option value="">All Statuses</option>
                                 {statuses.map((s) => <option key={s.status_id} value={s.status_id}>{s.status_name}</option>)}
@@ -863,15 +856,15 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                     )}
                 </div>
 
-                {/* Table */}
+                {/* Table / Cards */}
                 {loading ? (
                     <div className="p-6 space-y-3">
-                        {[0,1,2,3,4].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
+                        {[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
                     </div>
                 ) : employees.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 gap-3">
-                        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
-                            <Users size={24} className="text-gray-300" />
+                    <div className="flex flex-col items-center justify-center py-12 sm:py-16 gap-3">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-100 flex items-center justify-center">
+                            <Users size={22} className="text-gray-300" />
                         </div>
                         <p className="text-sm font-semibold text-gray-500">
                             {debouncedSearch || filterDept || filterStatus ? "No matching employees" : "No employees yet"}
@@ -879,44 +872,121 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                     </div>
                 ) : (
                     <div>
-                        <div className="grid px-6 py-2.5 bg-gray-50 border-b border-gray-100"
-                            style={{ gridTemplateColumns: "1fr 150px 150px 100px 80px 36px" }}>
-                            {["Employee", "Designation", "Department", "Joined", "Status", ""].map((h) => (
-                                <span key={h} className="text-[10px] font-black uppercase tracking-widest text-gray-400">{h}</span>
-                            ))}
+                        {/* ── Desktop table (md+) ── */}
+                        <div className="hidden md:block">
+                            <div className="grid px-6 py-2.5 bg-gray-50 border-b border-gray-100"
+                                style={{ gridTemplateColumns: "1fr 140px 140px 100px 80px 36px" }}>
+                                {["Employee", "Designation", "Department", "Joined", "Status", ""].map((h) => (
+                                    <span key={h} className="text-[10px] font-black uppercase tracking-widest text-gray-400">{h}</span>
+                                ))}
+                            </div>
+                            <div className="divide-y divide-gray-100">
+                                {employees.map((emp, i) => (
+                                    <div key={emp.employee_id}
+                                        className="grid px-6 py-3.5 items-center hover:bg-gray-50 transition-colors cursor-pointer"
+                                        style={{ gridTemplateColumns: "1fr 140px 140px 100px 80px 36px" }}
+                                        onClick={() => { setSelected(emp); setDetailOpen(true); }}>
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                                                style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>
+                                                {initials(emp.username)}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-[#004C8F] truncate">{emp.username}</p>
+                                                <p className="text-[11px] text-gray-400 truncate">{emp.email}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <Briefcase size={11} className="text-gray-400 shrink-0" />
+                                            <span className="text-[12px] text-gray-600 truncate">{emp.designation_name ?? "—"}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <Building2 size={11} className="text-gray-400 shrink-0" />
+                                            <span className="text-[12px] text-gray-600 truncate">{emp.department_name ?? "—"}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <Calendar size={11} className="text-gray-400 shrink-0" />
+                                            <span className="text-[11px] text-gray-400">{formatDate(emp.date_of_joining)}</span>
+                                        </div>
+                                        <StatusBadge isActive={emp.is_active} />
+                                        <div className="flex justify-end">
+                                            <MoreHorizontal size={15} className="text-gray-400" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <div className="divide-y divide-gray-100">
+
+                        {/* ── Tablet table (sm–md) ── */}
+                        <div className="hidden sm:block md:hidden">
+                            <div className="grid px-4 py-2.5 bg-gray-50 border-b border-gray-100"
+                                style={{ gridTemplateColumns: "1fr 120px 80px 36px" }}>
+                                {["Employee", "Department", "Status", ""].map((h) => (
+                                    <span key={h} className="text-[10px] font-black uppercase tracking-widest text-gray-400">{h}</span>
+                                ))}
+                            </div>
+                            <div className="divide-y divide-gray-100">
+                                {employees.map((emp, i) => (
+                                    <div key={emp.employee_id}
+                                        className="grid px-4 py-3 items-center hover:bg-gray-50 transition-colors cursor-pointer"
+                                        style={{ gridTemplateColumns: "1fr 120px 80px 36px" }}
+                                        onClick={() => { setSelected(emp); setDetailOpen(true); }}>
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                                                style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>
+                                                {initials(emp.username)}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-[#004C8F] truncate">{emp.username}</p>
+                                                <p className="text-[11px] text-gray-400 truncate">{emp.designation_name ?? emp.email}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <Building2 size={11} className="text-gray-400 shrink-0" />
+                                            <span className="text-[12px] text-gray-600 truncate">{emp.department_name ?? "—"}</span>
+                                        </div>
+                                        <StatusBadge isActive={emp.is_active} />
+                                        <div className="flex justify-end">
+                                            <MoreHorizontal size={15} className="text-gray-400" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* ── Mobile cards (< sm) ── */}
+                        <div className="sm:hidden divide-y divide-gray-100">
                             {employees.map((emp, i) => (
                                 <div key={emp.employee_id}
-                                    className="grid px-6 py-3.5 items-center hover:bg-gray-50 transition-colors cursor-pointer"
-                                    style={{ gridTemplateColumns: "1fr 150px 150px 100px 80px 36px" }}
+                                    className="px-4 py-3.5 hover:bg-gray-50 transition-colors cursor-pointer"
                                     onClick={() => { setSelected(emp); setDetailOpen(true); }}>
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0 mt-0.5"
                                             style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}>
                                             {initials(emp.username)}
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-semibold text-[#004C8F] truncate">{emp.username}</p>
-                                            <p className="text-[11px] text-gray-400 truncate">{emp.email}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between gap-2 mb-1">
+                                                <p className="text-sm font-semibold text-[#004C8F] truncate">{emp.username}</p>
+                                                <StatusBadge isActive={emp.is_active} />
+                                            </div>
+                                            <p className="text-[11px] text-gray-400 truncate mb-1.5">{emp.email}</p>
+                                            <div className="flex flex-wrap gap-x-3 gap-y-1">
+                                                {emp.designation_name && (
+                                                    <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                                                        <Briefcase size={10} className="text-gray-400" />{emp.designation_name}
+                                                    </span>
+                                                )}
+                                                {emp.department_name && (
+                                                    <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                                                        <Building2 size={10} className="text-gray-400" />{emp.department_name}
+                                                    </span>
+                                                )}
+                                                <span className="flex items-center gap-1 text-[11px] text-gray-400">
+                                                    <Calendar size={10} className="text-gray-400" />{formatDate(emp.date_of_joining)}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 min-w-0">
-                                        <Briefcase size={11} className="text-gray-400 shrink-0" />
-                                        <span className="text-[12px] text-gray-600 truncate">{emp.designation_name ?? "—"}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 min-w-0">
-                                        <Building2 size={11} className="text-gray-400 shrink-0" />
-                                        <span className="text-[12px] text-gray-600 truncate">{emp.department_name ?? "—"}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <Calendar size={11} className="text-gray-400 shrink-0" />
-                                        <span className="text-[11px] text-gray-400">{formatDate(emp.date_of_joining)}</span>
-                                    </div>
-                                    {/* Use is_active boolean — NOT status_code which isn't in list response */}
-                                    <StatusBadge isActive={emp.is_active} />
-                                    <div className="flex justify-end">
-                                        <MoreHorizontal size={15} className="text-gray-400" />
                                     </div>
                                 </div>
                             ))}
@@ -925,20 +995,20 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 )}
 
                 {/* Pagination footer */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2">
                     <p className="text-xs text-gray-500">
                         {loading ? "Loading…" : pagination
-                            ? `Showing ${((page-1)*20)+1}–${Math.min(page*20, pagination.total)} of ${pagination.total} employees`
+                            ? `Showing ${((page - 1) * 20) + 1}–${Math.min(page * 20, pagination.total)} of ${pagination.total} employees`
                             : ""}
                     </p>
                     {pagination && pagination.total_pages > 1 && (
                         <div className="flex items-center gap-1">
-                            <button disabled={!pagination.has_previous} onClick={() => setPage((p) => p-1)}
+                            <button disabled={!pagination.has_previous} onClick={() => setPage((p) => p - 1)}
                                 className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-white disabled:opacity-40 transition-colors">
                                 Prev
                             </button>
                             <span className="px-3 py-1.5 text-xs font-bold text-[#004C8F]">{page} / {pagination.total_pages}</span>
-                            <button disabled={!pagination.has_next} onClick={() => setPage((p) => p+1)}
+                            <button disabled={!pagination.has_next} onClick={() => setPage((p) => p + 1)}
                                 className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-white disabled:opacity-40 transition-colors">
                                 Next
                             </button>
@@ -958,86 +1028,72 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "list", label: "Employees",    icon: <Users          className="w-4 h-4" /> },
-    { id: "bulk", label: "Bulk Import",  icon: <FileSpreadsheet className="w-4 h-4" /> },
+    { id: "list", label: "Employees", icon: <Users className="w-4 h-4" /> },
+    { id: "bulk", label: "Bulk Import", icon: <FileSpreadsheet className="w-4 h-4" /> },
 ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function EmployeesPage() {
     const { toasts, show: toast } = useToast();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [tab, setTab] = useState<Tab>("list");
 
     return (
-        <div className="flex h-screen overflow-hidden bg-white">
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <>
+            <main className="flex-1 overflow-y-auto bg-white">
 
-            <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                <Navbar onMenuClick={() => setSidebarOpen(true)} />
+                {/* Page Header */}
+                <div className="bg-white border-b border-gray-200 px-4 sm:px-6 md:px-8 lg:px-10 py-4 sm:py-5">
+                    <div className="max-w-[1200px] mx-auto flex items-start sm:items-center justify-between gap-4">
+                        <div className="min-w-0">
+                            <h1 className="text-xl sm:text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
+                                Employee Management
+                            </h1>
+                            <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                                Create employees · Bulk import · Manage profiles &amp; hierarchy
+                            </p>
+                        </div>
+                        {/* Brand mark — hidden on small screens */}
+                        <span className="hidden lg:flex items-center text-xl font-black tracking-tight select-none shrink-0">
+                            <span style={{ color: "#E31837" }}>A</span>
+                            <span style={{ color: "#004C8F" }}>abhar</span>
+                        </span>
+                    </div>
+                </div>
 
-                <main className="flex-1 overflow-y-auto bg-white">
+                {/* Red accent line */}
+                <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
 
-                    {/* Page Header */}
-                    <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
-                        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-                            <div>
-                                <Link href="/control-panel"
-                                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-[#004C8F] hover:text-white hover:border-[#004C8F] transition-all duration-150 mb-3 group">
-                                    <ChevronLeft size={13} className="group-hover:-translate-x-0.5 transition-transform duration-150" />
-                                    Back to Control Panel
-                                </Link>
-                                <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#E31837" }}>
-                                    Admin · Control Panel
-                                </p>
-                                <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
-                                    Employee Management
-                                </h1>
-                                <p className="text-sm text-gray-400 mt-1">
-                                    Create employees · Bulk import · Manage profiles &amp; hierarchy
-                                </p>
-                            </div>
-                            <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-                                <span style={{ color: "#E31837" }}>A</span>
-                                <span style={{ color: "#004C8F" }}>abhar</span>
-                            </span>
+                {/* Tab bar */}
+                <div className="bg-white border-b border-gray-200 px-4 sm:px-6 md:px-8 lg:px-10">
+                    <div className="max-w-[1200px] mx-auto flex overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                        {TABS.map((t) => {
+                            const active = tab === t.id;
+                            return (
+                                <button key={t.id} onClick={() => setTab(t.id)}
+                                    className="flex items-center gap-2 px-4 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-semibold border-b-2 transition-all -mb-px whitespace-nowrap"
+                                    style={active
+                                        ? { color: "#004C8F", borderColor: "#E31837" }
+                                        : { color: "#9CA3AF", borderColor: "transparent" }}>
+                                    {t.icon}{t.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Content */}
+                <div className="px-4 sm:px-6 md:px-8 lg:px-10 py-4 sm:py-6 md:py-8" style={{ background: "#F7F9FC" }}>
+                    <div className="max-w-[1200px] mx-auto">
+                        {/* Inner card: less padding on mobile */}
+                        <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 md:p-8">
+                            {tab === "list" && <EmployeeListSection toast={toast} />}
+                            {tab === "bulk" && <BulkImportSection toast={toast} />}
                         </div>
                     </div>
+                </div>
 
-                    {/* Red accent line */}
-                    <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
-
-                    {/* Tab bar */}
-                    <div className="bg-white border-b border-gray-200 px-8 md:px-10">
-                        <div className="max-w-[1200px] mx-auto flex">
-                            {TABS.map((t) => {
-                                const active = tab === t.id;
-                                return (
-                                    <button key={t.id} onClick={() => setTab(t.id)}
-                                        className="flex items-center gap-2 px-5 py-4 text-sm font-semibold border-b-2 transition-all -mb-px"
-                                        style={active
-                                            ? { color: "#004C8F", borderColor: "#E31837" }
-                                            : { color: "#9CA3AF", borderColor: "transparent" }}>
-                                        {t.icon}{t.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
-                        <div className="max-w-[1200px] mx-auto">
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-                                {tab === "list" && <EmployeeListSection toast={toast} />}
-                                {tab === "bulk" && <BulkImportSection   toast={toast} />}
-                            </div>
-                        </div>
-                    </div>
-
-                </main>
-            </div>
-
+            </main>
             <ToastContainer toasts={toasts} />
-        </div>
+        </>
     );
 }

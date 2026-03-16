@@ -2,6 +2,7 @@
 // All requests routed through Next.js proxy — no direct microservice URL in browser.
 
 import { createAuthenticatedClient } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 import type { Notification, NotificationListResponse } from "@/types/notification-types";
 
 const notifClient = createAuthenticatedClient("/api/proxy/employees");
@@ -16,7 +17,10 @@ export async function getUnreadCount(): Promise<number> {
     _inFlightUnreadCount = notifClient
         .get<{ unread_count: number }>(`${BASE}/unread-count`)
         .then(r => r.data.unread_count)
-        .catch(() => 0)
+        .catch(error => {
+            console.error(extractErrorMessage(error));
+            return 0;
+        })
         .finally(() => { _inFlightUnreadCount = null; });
     return _inFlightUnreadCount;
 }
@@ -29,16 +33,25 @@ export async function getNotifications(
     _inFlightList = notifClient
         .get<NotificationListResponse>(BASE, { params: { limit, unread_only: unreadOnly } })
         .then(r => r.data)
+        .catch(error => { throw new Error(extractErrorMessage(error, "Failed to load notifications")); })
         .finally(() => { _inFlightList = null; });
     return _inFlightList;
 }
 
 export async function markOneRead(notificationId: string): Promise<Notification> {
-    const res = await notifClient.put<Notification>(`${BASE}/${notificationId}/read`, {});
-    return res.data;
+    try {
+        const res = await notifClient.put<Notification>(`${BASE}/${notificationId}/read`, {});
+        return res.data;
+    } catch (error) {
+        throw new Error(extractErrorMessage(error, "Failed to mark as read"));
+    }
 }
 
 export async function markAllRead(): Promise<number> {
-    const res = await notifClient.put<{ marked_read: number }>(`${BASE}/read-all`, {});
-    return res.data.marked_read;
+    try {
+        const res = await notifClient.put<{ marked_read: number }>(`${BASE}/read-all`, {});
+        return res.data.marked_read;
+    } catch (error) {
+        throw new Error(extractErrorMessage(error, "Failed to mark all as read"));
+    }
 }

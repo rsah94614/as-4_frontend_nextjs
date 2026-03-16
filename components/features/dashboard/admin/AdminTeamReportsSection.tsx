@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Download, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import AdminTeamsSection from "./AdminTeamsSection";
 import { fetchTeamReport } from "@/services/analytics-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 import type { TeamSummaryResponse } from "@/types/dashboard-types";
 
 type SortOption = "score" | "points" | "members" | "name";
@@ -33,7 +34,7 @@ async function fetchTeamsWithDetail(): Promise<{
         } catch { /* */ }
         return { data: null, error: detail || `HTTP ${res.status}` };
     } catch (e: unknown) {
-        return { data: null, error: e instanceof Error ? e.message : "Unexpected error" };
+        return { data: null, error: extractErrorMessage(e, "Unexpected error") };
     }
 }
 

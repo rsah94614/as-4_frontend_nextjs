@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { redeemReward } from "@/services/redeem-api";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { DialogState, RedemptionResponse } from "@/types/redeem-types";
 
 type Phase = "confirm" | "loading" | "success" | "error";
@@ -62,7 +63,7 @@ function RedeemDialogBody({
       setPhase("success");
       onSuccess(res, item.default_points);
     } catch (e) {
-      setErrorMessage(e instanceof Error ? e.message : "Redemption failed");
+      setErrorMessage(extractErrorMessage(e, "Redemption failed"));
       setPhase("error");
     }
   }

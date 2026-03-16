@@ -2,6 +2,7 @@
 // All requests routed through Next.js proxy — no direct microservice URLs in browser.
 
 import { createAuthenticatedClient } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 import {
     CategoryInfo,
     WalletData,
@@ -22,9 +23,8 @@ export async function fetchCatalog(page = 1, size = 20): Promise<PaginatedCatalo
             `${REWARDS_PROXY}/catalog?active_only=true&page=${page}&size=${size}`
         );
         return res.data;
-    } catch (err: unknown) {
-        const e = err as { response?: { data?: { detail?: string } } };
-        throw new Error(e.response?.data?.detail || "Failed to load catalog");
+    } catch (error) {
+        throw new Error(extractErrorMessage(error, "Failed to load catalog"));
     }
 }
 
@@ -34,7 +34,8 @@ export async function fetchCategories(): Promise<CategoryInfo[]> {
             `${REWARDS_PROXY}/categories?active_only=true`
         );
         return res.data;
-    } catch {
+    } catch (error) {
+        console.error("Categories fetch failed:", extractErrorMessage(error));
         return [];
     }
 }
@@ -45,9 +46,8 @@ export async function fetchWallet(employeeId: string): Promise<WalletData> {
             `${WALLET_PROXY}/employees/${employeeId}`
         );
         return res.data;
-    } catch (err: unknown) {
-        const e = err as { response?: { data?: { detail?: string } } };
-        throw new Error(e.response?.data?.detail || "Failed to load wallet");
+    } catch (error) {
+        throw new Error(extractErrorMessage(error, "Failed to load wallet"));
     }
 }
 
@@ -65,8 +65,7 @@ export async function redeemReward(
             comment: comment || null,
         });
         return res.data;
-    } catch (err: unknown) {
-        const e = err as { response?: { data?: { detail?: string } } };
-        throw new Error(e.response?.data?.detail || "Redemption failed");
+    } catch (error) {
+        throw new Error(extractErrorMessage(error, "Redemption failed"));
     }
 }

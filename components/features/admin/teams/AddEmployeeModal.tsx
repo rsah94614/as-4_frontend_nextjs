@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { Users, X, AlertCircle, Loader2 } from "lucide-react";
 import { fetchWithAuth } from "@/services/auth-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { Employee } from "@/types/team-types";
 
 const AUTH_API = process.env.NEXT_PUBLIC_AUTH_API_URL || "http://localhost:8001";
@@ -84,7 +85,7 @@ export function AddEmployeeModal({
             onSuccess();
             onClose();
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Failed to add employee");
+            setError(extractErrorMessage(err, "Failed to add employee"));
         } finally {
             setSubmitting(false);
         }

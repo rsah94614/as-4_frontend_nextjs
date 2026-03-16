@@ -31,7 +31,7 @@ import {
 } from "@/components/features/history/history-styles";
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { auth } from "@/services/auth-service";
-import { extractApiError } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { Button } from "@/components/ui/button";
 
 // ─── Proxy client ─────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ async function fetchWallet(employeeId: string): Promise<WalletData> {
     const res = await walletClient.get<WalletData>(`/employees/${employeeId}`);
     return res.data;
   } catch (error: unknown) {
-    throw new Error(extractApiError(error, "Failed to load wallet"));
+    throw new Error(extractErrorMessage(error, "Failed to load wallet"));
   }
 }
 
@@ -146,7 +146,7 @@ async function fetchPointsSummary(walletId: string): Promise<PointsSummary> {
     );
     return res.data;
   } catch (error: unknown) {
-    throw new Error(extractApiError(error, "Failed to load points summary"));
+    throw new Error(extractErrorMessage(error, "Failed to load points summary"));
   }
 }
 
@@ -166,7 +166,7 @@ async function fetchTransactions(
     );
     return res.data;
   } catch (error: unknown) {
-    throw new Error(extractApiError(error, "Failed to load transactions"));
+    throw new Error(extractErrorMessage(error, "Failed to load transactions"));
   }
 }
 
@@ -288,9 +288,7 @@ export default function Wallet() {
         setLoadingSummary(false);
       }
     } catch (e) {
-      setWalletError(
-        e instanceof Error ? e.message : "Failed to load wallet data."
-      );
+      setWalletError(extractErrorMessage(e, "Failed to load wallet data."));
       setLoadingSummary(false);
     } finally {
       setLoadingWallet(false);
@@ -306,9 +304,7 @@ export default function Wallet() {
         const data = await fetchTransactions(walletId, page, TXN_PAGE_SIZE);
         setTxnData(data);
       } catch (e) {
-        setTxnError(
-          e instanceof Error ? e.message : "Failed to load transactions."
-        );
+        setTxnError(extractErrorMessage(e, "Failed to load transactions."));
       } finally {
         setLoadingTxns(false);
       }

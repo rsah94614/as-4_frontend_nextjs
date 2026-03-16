@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { Search, RefreshCw, Plus, X } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
 import { useDepartments } from "@/hooks/useDepartments";
 import { Department } from "@/types/department-types";
 import { DepartmentStats } from "@/components/features/admin/departments/DepartmentStats";
@@ -11,7 +9,6 @@ import { DepartmentTable } from "@/components/features/admin/departments/Departm
 import { DepartmentModal } from "@/components/features/admin/departments/DepartmentModal";
 
 export default function DepartmentsPage() {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const {
         departments,
         pagination,
@@ -54,13 +51,8 @@ export default function DepartmentsPage() {
     const typeCount = new Set(departments.map(d => d.department_type?.type_code).filter(Boolean)).size;
 
     return (
-        <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#eef0f8" }}>
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-            <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                <Navbar onMenuClick={() => setSidebarOpen(true)} />
-
-                <main className="flex-1 overflow-y-auto p-6 space-y-5">
+        <>
+            <main className="flex-1 overflow-y-auto p-6 space-y-5">
 
                     {/* Blue header bar */}
                     <div
@@ -151,7 +143,6 @@ export default function DepartmentsPage() {
                         />
                     </div>
                 </main>
-            </div>
 
             <DepartmentModal
                 open={modalOpen}
@@ -160,6 +151,6 @@ export default function DepartmentsPage() {
                 selectedDepartment={selectedDepartment}
                 departmentTypes={departmentTypes}
             />
-        </div>
+        </>
     );
 }

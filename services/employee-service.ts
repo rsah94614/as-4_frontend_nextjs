@@ -12,7 +12,8 @@
 // /api/proxy/employees/v1/employees/${id} → 404).
 
 import { createAuthenticatedClient } from '@/lib/api-utils'
-import { extractApiError, requireAuthenticatedUserId } from '@/lib/api-utils'
+import { requireAuthenticatedUserId } from '@/lib/api-utils'
+import { extractErrorMessage } from '@/lib/error-utils'
 
 const employeesClient = createAuthenticatedClient('/api/proxy/employees')
 
@@ -96,8 +97,8 @@ export const employeeService = {
             // Now: `/${id}` → /api/proxy/employees/${id} → proxied correctly
             const res = await employeesClient.get<EmployeeDetail>(`/${id}`)
             return res.data
-        } catch (error: unknown) {
-            throw new Error(extractApiError(error, 'Failed to fetch employee'))
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, 'Failed to fetch employee'))
         }
     },
 
@@ -128,8 +129,8 @@ export const employeeService = {
                 `/list?${q.toString()}`
             )
             return res.data
-        } catch (error: unknown) {
-            throw new Error(extractApiError(error, 'Failed to fetch employees'))
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, 'Failed to fetch employees'))
         }
     },
 }
@@ -148,7 +149,7 @@ export async function getTeamMembersForUI(): Promise<{
     if (managerId) {
         const [teamLeaderDetail, colleaguesRes] = await Promise.all([
             employeeService.getEmployee(managerId).catch(() => null),
-            employeeService.listEmployees({ manager_id: managerId, limit: 100 }),
+            employeeService.listEmployees({ manager_id: managerId, limit: 100, is_active: true }),
         ])
 
         return {
@@ -156,10 +157,10 @@ export async function getTeamMembersForUI(): Promise<{
             teamMembers:  colleaguesRes.data
                 .filter((e) => e.employee_id !== myId)
                 .map(listItemToTeamMember),
-            teamLeader: teamLeaderDetail ? detailToTeamMember(teamLeaderDetail) : null,
+            teamLeader: teamLeaderDetail?.is_active ? detailToTeamMember(teamLeaderDetail) : null,
         }
     } else {
-        const directReportsRes = await employeeService.listEmployees({ manager_id: myId, limit: 100 })
+        const directReportsRes = await employeeService.listEmployees({ manager_id: myId, limit: 100, is_active: true })
         return {
             loggedInUser: detailToTeamMember(myDetail),
             teamMembers:  directReportsRes.data.map(listItemToTeamMember),

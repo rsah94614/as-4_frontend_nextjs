@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { fetchWithAuth } from "@/services/auth-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { Category, CreateCategoryPayload, UpdateCategoryPayload } from "@/types/reward-types";
 import { RewardField } from "./UIHelpers";
 import { Loader2, Save, Tag, CheckCircle2 } from "lucide-react";
@@ -69,7 +70,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
             }
             onSave();
         } catch (e: unknown) {
-            setError(e instanceof Error ? e.message : "Request failed");
+            setError(extractErrorMessage(e, "Request failed"));
         } finally {
             setSaving(false);
         }

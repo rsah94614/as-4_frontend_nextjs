@@ -174,6 +174,11 @@ async function handleProxy(
     console.log(`Original Host Header: ${req.headers.get("host")}`);
     console.log("---------------------------------------------");
 
+    console.log(`[proxy] Proxying ${service} -> ${targetUrl}`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
     try {
         const upstream = await proxyRequest(targetUrl, req, token);
         const status = upstream.status;
@@ -214,8 +219,11 @@ async function handleDashboardAggregate(token: string | null): Promise<NextRespo
     };
 
     async function safeFetch(url: string): Promise<unknown> {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
         try {
-            const res = await fetch(url, { headers });
+            const res = await fetch(url, { headers, signal: controller.signal });
+            clearTimeout(timeoutId);
             if (!res.ok) {
                 const body = await res.text().catch(() => "");
                 console.error(`[proxy/dashboard] ${url} → ${res.status}: ${body}`);
@@ -223,6 +231,7 @@ async function handleDashboardAggregate(token: string | null): Promise<NextRespo
             }
             return await res.json();
         } catch (err) {
+            clearTimeout(timeoutId);
             console.error(`[proxy/dashboard] ${url} unreachable:`, err);
             return null;
         }

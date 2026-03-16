@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Menu } from 'lucide-react';
+import { Bell, Menu, ArrowLeft } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { auth } from '@/services/auth-service';
 import { useRouter, usePathname } from 'next/navigation';
@@ -55,6 +55,13 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
     const hasUnread    = unreadCount > 0;
     const previewItems = notifications.slice(0, 5);
+
+    const ADMIN_ROUTES = [
+        '/audit-logs', '/departments', '/designations', '/employees',
+        '/review-categories', '/reviews', '/reward-categories', '/rewards',
+        '/roles', '/statuses', '/team-report'
+    ];
+    const isAdminRoute = ADMIN_ROUTES.some(route => pathname?.startsWith(route));
 
     // ── Bootstrap + poll ─────────────────────────────────────────────────────
     // Do an initial load when the Navbar mounts so the badge and dropdown
@@ -122,15 +129,31 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 <div className="flex items-center justify-between h-14 gap-2">
 
                     {/* Hamburger — mobile */}
-                    <button
-                        onClick={onMenuClick}
-                        className="p-2 rounded-md transition-colors lg:hidden shrink-0"
-                        style={{ color: '#fff' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                    >
-                        <Menu className="w-5 h-5" />
-                    </button>
+                    {!isAdminRoute && (
+                        <button
+                            onClick={onMenuClick}
+                            className="p-2 rounded-md transition-colors lg:hidden shrink-0"
+                            style={{ color: '#fff' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+                    )}
+
+                    {/* Back button for admin routes */}
+                    {isAdminRoute && (
+                        <button
+                            onClick={() => router.back()}
+                            className="p-2 ml-2 rounded-md transition-colors shrink-0 flex items-center justify-center"
+                            style={{ color: '#fff', background: 'rgba(255,255,255,0.1)' }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+                            aria-label="Go back"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                        </button>
+                    )}
 
                     {/* Right cluster */}
                     <div className="flex items-center gap-3 ml-auto">

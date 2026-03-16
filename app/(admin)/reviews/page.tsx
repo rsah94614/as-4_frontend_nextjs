@@ -8,12 +8,10 @@ import {
 import { useAdminReviews } from "@/hooks/useAdminReviews";
 import { TeamSection } from "@/components/features/admin/reviews/TeamSection";
 import { CalendarStrip } from "@/components/features/admin/reviews/UIHelpers";
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
+
 
 export default function AdminReviewsPage() {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [search, setSearch]           = useState("");
+    const [search, setSearch] = useState("");
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
     const {
@@ -34,7 +32,7 @@ export default function AdminReviewsPage() {
         });
     }, [managers, getTeam, search]);
 
-    const handleExpandAll   = () => setExpandedIds(new Set(filteredManagers.map((m) => m.employee_id)));
+    const handleExpandAll = () => setExpandedIds(new Set(filteredManagers.map((m) => m.employee_id)));
     const handleCollapseAll = () => setExpandedIds(new Set());
     const toggleTeam = (id: string) => {
         setExpandedIds((prev) => {
@@ -45,12 +43,8 @@ export default function AdminReviewsPage() {
     };
 
     return (
-        <div className="flex h-screen bg-white overflow-hidden">
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-            <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                <Navbar onMenuClick={() => setSidebarOpen(true)} />
-
-                <main className="flex-1 overflow-y-auto bg-white">
+        <>
+            <main className="flex-1 overflow-y-auto bg-white">
 
                     {/* ── Page Header ── */}
                     <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
@@ -216,7 +210,6 @@ export default function AdminReviewsPage() {
                         </div>
                     </div>
                 </main>
-            </div>
-        </div>
+        </>
     );
 }

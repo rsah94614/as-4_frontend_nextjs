@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 // 1. Swap fetchWithAuth for our Axios client builder
 import { createAuthenticatedClient } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { matchesPeriod, matchesType } from "../lib/history-utils";
 import { PAGE_SIZE } from "../components/features/history/constants";
 import type {
@@ -51,10 +52,9 @@ export function useHistoryData() {
             setAllHistory(res.data.data);
             setTotalItems(res.data.total_items);
 
-        } catch (err: unknown) {
+        } catch (err) {
             // 4. Handle Axios errors properly to extract backend details
-            const e = err as { response?: { data?: { detail?: string } }, message?: string };
-            setError(e.response?.data?.detail || e.message || "Something went wrong");
+            setError(extractErrorMessage(err, "Something went wrong"));
         } finally {
             setLoading(false);
         }

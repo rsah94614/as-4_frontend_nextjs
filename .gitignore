@@ -10,6 +10,8 @@
 !.yarn/releases
 !.yarn/versions
 
+/.vscode
+
 
 pnpm-lock.yaml
 
@@ -48,6 +50,7 @@ next-env.d.ts
 .package-lock.json
 
 CLAUDE.md
+AGENTS.md
 
 .vscode/settings.json
 dashboard_optimization_summary.txt

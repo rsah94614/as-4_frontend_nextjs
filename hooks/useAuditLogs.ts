@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import orgApiClient from "@/services/org-api-client";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { AuditLog, AuditFilters, AuditLogsResponse } from "@/types/audit-types";
 import { PaginationMeta } from "@/types/pagination";
 
@@ -36,8 +37,8 @@ export function useAuditLogs() {
             const res = await orgApiClient.get<AuditLogsResponse>("/audit-logs", { params });
             setLogs(res.data.data ?? []);
             setPagination(res.data.pagination ?? null);
-        } catch (err: unknown) {
-            const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to load audit logs.";
+        } catch (err) {
+            const detail = extractErrorMessage(err, "Failed to load audit logs.");
             const s = (err as { response?: { status?: number } })?.response?.status;
             setError(
                 s === 401

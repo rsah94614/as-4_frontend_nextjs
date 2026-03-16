@@ -12,8 +12,9 @@
  */
 
 import { createAuthenticatedClient } from "@/lib/api-utils";
-import { uploadToStorage } from "@/services/cloudinary";
-import { extractApiError, requireAuthenticatedUserId, categorizeFileUrls } from "@/lib/api-utils";
+import { uploadToStorage } from "@/services/s3";
+import { requireAuthenticatedUserId, categorizeFileUrls } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 import type { ReviewResponse, PaginatedReviewResponse } from "@/types/review";
 
 const recognitionClient = createAuthenticatedClient("/api/proxy/recognition");
@@ -178,8 +179,8 @@ export async function submitReview(params: SubmitReviewParams): Promise<SubmitRe
             review,
             reviewsRemaining: updatedState.reviewsRemaining,
         };
-    } catch (error: unknown) {
-        throw new Error(extractApiError(error, "Failed to create review."));
+    } catch (error) {
+        throw new Error(extractErrorMessage(error, "Failed to create review."));
     }
 }
 
@@ -191,7 +192,7 @@ export async function listReviews(page = 1, pageSize = 20): Promise<PaginatedRev
             `${ENDPOINTS.REVIEWS_LIST}?page=${page}&page_size=${pageSize}`
         );
         return res.data;
-    } catch (error: unknown) {
-        throw new Error(extractApiError(error, "Failed to fetch reviews."));
+    } catch (error) {
+        throw new Error(extractErrorMessage(error, "Failed to fetch reviews."));
     }
 }

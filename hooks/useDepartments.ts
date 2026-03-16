@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { departmentService } from "@/services/department-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 import {
     Department,
     DepartmentType,
@@ -23,7 +24,7 @@ export function useDepartments() {
             const types = await departmentService.listTypes();
             setDepartmentTypes(types);
         } catch (err) {
-            console.error("Failed to load department types", err);
+            console.error("Failed to load department types", extractErrorMessage(err));
         }
     }, []);
 
@@ -38,9 +39,8 @@ export function useDepartments() {
             });
             setDepartments(res.data);
             setPagination(res.pagination);
-        } catch (err: unknown) {
-            const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to load departments.";
-            setError(detail);
+        } catch (err) {
+            setError(extractErrorMessage(err, "Failed to load departments."));
         } finally {
             setLoading(false);
         }
