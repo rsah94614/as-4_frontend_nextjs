@@ -8,18 +8,22 @@ import {
     MessageSquare,
     Package,
     Coins,
+    Clock,
 } from "lucide-react";
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { HistoryItem } from "../../../types/history-types";
 import { getMessage } from "../../../lib/history-utils";
-
-// ─── Props ────────────────────────────────────────────────────────────────────
+import {
+    SUCCESS_GREEN,
+    DESTRUCTIVE_RED,
+    HDFC_BLUE
+} from "./history-styles";
 
 interface TransactionDetailModalProps {
     item: HistoryItem | null;
@@ -27,33 +31,33 @@ interface TransactionDetailModalProps {
     onClose: () => void;
 }
 
-// ─── Detail Row ───────────────────────────────────────────────────────────────
-
 function DetailRow({
     icon,
     label,
-    children,
+    value,
+    className = "",
 }: {
     icon: React.ReactNode;
     label: string;
-    children: React.ReactNode;
+    value: React.ReactNode;
+    className?: string;
 }) {
     return (
-        <div className="flex items-start gap-3.5 group/row">
-            <div className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 shrink-0 mt-0.5 group-hover/row:bg-gray-100 transition-colors">
-                {icon}
-            </div>
-            <div className="flex-1 min-w-0 pt-0.5">
-                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">
+        <div className={cn("flex flex-col gap-1", className)}>
+            <div className="flex items-center gap-1.5 text-gray-400">
+                <div className="w-3.5 h-3.5 flex items-center justify-center">
+                    {icon}
+                </div>
+                <p className="text-[9px] font-bold uppercase tracking-wider">
                     {label}
                 </p>
-                <div>{children}</div>
+            </div>
+            <div className="text-sm font-bold text-gray-900 pl-5">
+                {value}
             </div>
         </div>
     );
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString("en-IN", {
@@ -71,8 +75,6 @@ function formatTime(iso: string) {
     });
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export default function TransactionDetailModal({
     item,
     open,
@@ -81,112 +83,114 @@ export default function TransactionDetailModal({
     if (!item) return null;
 
     const isRedemption = !!item.reward_catalog;
+    const accentColor = isRedemption ? DESTRUCTIVE_RED : SUCCESS_GREEN;
+    const accentBg    = isRedemption ? "#fef2f2" : "#f0fdf4";
+    const accentBorder = isRedemption ? "#fecaca" : "#bbf7d0";
 
     return (
         <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-            <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden rounded-[32px] border-0 shadow-2xl animate-in zoom-in-95 duration-200">
-                {/* ── Header ── */}
-                <div className="relative px-8 pt-10 pb-8 bg-white border-b border-gray-100">
-                    <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: isRedemption ? "#E31837" : "#004C8F" }} />
+            {/* Fully white, compact modal — no rounded-b artifacts */}
+            <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl bg-white">
+                {/* Accent stripe */}
+                <div className="h-1 w-full" style={{ backgroundColor: accentColor }} />
 
-                    <DialogHeader className="relative z-10 space-y-4">
-                        <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 shadow-sm text-left align-left">
-                            {isRedemption ? (
-                                <ArrowUpRight className="w-7 h-7 text-[#E31837]" />
-                            ) : (
-                                <TrendingUp className="w-7 h-7 text-[#004C8F]" />
-                            )}
-                        </div>
-                        <div className="space-y-1 text-left">
-                            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">
-                                Transaction Detail
-                            </p>
-                            <DialogTitle className="text-2xl font-bold text-[#004C8F] leading-tight">
-                                {getMessage(item)}
-                            </DialogTitle>
-                        </div>
-                    </DialogHeader>
+                {/* Header */}
+                <div className="px-7 pt-6 pb-5 text-center border-b border-gray-100">
+                    {/* Icon */}
+                    <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 border"
+                        style={{ backgroundColor: accentBg, borderColor: accentBorder, color: accentColor }}
+                    >
+                        {isRedemption
+                            ? <ArrowUpRight size={26} />
+                            : <TrendingUp size={26} />}
+                    </div>
+
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.18em] mb-1">
+                        Transaction Details
+                    </p>
+                    <DialogTitle
+                        className="text-base font-black leading-snug"
+                        style={{ color: HDFC_BLUE }}
+                    >
+                        {getMessage(item)}
+                    </DialogTitle>
+
+                    <Badge
+                        className="mt-3 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest border-0"
+                        style={{ backgroundColor: accentBg, color: accentColor }}
+                    >
+                        {isRedemption ? "Redeemed Points" : "Earned Points"}
+                    </Badge>
                 </div>
 
-                {/* ── Details section ── */}
-                <div className="px-8 py-8 space-y-6 bg-white">
-                    {/* Points row */}
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                        <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isRedemption ? "bg-[#E31837]/10 text-[#E31837]" : "bg-[#004C8F]/10 text-[#004C8F]"}`}>
-                                <Coins className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                    {isRedemption ? "Points Deducted" : "Points Earned"}
-                                </p>
-                                <p className={`text-xl font-black ${isRedemption ? "text-[#E31837]" : "text-[#004C8F]"}`}>
-                                    {isRedemption ? "-" : "+"}{item.points}
-                                </p>
-                            </div>
-                        </div>
-                        <Badge
-                            className={`rounded-lg py-1 text-[10px] font-bold uppercase ${isRedemption
-                                ? "bg-[#E31837]/10 text-[#E31837] hover:bg-[#E31837]/10 border-none px-2"
-                                : "bg-[#004C8F]/10 text-[#004C8F] hover:bg-[#004C8F]/10 border-none px-2"
-                                }`}
+                {/* Body */}
+                <div className="px-7 py-5 space-y-4 bg-white">
+
+                    {/* Points Card */}
+                    <div className="rounded-xl border p-4 flex items-center gap-4 relative overflow-hidden"
+                        style={{ backgroundColor: accentBg, borderColor: accentBorder }}>
+                        <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: accentColor }} />
+                        <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: "#fff", color: accentColor, border: `1px solid ${accentBorder}` }}
                         >
-                            {isRedemption ? "Redemption" : "Points Earned"}
-                        </Badge>
+                            <Coins size={20} />
+                        </div>
+                        <div>
+                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+                                {isRedemption ? "Points Deducted" : "Total Received"}
+                            </p>
+                            <p className="text-xl font-black" style={{ color: accentColor }}>
+                                {isRedemption ? "-" : "+"}{item.points.toLocaleString()}
+                                <span className="text-xs font-semibold text-gray-400 ml-1">pts</span>
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <DetailRow icon={<Calendar className="w-4 h-4" />} label="Date">
-                            <span className="text-sm text-gray-900 font-bold">
-                                {formatDate(item.granted_at)}
-                            </span>
-                        </DetailRow>
-                        <DetailRow icon={<Hash className="w-4 h-4" />} label="Time">
-                            <span className="text-sm text-gray-900 font-bold">
-                                {formatTime(item.granted_at)}
-                            </span>
-                        </DetailRow>
+                    {/* Date / Time / ID grid */}
+                    <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-4 grid grid-cols-2 gap-4">
+                        <DetailRow icon={<Calendar size={12} />} label="Date" value={formatDate(item.granted_at)} />
+                        <DetailRow icon={<Clock size={12} />} label="Time" value={formatTime(item.granted_at)} />
+                        <DetailRow
+                            className="col-span-2"
+                            icon={<Hash size={12} />}
+                            label="Transaction ID"
+                            value={
+                                <span className="font-mono text-[10px] text-gray-500 break-all tracking-tight">
+                                    {item.history_id}
+                                </span>
+                            }
+                        />
                     </div>
 
-                    <div className="border-t border-gray-100 pt-6" />
-
-                    <DetailRow
-                        icon={<Hash className="w-4 h-4" />}
-                        label="Transaction ID"
-                    >
-                        <span className="text-xs font-mono text-gray-500 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-xl inline-block">
-                            {item.history_id}
-                        </span>
-                    </DetailRow>
-
-                    {/* Reward details (if redemption) */}
+                    {/* Reward info */}
                     {item.reward_catalog && (
-                        <div className="p-4 rounded-2xl bg-[#004C8F]/5 border border-[#004C8F]/10 space-y-3">
-                            <div className="flex items-center gap-2 text-[#004C8F]">
-                                <Package className="w-4 h-4" />
-                                <p className="text-[10px] font-bold uppercase tracking-wider">Reward Information</p>
+                        <div
+                            className="rounded-xl border p-4 space-y-2"
+                            style={{ backgroundColor: accentBg, borderColor: accentBorder }}
+                        >
+                            <div className="flex items-center gap-1.5" style={{ color: accentColor }}>
+                                <Package size={14} />
+                                <p className="text-[9px] font-black uppercase tracking-wider">Reward Info</p>
                             </div>
-                            <div>
-                                <p className="text-sm text-gray-900 font-bold">
-                                    {item.reward_catalog.reward_name}
-                                </p>
-                                <p className="text-xs font-mono text-[#004C8F]/70 mt-1">
-                                    Code: {item.reward_catalog.reward_code}
-                                </p>
-                            </div>
+                            <p className="text-sm font-black text-gray-900">{item.reward_catalog.reward_name}</p>
+                            <p className="text-[10px] text-gray-400 font-medium">
+                                Code: <span className="font-mono text-gray-600">{item.reward_catalog.reward_code}</span>
+                            </p>
                         </div>
                     )}
 
-                    {/* Comment */}
+                    {/* Note */}
                     {item.comment && (
-                        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                            <div className="flex items-center gap-2 text-gray-400 mb-2">
-                                <MessageSquare className="w-4 h-4" />
-                                <p className="text-[10px] font-bold uppercase tracking-wider">Note</p>
+                        <div className="flex gap-3 pt-1">
+                            <MessageSquare className="w-4 h-4 text-gray-300 shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Note</p>
+                                <p className="text-xs text-gray-500 italic leading-relaxed">
+                                    &ldquo;{item.comment}&rdquo;
+                                </p>
                             </div>
-                            <p className="text-sm text-gray-600 leading-relaxed italic">
-                                &ldquo;{item.comment}&rdquo;
-                            </p>
                         </div>
                     )}
                 </div>

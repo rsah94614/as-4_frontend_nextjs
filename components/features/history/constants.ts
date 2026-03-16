@@ -10,7 +10,8 @@ export const periodOptions: PeriodFilter[] = [
 
 export const typeOptions: TypeFilter[] = [
     "All",
-    "Gift Voucher",
-    "Spot Award",
-    "Merchandises",
+    "Gift Cards",
+    "Merchandise",
+    "Experiences",
+    "Wellness",
 ];

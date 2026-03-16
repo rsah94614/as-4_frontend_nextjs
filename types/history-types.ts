@@ -25,4 +25,4 @@ export interface PaginatedHistoryResponse {
 }
 
 export type PeriodFilter = "All History" | "Redeem History" | "Points History";
-export type TypeFilter = "All" | "Gift Voucher" | "Spot Award" | "Merchandises";
+export type TypeFilter = "All" | "Gift Cards" | "Merchandise" | "Experiences" | "Wellness";

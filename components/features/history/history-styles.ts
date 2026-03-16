@@ -2,18 +2,21 @@
 
 // ── Page layout ──────────────────────────────────────────────────────────────
 
-export const PAGE_WRAPPER = "flex-1 w-full min-h-screen bg-white";
+export const PAGE_WRAPPER = "flex-1 w-full min-h-screen bg-white mx-auto max-w-[1920px] shadow-[0_0_40px_rgba(0,0,0,0.05)] rounded-[20px]";
 
 export const PAGE_HEADER =
-    "bg-white border-b border-gray-200 px-8 md:px-10 py-5";
+    "bg-white border-b border-gray-200 px-8 md:px-10 py-5 rounded-[20px]";
 
 export const PAGE_HEADER_INNER =
     "max-w-[1200px] mx-auto flex items-center justify-between";
 
-export const PAGE_CONTENT = "px-8 md:px-10 py-8 max-w-[1200px] mx-auto";
+export const PAGE_CONTENT = "px-8 md:px-10 py-8 max-w-[1200px] mx-auto rounded-[20px]";
 
 export const HDFC_RED = "#c41230";
 export const HDFC_BLUE = "#003366";
+
+export const SUCCESS_GREEN = "#16a34a"; // Classic green (green-600)
+export const DESTRUCTIVE_RED = "#dc2626"; // Classic red (red-600)
 
 // ── Dropdown Buttons ────────────────────────────────────────────────────────
 
@@ -24,7 +27,7 @@ export const FILTER_BTN_ACTIVE =
     "border-gray-300 text-[#004C8F]";
 
 export const CLEAR_BTN =
-    "px-4 py-2 text-xs font-semibold text-[#E31837] border border-[#E31837]/20 rounded-lg hover:bg-[#E31837]/5 transition-all";
+    `px-4 py-2 text-xs font-semibold text-[${DESTRUCTIVE_RED}] border border-[${DESTRUCTIVE_RED}]/20 rounded-lg hover:bg-[${DESTRUCTIVE_RED}]/5 transition-all`;
 
 // ── Dropdown Menu ───────────────────────────────────────────────────────────
 

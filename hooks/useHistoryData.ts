@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-// 1. Swap fetchWithAuth for our Axios client builder
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { auth } from "@/services/auth-service";
 import { matchesPeriod, matchesType } from "../lib/history-utils";
 import { PAGE_SIZE } from "../components/features/history/constants";
 import type {
@@ -13,8 +13,55 @@ import type {
     TypeFilter,
 } from "../types/history-types";
 
-// 2. Create the proxy client
+// ── Proxy clients ────────────────────────────────────────────────────────────
 const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
+const walletClient  = createAuthenticatedClient("/api/proxy/wallet");
+
+// ── Wallet transaction types (mirrors backend) ──────────────────────────────
+interface TransactionType {
+    type_id: string;
+    code: string;
+    name: string;
+    is_credit: boolean;
+}
+
+interface Transaction {
+    transaction_id: string;
+    wallet_id: string;
+    amount: number;
+    transaction_type: TransactionType;
+    description: string | null;
+    transaction_at: string;
+}
+
+interface TransactionListResponse {
+    page: number;
+    limit: number;
+    total: number;
+    transactions: Transaction[];
+}
+
+interface WalletData {
+    wallet_id: string;
+    employee_id: string;
+    available_points: number;
+}
+
+/**
+ * Convert a credit (points-earned) transaction into a HistoryItem shape.
+ * These items have NO `reward_catalog`, so matchesPeriod("Points History")
+ * returns true for them.
+ */
+function transactionToHistoryItem(txn: Transaction): HistoryItem {
+    return {
+        history_id: txn.transaction_id,
+        points: txn.amount,
+        comment: txn.description ?? "Points earned",
+        granted_at: txn.transaction_at,
+        // No reward_catalog → "Points History" filter will include these
+        reward_catalog: undefined,
+    };
+}
 
 export function useHistoryData() {
     // ── Filter state ──────────────────────────────────────────────────────────
@@ -42,19 +89,50 @@ export function useHistoryData() {
         setLoading(true);
         setError(null);
         try {
-            // 3. Use the Axios client with relative paths
-            const res = await rewardsClient.get<PaginatedHistoryResponse>(
+            // 1. Fetch reward redemption history (items WITH reward_catalog)
+            const rewardsRes = await rewardsClient.get<PaginatedHistoryResponse>(
                 `/history/me?page=${pageNum}&size=${PAGE_SIZE}`
             );
+            const redemptionItems: HistoryItem[] = rewardsRes.data.data;
 
-            // Axios automatically resolves JSON into the `.data` property
-            // and throws an error automatically if the status is not 2xx.
-            setAllHistory(res.data.data);
-            setTotalItems(res.data.total_items);
+            // 2. Fetch credit transactions (points earned) from wallet service
+            let pointsItems: HistoryItem[] = [];
+            try {
+                const user = auth.getUser();
+                if (user?.employee_id) {
+                    const walletRes = await walletClient.get<WalletData>(
+                        `/employees/${user.employee_id}`
+                    );
+                    const walletId = walletRes.data.wallet_id;
 
+                    if (walletId) {
+                        const txnRes = await walletClient.get<TransactionListResponse>(
+                            `/transactions?wallet_id=${walletId}&page=${pageNum}&limit=${PAGE_SIZE}`
+                        );
+                        // Only include credit (points-earned) transactions
+                        pointsItems = txnRes.data.transactions
+                            .filter((txn) => txn.transaction_type.is_credit)
+                            .map(transactionToHistoryItem);
+                    }
+                }
+            } catch (err) {
+                // Wallet fetch failed — still show redemption history
+                console.warn("Failed to fetch wallet transactions for points history", err);
+            }
+
+            // 3. Merge both sources, sort by date descending
+            const merged = [...redemptionItems, ...pointsItems].sort(
+                (a, b) => new Date(b.granted_at).getTime() - new Date(a.granted_at).getTime()
+            );
+
+            setAllHistory(merged);
+            // Total items = redemption total + points items fetched
+            setTotalItems(
+                rewardsRes.data.total_items + pointsItems.length
+            );
         } catch (err) {
-            // 4. Handle Axios errors properly to extract backend details
-            setError(extractErrorMessage(err, "Something went wrong"));
+            // 4. Handle Axios errors properly using the extraction utility
+            setError(extractErrorMessage(err, "Something went wrong fetching history"));
         } finally {
             setLoading(false);
         }
