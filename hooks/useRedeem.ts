@@ -6,7 +6,7 @@ import {
   fetchCatalog,
   fetchCategories,
   fetchWallet,
-} from "@/services/redeem-api";
+} from "@/services/rewards-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 
 import {

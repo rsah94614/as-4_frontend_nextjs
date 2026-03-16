@@ -1,8 +1,5 @@
 // ─── Review Feature Config & Helpers ──────────────────────────────────────────
 
-export const API =
-    process.env.NEXT_PUBLIC_RECOGNITION_API_URL || "http://localhost:8005"
-
 export const RATING_LABELS: Record<number, string> = {
     1: "Poor",
     2: "Below Average",

@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import { Loader2, Archive } from "lucide-react";
-import { fetchWithAuth } from "@/services/auth-service";
+import { createAuthenticatedClient } from "@/lib/api-utils";
+
+const rewardsApiClient = createAuthenticatedClient("/api/proxy/rewards");
 import { extractErrorMessage } from "@/lib/error-utils";
 import { RewardItem } from "@/types/reward-types";
 import { RewardField } from "./UIHelpers";
@@ -16,7 +18,6 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 
-const API = process.env.NEXT_PUBLIC_REWARDS_API_URL ?? "http://localhost:8006";
 
 interface RestockModalProps {
     item: RewardItem;
@@ -37,14 +38,7 @@ export function RestockModal({ item, isOpen, onClose, onSave }: RestockModalProp
         setSaving(true);
         setError(null);
         try {
-            const r = await fetchWithAuth(`${API}/v1/rewards/catalog/${item.catalog_id}/stock`, {
-                method: "PATCH",
-                body: JSON.stringify({ amount }),
-            });
-            if (!r.ok) {
-                const d = await r.json();
-                throw new Error(d.detail ?? "Request failed");
-            }
+            await rewardsApiClient.patch(`/catalog/${item.catalog_id}/stock`, { amount });
             onSave();
         } catch (e: unknown) {
             setError(extractErrorMessage(e, "Request failed"));

@@ -13,7 +13,6 @@ import {
 import axiosClient from "@/services/api-client";
 import { BulkImportResult } from "@/types/team-types";
 
-const AUTH_API = process.env.NEXT_PUBLIC_AUTH_API_URL || "http://localhost:8001";
 
 interface BulkImportModalProps {
     onClose: () => void;
@@ -69,7 +68,7 @@ export function BulkImportModal({ onClose, onSuccess }: BulkImportModalProps) {
             const formData = new FormData();
             formData.append("file", file);
             const res = await axiosClient.post(
-                `${AUTH_API}/v1/auth/bulk-import`,
+                `/bulk-import`,
                 formData,
                 {
                     headers: {

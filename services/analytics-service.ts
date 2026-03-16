@@ -25,7 +25,7 @@ export async function fetchDashboardPlatformStats(): Promise<PlatformStatsRespon
         return res.data;
     } catch (error) {
         console.error("Platform Stats Error:", extractErrorMessage(error));
-        return null; 
+        return null;
     }
 }
 
@@ -35,7 +35,7 @@ export async function fetchDashboardRecentReviews(): Promise<RecentReviewRespons
         return res.data;
     } catch (error) {
         console.error("Recent Reviews Error:", extractErrorMessage(error));
-        return null; 
+        return null;
     }
 }
 
@@ -45,7 +45,7 @@ export async function fetchDashboardLeaderboard(): Promise<LeaderboardEntryRespo
         return res.data;
     } catch (error) {
         console.error("Leaderboard Error:", extractErrorMessage(error));
-        return null; 
+        return null;
     }
 }
 
@@ -55,7 +55,7 @@ export async function fetchTeamsSummary(): Promise<TeamSummaryResponse[] | null>
         return res.data;
     } catch (error) {
         console.error("Teams Summary Error:", extractErrorMessage(error));
-        return null; 
+        return null;
     }
 }
 
@@ -71,14 +71,14 @@ export async function fetchRecognitionUsers(
         return res.data;
     } catch (error) {
         console.error("Recognition Users Error:", extractErrorMessage(error));
-        return null; 
+        return null;
     }
 }
 
 export async function fetchRecognitionTeams(
     range: "week" | "month" | "quarter" | "year",
     page = 1,
-    limit = 50,
+    limit = 20,
 ): Promise<PaginatedTeamRecognition | null> {
     try {
         const res = await analyticsClient.get<PaginatedTeamRecognition>(
@@ -87,7 +87,7 @@ export async function fetchRecognitionTeams(
         return res.data;
     } catch (error) {
         console.error("Recognition Teams Error:", extractErrorMessage(error));
-        return null; 
+        return null;
     }
 }
 
@@ -99,7 +99,7 @@ export async function fetchRecognitionTrend(range: "3m" | "6m" | "1y"): Promise<
         return res.data;
     } catch (error) {
         console.error("Recognition Trend Error:", extractErrorMessage(error));
-        return null; 
+        return null;
     }
 }
 
@@ -109,7 +109,7 @@ export async function fetchParticipation(): Promise<ParticipationResponse | null
         return res.data;
     } catch (error) {
         console.error("Participation Data Error:", extractErrorMessage(error));
-        return null; 
+        return null;
     }
 }
 
@@ -119,35 +119,7 @@ export async function fetchTeamReport(departmentId: string): Promise<TeamReportR
         return res.data;
     } catch (error) {
         console.error("Team Report Error:", extractErrorMessage(error));
-        return null; 
+        return null;
     }
 }
 
-// ── Aggregate fetch — for the main dashboard page ────────────────────────────
-
-export interface DashboardData {
-    platformStats:  PlatformStatsResponse | null;
-    recentReviews:  RecentReviewResponse[] | null;
-    leaderboard:    LeaderboardEntryResponse[] | null;
-    teams:          TeamSummaryResponse[] | null;
-}
-
-export async function fetchAllDashboardData(): Promise<DashboardData> {
-    try {
-        const res = await analyticsClient.get<DashboardData>("/dashboard/all");
-        return res.data;
-    } catch {
-        const [platformStats, recentReviews, leaderboard, teams] = await Promise.allSettled([
-            fetchDashboardPlatformStats(),
-            fetchDashboardRecentReviews(),
-            fetchDashboardLeaderboard(),
-            fetchTeamsSummary(),
-        ]);
-        return {
-            platformStats: platformStats.status === "fulfilled" ? platformStats.value : null,
-            recentReviews: recentReviews.status === "fulfilled" ? recentReviews.value : null,
-            leaderboard:   leaderboard.status   === "fulfilled" ? leaderboard.value   : null,
-            teams:         teams.status         === "fulfilled" ? teams.value         : null,
-        };
-    }
-}

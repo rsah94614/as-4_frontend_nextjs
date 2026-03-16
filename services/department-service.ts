@@ -105,8 +105,7 @@ export const departmentService = {
             if ("data" in res.data) return res.data.data;
             return [];
         } catch (error) {
-            console.error("Failed to load department types", extractErrorMessage(error));
-            return [];
+            throw new Error(extractErrorMessage(error, "Failed to load department types"));
         }
     },
 };

@@ -3,8 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Plus, Search, X, ChevronDown, Info } from "lucide-react";
-
-import orgApiClient from "@/services/org-api-client";
+import { fetchStatuses, createStatus, updateStatus } from "@/services/org-service";
 import {
   Status,
   EntityType,
@@ -40,13 +39,11 @@ export default function StatusesPage() {
   };
 
   // ─── Data Fetching ────────────────────────────────────────────────────────
-  const fetchStatuses = useCallback(async () => {
+  const loadStatuses = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, string> = {};
-      if (filterType) params.entity_type = filterType;
-      const res = await orgApiClient.get<Status[]>("/statuses", { params });
-      setStatuses(Array.isArray(res.data) ? res.data : []);
+      const data = await fetchStatuses(filterType || undefined);
+      setStatuses(data);
     } catch (e: unknown) {
       showFlash(extractErrorMessage(e, "Could not load statuses. Please refresh."), "error");
     } finally {
@@ -55,8 +52,8 @@ export default function StatusesPage() {
   }, [filterType]);
 
   useEffect(() => {
-    fetchStatuses();
-  }, [fetchStatuses]);
+    loadStatuses();
+  }, [loadStatuses]);
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
   const handleCreate = async (form: {
@@ -69,10 +66,10 @@ export default function StatusesPage() {
     if (!form.status_name.trim()) return showFlash("Please enter a status name.", "error");
     setSaving(true);
     try {
-      await orgApiClient.post("/statuses", form);
+      await createStatus(form);
       setShowCreate(false);
       showFlash("Status created successfully.");
-      fetchStatuses();
+      loadStatuses();
     } catch (e: unknown) {
       showFlash(extractErrorMessage(e, "Could not create status. Please try again."), "error");
     } finally {
@@ -89,10 +86,10 @@ export default function StatusesPage() {
     if (!editForm.status_name.trim()) return showFlash("Status name cannot be empty.", "error");
     setSaving(true);
     try {
-      await orgApiClient.put(`/statuses/${statusId}`, editForm);
+      await updateStatus(statusId, editForm);
       setEditId(null);
       showFlash("Status updated successfully.");
-      fetchStatuses();
+      loadStatuses();
     } catch (e: unknown) {
       showFlash(extractErrorMessage(e, "Could not update status. Please try again."), "error");
     } finally {

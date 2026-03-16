@@ -26,7 +26,7 @@ export default function RolesPage() {
             <main className="flex-1 overflow-y-auto bg-white">
 
                 {/* Red accent line */}
-                <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+                {/* <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} /> */}
 
                 {/* ── Tab bar ── */}
                 <div className="bg-white border-b border-gray-200 px-3 sm:px-5 lg:px-8">

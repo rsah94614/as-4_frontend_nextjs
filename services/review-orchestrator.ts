@@ -11,26 +11,21 @@
  * The frontend does NOT pass rating — the backend computes everything from categories.
  */
 
-import { createAuthenticatedClient } from "@/lib/api-utils";
+import { createAuthenticatedClient, requireAuthenticatedUserId, categorizeFileUrls } from "@/lib/api-utils";
 import { uploadToStorage } from "@/services/s3";
-import { requireAuthenticatedUserId, categorizeFileUrls } from "@/lib/api-utils";
-import { extractErrorMessage } from "@/lib/error-utils";
-import type { ReviewResponse, PaginatedReviewResponse } from "@/types/review";
 
 const recognitionClient = createAuthenticatedClient("/api/proxy/recognition");
+import { extractErrorMessage } from "@/lib/error-utils";
+import type { ReviewResponse, PaginatedReviewResponse } from "@/types/review";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const ENDPOINTS = {
     REVIEWS_CREATE: "/reviews",
-    REVIEWS_LIST:   "/reviews",
+    REVIEWS_LIST: "/reviews",
 } as const;
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
-
-function requireMyId(): string {
-    return requireAuthenticatedUserId();
-}
 
 function currentMonthStart(): string {
     const d = new Date();
@@ -58,14 +53,14 @@ export function invalidateMonthlyReviewState(): void {
 // ─── Monthly state ────────────────────────────────────────────────────────────
 
 export interface MonthlyReviewState {
-    reviewsUsed:         number;
+    reviewsUsed: number;
     reviewedReceiverIds: Set<string>;
-    reviewsRemaining:    number;
-    canSubmit:           boolean;
+    reviewsRemaining: number;
+    canSubmit: boolean;
 }
 
 async function _doFetchMonthlyReviewState(): Promise<MonthlyReviewState> {
-    const myId       = requireMyId();
+    const myId = requireAuthenticatedUserId();
     const monthStart = currentMonthStart();
 
     const receiverIds = new Set<string>();
@@ -88,7 +83,7 @@ async function _doFetchMonthlyReviewState(): Promise<MonthlyReviewState> {
         page++;
     }
 
-    const reviewsUsed      = receiverIds.size;
+    const reviewsUsed = receiverIds.size;
     // Quota is enforced server-side; we use a generous client-side cap for UX only
     const CLIENT_QUOTA_CAP = 99;
     const reviewsRemaining = Math.max(0, CLIENT_QUOTA_CAP - reviewsUsed);
@@ -106,10 +101,10 @@ export async function fetchMonthlyReviewState(): Promise<MonthlyReviewState> {
 }
 
 // Convenience wrappers
-export async function getReviewsUsed():       Promise<number>       { return (await fetchMonthlyReviewState()).reviewsUsed; }
-export async function getReviewsRemaining():  Promise<number>       { return (await fetchMonthlyReviewState()).reviewsRemaining; }
-export async function canSubmitReview():      Promise<boolean>      { return (await fetchMonthlyReviewState()).canSubmit; }
-export async function getReviewedThisMonth(): Promise<Set<string>>  { return (await fetchMonthlyReviewState()).reviewedReceiverIds; }
+export async function getReviewsUsed(): Promise<number> { return (await fetchMonthlyReviewState()).reviewsUsed; }
+export async function getReviewsRemaining(): Promise<number> { return (await fetchMonthlyReviewState()).reviewsRemaining; }
+export async function canSubmitReview(): Promise<boolean> { return (await fetchMonthlyReviewState()).canSubmit; }
+export async function getReviewedThisMonth(): Promise<Set<string>> { return (await fetchMonthlyReviewState()).reviewedReceiverIds; }
 export async function hasAlreadyReviewed(receiverId: string): Promise<boolean> {
     return (await getReviewedThisMonth()).has(receiverId);
 }
@@ -117,21 +112,21 @@ export async function hasAlreadyReviewed(receiverId: string): Promise<boolean> {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface SubmitReviewParams {
-    receiverId:  string;
+    receiverId: string;
     categoryIds: string[];   // 1–5 UUIDs from GET /review-categories
-    comment:     string;
-    files?:      File[];
+    comment: string;
+    files?: File[];
 }
 
 export interface SubmitReviewResult {
-    review:           ReviewResponse;
+    review: ReviewResponse;
     reviewsRemaining: number;
 }
 
 // ─── Core orchestrator ────────────────────────────────────────────────────────
 
 export async function submitReview(params: SubmitReviewParams): Promise<SubmitReviewResult> {
-    const myId = requireMyId();
+    const myId = requireAuthenticatedUserId();
 
     const monthlyState = await fetchMonthlyReviewState();
 
@@ -155,16 +150,16 @@ export async function submitReview(params: SubmitReviewParams): Promise<SubmitRe
     const uploads = await Promise.all(
         files.map(async (file) => ({
             kind: file.type.split("/")[0],
-            url:  (await uploadToStorage(file)).url,
+            url: (await uploadToStorage(file)).url,
         }))
     );
     const { imageUrl, videoUrl } = categorizeFileUrls(uploads);
 
     try {
         const reviewRes = await recognitionClient.post<ReviewResponse>(ENDPOINTS.REVIEWS_CREATE, {
-            receiver_id:  receiverId,
+            receiver_id: receiverId,
             category_ids: categoryIds,
-            comment:      comment.trim(),
+            comment: comment.trim(),
             ...(imageUrl && { image_url: imageUrl }),
             ...(videoUrl && { video_url: videoUrl }),
         });

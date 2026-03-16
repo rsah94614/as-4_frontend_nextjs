@@ -3,39 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import AdminTeamsSection from "./AdminTeamsSection";
-import { fetchTeamReport } from "@/services/analytics-service";
+import { fetchTeamReport, fetchTeamsSummary } from "@/services/analytics-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import type { TeamSummaryResponse } from "@/types/dashboard-types";
 
-
-
 type SortOption = "score" | "points" | "members" | "name";
-
-
-
-const ANALYTICS_API =
-    process.env.NEXT_PUBLIC_ANALYTICS_API_URL || "http://localhost:8008";
 
 async function fetchTeamsWithDetail(): Promise<{
     data: TeamSummaryResponse[] | null;
     error: string | null;
 }> {
-    const url = `${ANALYTICS_API}/v1/analytics/dashboard/teams`;
     try {
-        const { fetchWithAuth } = await import("@/services/auth-service");
-        const res = await fetchWithAuth(url);
-        if (res.ok) {
-            const data = await res.json();
-            return { data: Array.isArray(data) ? data : data?.teams ?? [], error: null };
-        }
-        let detail = "";
-        try {
-            const body = await res.json();
-            detail = body?.detail ?? body?.message ?? "";
-        } catch { /* */ }
-        return { data: null, error: detail || `HTTP ${res.status}` };
+        const data = await fetchTeamsSummary();
+        return { data, error: null };
     } catch (e: unknown) {
         return { data: null, error: extractErrorMessage(e, "Unexpected error") };
     }
@@ -109,17 +91,17 @@ export default function AdminTeamReportsSection() {
         if (!teams.length) return;
         setDownloadingAll(true);
         try {
-            const wb = XLSX.utils.book_new();
-            const summaryHeaders = ["Department", "Members", "Total Points", "Avg Performance Score", "Reviews Received", "Rewards Redeemed"];
-            const summaryRows = teams.map(t => [
+            const wb = new ExcelJS.Workbook();
+
+            const summarySheet = wb.addWorksheet("All Teams");
+            summarySheet.columns = [{ width: 24 }, { width: 10 }, { width: 14 }, { width: 22 }, { width: 18 }, { width: 18 }];
+            summarySheet.addRow(["Department", "Members", "Total Points", "Avg Performance Score", "Reviews Received", "Rewards Redeemed"]);
+            teams.forEach(t => summarySheet.addRow([
                 t.department_name, t.total_members, t.total_points,
                 `${t.avg_performance_score}%`,
                 (t as TeamSummaryResponse & { total_reviews?: number }).total_reviews ?? "—",
                 (t as TeamSummaryResponse & { total_rewards?: number }).total_rewards ?? "—",
-            ]);
-            const summarySheet = XLSX.utils.aoa_to_sheet([summaryHeaders, ...summaryRows]);
-            summarySheet["!cols"] = [{ wch: 24 }, { wch: 10 }, { wch: 14 }, { wch: 22 }, { wch: 18 }, { wch: 18 }];
-            XLSX.utils.book_append_sheet(wb, summarySheet, "All Teams");
+            ]));
 
             const reports = await Promise.allSettled(teams.map(t => fetchTeamReport(t.department_id)));
             const memberHeaders = ["Rank", "Name", "Designation", "Performance Score", "Rating", "Total Points Earned", "Available Points", "Points This Month", "Reviews Received", "Reviews This Month", "Rewards Redeemed"];
@@ -128,21 +110,29 @@ export default function AdminTeamReportsSection() {
                 const sheetName = team.department_name.replace(/[\\/:*?[\]]/g, "").slice(0, 31);
                 if (result.status === "fulfilled" && result.value) {
                     const report = result.value;
-                    const rows = report.members.map((m, idx) => [
+                    const sheet = wb.addWorksheet(sheetName);
+                    sheet.columns = [6, 22, 22, 18, 18, 20, 18, 18, 18, 18, 18].map(w => ({ width: w }));
+                    sheet.addRow(memberHeaders);
+                    report.members.forEach((m, idx) => sheet.addRow([
                         idx + 1, m.username, m.designation, m.performance_score,
                         m.performance_score >= 75 ? "Excellent" : m.performance_score >= 50 ? "Good" : m.performance_score >= 25 ? "Fair" : "Needs Attention",
                         m.total_earned_points, m.available_points, m.points_this_month,
                         m.reviews_received, m.reviews_this_month, m.rewards_redeemed,
-                    ]);
-                    const sheet = XLSX.utils.aoa_to_sheet([memberHeaders, ...rows]);
-                    sheet["!cols"] = [{ wch: 6 }, { wch: 22 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
-                    XLSX.utils.book_append_sheet(wb, sheet, sheetName);
+                    ]));
                 } else {
-                    const sheet = XLSX.utils.aoa_to_sheet([["Failed to load data for this team"]]);
-                    XLSX.utils.book_append_sheet(wb, sheet, sheetName);
+                    const sheet = wb.addWorksheet(sheetName);
+                    sheet.addRow(["Failed to load data for this team"]);
                 }
             });
-            XLSX.writeFile(wb, `All_Team_Reports_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+            const buffer = await wb.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `All_Team_Reports_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
         } catch {
             setTeamsError("Download failed. Please try again.");
         } finally {

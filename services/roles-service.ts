@@ -1,4 +1,4 @@
-// services/roles-client.ts
+// services/roles-service.ts
 // All requests routed through the Next.js proxy — no direct microservice URLs
 // in the browser.  The proxy strips /api/proxy/roles and forwards to the
 // roles microservice, which receives the bare path (e.g. /list).
@@ -6,14 +6,14 @@
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 
-const rolesAxios = createAuthenticatedClient("/api/proxy/roles");
+const rolesClient = createAuthenticatedClient("/api/proxy/roles");
 
 async function request<T>(
     path: string,
     options: { method?: string; body?: unknown } = {},
 ): Promise<T> {
     try {
-        const res = await rolesAxios({
+        const res = await rolesClient({
             url:    path,
             method: options.method ?? "GET",
             data:   options.body,
@@ -70,8 +70,7 @@ export interface UpdateRouteTitlePayload {
     title:     string;
 }
 
-// ── Roles ──────────────────────────────────────────────────────────────────
-// Paths match router.py exactly:  /list  /create
+// ── Roles ───────────────────────────────────────────────────────────────────
 
 export const rolesApi = {
     listRoles:  (): Promise<Role[]> =>
@@ -80,8 +79,7 @@ export const rolesApi = {
         request("/create", { method: "POST", body }),
 };
 
-// ── Employee Roles ─────────────────────────────────────────────────────────
-// Paths match router.py exactly:  /employees  /assign  /revoke
+// ── Employee Roles ──────────────────────────────────────────────────────────
 
 export const employeeRolesApi = {
     listEmployeeRoles: (): Promise<EmployeeRole[]> =>
@@ -92,12 +90,7 @@ export const employeeRolesApi = {
         request("/revoke", { method: "POST", body }),
 };
 
-// ── Route Permissions ──────────────────────────────────────────────────────
-// Paths match router.py exactly:
-//   GET    /route-permissions
-//   POST   /route-permissions
-//   PATCH  /route-permissions          (remove)
-//   PATCH  /route-permissions/title    (rename)
+// ── Route Permissions ───────────────────────────────────────────────────────
 
 export const routePermissionsApi = {
     listRoutePermissions: (): Promise<RoutePermission[]> =>

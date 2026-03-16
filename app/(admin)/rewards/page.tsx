@@ -3,19 +3,14 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, Search, ChevronDown, X } from "lucide-react";
 
-// 1. Swap fetchWithAuth for our Axios client builder
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Category, RewardItem, Pagination } from "@/types/reward-types";
-
+import { fetchAdminCatalog, fetchAdminCategories } from "@/services/rewards-service";
 
 // Modular Components
 import { RewardGrid } from "@/components/features/admin/rewards/RewardGrid";
 import { RewardModal } from "@/components/features/admin/rewards/RewardModal";
 import { RestockModal } from "@/components/features/admin/rewards/RestockModal";
-
-// 2. Create the proxy client right here
-const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
 
 export default function RewardsPage() {
   const [items, setItems] = useState<RewardItem[]>([]);
@@ -35,16 +30,14 @@ export default function RewardsPage() {
     setLoading(true);
     setError("");
     try {
-      // 3. Use the Axios client with relative paths!
-      const [catRes, itemRes] = await Promise.all([
-        rewardsClient.get(`/categories?active_only=false`),
-        rewardsClient.get(`/catalog?active_only=${filterState === "active"}&page=${page}&size=12`),
+      const [cats, catalog] = await Promise.all([
+        fetchAdminCategories(),
+        fetchAdminCatalog({ page, size: 12, active_only: filterState === "active" ? true : undefined }),
       ]);
 
-      // Axios automatically parses JSON into the .data property
-      setCategories(catRes.data);
-      setItems(itemRes.data.data);
-      setPagination(itemRes.data.pagination);
+      setCategories(cats as Category[]);
+      setItems(catalog.data as unknown as RewardItem[]);
+      setPagination(catalog.pagination as Pagination);
 
     } catch (e: unknown) {
       setError(extractErrorMessage(e, "Failed to load catalog. Check your connection."));
