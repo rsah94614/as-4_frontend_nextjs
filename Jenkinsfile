@@ -84,7 +84,7 @@ pipeline {
             steps {
                 echo 'Building Next.js Production Image...'
                 sh """
-                docker build \\
+                docker build --no-cache \\
                   --build-arg NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \\
                   --build-arg NEXT_PUBLIC_RECOGNITION_API_URL=${NEXT_PUBLIC_RECOGNITION_API_URL} \\
                   --build-arg NEXT_PUBLIC_EMPLOYEE_API_URL=${NEXT_PUBLIC_EMPLOYEE_API_URL} \\
