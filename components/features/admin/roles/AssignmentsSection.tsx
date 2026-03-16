@@ -56,7 +56,7 @@ function HowItWorks() {
             <button
                 type="button"
                 onClick={() => setOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-4 sm:px-6 py-3.5 hover:bg-gray-50 transition-colors"
             >
                 <div className="flex items-center gap-2">
                     <Info size={13} className="text-[#E31837]" />
@@ -68,7 +68,7 @@ function HowItWorks() {
                 <div className="border-t border-gray-100">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
                         {HOW_IT_WORKS.map((s) => (
-                            <div key={s.n} className="flex gap-3 px-5 py-4">
+                            <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-4">
                                 <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
                                 <div>
                                     <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
@@ -157,7 +157,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
 
                 {/* Card header */}
-                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-2">
                         <Users size={14} className="text-[#004C8F]" />
                         <h2 className="text-sm font-bold text-[#004C8F]">Role Assignments</h2>
@@ -169,7 +169,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                     </div>
                     <button
                         onClick={() => setOpen(true)}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
+                        className="flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
                         style={{ background: "#E31837" }}
                     >
                         <UserPlus size={13} /> Assign Role
@@ -177,8 +177,8 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                 </div>
 
                 {/* Search bar */}
-                <div className="px-6 py-3 border-b border-gray-100">
-                    <div className="relative max-w-sm">
+                <div className="px-4 sm:px-6 py-3 border-b border-gray-100">
+                    <div className="relative w-full sm:max-w-sm">
                         <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                         <input
                             placeholder="Search by name, email or role…"
@@ -207,8 +207,54 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                     </div>
                 ) : (
                     <div>
+                        <div className="md:hidden divide-y divide-gray-100">
+                            {filtered.map((r, i) => (
+                                <div key={r.employee_role_id} className="px-4 py-3.5 space-y-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div
+                                            className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                                            style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
+                                        >
+                                            {initials(r.employee.username)}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-semibold text-[#004C8F] truncate">{r.employee.username}</p>
+                                            <p className="text-[11px] text-gray-400 truncate">{r.employee.email}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span
+                                            className="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold"
+                                            style={rolePillStyle(r.role.name)}
+                                        >
+                                            {r.role.name}
+                                        </span>
+                                        <p className="text-[11px] text-gray-400 text-right">
+                                            {new Date(r.assigned_at).toLocaleDateString("en-IN", {
+                                                day: "2-digit", month: "short", year: "numeric",
+                                            })}
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        disabled={revoking === r.employee_role_id}
+                                        onClick={() => handleRevoke(r)}
+                                        className="inline-flex w-full items-center justify-center gap-1 px-2.5 py-2 rounded-lg text-[11px] font-semibold
+                                            transition-all hover:bg-red-50 disabled:opacity-40 border border-red-100"
+                                        style={{ color: "#E31837" }}
+                                    >
+                                        {revoking === r.employee_role_id
+                                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                                            : <UserMinus size={12} />}
+                                        Revoke
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
                         {/* Table head */}
-                        <div className="grid px-6 py-2.5 bg-gray-50 border-b border-gray-100"
+                        <div className="hidden md:grid px-4 sm:px-6 py-2.5 bg-gray-50 border-b border-gray-100"
                             style={{ gridTemplateColumns: "1fr 160px 120px 90px" }}>
                             {["Employee", "Role", "Assigned", ""].map((h) => (
                                 <span key={h} className="text-[10px] font-black uppercase tracking-widest text-gray-400">{h}</span>
@@ -216,11 +262,11 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                         </div>
 
                         {/* Rows */}
-                        <div className="divide-y divide-gray-100">
+                        <div className="hidden md:block divide-y divide-gray-100">
                             {filtered.map((r, i) => (
                                 <div
                                     key={r.employee_role_id}
-                                    className="grid px-6 py-3.5 items-center hover:bg-gray-50 transition-colors"
+                                    className="grid px-4 sm:px-6 py-3.5 items-center hover:bg-gray-50 transition-colors"
                                     style={{ gridTemplateColumns: "1fr 160px 120px 90px" }}
                                 >
                                     {/* Employee */}
@@ -276,13 +322,13 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                 )}
 
                 {/* Footer bar */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <p className="text-xs text-gray-500">
                         {loading ? "Loading…" : `${records.length} assignment${records.length !== 1 ? "s" : ""}`}
                     </p>
                     <button
                         onClick={() => setOpen(true)}
-                        className="flex items-center gap-1 text-xs font-semibold text-[#004C8F] hover:text-[#E31837] transition-colors"
+                        className="flex items-center gap-1 text-xs font-semibold text-[#004C8F] hover:text-[#E31837] transition-colors w-fit"
                     >
                         <UserPlus size={12} /> Assign another
                     </button>
@@ -302,7 +348,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                     </div>
                     <div className="h-0.5" style={{ background: "#E31837" }} />
 
-                    <div className="p-6 space-y-4 bg-white">
+                    <div className="p-4 sm:p-6 space-y-4 bg-white">
                         <div className="space-y-1.5">
                             <Label htmlFor="employee_id" className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
                                 Employee ID <span style={{ color: "#E31837" }}>*</span>
@@ -334,13 +380,13 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                         </div>
                     </div>
 
-                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+                    <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3">
                         <Button variant="outline" onClick={() => setOpen(false)} disabled={submitting}
-                            className="border-gray-200 text-xs font-semibold">
+                            className="border-gray-200 text-xs font-semibold w-full sm:w-auto">
                             Cancel
                         </Button>
                         <button onClick={handleAssign} disabled={submitting}
-                            className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                            className="flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 w-full sm:w-auto"
                             style={{ background: "#004C8F" }}>
                             {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                             Assign Role

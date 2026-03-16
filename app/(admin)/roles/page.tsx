@@ -29,15 +29,15 @@ export default function RolesPage() {
                 <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
 
                 {/* ── Tab bar ── */}
-                <div className="bg-white border-b border-gray-200 px-8 md:px-10">
-                    <div className="max-w-[1200px] mx-auto flex">
+                <div className="bg-white border-b border-gray-200 px-3 sm:px-5 lg:px-8">
+                    <div className="max-w-[1200px] mx-auto flex overflow-x-auto scrollbar-thin">
                         {TABS.map((t) => {
                             const active = tab === t.id;
                             return (
                                 <button
                                     key={t.id}
                                     onClick={() => setTab(t.id)}
-                                    className="flex items-center gap-2 px-5 py-4 text-sm font-semibold border-b-2 transition-all -mb-px"
+                                    className="flex shrink-0 items-center gap-2 px-3 sm:px-5 py-3.5 sm:py-4 text-xs sm:text-sm font-semibold border-b-2 transition-all -mb-px whitespace-nowrap"
                                     style={
                                         active
                                             ? { color: "#004C8F", borderColor: "#E31837" }
@@ -53,9 +53,9 @@ export default function RolesPage() {
                 </div>
 
                 {/* ── Main content ── */}
-                <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
+                <div className="px-3 sm:px-5 lg:px-8 py-4 sm:py-6 lg:py-8" style={{ background: "#F7F9FC" }}>
                     <div className="max-w-[1200px] mx-auto">
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 sm:p-5 lg:p-8">
                             {tab === "roles" && <RolesSection toast={toast} />}
                             {tab === "assignments" && <AssignmentsSection toast={toast} />}
                             {tab === "permissions" && <RoutePermissionsSection toast={toast} />}
