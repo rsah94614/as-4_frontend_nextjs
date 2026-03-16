@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Tag, Plus, Check, AlertCircle, X, Info, ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
+
 
 import { useReviewCategories } from "@/hooks/useReviewCategories";
 import { ReviewCategory } from "@/types/review-category-types";
@@ -25,21 +24,20 @@ interface EditForm {
 }
 
 export default function ReviewCategoriesPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeOnly, setActiveOnly]   = useState<FilterValue>(null);
+  const [activeOnly, setActiveOnly] = useState<FilterValue>(null);
 
   const { categories, loading, error, createCategory, updateCategory } =
     useReviewCategories(activeOnly);
 
-  const [flash, setFlash]           = useState<{ type: "success" | "error"; msg: string } | null>(null);
+  const [flash, setFlash] = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [editId, setEditId]         = useState<string | null>(null);
-  const [editForm, setEditForm]     = useState<EditForm>({
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<EditForm>({
     category_code: "",
     category_name: "",
-    multiplier:    "",
-    description:   "",
-    is_active:     true,
+    multiplier: "",
+    description: "",
+    is_active: true,
   });
   const [saving, setSaving] = useState(false);
 
@@ -53,7 +51,7 @@ export default function ReviewCategoriesPage() {
     const category_code = String(form.category_code ?? "").trim();
     const category_name = String(form.category_name ?? "").trim();
     const multiplierVal = String(form.multiplier ?? "").trim();
-    const description   = String(form.description ?? "").trim() || undefined;
+    const description = String(form.description ?? "").trim() || undefined;
 
     if (!category_code) return showFlash("Please enter a category code.", "error");
     if (!category_name) return showFlash("Please enter a category name.", "error");
@@ -83,9 +81,9 @@ export default function ReviewCategoriesPage() {
     setEditForm({
       category_code: c.category_code,
       category_name: c.category_name,
-      multiplier:    String(c.multiplier),
-      description:   c.description ?? "",
-      is_active:     c.is_active,
+      multiplier: String(c.multiplier),
+      description: c.description ?? "",
+      is_active: c.is_active,
     });
   };
 
@@ -100,9 +98,9 @@ export default function ReviewCategoriesPage() {
       await updateCategory(id, {
         category_code: editForm.category_code.trim(),
         category_name: editForm.category_name.trim(),
-        multiplier:    parseFloat(editForm.multiplier),
-        description:   editForm.description.trim() || undefined,
-        is_active:     editForm.is_active,
+        multiplier: parseFloat(editForm.multiplier),
+        description: editForm.description.trim() || undefined,
+        is_active: editForm.is_active,
       });
       setEditId(null);
       showFlash("Category updated successfully.");
@@ -123,17 +121,12 @@ export default function ReviewCategoriesPage() {
     }
   };
 
-  const activeCount   = categories.filter(c => c.is_active).length;
+  const activeCount = categories.filter(c => c.is_active).length;
   const inactiveCount = categories.filter(c => !c.is_active).length;
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-white">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Navbar onMenuClick={() => setSidebarOpen(true)} />
-
-        <main className="flex-1 overflow-y-auto bg-white">
+    return (
+        <>
+            <main className="flex-1 overflow-y-auto bg-white">
 
           {/* ── Page Header ── */}
           <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
@@ -200,11 +193,10 @@ export default function ReviewCategoriesPage() {
                 {/* ── Flash ── */}
                 {flash && (
                   <div
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm mb-5 ${
-                      flash.type === "success"
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                        : "bg-red-50 border-red-200 text-red-800"
-                    }`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm mb-5 ${flash.type === "success"
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                      : "bg-red-50 border-red-200 text-red-800"
+                      }`}
                   >
                     {flash.type === "success"
                       ? <Check className="w-4 h-4 shrink-0" />
@@ -257,7 +249,6 @@ export default function ReviewCategoriesPage() {
           </div>
 
         </main>
-      </div>
 
       {/* ── Create modal ── */}
       <ReviewCategoryModals
@@ -266,6 +257,6 @@ export default function ReviewCategoriesPage() {
         onCreate={handleCreate}
         saving={saving}
       />
-    </div>
+    </>
   );
 }

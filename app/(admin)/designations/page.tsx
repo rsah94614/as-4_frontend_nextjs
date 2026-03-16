@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Search, RefreshCw, Plus, X } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
+
 import { useDesignations } from "@/hooks/useDesignations";
 import { Designation } from "@/types/designation-types";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import { DesignationTable } from "@/components/features/admin/designations/Desig
 import { DesignationModal } from "@/components/features/admin/designations/DesignationModal";
 
 export default function DesignationsPage() {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const {
         designations,
         pagination,
@@ -65,13 +63,8 @@ export default function DesignationsPage() {
         : "—";
 
     return (
-        <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#eef0f8" }}>
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-            <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                <Navbar onMenuClick={() => setSidebarOpen(true)} />
-
-                <main className="flex-1 overflow-y-auto p-6 space-y-5">
+        <>
+            <main className="flex-1 overflow-y-auto p-6 space-y-5">
 
                     {/* Blue header bar */}
                     <div
@@ -158,7 +151,6 @@ export default function DesignationsPage() {
                         />
                     </div>
                 </main>
-            </div>
 
             <DesignationModal
                 open={modalOpen}
@@ -166,6 +158,6 @@ export default function DesignationsPage() {
                 onSuccess={refresh}
                 selectedDesignation={selectedDesignation}
             />
-        </div>
+        </>
     );
 }
