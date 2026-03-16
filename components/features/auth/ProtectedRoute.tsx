@@ -24,7 +24,6 @@ export default function ProtectedRoute({
 }: ProtectedRouteProps) {
   const router = useRouter()
   const [isChecking, setIsChecking] = useState(true)
-  const [, setIsAuthenticated] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
@@ -42,7 +41,6 @@ export default function ProtectedRoute({
       }
 
       if (authed) {
-        setIsAuthenticated(true)
         setIsAdmin(isAdminUser())
         setIsChecking(false)
       } else {
