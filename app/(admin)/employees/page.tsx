@@ -8,8 +8,7 @@ import {
     X, Eye, EyeOff, FileSpreadsheet, Download,
 } from "lucide-react";
 import Link from "next/link";
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,12 +24,12 @@ import { createAuthenticatedClient } from "@/lib/api-utils";
 import { auth } from "@/services/auth-service";
 
 // ─── API clients ──────────────────────────────────────────────────────────────
-const empClient  = createAuthenticatedClient("/api/proxy/employees");
+const empClient = createAuthenticatedClient("/api/proxy/employees");
 
 // Auth bulk-import needs multipart — we call fetch directly with the token.
 async function authBulkImport(file: File) {
     const token = auth.getAccessToken();
-    const form  = new FormData();
+    const form = new FormData();
     form.append("file", file);
     const res = await fetch("/api/proxy/auth/bulk-import", {
         method: "POST",
@@ -46,8 +45,8 @@ async function authBulkImport(file: File) {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Designation { designation_id: string; designation_name: string; }
-interface Department  { department_id: string;  department_name: string;  }
-interface Status      { status_id: string;      status_code: string;      status_name: string; }
+interface Department { department_id: string; department_name: string; }
+interface Status { status_id: string; status_code: string; status_name: string; }
 
 interface Employee {
     employee_id: string;
@@ -70,7 +69,7 @@ interface Employee {
 
 interface PaginationMeta {
     current_page: number; per_page: number; total: number;
-    total_pages: number;  has_next: boolean; has_previous: boolean;
+    total_pages: number; has_next: boolean; has_previous: boolean;
 }
 
 interface BulkImportRow {
@@ -116,16 +115,16 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
 
 // ─── HowItWorks ───────────────────────────────────────────────────────────────
 const HOW_IT_WORKS_LIST = [
-    { n: "01", title: "Create Employee",  desc: "Add employees individually via the form, providing all required profile details." },
-    { n: "02", title: "Assign Manager",   desc: "Set manager_id to build the hierarchy used by digest and recognition scoping." },
-    { n: "03", title: "Set DOB",          desc: "Date of birth enables birthday celebration notifications from the celebration worker." },
-    { n: "04", title: "Manage Status",    desc: "Deactivate an employee via the detail panel — soft-deletes without losing history." },
+    { n: "01", title: "Create Employee", desc: "Add employees individually via the form, providing all required profile details." },
+    { n: "02", title: "Assign Manager", desc: "Set manager_id to build the hierarchy used by digest and recognition scoping." },
+    { n: "03", title: "Set DOB", desc: "Date of birth enables birthday celebration notifications from the celebration worker." },
+    { n: "04", title: "Manage Status", desc: "Deactivate an employee via the detail panel — soft-deletes without losing history." },
 ];
 const HOW_IT_WORKS_BULK = [
     { n: "01", title: "Download Template", desc: "Download the CSV template with correct column headers pre-filled." },
-    { n: "02", title: "Fill Data",         desc: "Required: username, email, password, designation_id, department_id. Optional: manager_id, date_of_birth." },
-    { n: "03", title: "Upload File",       desc: "Upload your completed CSV or XLSX file. Each row is processed independently." },
-    { n: "04", title: "Review Results",    desc: "Successful rows are created immediately. Errors are listed per-row — fix and re-upload." },
+    { n: "02", title: "Fill Data", desc: "Required: username, email, password, designation_id, department_id. Optional: manager_id, date_of_birth." },
+    { n: "03", title: "Upload File", desc: "Upload your completed CSV or XLSX file. Each row is processed independently." },
+    { n: "04", title: "Review Results", desc: "Successful rows are created immediately. Errors are listed per-row — fix and re-upload." },
 ];
 
 function HowItWorks({ steps }: { steps: typeof HOW_IT_WORKS_LIST }) {
@@ -218,13 +217,13 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
                     ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },
                 body: JSON.stringify({
-                    username:       form.username,
-                    email:          form.email,
-                    password:       form.password,
+                    username: form.username,
+                    email: form.email,
+                    password: form.password,
                     designation_id: form.designation_id,
-                    department_id:  form.department_id,
-                    manager_id:     form.manager_id   || undefined,
-                    date_of_birth:  form.date_of_birth || undefined,
+                    department_id: form.department_id,
+                    manager_id: form.manager_id || undefined,
+                    date_of_birth: form.date_of_birth || undefined,
                 }),
             }).then(async (res) => {
                 if (!res.ok) {
@@ -337,21 +336,21 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
     toast: (msg: string, t?: "success" | "error") => void;
     designations: Designation[]; departments: Department[]; statuses: Status[]; employees: Employee[];
 }) {
-    const [editing, setEditing]   = useState(false);
-    const [submitting, setSub]    = useState(false);
+    const [editing, setEditing] = useState(false);
+    const [submitting, setSub] = useState(false);
     const [deactivating, setDeact] = useState(false);
     const [form, setForm] = useState({ username: "", email: "", designation_id: "", department_id: "", manager_id: "", status_id: "", date_of_birth: "" });
 
     useEffect(() => {
         if (employee) {
             setForm({
-                username:       employee.username       ?? "",
-                email:          employee.email          ?? "",
+                username: employee.username ?? "",
+                email: employee.email ?? "",
                 designation_id: employee.designation_id ?? "",
-                department_id:  employee.department_id  ?? "",
-                manager_id:     employee.manager_id     ?? "",
-                status_id:      employee.status_id      ?? "",
-                date_of_birth:  employee.date_of_birth  ? employee.date_of_birth.split("T")[0] : "",
+                department_id: employee.department_id ?? "",
+                manager_id: employee.manager_id ?? "",
+                status_id: employee.status_id ?? "",
+                date_of_birth: employee.date_of_birth ? employee.date_of_birth.split("T")[0] : "",
             });
             setEditing(false);
         }
@@ -366,14 +365,14 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
         try {
             setSub(true);
             const payload: Record<string, string | undefined> = {};
-            if (form.username       !== employee.username)       payload.username       = form.username;
-            if (form.email          !== employee.email)          payload.email          = form.email;
+            if (form.username !== employee.username) payload.username = form.username;
+            if (form.email !== employee.email) payload.email = form.email;
             if (form.designation_id !== employee.designation_id) payload.designation_id = form.designation_id;
-            if (form.department_id  !== employee.department_id)  payload.department_id  = form.department_id;
-            if (form.manager_id     !== (employee.manager_id ?? "")) payload.manager_id = form.manager_id || undefined;
-            if (form.status_id      !== employee.status_id)      payload.status_id      = form.status_id;
+            if (form.department_id !== employee.department_id) payload.department_id = form.department_id;
+            if (form.manager_id !== (employee.manager_id ?? "")) payload.manager_id = form.manager_id || undefined;
+            if (form.status_id !== employee.status_id) payload.status_id = form.status_id;
             const formDob = form.date_of_birth || undefined;
-            const empDob  = employee.date_of_birth ? employee.date_of_birth.split("T")[0] : undefined;
+            const empDob = employee.date_of_birth ? employee.date_of_birth.split("T")[0] : undefined;
             if (formDob !== empDob) payload.date_of_birth = formDob;
             await empClient.put(`/${employee.employee_id}`, payload);
             toast("Employee updated successfully");
@@ -431,10 +430,10 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                     {!editing ? (
                         <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                             <Field label="Employee ID" value={<span className="font-mono text-xs break-all">{employee.employee_id}</span>} />
-                            <Field label="Designation"   value={employee.designation_name} />
-                            <Field label="Department"    value={employee.department_name} />
-                            <Field label="Manager"       value={employee.manager_name} />
-                            <Field label="Date of Join"  value={formatDate(employee.date_of_joining)} />
+                            <Field label="Designation" value={employee.designation_name} />
+                            <Field label="Department" value={employee.department_name} />
+                            <Field label="Manager" value={employee.manager_name} />
+                            <Field label="Date of Join" value={formatDate(employee.date_of_joining)} />
                             <Field label="Date of Birth" value={formatDate(employee.date_of_birth)} />
                         </div>
                     ) : (
@@ -517,16 +516,16 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
 // Optional columns: manager_id, date_of_birth
 const REQUIRED_COLS = ["username", "email", "password", "designation_id", "department_id"];
 const OPTIONAL_COLS = ["manager_id", "date_of_birth"];
-const CSV_TEMPLATE  = [
+const CSV_TEMPLATE = [
     [...REQUIRED_COLS, ...OPTIONAL_COLS].join(","),
     "john.doe,john.doe@company.com,Passw0rd!,<designation_uuid>,<department_uuid>,<manager_uuid>,1990-05-20",
 ].join("\n");
 
 function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "error") => void }) {
-    const inputRef               = useRef<HTMLInputElement>(null);
-    const [file, setFile]        = useState<File | null>(null);
-    const [uploading, setUpl]    = useState(false);
-    const [result, setResult]    = useState<BulkImportResponse | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [file, setFile] = useState<File | null>(null);
+    const [uploading, setUpl] = useState(false);
+    const [result, setResult] = useState<BulkImportResponse | null>(null);
     const [resultFilter, setFlt] = useState<"all" | "success" | "error">("all");
 
     const handleFile = (f: File) => {
@@ -552,8 +551,8 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
 
     const downloadTemplate = () => {
         const blob = new Blob([CSV_TEMPLATE], { type: "text/csv" });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
         a.href = url; a.download = "employee_import_template.csv"; a.click();
         URL.revokeObjectURL(url);
     };
@@ -730,19 +729,19 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
 
 // ─── Employee List Section ────────────────────────────────────────────────────
 function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "error") => void }) {
-    const [employees, setEmployees]       = useState<Employee[]>([]);
-    const [loading, setLoading]           = useState(true);
-    const [pagination, setPagination]     = useState<PaginationMeta | null>(null);
-    const [page, setPage]                 = useState(1);
-    const [search, setSearch]             = useState("");
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState("");
     const [debouncedSearch, setDebounced] = useState("");
-    const [createOpen, setCreateOpen]     = useState(false);
-    const [selected, setSelected]         = useState<Employee | null>(null);
-    const [detailOpen, setDetailOpen]     = useState(false);
+    const [createOpen, setCreateOpen] = useState(false);
+    const [selected, setSelected] = useState<Employee | null>(null);
+    const [detailOpen, setDetailOpen] = useState(false);
     const [designations, setDesignations] = useState<Designation[]>([]);
-    const [departments,  setDepartments]  = useState<Department[]>([]);
-    const [statuses,     setStatuses]     = useState<Status[]>([]);
-    const [filterDept,   setFilterDept]   = useState("");
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [statuses, setStatuses] = useState<Status[]>([]);
+    const [filterDept, setFilterDept] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
 
     useEffect(() => {
@@ -771,16 +770,16 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 const arr: Department[] = Array.isArray(d) ? d : (d as { data?: Department[] }).data ?? [];
                 setDepartments(arr.sort((a, b) => a.department_name.localeCompare(b.department_name)));
             }
-        } catch {/* best-effort */}
+        } catch {/* best-effort */ }
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const load = useCallback(async () => {
         try {
             setLoading(true);
             const params: Record<string, string | number> = { page, limit: 20 };
-            if (debouncedSearch) params.search      = debouncedSearch;
-            if (filterDept)      params.department_id = filterDept;
-            if (filterStatus)    params.status_id   = filterStatus;
+            if (debouncedSearch) params.search = debouncedSearch;
+            if (filterDept) params.department_id = filterDept;
+            if (filterStatus) params.status_id = filterStatus;
             const res = await empClient.get<{ data: Employee[]; pagination: PaginationMeta }>("/list", { params });
             const emps = res.data.data;
             setEmployees(emps);
@@ -866,7 +865,7 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 {/* Table */}
                 {loading ? (
                     <div className="p-6 space-y-3">
-                        {[0,1,2,3,4].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
+                        {[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
                     </div>
                 ) : employees.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -928,17 +927,17 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
                     <p className="text-xs text-gray-500">
                         {loading ? "Loading…" : pagination
-                            ? `Showing ${((page-1)*20)+1}–${Math.min(page*20, pagination.total)} of ${pagination.total} employees`
+                            ? `Showing ${((page - 1) * 20) + 1}–${Math.min(page * 20, pagination.total)} of ${pagination.total} employees`
                             : ""}
                     </p>
                     {pagination && pagination.total_pages > 1 && (
                         <div className="flex items-center gap-1">
-                            <button disabled={!pagination.has_previous} onClick={() => setPage((p) => p-1)}
+                            <button disabled={!pagination.has_previous} onClick={() => setPage((p) => p - 1)}
                                 className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-white disabled:opacity-40 transition-colors">
                                 Prev
                             </button>
                             <span className="px-3 py-1.5 text-xs font-bold text-[#004C8F]">{page} / {pagination.total_pages}</span>
-                            <button disabled={!pagination.has_next} onClick={() => setPage((p) => p+1)}
+                            <button disabled={!pagination.has_next} onClick={() => setPage((p) => p + 1)}
                                 className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-white disabled:opacity-40 transition-colors">
                                 Next
                             </button>
@@ -958,24 +957,18 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "list", label: "Employees",    icon: <Users          className="w-4 h-4" /> },
-    { id: "bulk", label: "Bulk Import",  icon: <FileSpreadsheet className="w-4 h-4" /> },
+    { id: "list", label: "Employees", icon: <Users className="w-4 h-4" /> },
+    { id: "bulk", label: "Bulk Import", icon: <FileSpreadsheet className="w-4 h-4" /> },
 ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function EmployeesPage() {
     const { toasts, show: toast } = useToast();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [tab, setTab] = useState<Tab>("list");
 
     return (
-        <div className="flex h-screen overflow-hidden bg-white">
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-            <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                <Navbar onMenuClick={() => setSidebarOpen(true)} />
-
-                <main className="flex-1 overflow-y-auto bg-white">
+        <>
+            <main className="flex-1 overflow-y-auto bg-white">
 
                     {/* Page Header */}
                     <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
@@ -1029,15 +1022,13 @@ export default function EmployeesPage() {
                         <div className="max-w-[1200px] mx-auto">
                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                                 {tab === "list" && <EmployeeListSection toast={toast} />}
-                                {tab === "bulk" && <BulkImportSection   toast={toast} />}
+                                {tab === "bulk" && <BulkImportSection toast={toast} />}
                             </div>
                         </div>
                     </div>
 
                 </main>
-            </div>
-
             <ToastContainer toasts={toasts} />
-        </div>
+        </>
     );
 }

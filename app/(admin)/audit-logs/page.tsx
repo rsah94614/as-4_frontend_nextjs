@@ -3,8 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { RefreshCw, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
+
 import { AuditLog, AuditFilters } from "@/types/audit-types";
 import { PaginationMeta } from "@/types/pagination";
 import orgApiClient from "@/services/org-api-client";
@@ -13,7 +12,6 @@ import { AuditDetailModal } from "@/components/features/admin/audit-logs/AuditDe
 import { AuditFilterPanel } from "@/components/features/admin/audit-logs/AuditFilters";
 
 export default function AuditLogsPage() {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [pagination, setPagination] = useState<PaginationMeta | null>(null);
     const [loading, setLoading] = useState(true);
@@ -40,12 +38,12 @@ export default function AuditLogsPage() {
         setError(null);
         try {
             const params: Record<string, string | number> = { page, limit: 10 };
-            if (filters.tableName)     params.table_name     = filters.tableName;
+            if (filters.tableName) params.table_name = filters.tableName;
             if (filters.operationType) params.operation_type = filters.operationType;
             // performed_by filter is UUID — only send if it looks like a UUID
-            if (filters.performedBy)   params.performed_by   = filters.performedBy;
-            if (filters.startDate)     params.start_date     = new Date(filters.startDate).toISOString();
-            if (filters.endDate)       params.end_date       = new Date(filters.endDate).toISOString();
+            if (filters.performedBy) params.performed_by = filters.performedBy;
+            if (filters.startDate) params.start_date = new Date(filters.startDate).toISOString();
+            if (filters.endDate) params.end_date = new Date(filters.endDate).toISOString();
 
             const res = await orgApiClient.get<{
                 data: AuditLog[];
@@ -83,13 +81,8 @@ export default function AuditLogsPage() {
     };
 
     return (
-        <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#eef0f8" }}>
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-            <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                <Navbar onMenuClick={() => setSidebarOpen(true)} />
-
-                <main className="flex-1 overflow-y-auto p-6 space-y-5">
+        <>
+            <main className="flex-1 overflow-y-auto p-6 space-y-5">
 
                     {/* Blue header bar */}
                     <div
@@ -190,9 +183,7 @@ export default function AuditLogsPage() {
                         />
                     </div>
                 </main>
-            </div>
-
             <AuditDetailModal log={selectedLog} onClose={() => setSelectedLog(null)} />
-        </div>
+        </>
     );
 }
