@@ -134,7 +134,7 @@ export default function StatusesPage() {
           />
         )}
 
-        <InfoTooltip />
+        <HowItWorks />
 
         {flash && (
           <FlashBanner
@@ -216,48 +216,41 @@ export default function StatusesPage() {
   );
 }
 
-// ─── InfoTooltip ─────────────────────────────────────────────────────────────
-function InfoTooltip() {
-  const [open, setOpen] = useState(false);
+// ─── HowItWorks ───────────────────────────────────────────────────────────────
+const HOW_IT_WORKS_STEPS = [
+  { n: "01", title: "Create Status", desc: "Add a status with a unique code, name, entity type, and optional description." },
+  { n: "02", title: "Status Code is Fixed", desc: "The code is set at creation and cannot be changed — it is used internally by the system." },
+  { n: "03", title: "Assign to Entities", desc: "Statuses are applied to employees, reviews, transactions, and rewards to describe their current state." },
+  { n: "04", title: "Edit or Deactivate", desc: "You can rename or update the description of a status at any time via the inline edit." },
+];
 
+function HowItWorks() {
+  const [open, setOpen] = useState(false);
   return (
-    <div
-      className="relative inline-flex items-center mb-6"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
-        className={cn(
-          "w-7 h-7 rounded-full border flex items-center justify-center transition-all",
-          open
-            ? "bg-[#E8F1FA] border-[#C0D6EE]"
-            : "bg-white border-gray-200 hover:bg-[#E8F1FA] hover:border-[#C0D6EE]"
-        )}
-        aria-label="What are statuses?"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-3.5 hover:bg-gray-50 transition-colors"
       >
-        <Info size={13} style={{ color: "#004C8F" }} />
+        <div className="flex items-center gap-2">
+          <Info size={13} className="text-[#E31837] shrink-0" />
+          <span className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</span>
+        </div>
+        <ChevronDown size={15} className={cn("text-gray-400 transition-transform duration-200 shrink-0", open && "rotate-180")} />
       </button>
-
       {open && (
-        <div className="absolute top-[calc(100%+8px)] left-0
-          w-80 bg-white border border-[#C0D6EE] rounded-xl p-3 shadow-md z-50
-          pointer-events-none">
-          {/* Arrow */}
-          <div className="absolute -top-[5px] left-4 w-2 h-2
-            bg-white border-l border-t border-[#C0D6EE] rotate-45" />
-          <div className="flex gap-2 items-start">
-            <Info size={13} className="mt-0.5 shrink-0" style={{ color: "#004C8F" }} />
-            <p className="text-[12px] leading-relaxed text-gray-500 m-0">
-              Statuses are labels that describe the current state of employees,
-              reviews, transactions, and rewards. You can rename or describe a
-              status, but the{" "}
-              <strong className="font-semibold" style={{ color: "#004C8F" }}>
-                Status Code
-              </strong>{" "}
-              is fixed after creation — it&apos;s used internally by the system.
-            </p>
+        <div className="border-t border-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-gray-100 sm:divide-x">
+            {HOW_IT_WORKS_STEPS.map((s) => (
+              <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-3 sm:py-4">
+                <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
+                <div>
+                  <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
+                  <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

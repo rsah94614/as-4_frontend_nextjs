@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Tag, Plus, Check, AlertCircle, X, Info, ChevronLeft } from "lucide-react";
-import Link from "next/link";
+import { Tag, Plus, Check, AlertCircle, X, Info, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 
 import { useReviewCategories } from "@/hooks/useReviewCategories";
@@ -12,6 +12,48 @@ import { extractErrorMessage } from "@/lib/error-utils";
 import { ReviewCategoryTable } from "@/components/features/admin/review-categories/ReviewCategoryTable";
 import { ReviewCategoryModals } from "@/components/features/admin/review-categories/ReviewCategoryModal";
 import { ReviewCategoryFilters } from "@/components/features/admin/review-categories/ReviewCategoryFilters";
+
+// ─── HowItWorks ───────────────────────────────────────────────────────────────
+const HOW_IT_WORKS_STEPS = [
+  { n: "01", title: "Create Category", desc: "Add a category with a unique code, name, and multiplier value greater than 0." },
+  { n: "02", title: "Set Multiplier", desc: "The multiplier determines points awarded — e.g. 1.4× means 1.4 points per reviewer weight unit." },
+  { n: "03", title: "Assign in Reviews", desc: "Employees select 1–5 categories per review. Points equal the sum of selected multipliers × reviewer weight." },
+  { n: "04", title: "Manage Status", desc: "Deactivate a category to hide it from new reviews. Existing reviews are unaffected." },
+];
+
+function HowItWorks() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-3.5 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Info size={13} className="text-[#E31837] shrink-0" />
+          <span className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</span>
+        </div>
+        <ChevronDown size={15} className={cn("text-gray-400 transition-transform duration-200 shrink-0", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="border-t border-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-gray-100 sm:divide-x">
+            {HOW_IT_WORKS_STEPS.map((s) => (
+              <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-3 sm:py-4">
+                <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
+                <div>
+                  <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
+                  <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 type FilterValue = boolean | null;
 
@@ -154,17 +196,8 @@ export default function ReviewCategoriesPage() {
           <div className="max-w-[1200px] mx-auto">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
 
-              {/* ── Info banner ── */}
-              <div className="flex gap-3 items-start bg-blue-50 border border-blue-100 rounded-xl px-4 py-3.5 mb-6">
-                <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
-                <p className="text-sm text-blue-700 leading-relaxed">
-                  Each <strong>review category</strong> carries a <strong>multiplier</strong> that
-                  determines how many points a reviewer awards. Employees can select{" "}
-                  <strong>1–5 categories</strong> per review — points ={" "}
-                  <strong>sum of selected multipliers × reviewer weight</strong>. Changing a
-                  multiplier only affects <strong>future</strong> reviews; existing ones are unaffected.
-                </p>
-              </div>
+              {/* ── How It Works ── */}
+              <HowItWorks />
 
               {/* ── Toolbar: filters + add button ── */}
               <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
