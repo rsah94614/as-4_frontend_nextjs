@@ -1,25 +1,24 @@
-# Stage 1: Base image using Node 20 (matching your CI/CD tools)
+# Stage 1: Base image
 FROM node:20-alpine AS base
-
-# Stage 2: Install dependencies
-FROM base AS deps
-# libc6-compat is required by some Node modules on Alpine Linux
+# Install compatibility libraries needed by some npm packages on Alpine
 RUN apk add --no-cache libc6-compat
+
+# Stage 2: Install dependencies with cache mount for faster rebuilds
+FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline
 
 # Stage 3: Build the application
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Disabling telemetry data collection
-ENV NEXT_TELEMETRY_DISABLED=1 
 
-# ==========================================
-# INJECT FRONTEND ENVIRONMENT VARIABLES HERE
-# ==========================================
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Inject build-time environment variables
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_RECOGNITION_API_URL
 ARG NEXT_PUBLIC_EMPLOYEE_API_URL
@@ -41,28 +40,31 @@ ENV NEXT_PUBLIC_ORG_API_URL=$NEXT_PUBLIC_ORG_API_URL
 ENV NEXT_PUBLIC_ROLES_API_URL=$NEXT_PUBLIC_ROLES_API_URL
 # ENV NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=$NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
 # ENV NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=$NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
-# ==========================================
 
 RUN npm run build
 
-# Stage 4: Production server environment
+# Stage 4: Production runner
 FROM base AS runner
 WORKDIR /app
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create a non-root user for security compliance
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-# Copy only the necessary files from the standalone build
+# Copy only necessary build artifacts
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Switch to the non-root user
 USER nextjs
 
 EXPOSE 3000
-# The standalone build creates its own server.js
+
+# Lets Docker/orchestrators detect if the app is unhealthy
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD wget -qO- http://localhost:3000/ || exit 1
+
 CMD ["node", "server.js"]

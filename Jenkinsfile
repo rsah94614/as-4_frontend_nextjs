@@ -6,26 +6,24 @@ pipeline {
     }
 
     environment {
-        // --- Branch Control & Images ---
-        TARGET_BRANCH = "pipeline-branch"
+        TARGET_BRANCH = "bn1-pipeline"
         REPO_URL = "https://github.com/rsah94614/as-4_frontend_nextjs.git" 
         IMAGE = "mrmonster786/employee-rr-frontend"
         TAG = "${TARGET_BRANCH}-${env.BUILD_NUMBER}"
         CONTAINER_NAME = "frontend-${TARGET_BRANCH}"
+        DOCKER_BUILDKIT = "1"
         
-        // --- Target Infrastructure ---
-        TARGET_EC2_HOST = "frontend.aabhar.top"
+        TARGET_EC2_HOST = "aabhar.top"
         HOST_PORT = "3000"
 
-        // --- Frontend API Routing Variables ---
-        NEXT_PUBLIC_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_RECOGNITION_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_EMPLOYEE_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_WALLET_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_REWARDS_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_ANALYTICS_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_ORG_API_URL = "https://test.aabhar.top"
-        NEXT_PUBLIC_ROLES_API_URL = "https://test.aabhar.top"
+        NEXT_PUBLIC_API_URL = "https://bn1.aabhar.top"
+        NEXT_PUBLIC_RECOGNITION_API_URL = "https://bn1.aabhar.top"
+        NEXT_PUBLIC_EMPLOYEE_API_URL = "https://bn1.aabhar.top"
+        NEXT_PUBLIC_WALLET_API_URL = "https://bn1.aabhar.top"
+        NEXT_PUBLIC_REWARDS_API_URL = "https://bn1.aabhar.top"
+        NEXT_PUBLIC_ANALYTICS_API_URL = "https://bn1.aabhar.top"
+        NEXT_PUBLIC_ORG_API_URL = "https://bn1.aabhar.top"
+        NEXT_PUBLIC_ROLES_API_URL = "https://bn1.aabhar.top"
     }
 
     options {
@@ -35,15 +33,32 @@ pipeline {
     }
 
     stages {
+        stage('Bootstrap Docker Buildx') {
+            steps {
+                script {
+                    def exitCode = sh(script: "docker buildx version", returnStatus: true)
+                    if (exitCode != 0) {
+                        echo "Buildx missing. Installing for Jenkins user..."
+                        sh '''
+                        mkdir -p ~/.docker/cli-plugins
+                        curl -SL https://github.com/docker/buildx/releases/download/v0.12.1/buildx-v0.12.1.linux-amd64 -o ~/.docker/cli-plugins/docker-buildx
+                        chmod +x ~/.docker/cli-plugins/docker-buildx
+                        docker buildx version
+                        '''
+                    } else {
+                        echo "Buildx is already configured."
+                    }
+                }
+            }
+        }
+
         stage('Checkout Source') {
             steps {
                 echo "Fetching code for branch: ${TARGET_BRANCH} using GitHub PAT..."
-                // Added credentialsId here to authenticate with GitHub
                 git branch: "${TARGET_BRANCH}", credentialsId: 'github-frontend-creds', url: "${REPO_URL}"
             }
         }
 
-        // 1. Parallelize Static Scans (NPM Install + Lint + Trivy FS + Gitleaks)
         stage('Static Analysis & Security') {
             parallel {
                 stage('Secrets Scan (Gitleaks)') {
@@ -51,14 +66,12 @@ pipeline {
                         sh 'gitleaks detect --source . --report-format json --report-path gitleaks-report.json --exit-code 0 || true'
                     }
                 }
-
                 stage('Dependencies & Quality') {
                     steps {
                         sh 'npm ci'
                         sh 'npm run lint || true' 
                     }
                 }
-
                 stage('SCA - Trivy Filesystem') {
                     steps {
                         sh 'trivy fs --severity CRITICAL --ignore-unfixed --format json --output trivy-fs-report.json . || true'
@@ -67,7 +80,6 @@ pipeline {
             }
         }
 
-        // 2. Build Stage (Injects Environment Variables)
         stage('Build Docker Image') {
             steps {
                 echo 'Building Next.js Production Image...'
@@ -86,16 +98,14 @@ pipeline {
             }
         }
 
-        // 3. Container Scan
         stage('Dynamic Analysis') {
             steps {
                 sh 'trivy image --scanners vuln --severity HIGH,CRITICAL --format json --output trivy-image-report.json ${IMAGE}:${TAG} || true'
             }
         }
 
-        // 4. Push Image
         stage('Push Image') {
-            when { branch 'pipeline-branch' }
+            when { branch 'bn1-pipeline' }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
@@ -108,9 +118,8 @@ pipeline {
             }
         }
 
-        // 5. Deploy to Frontend EC2 & Verify Health
         stage('Deploy to EC2 (AWS)') {
-            when { branch 'pipeline-branch' }
+            when { branch 'bn1-pipeline' }
             steps {
                 script {
                     sshagent(credentials: ['frontend-ec2-ssh-key']) {
@@ -134,7 +143,7 @@ pipeline {
                         """
                     }
 
-                    echo "🚀 Application deployed successfully. Traffic handled by Nginx." 
+                    echo "🚀 Application deployed successfully. Traffic handled by Nginx."
                     echo "⏳ Waiting for Next.js SSR to boot..."
                     
                     timeout(time: 3, unit: 'MINUTES') { 
@@ -160,7 +169,6 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: '**/*.json', allowEmptyArchive: true
-            
             echo "Running deep cleanup to free up Jenkins disk space..."
             cleanWs()
             sh "docker image prune -f"
