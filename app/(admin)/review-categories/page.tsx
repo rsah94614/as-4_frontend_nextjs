@@ -124,131 +124,121 @@ export default function ReviewCategoriesPage() {
   const activeCount = categories.filter(c => c.is_active).length;
   const inactiveCount = categories.filter(c => !c.is_active).length;
 
-    return (
-        <>
-            <main className="flex-1 overflow-y-auto bg-white">
+  return (
+    <>
+      <main className="flex-1 overflow-y-auto bg-white">
 
-          {/* ── Page Header ── */}
-          <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
-            <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-              <div>
-                <Link
-                  href="/control-panel"
-                  className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-[#004C8F] hover:text-white hover:border-[#004C8F] transition-all duration-150 mb-3 group"
-                >
-                  <ChevronLeft size={13} className="group-hover:-translate-x-0.5 transition-transform duration-150" />
-                  Back to Control Panel
-                </Link>
-                <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#E31837" }}>
-                  Admin · Control Panel
-                </p>
-                <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
-                  Review Categories
-                </h1>
-                <p className="text-sm text-gray-400 mt-1">
-                  Manage category tags · Set point multipliers · Activate or deactivate
+        {/* ── Page Header ── */}
+        <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+          <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
+                Review Categories
+              </h1>
+              <p className="text-sm text-gray-400 mt-1">
+                Manage category tags · Set point multipliers · Activate or deactivate
+              </p>
+            </div>
+            <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
+              <span style={{ color: "#E31837" }}>A</span>
+              <span style={{ color: "#004C8F" }}>abhar</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Red accent line */}
+        <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+
+        {/* ── Main content ── */}
+        <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
+          <div className="max-w-[1200px] mx-auto">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+
+              {/* ── Info banner ── */}
+              <div className="flex gap-3 items-start bg-blue-50 border border-blue-100 rounded-xl px-4 py-3.5 mb-6">
+                <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+                <p className="text-sm text-blue-700 leading-relaxed">
+                  Each <strong>review category</strong> carries a <strong>multiplier</strong> that
+                  determines how many points a reviewer awards. Employees can select{" "}
+                  <strong>1–5 categories</strong> per review — points ={" "}
+                  <strong>sum of selected multipliers × reviewer weight</strong>. Changing a
+                  multiplier only affects <strong>future</strong> reviews; existing ones are unaffected.
                 </p>
               </div>
-              <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-                <span style={{ color: "#E31837" }}>A</span>
-                <span style={{ color: "#004C8F" }}>abhar</span>
-              </span>
-            </div>
-          </div>
 
-          {/* Red accent line */}
-          <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+              {/* ── Toolbar: filters + add button ── */}
+              <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
+                <ReviewCategoryFilters activeOnly={activeOnly} onFilterChange={setActiveOnly} />
 
-          {/* ── Main content ── */}
-          <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
-            <div className="max-w-[1200px] mx-auto">
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white transition-all duration-150"
+                  style={{ background: "#E31837" }}
+                >
+                  <Plus className="w-4 h-4" />
+                  New Category
+                </button>
+              </div>
 
-                {/* ── Info banner ── */}
-                <div className="flex gap-3 items-start bg-blue-50 border border-blue-100 rounded-xl px-4 py-3.5 mb-6">
-                  <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
-                  <p className="text-sm text-blue-700 leading-relaxed">
-                    Each <strong>review category</strong> carries a <strong>multiplier</strong> that
-                    determines how many points a reviewer awards. Employees can select{" "}
-                    <strong>1–5 categories</strong> per review — points ={" "}
-                    <strong>sum of selected multipliers × reviewer weight</strong>. Changing a
-                    multiplier only affects <strong>future</strong> reviews; existing ones are unaffected.
-                  </p>
-                </div>
-
-                {/* ── Toolbar: filters + add button ── */}
-                <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
-                  <ReviewCategoryFilters activeOnly={activeOnly} onFilterChange={setActiveOnly} />
-
-                  <button
-                    onClick={() => setShowCreate(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white transition-all duration-150"
-                    style={{ background: "#E31837" }}
-                  >
-                    <Plus className="w-4 h-4" />
-                    New Category
+              {/* ── Flash ── */}
+              {flash && (
+                <div
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm mb-5 ${flash.type === "success"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                    : "bg-red-50 border-red-200 text-red-800"
+                    }`}
+                >
+                  {flash.type === "success"
+                    ? <Check className="w-4 h-4 shrink-0" />
+                    : <AlertCircle className="w-4 h-4 shrink-0" />}
+                  <span className="flex-1 font-medium">{flash.msg}</span>
+                  <button onClick={() => setFlash(null)} className="p-0.5 hover:opacity-60 transition-opacity">
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
+              )}
 
-                {/* ── Flash ── */}
-                {flash && (
-                  <div
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm mb-5 ${flash.type === "success"
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                      : "bg-red-50 border-red-200 text-red-800"
-                      }`}
-                  >
-                    {flash.type === "success"
-                      ? <Check className="w-4 h-4 shrink-0" />
-                      : <AlertCircle className="w-4 h-4 shrink-0" />}
-                    <span className="flex-1 font-medium">{flash.msg}</span>
-                    <button onClick={() => setFlash(null)} className="p-0.5 hover:opacity-60 transition-opacity">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
+              {/* ── API error ── */}
+              {error && !flash && (
+                <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm mb-5 text-center font-medium">
+                  {error}
+                </div>
+              )}
 
-                {/* ── API error ── */}
-                {error && !flash && (
-                  <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm mb-5 text-center font-medium">
-                    {error}
-                  </div>
-                )}
-
-                {/* ── Section header ── */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4" style={{ color: "#004C8F" }} />
-                    <span className="font-semibold text-sm" style={{ color: "#004C8F" }}>
-                      Review Categories
-                    </span>
-                  </div>
-                  <span className="text-xs text-gray-400">
-                    {loading
-                      ? "Loading…"
-                      : `${categories.length} total${activeCount > 0 ? ` · ${activeCount} active` : ""}${inactiveCount > 0 ? ` · ${inactiveCount} inactive` : ""}`}
+              {/* ── Section header ── */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Tag className="w-4 h-4" style={{ color: "#004C8F" }} />
+                  <span className="font-semibold text-sm" style={{ color: "#004C8F" }}>
+                    Review Categories
                   </span>
                 </div>
-
-                {/* ── Table ── */}
-                <ReviewCategoryTable
-                  categories={categories}
-                  loading={loading}
-                  onEdit={startEdit}
-                  onToggleActive={handleToggleActive}
-                  editingId={editId}
-                  editForm={editForm}
-                  onUpdate={handleUpdate}
-                  onCancelEdit={() => setEditId(null)}
-                  onEditFormChange={(field, val) => setEditForm(p => ({ ...p, [field]: val }))}
-                  saving={saving}
-                />
-
+                <span className="text-xs text-gray-400">
+                  {loading
+                    ? "Loading…"
+                    : `${categories.length} total${activeCount > 0 ? ` · ${activeCount} active` : ""}${inactiveCount > 0 ? ` · ${inactiveCount} inactive` : ""}`}
+                </span>
               </div>
+
+              {/* ── Table ── */}
+              <ReviewCategoryTable
+                categories={categories}
+                loading={loading}
+                onEdit={startEdit}
+                onToggleActive={handleToggleActive}
+                editingId={editId}
+                editForm={editForm}
+                onUpdate={handleUpdate}
+                onCancelEdit={() => setEditId(null)}
+                onEditFormChange={(field, val) => setEditForm(p => ({ ...p, [field]: val }))}
+                saving={saving}
+              />
+
             </div>
           </div>
+        </div>
 
-        </main>
+      </main>
 
       {/* ── Create modal ── */}
       <ReviewCategoryModals

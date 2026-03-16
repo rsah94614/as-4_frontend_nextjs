@@ -50,9 +50,6 @@ export default function AdminReviewsPage() {
                     <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
                         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#E31837" }}>
-                                    Admin · Recognition
-                                </p>
                                 <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
                                     Recognition Admin
                                 </h1>
