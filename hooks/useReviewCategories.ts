@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { createAuthenticatedClient, extractApiError } from "@/lib/api-utils";
+import { createAuthenticatedClient } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 import {
   ReviewCategory,
   ReviewCategoryCreatePayload,
@@ -24,7 +25,7 @@ export function useReviewCategories(activeOnly: boolean | null = null) {
       const res = await client.get<{ data: ReviewCategory[] }>(BASE_URL, { params });
       setCategories(res.data?.data ?? []);
     } catch (e: unknown) {
-      setError(extractApiError(e, "Failed to load categories"));
+      setError(extractErrorMessage(e, "Failed to load categories"));
     } finally {
       setLoading(false);
     }

@@ -4,6 +4,7 @@
 // — no direct microservice URL exposed to the browser.
 
 import { createAuthenticatedClient } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 
 import {
     Designation,
@@ -29,32 +30,44 @@ export const designationService = {
         limit?: number;
         is_active?: boolean;
     }): Promise<DesignationListResponse> {
-        const res = await orgClient.get<DesignationListResponse>("/designations", {
-            params: {
-                page: params?.page ?? 1,
-                limit: params?.limit ?? 20,
-                ...(params?.is_active != null ? { is_active: params.is_active } : {}),
-            },
-        });
-        return res.data;
+        try {
+            const res = await orgClient.get<DesignationListResponse>("/designations", {
+                params: {
+                    page: params?.page ?? 1,
+                    limit: params?.limit ?? 20,
+                    ...(params?.is_active != null ? { is_active: params.is_active } : {}),
+                },
+            });
+            return res.data;
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, "Failed to list designations"));
+        }
     },
 
     /**
      * GET /api/proxy/org/designations/:id
      */
     async getById(designationId: string): Promise<DesignationDetail> {
-        const res = await orgClient.get<DesignationDetail>(
-            `/designations/${designationId}`
-        );
-        return res.data;
+        try {
+            const res = await orgClient.get<DesignationDetail>(
+                `/designations/${designationId}`
+            );
+            return res.data;
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, "Failed to get designation"));
+        }
     },
 
     /**
      * POST /api/proxy/org/designations
      */
     async create(payload: CreateDesignationPayload): Promise<Designation> {
-        const res = await orgClient.post<Designation>("/designations", payload);
-        return res.data;
+        try {
+            const res = await orgClient.post<Designation>("/designations", payload);
+            return res.data;
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, "Failed to create designation"));
+        }
     },
 
     /**
@@ -64,10 +77,14 @@ export const designationService = {
         designationId: string,
         payload: UpdateDesignationPayload
     ): Promise<DesignationDetail> {
-        const res = await orgClient.put<DesignationDetail>(
-            `/designations/${designationId}`,
-            payload
-        );
-        return res.data;
+        try {
+            const res = await orgClient.put<DesignationDetail>(
+                `/designations/${designationId}`,
+                payload
+            );
+            return res.data;
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, "Failed to update designation"));
+        }
     },
 };

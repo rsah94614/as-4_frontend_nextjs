@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { designationService } from "@/services/designation-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 import {
     Designation,
     DesignationListResponse,
@@ -26,9 +27,8 @@ export function useDesignations() {
             });
             setDesignations(res.data);
             setPagination(res.pagination);
-        } catch (err: unknown) {
-            const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to load designations.";
-            setError(detail);
+        } catch (err) {
+            setError(extractErrorMessage(err, "Failed to load designations."));
         } finally {
             setLoading(false);
         }

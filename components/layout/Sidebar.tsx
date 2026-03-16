@@ -20,8 +20,8 @@ const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { label: "Recognize", href: "/review", icon: FileText },
   { label: "Redeem", href: "/redeem", icon: Trophy },
+   { label: "Wallet", href: "/wallet", icon: Wallet },
   { label: "History", href: "/history", icon: Clock },
-  { label: "Wallet", href: "/wallet", icon: Wallet },
   { label: "Control Panel", href: "/control-panel", icon: SlidersHorizontal, adminOnly: true },
 ];
 

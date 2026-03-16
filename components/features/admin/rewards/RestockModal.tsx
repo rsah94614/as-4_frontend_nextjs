@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Loader2, Archive } from "lucide-react";
 import { fetchWithAuth } from "@/services/auth-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { RewardItem } from "@/types/reward-types";
 import { RewardField } from "./UIHelpers";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,7 @@ export function RestockModal({ item, isOpen, onClose, onSave }: RestockModalProp
             }
             onSave();
         } catch (e: unknown) {
-            setError(e instanceof Error ? e.message : "Request failed");
+            setError(extractErrorMessage(e, "Request failed"));
         } finally {
             setSaving(false);
         }

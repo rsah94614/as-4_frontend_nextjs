@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { createAuthenticatedClient } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { Employee, Review } from "@/types/admin-review-types";
 
 const employeeClient    = createAuthenticatedClient("/api/proxy/employees");
@@ -45,7 +46,7 @@ export function useAdminReviews() {
                 if (page >= (res.data.pagination?.total_pages ?? 1)) break;
                 page++;
             } catch (e) {
-                console.warn("Reviews fetch failed:", e);
+                console.warn("Reviews fetch failed:", extractErrorMessage(e, "Failed to fetch admin reviews"));
                 break;
             }
         }
@@ -62,8 +63,8 @@ export function useAdminReviews() {
             ]);
             setEmployees(empList);
             setAllReviews(reviewList);
-        } catch (e: unknown) {
-            setError(e instanceof Error ? e.message : "Something went wrong");
+        } catch (e) {
+            setError(extractErrorMessage(e, "Something went wrong"));
         } finally {
             setLoading(false);
         }

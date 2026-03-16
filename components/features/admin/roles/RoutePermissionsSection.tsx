@@ -10,6 +10,7 @@ import {
     type Role,
     type RoutePermission,
 } from "@/services/roles-client";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { MethodBadge, type ToastType } from "./UIHelpers";
 
 interface RoutePermissionsSectionProps {
@@ -78,7 +79,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
             setRoles(r);
             setSelectedRoleId((prev) => prev || (r[0]?.role_id ?? ""));
         } catch (e: unknown) {
-            toast((e as Error).message, "error");
+            toast(extractErrorMessage(e), "error");
         } finally {
             setLoading(false);
         }
@@ -132,7 +133,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
                 }),
             );
         } catch (e: unknown) {
-            toast((e as Error).message, "error");
+            toast(extractErrorMessage(e), "error");
         } finally {
             setAdding(null);
         }
@@ -151,7 +152,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
                 }),
             );
         } catch (e: unknown) {
-            toast((e as Error).message, "error");
+            toast(extractErrorMessage(e), "error");
         } finally {
             setRemoving(null);
         }

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-// 1. Swap fetchWithAuth for your proxy-enabled client factory
 import { createAuthenticatedClient } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { Category } from "@/types/reward-types";
 
 // 2. Instantiate the proxy client right here (or import it if you have it exported globally)
@@ -31,10 +31,8 @@ export function useRewardCategories() {
             // Axios automatically resolves JSON into the `.data` property
             setCategories(res.data);
             
-        } catch (e: unknown) {
-            // Type assertion for Axios errors to pull out clean backend error messages
-            const err = e as { response?: { data?: { detail?: string } }, message?: string };
-            setError(err.response?.data?.detail || err.message || "Failed to load categories.");
+        } catch (err) {
+            setError(extractErrorMessage(err, "Failed to load categories."));
         } finally {
             setLoading(false);
         }

@@ -5,6 +5,7 @@ import { Plus, Search, LayoutGrid, ArrowUpRight } from "lucide-react";
 
 // 1. Swap fetchWithAuth for our Axios client builder
 import { createAuthenticatedClient } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { Category, RewardItem, Pagination } from "@/types/reward-types";
 
 import { Button } from "@/components/ui/button";
@@ -48,7 +49,7 @@ export default function RewardsPage() {
       setPagination(itemRes.data.pagination);
 
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to load catalog. Check your connection.");
+      setError(extractErrorMessage(e, "Failed to load catalog. Check your connection."));
     } finally {
       setLoading(false);
     }

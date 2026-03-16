@@ -4,7 +4,7 @@
 
 import { createAuthenticatedClient } from '@/lib/api-utils'
 import { uploadToStorage } from './cloudinary'
-import { extractApiError } from '@/lib/api-utils'
+import { extractErrorMessage } from '@/lib/error-utils'
 
 const recognitionClient = createAuthenticatedClient('/api/proxy/recognition')
 
@@ -29,8 +29,8 @@ export const reviewService = {
                 `/reviews?page=${page}&page_size=${pageSize}`
             );
             return res.data;
-        } catch (error: unknown) {
-            throw new Error(extractApiError(error, 'Failed to fetch reviews'));
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, 'Failed to fetch reviews'));
         }
     },
 
@@ -38,8 +38,8 @@ export const reviewService = {
         try {
             const res = await recognitionClient.get<ReviewResponse>(`/reviews/${reviewId}`);
             return res.data;
-        } catch (error: unknown) {
-            throw new Error(extractApiError(error, 'Failed to fetch review'));
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, 'Failed to fetch review'));
         }
     },
 
@@ -47,8 +47,8 @@ export const reviewService = {
         try {
             const res = await recognitionClient.post<ReviewResponse>('/reviews', data);
             return res.data;
-        } catch (error: unknown) {
-            throw new Error(extractApiError(error, 'Failed to create review'));
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, 'Failed to create review'));
         }
     },
 
@@ -56,8 +56,8 @@ export const reviewService = {
         try {
             const res = await recognitionClient.put<ReviewResponse>(`/reviews/${reviewId}`, data);
             return res.data;
-        } catch (error: unknown) {
-            throw new Error(extractApiError(error, 'Failed to update review'));
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, 'Failed to update review'));
         }
     },
 }

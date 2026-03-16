@@ -4,6 +4,7 @@
 // — no direct microservice URL exposed to the browser.
 
 import { createAuthenticatedClient } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 import {
     DepartmentType,
     Department,
@@ -31,33 +32,45 @@ export const departmentService = {
         search?: string;
         is_active?: boolean;
     }): Promise<DepartmentListResponse> {
-        const res = await orgClient.get<DepartmentListResponse>("/departments", {
-            params: {
-                page: params?.page ?? 1,
-                limit: params?.limit ?? 20,
-                ...(params?.search ? { search: params.search } : {}),
-                ...(params?.is_active != null ? { is_active: params.is_active } : {}),
-            },
-        });
-        return res.data;
+        try {
+            const res = await orgClient.get<DepartmentListResponse>("/departments", {
+                params: {
+                    page: params?.page ?? 1,
+                    limit: params?.limit ?? 20,
+                    ...(params?.search ? { search: params.search } : {}),
+                    ...(params?.is_active != null ? { is_active: params.is_active } : {}),
+                },
+            });
+            return res.data;
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, "Failed to list departments"));
+        }
     },
 
     /**
      * GET /api/proxy/org/departments/:id
      */
     async getById(departmentId: string): Promise<DepartmentDetail> {
-        const res = await orgClient.get<DepartmentDetail>(
-            `/departments/${departmentId}`
-        );
-        return res.data;
+        try {
+            const res = await orgClient.get<DepartmentDetail>(
+                `/departments/${departmentId}`
+            );
+            return res.data;
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, "Failed to get department"));
+        }
     },
 
     /**
      * POST /api/proxy/org/departments
      */
     async create(payload: CreateDepartmentPayload): Promise<Department> {
-        const res = await orgClient.post<Department>("/departments", payload);
-        return res.data;
+        try {
+            const res = await orgClient.post<Department>("/departments", payload);
+            return res.data;
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, "Failed to create department"));
+        }
     },
 
     /**
@@ -67,11 +80,15 @@ export const departmentService = {
         departmentId: string,
         payload: UpdateDepartmentPayload
     ): Promise<Department> {
-        const res = await orgClient.put<Department>(
-            `/departments/${departmentId}`,
-            payload
-        );
-        return res.data;
+        try {
+            const res = await orgClient.put<Department>(
+                `/departments/${departmentId}`,
+                payload
+            );
+            return res.data;
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, "Failed to update department"));
+        }
     },
 
     /**
@@ -87,7 +104,8 @@ export const departmentService = {
             if (Array.isArray(res.data)) return res.data;
             if ("data" in res.data) return res.data.data;
             return [];
-        } catch {
+        } catch (error) {
+            console.error("Failed to load department types", extractErrorMessage(error));
             return [];
         }
     },

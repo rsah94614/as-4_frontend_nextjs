@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { fetchWithAuth } from "@/services/auth-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { Employee, Review, MemberStats } from "@/types/team-types";
 
 const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || "http://localhost:8002";
@@ -60,8 +61,8 @@ export function useTeams() {
             ]);
             setAllEmployees(employees);
             setAllReviews(reviews);
-        } catch (e: unknown) {
-            setError(e instanceof Error ? e.message : "Something went wrong");
+        } catch (err) {
+            setError(extractErrorMessage(err, "Something went wrong"));
         } finally {
             setLoading(false);
         }

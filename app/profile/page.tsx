@@ -6,6 +6,7 @@ import { useAuth } from "@/providers/AuthProvider";
 
 // 1. Swap fetchWithAuth for your dedicated employee service
 import { employeeService } from "@/services/employee-service"; 
+import { extractErrorMessage } from "@/lib/error-utils";
 
 import ProtectedRoute from "@/components/features/auth/ProtectedRoute";
 import ProfileSkeleton from "@/components/features/profile/ProfileSkeleton";
@@ -47,7 +48,7 @@ export default function ProfilePage() {
             } as unknown as EmployeeDetail);
             
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Something went wrong");
+            setError(extractErrorMessage(err, "Something went wrong"));
         } finally {
             setLoading(false);
         }

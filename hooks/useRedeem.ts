@@ -7,6 +7,7 @@ import {
   fetchCategories,
   fetchWallet,
 } from "@/services/redeem-api";
+import { extractErrorMessage } from "@/lib/error-utils";
 
 import {
   RewardItem,
@@ -48,7 +49,7 @@ export function useRedeem() {
       setItems(catalogData.data);
       setPagination(catalogData.pagination);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load catalog");
+      setError(extractErrorMessage(e, "Failed to load catalog"));
     } finally {
       setLoading(false);
     }
@@ -87,7 +88,7 @@ export function useRedeem() {
       allItemsCacheRef.current = combined;
       setAllItems(combined);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load catalog");
+      setError(extractErrorMessage(e, "Failed to load catalog"));
     } finally {
       setCategoryLoading(false);
       fetchInProgressRef.current = false;
@@ -112,7 +113,7 @@ export function useRedeem() {
       setCategories(catsData);
       setWallet(walletData);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load data");
+      setError(extractErrorMessage(e, "Failed to load data"));
     } finally {
       setLoading(false);
     }

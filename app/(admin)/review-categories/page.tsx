@@ -7,7 +7,7 @@ import Link from "next/link";
 
 import { useReviewCategories } from "@/hooks/useReviewCategories";
 import { ReviewCategory } from "@/types/review-category-types";
-import { extractApiError } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 
 import { ReviewCategoryTable } from "@/components/features/admin/review-categories/ReviewCategoryTable";
 import { ReviewCategoryModals } from "@/components/features/admin/review-categories/ReviewCategoryModal";
@@ -69,7 +69,7 @@ export default function ReviewCategoriesPage() {
       setShowCreate(false);
       showFlash("Category created successfully.");
     } catch (e: unknown) {
-      showFlash(extractApiError(e, "Could not create category. Code or name may already exist."), "error");
+      showFlash(extractErrorMessage(e, "Could not create category. Code or name may already exist."), "error");
     } finally {
       setSaving(false);
     }
@@ -105,7 +105,7 @@ export default function ReviewCategoriesPage() {
       setEditId(null);
       showFlash("Category updated successfully.");
     } catch (e: unknown) {
-      showFlash(extractApiError(e, "Could not update. Code or name may conflict with an existing category."), "error");
+      showFlash(extractErrorMessage(e, "Could not update. Code or name may conflict with an existing category."), "error");
     } finally {
       setSaving(false);
     }
@@ -117,7 +117,7 @@ export default function ReviewCategoriesPage() {
       await updateCategory(c.category_id, { is_active: !c.is_active });
       showFlash(`Category ${!c.is_active ? "activated" : "deactivated"} successfully.`);
     } catch (e: unknown) {
-      showFlash(extractApiError(e, "Could not toggle category status."), "error");
+      showFlash(extractErrorMessage(e, "Could not toggle category status."), "error");
     }
   };
 

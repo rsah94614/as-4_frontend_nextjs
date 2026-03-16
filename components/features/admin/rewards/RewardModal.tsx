@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Loader2, Save, Package, CheckCircle2 } from "lucide-react";
 import { fetchWithAuth } from "@/services/auth-service";
+import { extractErrorMessage } from "@/lib/error-utils";
 import { Category, RewardItem } from "@/types/reward-types";
 import { RewardField } from "./UIHelpers";
 import { Button } from "@/components/ui/button";
@@ -108,7 +109,7 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
             }
             onSave();
         } catch (e: unknown) {
-            setError(e instanceof Error ? e.message : "Request failed");
+            setError(extractErrorMessage(e, "Request failed"));
         } finally {
             setSaving(false);
         }

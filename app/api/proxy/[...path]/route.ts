@@ -88,6 +88,7 @@ async function proxyRequest(
     targetUrl: string,
     req: NextRequest,
     token: string | null,
+    signal?: AbortSignal,
 ): Promise<Response> {
     const incomingContentType = req.headers.get("content-type") ?? "";
     const isMultipart = incomingContentType.includes("multipart/form-data");
@@ -135,6 +136,7 @@ async function proxyRequest(
         body,
         // keepalive is incompatible with large bodies; omit for multipart.
         keepalive: !isMultipart,
+        signal,
     });
 }
 
@@ -192,8 +194,13 @@ async function handleProxy(
     const targetPath = rest.length > 0 ? "/" + rest.join("/") : "";
     const targetUrl  = `${baseUrl}${targetPath}`;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
     try {
-        const upstream    = await proxyRequest(targetUrl, req, token);
+        const upstream    = await proxyRequest(targetUrl, req, token, controller.signal);
+        clearTimeout(timeoutId);
+        
         const contentType = upstream.headers.get("content-type") ?? "";
         const status      = upstream.status;
 
@@ -213,11 +220,40 @@ async function handleProxy(
             status,
             headers: { "Content-Type": contentType || "text/plain" },
         });
-    } catch (err) {
-        console.error(`[proxy] ${service}${targetPath} failed:`, err);
+    } catch (err: unknown) {
+        clearTimeout(timeoutId);
+        const error = err as { 
+            name?: string; 
+            code?: string; 
+            status?: number; 
+            message?: string; 
+            response?: { 
+                status?: number; 
+                data?: { detail?: string }; 
+                statusText?: string 
+            } 
+        };
+
+        console.error(`[proxy] ${service}${targetPath} failed:`, error);
+        
+        // Preserve upstream status codes if error object contains status
+        let status = 502;
+        let detail = "Upstream service unavailable";
+
+        if (error.name === "AbortError" || error.code === "ECONNABORTED") {
+            status = 504;
+            detail = "Gateway Timeout";
+        } else if (error.status) {
+            status = error.status;
+            detail = error.message || detail;
+        } else if (error.response?.status) {
+            status = error.response.status;
+            detail = error.response.data?.detail || error.response.statusText || detail;
+        }
+
         return NextResponse.json(
-            { detail: "Upstream service unavailable" },
-            { status: 502 },
+            { detail },
+            { status },
         );
     }
 }
@@ -237,8 +273,11 @@ async function handleDashboardAggregate(token: string | null): Promise<NextRespo
     };
 
     async function safeFetch(url: string): Promise<unknown> {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
         try {
-            const res = await fetch(url, { headers });
+            const res = await fetch(url, { headers, signal: controller.signal });
+            clearTimeout(timeoutId);
             if (!res.ok) {
                 const body = await res.text().catch(() => "");
                 console.error(`[proxy/dashboard] ${url} → ${res.status}: ${body}`);
@@ -246,6 +285,7 @@ async function handleDashboardAggregate(token: string | null): Promise<NextRespo
             }
             return await res.json();
         } catch (err) {
+            clearTimeout(timeoutId);
             console.error(`[proxy/dashboard] ${url} unreachable:`, err);
             return null;
         }

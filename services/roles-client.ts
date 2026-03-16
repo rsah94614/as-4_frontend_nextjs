@@ -4,6 +4,7 @@
 // roles microservice, which receives the bare path (e.g. /list).
 
 import { createAuthenticatedClient } from "@/lib/api-utils";
+import { extractErrorMessage } from "@/lib/error-utils";
 
 const rolesAxios = createAuthenticatedClient("/api/proxy/roles");
 
@@ -11,12 +12,16 @@ async function request<T>(
     path: string,
     options: { method?: string; body?: unknown } = {},
 ): Promise<T> {
-    const res = await rolesAxios({
-        url:    path,
-        method: options.method ?? "GET",
-        data:   options.body,
-    });
-    return res.data as T;
+    try {
+        const res = await rolesAxios({
+            url:    path,
+            method: options.method ?? "GET",
+            data:   options.body,
+        });
+        return res.data as T;
+    } catch (error) {
+        throw new Error(extractErrorMessage(error, "Roles API request failed"));
+    }
 }
 
 // ── Types ──────────────────────────────────────────────────────────────────

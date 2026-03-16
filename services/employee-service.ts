@@ -12,7 +12,8 @@
 // /api/proxy/employees/v1/employees/${id} → 404).
 
 import { createAuthenticatedClient } from '@/lib/api-utils'
-import { extractApiError, requireAuthenticatedUserId } from '@/lib/api-utils'
+import { requireAuthenticatedUserId } from '@/lib/api-utils'
+import { extractErrorMessage } from '@/lib/error-utils'
 
 const employeesClient = createAuthenticatedClient('/api/proxy/employees')
 
@@ -96,8 +97,8 @@ export const employeeService = {
             // Now: `/${id}` → /api/proxy/employees/${id} → proxied correctly
             const res = await employeesClient.get<EmployeeDetail>(`/${id}`)
             return res.data
-        } catch (error: unknown) {
-            throw new Error(extractApiError(error, 'Failed to fetch employee'))
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, 'Failed to fetch employee'))
         }
     },
 
@@ -128,8 +129,8 @@ export const employeeService = {
                 `/list?${q.toString()}`
             )
             return res.data
-        } catch (error: unknown) {
-            throw new Error(extractApiError(error, 'Failed to fetch employees'))
+        } catch (error) {
+            throw new Error(extractErrorMessage(error, 'Failed to fetch employees'))
         }
     },
 }
