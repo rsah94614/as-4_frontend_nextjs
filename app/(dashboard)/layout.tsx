@@ -14,14 +14,14 @@ export default function DashboardLayout({
 
   return (
     <ProtectedRoute>
-      <div className="flex min-h-screen bg-[#F0F4F8]">
+      <div className="min-h-screen bg-[#F0F4F8] overflow-x-hidden">
         {/* Left Sidebar */}
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 w-full">
+        <div className="flex flex-col min-w-0 w-full lg:pl-60 overflow-x-hidden">
           <Navbar onMenuClick={() => setSidebarOpen(true)} />
-          <main className="flex-1 p-4 sm:p-6 overflow-auto">{children}</main>
+          <main className="flex-1 p-4 sm:p-6 overflow-y-auto overflow-x-hidden">{children}</main>
         </div>
       </div>
     </ProtectedRoute>

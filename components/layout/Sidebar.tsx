@@ -51,7 +51,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         className={`
           fixed top-0 left-0 z-50 flex flex-col w-60 h-screen
           transform transition-transform duration-300 ease-in-out
-          lg:sticky lg:top-0 lg:translate-x-0 lg:z-auto lg:shrink-0 lg:h-screen
+          lg:translate-x-0 lg:z-40
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
         style={{ background: '#004C8F', borderRight: '1px solid rgba(255,255,255,0.08)' }}
