@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Search, X, Plus, ChevronDown } from "lucide-react";
 import { useRewardCategories } from "@/hooks/useRewardCategories";
-import { Button } from "@/components/ui/button";
 
 // Modular Components
 import { RewardStats } from "@/components/features/admin/rewards/UIHelpers";
@@ -159,4 +158,4 @@ export default function CategoriesPage() {
     </main>
   );
 }
-
+

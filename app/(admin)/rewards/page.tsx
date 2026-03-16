@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Plus, Search, LayoutGrid, ChevronLeft, ChevronDown, X } from "lucide-react";
-import Link from "next/link";
+import { Plus, Search, ChevronDown, X } from "lucide-react";
 
 // 1. Swap fetchWithAuth for our Axios client builder
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Category, RewardItem, Pagination } from "@/types/reward-types";
 
-import { Input } from "@/components/ui/input";
 
 // Modular Components
 import { RewardGrid } from "@/components/features/admin/rewards/RewardGrid";
