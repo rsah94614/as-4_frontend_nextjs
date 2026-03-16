@@ -149,7 +149,7 @@ export async function getTeamMembersForUI(): Promise<{
     if (managerId) {
         const [teamLeaderDetail, colleaguesRes] = await Promise.all([
             employeeService.getEmployee(managerId).catch(() => null),
-            employeeService.listEmployees({ manager_id: managerId, limit: 100 }),
+            employeeService.listEmployees({ manager_id: managerId, limit: 100, is_active: true }),
         ])
 
         return {
@@ -157,10 +157,10 @@ export async function getTeamMembersForUI(): Promise<{
             teamMembers:  colleaguesRes.data
                 .filter((e) => e.employee_id !== myId)
                 .map(listItemToTeamMember),
-            teamLeader: teamLeaderDetail ? detailToTeamMember(teamLeaderDetail) : null,
+            teamLeader: teamLeaderDetail?.is_active ? detailToTeamMember(teamLeaderDetail) : null,
         }
     } else {
-        const directReportsRes = await employeeService.listEmployees({ manager_id: myId, limit: 100 })
+        const directReportsRes = await employeeService.listEmployees({ manager_id: myId, limit: 100, is_active: true })
         return {
             loggedInUser: detailToTeamMember(myDetail),
             teamMembers:  directReportsRes.data.map(listItemToTeamMember),
