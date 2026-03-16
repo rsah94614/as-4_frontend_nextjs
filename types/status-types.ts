@@ -38,18 +38,19 @@ export const ENTITY_META: Record<EntityType, EntityMeta> = {
     REVIEW: {
         label: "Review",
         description: "Statuses assigned to peer reviews (e.g. Pending, Approved, Flagged).",
-        pill: "bg-violet-50 text-violet-700 border-violet-200",
-        header: "bg-violet-50/50 border-violet-100",
-        dot: "bg-violet-400",
-        ring: "ring-violet-200",
-    },
-    TRANSACTION: {
-        label: "Transaction",
-        description: "Statuses for point transactions and transfers (e.g. Completed, Reversed).",
         pill: "bg-amber-50 text-amber-700 border-amber-200",
         header: "bg-amber-50/50 border-amber-100",
         dot: "bg-amber-400",
         ring: "ring-amber-200",
+
+    },
+    TRANSACTION: {
+        label: "Transaction",
+        description: "Statuses for point transactions and transfers (e.g. Completed, Reversed).",
+        pill: "bg-[#EBF2FA] text-[#1E3A5F] border-[#B8CCE0]",
+        header: "bg-[#F2F7FC] border-[#C8DCF0]",
+        dot: "bg-[#1E3A5F]",
+        ring: "ring-[#1E3A5F]/30",
     },
     REWARD: {
         label: "Reward",
