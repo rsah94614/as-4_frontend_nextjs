@@ -1,19 +1,25 @@
 "use client";
 
 import React from "react";
-import { Category } from "@/types/reward-types";
+import { Category, CategoryFilter } from "@/types/reward-types";
 import { RewardBadge, SkeletonRow } from "./UIHelpers";
 import { Edit2, Package, Tag, Clock, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface CategoryTableProps {
     categories: Category[];
     loading: boolean;
     onEdit: (cat: Category) => void;
     openCreate: () => void;
+    filterState?: CategoryFilter;
 }
 
-export function CategoryTable({ categories, loading, onEdit, openCreate }: CategoryTableProps) {
+export function CategoryTable({ 
+    categories, 
+    loading, 
+    onEdit, 
+    openCreate,
+    filterState = "all" 
+}: CategoryTableProps) {
     if (!loading && categories.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-40 text-slate-400 text-sm bg-white rounded-xl border border-dashed border-slate-200 gap-6 group hover:border-blue-200 transition-all cursor-default">
@@ -21,8 +27,15 @@ export function CategoryTable({ categories, loading, onEdit, openCreate }: Categ
                     <Package className="w-10 h-10 opacity-20 group-hover:text-blue-400 group-hover:opacity-100 transition-all duration-700 hover:rotate-12" />
                 </div>
                 <div className="text-center group-hover:scale-105 transition-transform">
-                    <p className="font-semibold text-slate-300 uppercase tracking-wide mb-2 group-hover:text-blue-400 transition-colors">CATEGORY GRID EMPTY</p>
-                    <p className="font-semibold text-slate-400/60 lowercase tracking-widest text-xs leading-relaxed max-w-xs">Try adjusting your filters or define a new<br />reward category for your employees.</p>
+                    <p className="font-semibold text-slate-300 uppercase tracking-wide mb-2 group-hover:text-blue-400 transition-colors">
+                        {filterState === "all" ? "CATEGORY GRID EMPTY" : `NO ${filterState.toUpperCase()} CATEGORIES`}
+                    </p>
+                    <p className="font-semibold text-slate-400/60 lowercase tracking-widest text-xs leading-relaxed max-w-xs">
+                        {filterState === "all" 
+                            ? "Try adjusting your filters or define a new reward category for your employees."
+                            : `None of your categories match the ${filterState} filter. Try switching back to all status.`
+                        }
+                    </p>
                 </div>
                 <button
                     onClick={openCreate}
