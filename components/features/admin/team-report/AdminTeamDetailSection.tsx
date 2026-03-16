@@ -7,7 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import AdminTeamMemberRow from "./AdminTeamMemberRow";
 import type { TeamReportResponse } from "@/types/dashboard-types";
-import * as XLSX from "xlsx";
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid,
     Tooltip, ResponsiveContainer, Cell, Legend,
@@ -18,34 +17,72 @@ interface Props { report: TeamReportResponse }
 
 // ─── Export ──────────────────────────────────────────────────────────────────
 
-function exportTeamToXLSX(report: TeamReportResponse) {
-    const wb = XLSX.utils.book_new();
-    const summaryData = [
-        ["Team Report", report.department_name], [""],
-        ["Metric", "Value"],
-        ["Total Members", report.total_members],
-        ["Total Points Earned", report.total_points],
-        ["Total Reviews Received", report.total_reviews],
-        ["Total Rewards Redeemed", report.total_rewards],
-        ["Avg Performance Score", `${report.avg_performance_score}%`],
-    ];
-    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-    summarySheet["!cols"] = [{ wch: 28 }, { wch: 20 }];
-    XLSX.utils.book_append_sheet(wb, summarySheet, "Summary");
+async function exportTeamToXLSX(report: TeamReportResponse) {
+    try {
+        // 1. DYNAMIC IMPORT: Lazy-load ExcelJS to save bundle size
+        const ExcelJS = (await import('exceljs')).default || await import('exceljs');
+        const workbook = new ExcelJS.Workbook();
 
-    const headers = ["Rank", "Name", "Designation", "Performance Score", "Rating",
-        "Total Points Earned", "Available Points", "Points This Month",
-        "Reviews Received", "Reviews This Month", "Rewards Redeemed"];
-    const rows = report.members.map((m, i) => [
-        i + 1, m.username, m.designation, m.performance_score,
-        scoreColor(m.performance_score).label,
-        m.total_earned_points, m.available_points, m.points_this_month,
-        m.reviews_received, m.reviews_this_month, m.rewards_redeemed,
-    ]);
-    const sheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    sheet["!cols"] = Array(11).fill({ wch: 18 });
-    XLSX.utils.book_append_sheet(wb, sheet, "Members");
-    XLSX.writeFile(wb, `${report.department_name.replace(/\s+/g, "_")}_Report.xlsx`);
+        // 2. Summary Sheet
+        const summarySheet = workbook.addWorksheet("Summary");
+        summarySheet.columns = [{ width: 28 }, { width: 20 }];
+        
+        summarySheet.addRows([
+            ["Team Report", report.department_name],
+            [], // Empty row for spacing
+            ["Metric", "Value"],
+            ["Total Members", report.total_members],
+            ["Total Points Earned", report.total_points],
+            ["Total Reviews Received", report.total_reviews],
+            ["Total Rewards Redeemed", report.total_rewards],
+            ["Avg Performance Score", `${report.avg_performance_score}%`],
+        ]);
+
+        // Style the Summary sheet headers
+        summarySheet.getRow(1).font = { bold: true, size: 14 };
+        summarySheet.getRow(3).font = { bold: true };
+
+        // 3. Members Sheet
+        const sheet = workbook.addWorksheet("Members");
+        sheet.columns = [
+            { header: "Rank", width: 18 },
+            { header: "Name", width: 18 },
+            { header: "Designation", width: 18 },
+            { header: "Performance Score", width: 18 },
+            { header: "Rating", width: 18 },
+            { header: "Total Points Earned", width: 18 },
+            { header: "Available Points", width: 18 },
+            { header: "Points This Month", width: 18 },
+            { header: "Reviews Received", width: 18 },
+            { header: "Reviews This Month", width: 18 },
+            { header: "Rewards Redeemed", width: 18 }
+        ];
+        
+        // Style the Members sheet header
+        sheet.getRow(1).font = { bold: true };
+
+        const rows = report.members.map((m, i) => [
+            i + 1, m.username, m.designation, m.performance_score,
+            scoreColor(m.performance_score).label,
+            m.total_earned_points, m.available_points, m.points_this_month,
+            m.reviews_received, m.reviews_this_month, m.rewards_redeemed,
+        ]);
+        sheet.addRows(rows);
+
+        // 4. Generate file and trigger native browser download
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${report.department_name.replace(/\s+/g, "_")}_Report.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error("Failed to export Excel file:", error);
+    }
 }
 
 // ─── KPI cards ───────────────────────────────────────────────────────────────

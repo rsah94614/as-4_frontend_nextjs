@@ -12,6 +12,7 @@ pipeline {
         IMAGE = "mrmonster786/employee-rr-frontend"
         TAG = "${TARGET_BRANCH}-${env.BUILD_NUMBER}"
         CONTAINER_NAME = "frontend-${TARGET_BRANCH}"
+        DOCKER_BUILDKIT = "1"
         
         // --- Target Infrastructure ---
         TARGET_EC2_HOST = "aabhar.top"

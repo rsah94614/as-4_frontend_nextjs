@@ -1,18 +1,15 @@
+'use client';
+
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
-import * as XLSX from "xlsx";
 import AdminTeamsSection from "./AdminTeamsSection";
 import { fetchTeamReport } from "@/services/analytics-service";
 import type { TeamSummaryResponse } from "@/types/dashboard-types";
 
-
-
 type SortOption = "score" | "points" | "members" | "name";
-
-
 
 const ANALYTICS_API =
     process.env.NEXT_PUBLIC_ANALYTICS_API_URL || "http://localhost:8008";
@@ -39,8 +36,6 @@ async function fetchTeamsWithDetail(): Promise<{
         return { data: null, error: e instanceof Error ? e.message : "Unexpected error" };
     }
 }
-
-
 
 function TeamsLoadingSkeleton() {
     return (
@@ -82,9 +77,6 @@ function TeamsErrorState({ onRetry }: { onRetry: () => void }) {
     );
 }
 
-
-
-
 export default function AdminTeamReportsSection() {
     const [teams, setTeams] = useState<TeamSummaryResponse[]>([]);
     const [loadingTeams, setLoadingTeams] = useState(true);
@@ -108,41 +100,86 @@ export default function AdminTeamReportsSection() {
         if (!teams.length) return;
         setDownloadingAll(true);
         try {
-            const wb = XLSX.utils.book_new();
-            const summaryHeaders = ["Department", "Members", "Total Points", "Avg Performance Score", "Reviews Received", "Rewards Redeemed"];
+            // 1. DYNAMIC IMPORT: Browser only downloads ExcelJS when button is clicked
+            const ExcelJS = (await import('exceljs')).default || await import('exceljs');
+            const workbook = new ExcelJS.Workbook();
+
+            // 2. Setup Summary Sheet
+            const summarySheet = workbook.addWorksheet("All Teams");
+            summarySheet.columns = [
+                { header: "Department", width: 24 },
+                { header: "Members", width: 10 },
+                { header: "Total Points", width: 14 },
+                { header: "Avg Performance Score", width: 22 },
+                { header: "Reviews Received", width: 18 },
+                { header: "Rewards Redeemed", width: 18 }
+            ];
+            
+            // Style header row
+            summarySheet.getRow(1).font = { bold: true };
+
             const summaryRows = teams.map(t => [
-                t.department_name, t.total_members, t.total_points,
+                t.department_name, 
+                t.total_members, 
+                t.total_points,
                 `${t.avg_performance_score}%`,
                 (t as TeamSummaryResponse & { total_reviews?: number }).total_reviews ?? "—",
                 (t as TeamSummaryResponse & { total_rewards?: number }).total_rewards ?? "—",
             ]);
-            const summarySheet = XLSX.utils.aoa_to_sheet([summaryHeaders, ...summaryRows]);
-            summarySheet["!cols"] = [{ wch: 24 }, { wch: 10 }, { wch: 14 }, { wch: 22 }, { wch: 18 }, { wch: 18 }];
-            XLSX.utils.book_append_sheet(wb, summarySheet, "All Teams");
+            summarySheet.addRows(summaryRows);
 
+            // 3. Fetch detailed reports and create individual sheets
             const reports = await Promise.allSettled(teams.map(t => fetchTeamReport(t.department_id)));
-            const memberHeaders = ["Rank", "Name", "Designation", "Performance Score", "Rating", "Total Points Earned", "Available Points", "Points This Month", "Reviews Received", "Reviews This Month", "Rewards Redeemed"];
+            
             reports.forEach((result, i) => {
                 const team = teams[i];
                 const sheetName = team.department_name.replace(/[\\/:*?[\]]/g, "").slice(0, 31);
+                const sheet = workbook.addWorksheet(sheetName);
+
                 if (result.status === "fulfilled" && result.value) {
                     const report = result.value;
+                    
+                    sheet.columns = [
+                        { header: "Rank", width: 6 },
+                        { header: "Name", width: 22 },
+                        { header: "Designation", width: 22 },
+                        { header: "Performance Score", width: 18 },
+                        { header: "Rating", width: 18 },
+                        { header: "Total Points Earned", width: 20 },
+                        { header: "Available Points", width: 18 },
+                        { header: "Points This Month", width: 18 },
+                        { header: "Reviews Received", width: 18 },
+                        { header: "Reviews This Month", width: 18 },
+                        { header: "Rewards Redeemed", width: 18 }
+                    ];
+                    sheet.getRow(1).font = { bold: true };
+
                     const rows = report.members.map((m, idx) => [
                         idx + 1, m.username, m.designation, m.performance_score,
                         m.performance_score >= 75 ? "Excellent" : m.performance_score >= 50 ? "Good" : m.performance_score >= 25 ? "Fair" : "Needs Attention",
                         m.total_earned_points, m.available_points, m.points_this_month,
                         m.reviews_received, m.reviews_this_month, m.rewards_redeemed,
                     ]);
-                    const sheet = XLSX.utils.aoa_to_sheet([memberHeaders, ...rows]);
-                    sheet["!cols"] = [{ wch: 6 }, { wch: 22 }, { wch: 22 }, { wch: 18 }, { wch: 18 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
-                    XLSX.utils.book_append_sheet(wb, sheet, sheetName);
+                    sheet.addRows(rows);
                 } else {
-                    const sheet = XLSX.utils.aoa_to_sheet([["Failed to load data for this team"]]);
-                    XLSX.utils.book_append_sheet(wb, sheet, sheetName);
+                    sheet.addRow(["Failed to load data for this team"]);
                 }
             });
-            XLSX.writeFile(wb, `All_Team_Reports_${new Date().toISOString().slice(0, 10)}.xlsx`);
-        } catch {
+
+            // 4. Generate file and trigger native browser download
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `All_Team_Reports_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.error(error);
             setTeamsError("Download failed. Please try again.");
         } finally {
             setDownloadingAll(false);
