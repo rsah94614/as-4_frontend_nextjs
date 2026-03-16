@@ -194,6 +194,8 @@ async function handleProxy(
     const targetPath = rest.length > 0 ? "/" + rest.join("/") : "";
     const targetUrl  = `${baseUrl}${targetPath}`;
 
+    console.log(`[proxy] Proxying ${service} -> ${targetUrl}`);
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
