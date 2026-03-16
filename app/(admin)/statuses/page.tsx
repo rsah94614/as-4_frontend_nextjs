@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Tag, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Plus, Search, X, ChevronDown, Info } from "lucide-react";
+
 import orgApiClient from "@/services/org-api-client";
 import {
   Status,
@@ -9,10 +11,15 @@ import {
   ENTITY_TYPES,
   ENTITY_META,
 } from "@/types/status-types";
-import { Button } from "@/components/ui/button";
 import { extractErrorMessage } from "@/lib/error-utils";
 // Modular Components
-import { PageShell, InfoBanner, FlashBanner } from "@/components/features/admin/statuses/UIHelpers";
+import {
+  PageShell,
+  PageHeader,
+  ContentWrapper,
+  StatusStats,
+  FlashBanner,
+} from "@/components/features/admin/statuses/UIHelpers";
 import { StatusTable, type EditForm } from "@/components/features/admin/statuses/StatusTable";
 import { StatusModal } from "@/components/features/admin/statuses/StatusModal";
 
@@ -20,6 +27,7 @@ export default function StatusesPage() {
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<EntityType | "">("");
+  const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditForm>({ status_name: "", description: "" });
@@ -39,9 +47,9 @@ export default function StatusesPage() {
       if (filterType) params.entity_type = filterType;
       const res = await orgApiClient.get<Status[]>("/statuses", { params });
       setStatuses(Array.isArray(res.data) ? res.data : []);
-   } catch (e: unknown) {
-     showFlash(extractErrorMessage(e, "Could not load statuses. Please refresh."), "error");
-} finally {
+    } catch (e: unknown) {
+      showFlash(extractErrorMessage(e, "Could not load statuses. Please refresh."), "error");
+    } finally {
       setLoading(false);
     }
   }, [filterType]);
@@ -65,9 +73,9 @@ export default function StatusesPage() {
       setShowCreate(false);
       showFlash("Status created successfully.");
       fetchStatuses();
-   } catch (e: unknown) {
-     showFlash(extractErrorMessage(e, "Could not create status. Please try again."), "error");
-} finally {
+    } catch (e: unknown) {
+      showFlash(extractErrorMessage(e, "Could not create status. Please try again."), "error");
+    } finally {
       setSaving(false);
     }
   };
@@ -85,101 +93,120 @@ export default function StatusesPage() {
       setEditId(null);
       showFlash("Status updated successfully.");
       fetchStatuses();
-   } catch (e: unknown) {
-     showFlash(extractErrorMessage(e, "Could not update status. Please try again."), "error");
-     } finally {
+    } catch (e: unknown) {
+      showFlash(extractErrorMessage(e, "Could not update status. Please try again."), "error");
+    } finally {
       setSaving(false);
     }
   };
 
+  // ─── Computed ─────────────────────────────────────────────────────────────
   const totalCount = statuses.length;
+  const entityCounts = ENTITY_TYPES.map((t) => ({
+    label: ENTITY_META[t].label,
+    value: statuses.filter((s) => s.entity_type === t).length,
+    color: ENTITY_META[t].dot,
+  }));
+
+  // Filter statuses by search text (name or code)
+  const filteredStatuses = search.trim()
+    ? statuses.filter(
+      (s) =>
+        s.status_name.toLowerCase().includes(search.toLowerCase()) ||
+        s.status_code.toLowerCase().includes(search.toLowerCase())
+    )
+    : statuses;
 
   return (
     <PageShell>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
-            <Tag className="w-6 h-6 text-amber-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-              Statuses
-            </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {loading
-                ? "Loading…"
-                : `${totalCount} status${totalCount !== 1 ? "es" : ""} across 4 categories`}
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={() => setShowCreate(true)}
-          className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl px-5 h-11 shadow-sm shadow-amber-200 gap-2"
-        >
-          <Plus className="w-4 h-4" /> Add New Status
-        </Button>
-      </div>
-
-      {/* Info banner */}
-      <InfoBanner>
-        Statuses are labels that describe the current state of employees, reviews,
-        transactions, and rewards. You can rename or describe a status, but the{" "}
-        <strong>Status Code</strong> is fixed after creation — it&apos;s used
-        internally by the system.
-      </InfoBanner>
-
-      {flash && (
-        <FlashBanner
-          type={flash.type}
-          msg={flash.msg}
-          onDismiss={() => setFlash(null)}
-        />
-      )}
-
-      {/* Filter pills */}
-      <div className="flex items-center gap-2 mb-6 flex-wrap">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mr-1">
-          Filter:
-        </span>
-        {(["", ...ENTITY_TYPES] as (EntityType | "")[]).map((t) => {
-          const meta = t ? ENTITY_META[t as EntityType] : null;
-          const active = filterType === t;
-          return (
-            <button
-              key={t || "all"}
-              onClick={() => setFilterType(t as EntityType | "")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${active
-                  ? meta
-                    ? `${meta.pill} border-current shadow-sm`
-                    : "bg-gray-900 text-white border-gray-900"
-                  : "bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:text-gray-700"
-                }`}
-            >
-              {meta && (
-                <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
-              )}
-              {meta ? meta.label : "All Categories"}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Table */}
-      <StatusTable
-        statuses={statuses}
-        loading={loading}
-        filterType={filterType}
-        editId={editId}
-        editForm={editForm}
-        saving={saving}
-        onEdit={startEdit}
-        onUpdate={handleUpdate}
-        onCancelEdit={() => setEditId(null)}
-        onEditFormChange={(field, val) =>
-          setEditForm((p) => ({ ...p, [field]: val }))
-        }
+      {/* ─── Page Header ─── */}
+      <PageHeader
+        title="Status Management"
+        subtitle="Define and manage status labels for employees, reviews, transactions & rewards"
       />
+
+      {/* ─── Content ─── */}
+      <ContentWrapper>
+        {/* Stats pills */}
+        {!loading && totalCount > 0 && (
+          <StatusStats
+            stats={[
+              { label: "Total", value: totalCount, color: "bg-[#004C8F]" },
+              ...entityCounts,
+            ]}
+          />
+        )}
+
+        <InfoTooltip />
+
+        {flash && (
+          <FlashBanner
+            type={flash.type}
+            msg={flash.msg}
+            onDismiss={() => setFlash(null)}
+          />
+        )}
+
+        {/* ─── Toolbar ─── */}
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or code…"
+              className="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 transition-all"
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <X size={13} />
+              </button>
+            )}
+          </div>
+
+          {/* Entity type filter dropdown */}
+          <div className="relative">
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value as EntityType | "")}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium text-gray-600"
+            >
+              <option value="">All Categories</option>
+              {ENTITY_TYPES.map((t) => (
+                <option key={t} value={t}>{ENTITY_META[t].label}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+          </div>
+
+          {/* Add New Status button */}
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
+            style={{ background: "#E31837" }}
+          >
+            <Plus size={13} />
+            Add New Status
+          </button>
+        </div>
+
+        {/* Table */}
+        <StatusTable
+          statuses={filteredStatuses}
+          loading={loading}
+          filterType={filterType}
+          editId={editId}
+          editForm={editForm}
+          saving={saving}
+          onEdit={startEdit}
+          onUpdate={handleUpdate}
+          onCancelEdit={() => setEditId(null)}
+          onEditFormChange={(field, val) =>
+            setEditForm((p) => ({ ...p, [field]: val }))
+          }
+        />
+      </ContentWrapper>
 
       {/* Create Modal */}
       <StatusModal
@@ -189,5 +216,54 @@ export default function StatusesPage() {
         saving={saving}
       />
     </PageShell>
+  );
+}
+
+// ─── InfoTooltip ─────────────────────────────────────────────────────────────
+function InfoTooltip() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div
+      className="relative inline-flex items-center mb-6"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "w-7 h-7 rounded-full border flex items-center justify-center transition-all",
+          open
+            ? "bg-[#E8F1FA] border-[#C0D6EE]"
+            : "bg-white border-gray-200 hover:bg-[#E8F1FA] hover:border-[#C0D6EE]"
+        )}
+        aria-label="What are statuses?"
+      >
+        <Info size={13} style={{ color: "#004C8F" }} />
+      </button>
+
+      {open && (
+        <div className="absolute top-[calc(100%+8px)] left-0
+          w-80 bg-white border border-[#C0D6EE] rounded-xl p-3 shadow-md z-50
+          pointer-events-none">
+          {/* Arrow */}
+          <div className="absolute -top-[5px] left-4 w-2 h-2
+            bg-white border-l border-t border-[#C0D6EE] rotate-45" />
+          <div className="flex gap-2 items-start">
+            <Info size={13} className="mt-0.5 shrink-0" style={{ color: "#004C8F" }} />
+            <p className="text-[12px] leading-relaxed text-gray-500 m-0">
+              Statuses are labels that describe the current state of employees,
+              reviews, transactions, and rewards. You can rename or describe a
+              status, but the{" "}
+              <strong className="font-semibold" style={{ color: "#004C8F" }}>
+                Status Code
+              </strong>{" "}
+              is fixed after creation — it&apos;s used internally by the system.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
