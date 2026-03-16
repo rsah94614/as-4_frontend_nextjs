@@ -10,7 +10,7 @@ import {
     XAxis, YAxis, Tooltip, Legend, Area,
 } from "recharts";
 import { fetchRecognitionTrend } from "@/services/analytics-service";
-import type { TrendPoint } from "@/types/dashboard-types";
+import type { TrendPoint, RecognitionTrendResponse } from "@/types/dashboard-types";
 
 type Range = "3m" | "6m" | "1y";
 
@@ -50,21 +50,38 @@ function TrendSkeleton() {
     );
 }
 
-export default function AdminRecognitionTrendSection() {
+export default function AdminRecognitionTrendSection({ initialData }: { initialData?: RecognitionTrendResponse | null }) {
     const [range, setRange] = useState<Range>("6m");
-    const [trendState, setTrendState] = useState<TrendState>({ status: "loading" });
+    const [trendState, setTrendState] = useState<TrendState>(
+        initialData ? { status: "ok", data: initialData.data } : { status: "loading" }
+    );
 
-    // The effect depends on `range` directly. It never calls setState itself —
-    // all setState calls happen inside the .then() callback.
+    // Sync prop to state during render
+    const [prevInitialData, setPrevInitialData] = useState(initialData);
+    if (initialData !== prevInitialData) {
+        setPrevInitialData(initialData);
+        if (range === "6m" && initialData) {
+            setTrendState({ status: "ok", data: initialData.data });
+        }
+    }
+
+    // The effect depends on `range` directly.
     const load = useCallback((r: Range) => {
         fetchRecognitionTrend(r).then((res) => {
             setTrendState(res ? { status: "ok", data: res.data } : { status: "error" });
         });
     }, []);
 
+    const handleRangeChange = useCallback((newRange: Range) => {
+        setTrendState({ status: "loading" });
+        setRange(newRange);
+    }, []);
+
     useEffect(() => {
+        // Only load if range changed from default "6m" OR we don't have initialData
+        if (range === "6m" && initialData) return;
         load(range);
-    }, [range, load]);
+    }, [range, load, initialData]);
 
     if (trendState.status === "loading") return <TrendSkeleton />;
 
@@ -80,7 +97,7 @@ export default function AdminRecognitionTrendSection() {
                         {RANGES.map(r => (
                             <button
                                 key={r.value}
-                                onClick={() => setRange(r.value)}
+                                onClick={() => handleRangeChange(r.value)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${range === r.value
                                         ? "bg-white text-gray-900 shadow-sm"
                                         : "text-muted-foreground hover:text-gray-700"

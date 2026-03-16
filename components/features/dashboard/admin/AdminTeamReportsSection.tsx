@@ -77,9 +77,9 @@ function TeamsErrorState({ onRetry }: { onRetry: () => void }) {
     );
 }
 
-export default function AdminTeamReportsSection() {
-    const [teams, setTeams] = useState<TeamSummaryResponse[]>([]);
-    const [loadingTeams, setLoadingTeams] = useState(true);
+export default function AdminTeamReportsSection({ initialTeams }: { initialTeams?: TeamSummaryResponse[] | null }) {
+    const [teams, setTeams] = useState<TeamSummaryResponse[]>(initialTeams ?? []);
+    const [loadingTeams, setLoadingTeams] = useState(initialTeams === undefined);
     const [teamsError, setTeamsError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState<SortOption>("score");
@@ -94,7 +94,14 @@ export default function AdminTeamReportsSection() {
         setLoadingTeams(false);
     }, []);
 
-    useEffect(() => { loadTeams(); }, [loadTeams]);
+    useEffect(() => {
+        if (initialTeams) {
+            setTeams(initialTeams);
+            setLoadingTeams(false);
+            return;
+        }
+        loadTeams();
+    }, [loadTeams, initialTeams]);
 
     const downloadAllReports = useCallback(async () => {
         if (!teams.length) return;

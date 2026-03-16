@@ -31,11 +31,23 @@ const CARDS = [
     },
 ];
 
-export default function DashboardStatsSection() {
-    const [data, setData] = useState<PlatformStatsResponse | null>(null);
-    const [loading, setLoading] = useState(true);
+export default function DashboardStatsSection({ initialData }: { initialData?: PlatformStatsResponse | null }) {
+    const [data, setData] = useState<PlatformStatsResponse | null>(initialData ?? null);
+    const [loading, setLoading] = useState(!initialData);
+
+    // Sync prop to state during render
+    const [prevInitialData, setPrevInitialData] = useState(initialData);
+    if (initialData !== prevInitialData) {
+        setPrevInitialData(initialData);
+        if (initialData) {
+            setData(initialData);
+            setLoading(false);
+        }
+    }
 
     useEffect(() => {
+        if (initialData) return;
+
         async function load() {
             setLoading(true);
             const result = await fetchDashboardPlatformStats();
@@ -43,7 +55,7 @@ export default function DashboardStatsSection() {
             setLoading(false);
         }
         load();
-    }, []);
+    }, [initialData]);
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

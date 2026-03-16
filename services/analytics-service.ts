@@ -104,6 +104,32 @@ export interface DashboardData {
     teams:          TeamSummaryResponse[] | null;
 }
 
+export interface AdminDashboardData {
+    participation: ParticipationResponse | null;
+    recognitionTrend: RecognitionTrendResponse | null;
+    recognitionUsers: PaginatedUserRecognition | null;
+    recognitionTeams: PaginatedTeamRecognition | null;
+    teams: TeamSummaryResponse[] | null;
+}
+
+export async function fetchAdminDashboardData(): Promise<AdminDashboardData> {
+    const [participation, recognitionTrend, recognitionUsers, recognitionTeams, teams] = await Promise.allSettled([
+        fetchParticipation(),
+        fetchRecognitionTrend("6m"),
+        fetchRecognitionUsers("month"),
+        fetchRecognitionTeams("month"),
+        fetchTeamsSummary(),
+    ]);
+
+    return {
+        participation: participation.status === "fulfilled" ? participation.value : null,
+        recognitionTrend: recognitionTrend.status === "fulfilled" ? recognitionTrend.value : null,
+        recognitionUsers: recognitionUsers.status === "fulfilled" ? recognitionUsers.value : null,
+        recognitionTeams: recognitionTeams.status === "fulfilled" ? recognitionTeams.value : null,
+        teams: teams.status === "fulfilled" ? teams.value : null,
+    };
+}
+
 export async function fetchAllDashboardData(): Promise<DashboardData> {
     try {
         const res = await analyticsClient.get<DashboardData>("/dashboard/all");

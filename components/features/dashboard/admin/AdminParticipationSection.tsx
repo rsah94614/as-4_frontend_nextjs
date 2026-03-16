@@ -80,22 +80,37 @@ type LoadState =
     | { status: "error" }
     | { status: "ok"; data: ParticipationResponse };
 
-export default function AdminParticipationSection() {
-    const [state, setState] = useState<LoadState>({ status: "loading" });
+export default function AdminParticipationSection({ initialData }: { initialData?: ParticipationResponse | null }) {
+    const [state, setState] = useState<LoadState>(
+        initialData ? { status: "ok", data: initialData } : { status: "loading" }
+    );
+
+    // Sync prop to state during render if it changes
+    const [prevInitialData, setPrevInitialData] = useState(initialData);
+    if (initialData !== prevInitialData) {
+        setPrevInitialData(initialData);
+        if (initialData) {
+            setState({ status: "ok", data: initialData });
+        }
+    }
 
     // `triggerLoad` increments a counter; the effect reacts to the counter change.
-    // This means the effect body never calls setState — the fetch .then() does.
     const [loadTick, setLoadTick] = useState(0);
-    const load = useCallback(() => setLoadTick(t => t + 1), []);
+    const load = useCallback(() => {
+        setState({ status: "loading" });
+        setLoadTick(t => t + 1);
+    }, []);
 
     useEffect(() => {
+        if (loadTick === 0) return;
+
         let cancelled = false;
         fetchParticipation().then((res) => {
             if (cancelled) return;
             setState(res ? { status: "ok", data: res } : { status: "error" });
         });
         return () => { cancelled = true; };
-    }, [loadTick]); // re-runs whenever load() is called
+    }, [loadTick]);
 
     if (state.status === "loading") return <ParticipationSkeleton />;
     if (state.status === "error")   return <ParticipationError onRetry={load} />;

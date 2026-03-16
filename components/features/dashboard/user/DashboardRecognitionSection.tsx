@@ -37,11 +37,23 @@ function RecognitionSkeleton() {
     );
 }
 
-const DashboardRecognitionSection = () => {
-    const [reviews, setReviews] = useState<RecentReviewResponse[]>([]);
-    const [loading, setLoading] = useState(true);
+const DashboardRecognitionSection = ({ initialData }: { initialData?: RecentReviewResponse[] | null }) => {
+    const [reviews, setReviews] = useState<RecentReviewResponse[]>(initialData ?? []);
+    const [loading, setLoading] = useState(!initialData);
+
+    // Sync prop to state during render
+    const [prevInitialData, setPrevInitialData] = useState(initialData);
+    if (initialData !== prevInitialData) {
+        setPrevInitialData(initialData);
+        if (initialData) {
+            setReviews(initialData);
+            setLoading(false);
+        }
+    }
 
     useEffect(() => {
+        if (initialData) return;
+
         async function load() {
             setLoading(true);
             const result = await fetchDashboardRecentReviews();
@@ -49,7 +61,7 @@ const DashboardRecognitionSection = () => {
             setLoading(false);
         }
         load();
-    }, []);
+    }, [initialData]);
 
     const items = reviews.map((r, i) => ({
         id: r.review_id,

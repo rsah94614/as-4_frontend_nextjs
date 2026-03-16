@@ -147,6 +147,7 @@ export default function LoginPage() {
               width={180}
               height={40}
               className="object-contain"
+              priority
             />
             <div className="h-10 w-px bg-gray-300"></div>
             <span className="text-[#E31837] text-2xl font-black tracking-widest uppercase">A</span>

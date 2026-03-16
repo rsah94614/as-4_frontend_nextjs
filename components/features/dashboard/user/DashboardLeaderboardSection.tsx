@@ -152,11 +152,23 @@ function LeaderboardSkeleton() {
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 
-const DashboardLeaderboardSection = () => {
-    const [entries, setEntries] = useState<LeaderboardEntryResponse[]>([]);
-    const [loading, setLoading] = useState(true);
+const DashboardLeaderboardSection = ({ initialData }: { initialData?: LeaderboardEntryResponse[] | null }) => {
+    const [entries, setEntries] = useState<LeaderboardEntryResponse[]>(initialData ?? []);
+    const [loading, setLoading] = useState(!initialData);
+
+    // Sync prop to state during render
+    const [prevInitialData, setPrevInitialData] = useState(initialData);
+    if (initialData !== prevInitialData) {
+        setPrevInitialData(initialData);
+        if (initialData) {
+            setEntries(initialData);
+            setLoading(false);
+        }
+    }
 
     useEffect(() => {
+        if (initialData) return;
+
         async function load() {
             setLoading(true);
             const result = await fetchDashboardLeaderboard();
@@ -164,7 +176,7 @@ const DashboardLeaderboardSection = () => {
             setLoading(false);
         }
         load();
-    }, []);
+    }, [initialData]);
 
     const mapped = entries.map((entry, i) => ({
         rank: entry.rank,

@@ -159,17 +159,39 @@ type RecognitionState = {
     error: boolean;
 };
 
-export default function AdminRecognitionSection() {
+export default function AdminRecognitionSection({ 
+    initialUsers, 
+    initialTeams 
+}: { 
+    initialUsers?: UserRecognition[] | null; 
+    initialTeams?: TeamRecognition[] | null; 
+}) {
     const [range,    setRange]    = useState<Range>("month");
     const [layout,   setLayout]   = useState<Layout>("user");
     const [userSort, setUserSort] = useState<UserSort>("givers");
 
     const [recog, setRecog] = useState<RecognitionState>({
-        users: [], teams: [], loading: true, error: false,
+        users: initialUsers ?? [],
+        teams: initialTeams ?? [],
+        loading: initialUsers === undefined || initialTeams === undefined,
+        error: false,
     });
 
+    // Sync prop to state during render
+    const [prevInitial, setPrevInitial] = useState({ u: initialUsers, t: initialTeams });
+    if (initialUsers !== prevInitial.u || initialTeams !== prevInitial.t) {
+        setPrevInitial({ u: initialUsers, t: initialTeams });
+        if (range === "month") {
+            setRecog({
+                users: initialUsers ?? [],
+                teams: initialTeams ?? [],
+                loading: false,
+                error: false
+            });
+        }
+    }
+
     // loadAll only touches state in .then() — never synchronously.
-    // The effect calls loadAll(); the effect body itself has zero setState calls.
     const loadAll = useCallback((r: Range) => {
         Promise.all([
             fetchRecognitionUsers(r),
@@ -184,9 +206,15 @@ export default function AdminRecognitionSection() {
         });
     }, []);
 
+    const handleRangeChange = useCallback((v: Range) => {
+        setRecog(prev => ({ ...prev, loading: true }));
+        setRange(v);
+    }, []);
+
     useEffect(() => {
+        if (range === "month" && initialUsers && initialTeams) return;
         loadAll(range);
-    }, [range, loadAll]);
+    }, [range, loadAll, initialUsers, initialTeams]);
 
     const { users, teams, loading, error } = recog;
 
@@ -220,7 +248,7 @@ export default function AdminRecognitionSection() {
                                 </TabsList>
                             </Tabs>
                         </div>
-                        <Select value={range} onValueChange={v => setRange(v as Range)}>
+                        <Select value={range} onValueChange={v => handleRangeChange(v as Range)}>
                             <SelectTrigger size="sm" className="w-36">
                                 <SelectValue placeholder="Date range" />
                             </SelectTrigger>
