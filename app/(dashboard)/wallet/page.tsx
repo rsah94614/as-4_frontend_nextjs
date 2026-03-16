@@ -9,7 +9,7 @@
  *   GET /transactions?wallet_id=...     → TransactionListResponse
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Gift,
   Ticket,
@@ -46,6 +46,34 @@ function formatDate(iso: string) {
     month: "2-digit",
     year: "numeric",
   });
+}
+
+/** Animated count-up from 0/previous value to target value (same feel as Redeem). */
+function useCountUp(target: number, duration = 800) {
+  const [value, setValue] = useState(0);
+  const prevTarget = useRef(0);
+
+  useEffect(() => {
+    if (target === prevTarget.current) return;
+
+    const start = prevTarget.current;
+    const diff = target - start;
+    const startTime = performance.now();
+
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(start + diff * eased));
+
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+    prevTarget.current = target;
+  }, [target, duration]);
+
+  return value;
 }
 
 // ─── Exact API response types (mirrors backend schemas.py) ───────────────────
@@ -228,9 +256,11 @@ export default function Wallet() {
   const [txnPage, setTxnPage] = useState(1);
 
   const [loadingWallet, setLoadingWallet] = useState(true);
+  const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingTxns, setLoadingTxns] = useState(true);
   const [walletError, setWalletError] = useState<string | null>(null);
   const [txnError, setTxnError] = useState<string | null>(null);
+  const displayBalance = useCountUp(wallet?.available_points ?? 0);
 
   // ── Load wallet + summary ─────────────────────────────────────────────────
   const loadWallet = useCallback(async () => {
@@ -238,22 +268,30 @@ export default function Wallet() {
     if (!user?.employee_id) {
       setWalletError("Not authenticated. Please log in.");
       setLoadingWallet(false);
+      setLoadingSummary(false);
       return;
     }
 
     setLoadingWallet(true);
+    setLoadingSummary(true);
     setWalletError(null);
 
     try {
       const walletData = await fetchWallet(user.employee_id);
       setWallet(walletData);
+      setLoadingWallet(false);
 
-      const sumData = await fetchPointsSummary(walletData.wallet_id);
-      setSummary(sumData);
+      try {
+        const sumData = await fetchPointsSummary(walletData.wallet_id);
+        setSummary(sumData);
+      } finally {
+        setLoadingSummary(false);
+      }
     } catch (e) {
       setWalletError(
         e instanceof Error ? e.message : "Failed to load wallet data."
       );
+      setLoadingSummary(false);
     } finally {
       setLoadingWallet(false);
     }
@@ -347,7 +385,7 @@ export default function Wallet() {
                   <SkeletonLight className="h-10 w-44 mt-2" />
                 ) : (
                   <p className="text-lg sm:text-xl font-bold text-white leading-tight mt-1.5">
-                    {(wallet?.available_points ?? 0).toLocaleString()}
+                    {displayBalance.toLocaleString()}
                   </p>
                 )}
               </div>
@@ -564,7 +602,7 @@ export default function Wallet() {
                   <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border"
                     style={{ background: "#fbfdff", borderColor: "#d9e4f2" }}>
                     <span className="text-xs sm:text-sm font-bold text-gray-500">This Month</span>
-                    {loadingWallet ? (
+                    {loadingSummary ? (
                       <Skeleton className="h-5 w-16" />
                     ) : (
                       <span className="text-sm sm:text-base font-bold leading-tight" style={{ color: HDFC_BLUE }}>
@@ -576,7 +614,7 @@ export default function Wallet() {
                   <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border"
                     style={{ background: "#fbfdff", borderColor: "#d9e4f2" }}>
                     <span className="text-xs sm:text-sm font-bold text-gray-500">This Year</span>
-                    {loadingWallet ? (
+                    {loadingSummary ? (
                       <Skeleton className="h-5 w-16" />
                     ) : (
                       <span className="text-sm sm:text-base font-bold leading-tight" style={{ color: HDFC_BLUE }}>
