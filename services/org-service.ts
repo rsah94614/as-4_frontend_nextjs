@@ -3,7 +3,7 @@
 
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
-import type { AuditLog, AuditFilters, AuditLogsResponse } from "@/types/audit-types";
+import type { AuditLog, AuditLogsResponse } from "@/types/audit-types";
 import type { PaginationMeta } from "@/types/pagination";
 import type { Status, EntityType } from "@/types/status-types";
 
@@ -12,13 +12,13 @@ const orgClient = createAuthenticatedClient("/api/proxy/org");
 // ── Audit Logs ────────────────────────────────────────────────────────────────
 
 export interface AuditLogParams {
-    page?:           number;
-    limit?:          number;
-    table_name?:     string;
+    page?: number;
+    limit?: number;
+    table_name?: string;
     operation_type?: string;
-    performed_by?:   string;
-    start_date?:     string;
-    end_date?:       string;
+    performed_by?: string;
+    start_date?: string;
+    end_date?: string;
 }
 
 export async function fetchAuditLogs(
@@ -46,10 +46,10 @@ export async function fetchStatuses(entityType?: EntityType): Promise<Status[]> 
 }
 
 export interface CreateStatusPayload {
-    status_code:  string;
-    status_name:  string;
-    description:  string;
-    entity_type:  EntityType;
+    status_code: string;
+    status_name: string;
+    description: string;
+    entity_type: EntityType;
 }
 
 export async function createStatus(payload: CreateStatusPayload): Promise<Status> {
@@ -62,8 +62,8 @@ export async function createStatus(payload: CreateStatusPayload): Promise<Status
 }
 
 export interface UpdateStatusPayload {
-    status_name:  string;
-    description:  string;
+    status_name: string;
+    description: string;
 }
 
 export async function updateStatus(statusId: string, payload: UpdateStatusPayload): Promise<Status> {
