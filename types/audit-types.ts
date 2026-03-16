@@ -14,6 +14,8 @@ export interface AuditLog {
     performed_at: string;
     ip_address?: string;
     user_agent?: string;
+    employee_name?: string;
+    performed_by_name?: string;
 }
 
 export interface AuditLogsResponse {

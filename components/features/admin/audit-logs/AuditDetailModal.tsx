@@ -4,7 +4,6 @@ import { X } from "lucide-react";
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -72,7 +71,7 @@ function ChangeTable({ data, emptyMessage }: { data: unknown; emptyMessage: stri
 export function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
     if (!log) return null;
 
-    const employeeName = (log as any).employee_name || (log as any).performed_by_name || "Admin";
+    const employeeName = log.employee_name || log.performed_by_name || "Admin";
 
     return (
         <Dialog open={!!log} onOpenChange={(open) => !open && onClose()}>
