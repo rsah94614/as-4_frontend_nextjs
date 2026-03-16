@@ -18,6 +18,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { HistoryItem } from "../../../types/history-types";
 import { getMessage } from "../../../lib/history-utils";
+import { 
+    SUCCESS_GREEN, 
+    DESTRUCTIVE_RED, 
+    HDFC_BLUE 
+} from "./history-styles";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -87,21 +92,21 @@ export default function TransactionDetailModal({
             <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden rounded-[32px] border-0 shadow-2xl animate-in zoom-in-95 duration-200">
                 {/* ── Header ── */}
                 <div className="relative px-8 pt-10 pb-8 bg-white border-b border-gray-100">
-                    <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: isRedemption ? "#E31837" : "#004C8F" }} />
+                    <div className="absolute top-0 left-0 right-0 h-1.5" style={{ backgroundColor: isRedemption ? DESTRUCTIVE_RED : SUCCESS_GREEN }} />
 
                     <DialogHeader className="relative z-10 space-y-4">
                         <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 shadow-sm text-left align-left">
                             {isRedemption ? (
-                                <ArrowUpRight className="w-7 h-7 text-[#E31837]" />
+                                <ArrowUpRight className="w-7 h-7" style={{ color: DESTRUCTIVE_RED }} />
                             ) : (
-                                <TrendingUp className="w-7 h-7 text-[#004C8F]" />
+                                <TrendingUp className="w-7 h-7" style={{ color: SUCCESS_GREEN }} />
                             )}
                         </div>
                         <div className="space-y-1 text-left">
                             <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">
                                 Transaction Detail
                             </p>
-                            <DialogTitle className="text-2xl font-bold text-[#004C8F] leading-tight">
+                            <DialogTitle className="text-2xl font-bold leading-tight" style={{ color: HDFC_BLUE }}>
                                 {getMessage(item)}
                             </DialogTitle>
                         </div>
@@ -113,23 +118,31 @@ export default function TransactionDetailModal({
                     {/* Points row */}
                     <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100">
                         <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isRedemption ? "bg-[#E31837]/10 text-[#E31837]" : "bg-[#004C8F]/10 text-[#004C8F]"}`}>
+                            <div 
+                                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                style={{ 
+                                    backgroundColor: isRedemption ? `${DESTRUCTIVE_RED}1A` : `${SUCCESS_GREEN}1A`,
+                                    color: isRedemption ? DESTRUCTIVE_RED : SUCCESS_GREEN 
+                                }}
+                            >
                                 <Coins className="w-5 h-5" />
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                                     {isRedemption ? "Points Deducted" : "Points Earned"}
                                 </p>
-                                <p className={`text-xl font-black ${isRedemption ? "text-[#E31837]" : "text-[#004C8F]"}`}>
+                                <p className="text-xl font-black" style={{ color: isRedemption ? DESTRUCTIVE_RED : SUCCESS_GREEN }}>
                                     {isRedemption ? "-" : "+"}{item.points}
                                 </p>
                             </div>
                         </div>
                         <Badge
-                            className={`rounded-lg py-1 text-[10px] font-bold uppercase ${isRedemption
-                                ? "bg-[#E31837]/10 text-[#E31837] hover:bg-[#E31837]/10 border-none px-2"
-                                : "bg-[#004C8F]/10 text-[#004C8F] hover:bg-[#004C8F]/10 border-none px-2"
-                                }`}
+                            variant="secondary"
+                            className="rounded-lg py-1 text-[10px] font-bold uppercase border-none px-2"
+                            style={{ 
+                                backgroundColor: isRedemption ? `${DESTRUCTIVE_RED}1A` : `${SUCCESS_GREEN}1A`,
+                                color: isRedemption ? DESTRUCTIVE_RED : SUCCESS_GREEN 
+                            }}
                         >
                             {isRedemption ? "Redemption" : "Points Earned"}
                         </Badge>
@@ -161,8 +174,8 @@ export default function TransactionDetailModal({
 
                     {/* Reward details (if redemption) */}
                     {item.reward_catalog && (
-                        <div className="p-4 rounded-2xl bg-[#004C8F]/5 border border-[#004C8F]/10 space-y-3">
-                            <div className="flex items-center gap-2 text-[#004C8F]">
+                        <div className="p-4 rounded-2xl border space-y-3" style={{ backgroundColor: `${DESTRUCTIVE_RED}0D`, borderColor: `${DESTRUCTIVE_RED}1A` }}>
+                            <div className="flex items-center gap-2" style={{ color: DESTRUCTIVE_RED }}>
                                 <Package className="w-4 h-4" />
                                 <p className="text-[10px] font-bold uppercase tracking-wider">Reward Information</p>
                             </div>

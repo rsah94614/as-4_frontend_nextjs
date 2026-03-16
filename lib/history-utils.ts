@@ -11,7 +11,13 @@ export function matchesPeriod(item: HistoryItem, period: PeriodFilter): boolean 
 /** Returns true if the item matches the chosen transaction-type filter */
 export function matchesType(item: HistoryItem, type: TypeFilter): boolean {
     if (type === "All") return true;
-    const name = item.reward_catalog?.reward_name?.toLowerCase() ?? "";
+    
+    // If filtering by a specific reward type (e.g., "Gift Voucher"), 
+    // it must be a redemption (has reward_catalog) and match the name.
+    // If it's a points transaction (no reward_catalog), it does not match a reward type filter.
+    if (!item.reward_catalog) return false;
+    
+    const name = item.reward_catalog.reward_name?.toLowerCase() ?? "";
     return name.includes(type.toLowerCase());
 }
 
