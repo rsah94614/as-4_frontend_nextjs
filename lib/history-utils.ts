@@ -8,17 +8,47 @@ export function matchesPeriod(item: HistoryItem, period: PeriodFilter): boolean 
     return true;
 }
 
+/**
+ * Maps a reward_code prefix to its category.
+ *
+ * Reward codes follow the pattern: REW-{CATEGORY}-{ITEM}
+ *   - REW-AMZ-*, REW-FLIP-*   → Gift Cards
+ *   - REW-MERCH-*              → Merchandise
+ *   - REW-LEARN-*, REW-EXP-*  → Experiences
+ *   - REW-WELL-*               → Wellness
+ */
+function getRewardCategory(rewardCode: string): TypeFilter {
+    const code = rewardCode.toUpperCase();
+
+    // Gift Cards
+    if (code.startsWith("REW-AMZ") || code.startsWith("REW-FLIP"))
+        return "Gift Cards";
+
+    // Merchandise
+    if (code.startsWith("REW-MERCH"))
+        return "Merchandise";
+
+    // Experiences (learning + experiential)
+    if (code.startsWith("REW-LEARN") || code.startsWith("REW-EXP"))
+        return "Experiences";
+
+    // Wellness
+    if (code.startsWith("REW-WELL"))
+        return "Wellness";
+
+    // Fallback — unknown category, return "All" so it's always visible
+    return "All";
+}
+
 /** Returns true if the item matches the chosen transaction-type filter */
 export function matchesType(item: HistoryItem, type: TypeFilter): boolean {
     if (type === "All") return true;
-    
-    // If filtering by a specific reward type (e.g., "Gift Voucher"), 
-    // it must be a redemption (has reward_catalog) and match the name.
-    // If it's a points transaction (no reward_catalog), it does not match a reward type filter.
+
+    // Points-earned transactions (no reward_catalog) don't belong to any reward category
     if (!item.reward_catalog) return false;
-    
-    const name = item.reward_catalog.reward_name?.toLowerCase() ?? "";
-    return name.includes(type.toLowerCase());
+
+    // Match by reward_code category
+    return getRewardCategory(item.reward_catalog.reward_code) === type;
 }
 
 /** Derives a human-readable message for a history row */
