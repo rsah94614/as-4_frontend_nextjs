@@ -36,6 +36,25 @@ pipeline {
     }
 
     stages {
+        stage('Bootstrap Docker Buildx') {
+            steps {
+                script {
+                    // Check if buildx is already installed to avoid redundant downloads
+                    def exitCode = sh(script: "docker buildx version", returnStatus: true)
+                    if (exitCode != 0) {
+                        echo "Buildx missing. Installing for Jenkins user..."
+                        sh '''
+                        mkdir -p ~/.docker/cli-plugins
+                        curl -SL https://github.com/docker/buildx/releases/download/v0.12.1/buildx-v0.12.1.linux-amd64 -o ~/.docker/cli-plugins/docker-buildx
+                        chmod +x ~/.docker/cli-plugins/docker-buildx
+                        docker buildx version
+                        '''
+                    } else {
+                        echo "Buildx is already configured."
+                    }
+                }
+            }
+        }
         stage('Checkout Source') {
             steps {
                 echo "Fetching code for branch: ${TARGET_BRANCH} using GitHub PAT..."
