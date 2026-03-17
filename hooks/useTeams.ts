@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { fetchWithAuth } from "@/services/auth-service";
+import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Employee, Review, MemberStats } from "@/types/team-types";
 
-const EMPLOYEE_API = process.env.NEXT_PUBLIC_EMPLOYEE_API_URL || "http://localhost:8002";
-const RECOGNITION_API = process.env.NEXT_PUBLIC_RECOGNITION_API_URL || "http://localhost:8005";
+const employeeProxyClient    = createAuthenticatedClient("/api/proxy/employees");
+const recognitionProxyClient = createAuthenticatedClient("/api/proxy/recognition");
 
 export function useTeams() {
     const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
@@ -21,12 +21,12 @@ export function useTeams() {
         const all: Employee[] = [];
         let page = 1;
         while (true) {
-            const res = await fetchWithAuth(`${EMPLOYEE_API}/v1/employees?limit=${PAGE_SIZE}&page=${page}`);
-            if (!res.ok) throw new Error(`Failed to fetch employees (${res.status})`);
-            const data = await res.json();
-            const rows: Employee[] = data.data ?? [];
+            const res = await employeeProxyClient.get<{ data: Employee[]; pagination: { total_pages: number } }>(
+                `/list?limit=${PAGE_SIZE}&page=${page}`
+            );
+            const rows: Employee[] = res.data.data ?? [];
             all.push(...rows);
-            if (page >= (data.pagination?.total_pages ?? 1)) break;
+            if (page >= (res.data.pagination?.total_pages ?? 1)) break;
             page++;
         }
         return all;
@@ -37,15 +37,12 @@ export function useTeams() {
         const all: Review[] = [];
         let page = 1;
         while (true) {
-            const res = await fetchWithAuth(`${RECOGNITION_API}/v1/reviews?page=${page}&page_size=${PAGE_SIZE}`);
-            if (!res.ok) {
-                console.warn(`Reviews fetch returned ${res.status}`);
-                break;
-            }
-            const data = await res.json();
-            const rows: Review[] = data.data ?? [];
+            const res = await recognitionProxyClient.get<{ data: Review[]; pagination: { total_pages: number } }>(
+                `/reviews?page=${page}&page_size=${PAGE_SIZE}`
+            );
+            const rows: Review[] = res.data.data ?? [];
             all.push(...rows);
-            if (page >= (data.pagination?.total_pages ?? 1)) break;
+            if (page >= (res.data.pagination?.total_pages ?? 1)) break;
             page++;
         }
         return all;

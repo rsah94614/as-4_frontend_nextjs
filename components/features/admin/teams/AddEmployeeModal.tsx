@@ -2,11 +2,9 @@
 
 import React, { useState, useMemo } from "react";
 import { Users, X, AlertCircle, Loader2 } from "lucide-react";
-import { fetchWithAuth } from "@/services/auth-service";
+import axiosClient from "@/services/api-client";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Employee } from "@/types/team-types";
-
-const AUTH_API = process.env.NEXT_PUBLIC_AUTH_API_URL || "http://localhost:8001";
 
 interface AddEmployeeModalProps {
     onClose: () => void;
@@ -67,21 +65,14 @@ export function AddEmployeeModal({
         setSubmitting(true);
         setError(null);
         try {
-            const res = await fetchWithAuth(`${AUTH_API}/v1/auth/signup`, {
-                method: "POST",
-                body: JSON.stringify({
-                    username: form.username,
-                    email: form.email,
-                    password: form.password,
-                    designation_id: form.designation_id,
-                    department_id: form.department_id,
-                    manager_id: form.manager_id || null,
-                }),
+            await axiosClient.post(`/signup`, {
+                username: form.username,
+                email: form.email,
+                password: form.password,
+                designation_id: form.designation_id,
+                department_id: form.department_id,
+                manager_id: form.manager_id || null,
             });
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.detail || "Failed to add employee");
-            }
             onSuccess();
             onClose();
         } catch (err: unknown) {

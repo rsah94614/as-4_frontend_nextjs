@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import AdminTeamMemberRow from "./AdminTeamMemberRow";
 import type { TeamReportResponse } from "@/types/dashboard-types";
+import ExcelJS from "exceljs";
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid,
     Tooltip, ResponsiveContainer, Cell, Legend,

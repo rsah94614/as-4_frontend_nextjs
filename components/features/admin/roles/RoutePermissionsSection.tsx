@@ -9,7 +9,7 @@ import {
     routePermissionsApi,
     type Role,
     type RoutePermission,
-} from "@/services/roles-client";
+} from "@/services/roles-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { MethodBadge, type ToastType } from "./UIHelpers";
 

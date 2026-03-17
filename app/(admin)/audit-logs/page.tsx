@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 import { AuditLog, AuditFilters } from "@/types/audit-types";
 import { PaginationMeta } from "@/types/pagination";
-import orgApiClient from "@/services/org-api-client";
+import { fetchAuditLogs } from "@/services/org-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { AuditTable } from "@/components/features/admin/audit-logs/AuditTable";
 import { AuditDetailModal } from "@/components/features/admin/audit-logs/AuditDetailModal";
@@ -41,20 +41,17 @@ export default function AuditLogsPage() {
         setLoading(true);
         setError(null);
         try {
-            const params: Record<string, string | number> = { page, limit: 10 };
-            if (filters.tableName) params.table_name = filters.tableName;
-            if (filters.operationType) params.operation_type = filters.operationType;
-            if (filters.performedBy) params.performed_by = filters.performedBy;
-            if (filters.startDate) params.start_date = new Date(filters.startDate).toISOString();
-            if (filters.endDate) params.end_date = new Date(filters.endDate).toISOString();
-
-            const res = await orgApiClient.get<{
-                data: AuditLog[];
-                pagination: PaginationMeta;
-            }>("/audit-logs", { params });
-
-            setLogs(res.data.data ?? []);
-            setPagination(res.data.pagination ?? null);
+            const { data, pagination } = await fetchAuditLogs({
+                page,
+                limit: 10,
+                ...(filters.tableName      && { table_name:      filters.tableName }),
+                ...(filters.operationType  && { operation_type:  filters.operationType }),
+                ...(filters.performedBy    && { performed_by:    filters.performedBy }),
+                ...(filters.startDate      && { start_date:      new Date(filters.startDate).toISOString() }),
+                ...(filters.endDate        && { end_date:        new Date(filters.endDate).toISOString() }),
+            });
+            setLogs(data);
+            setPagination(pagination ?? null);
         } catch (e: unknown) {
             setError(extractErrorMessage(e, "Could not load audit logs. Please check that the service is running."));
             setLogs([]);
@@ -80,22 +77,35 @@ export default function AuditLogsPage() {
 
     return (
         <>
-            <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
-                <div
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 lg:px-6 py-4 rounded-xl"
-                    style={{ backgroundColor: "#1a4ab5" }}
-                >
-                    <div>
-                        <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white tracking-wide">Audit Logs</h1>
-                        <p className="text-blue-200 text-xs mt-0.5">
-                            {pagination ? `${pagination.total.toLocaleString()} total records` : "System activity history"}
-                        </p>
+            <main className="flex-1 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5">
+                {/* ─── Page Header (matches Employee page) ─── */}
+                <div>
+                    <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+                        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+                            <div>
+                                <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
+                                    Audit Logs
+                                </h1>
+                                <p className="text-sm text-gray-400 mt-1">
+                                    Track and monitor all system activity
+                                </p>
+                            </div>
+                            <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
+                                <span style={{ color: "#E31837" }}>A</span>
+                                <span style={{ color: "#004C8F" }}>abhar</span>
+                            </span>
+                        </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                    {/* Red accent line */}
+                    <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+                </div>
+                <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
+                <div className="bg-white rounded-xl shadow-sm px-3 sm:px-4 lg:px-6 py-4 sm:py-5 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                         <Button
                             variant="outline"
                             onClick={() => setFiltersOpen(f => !f)}
-                            className="h-10 w-full sm:w-auto px-4 rounded-lg font-semibold border-white/30 text-white bg-white/10 hover:bg-white/20"
+                            className="h-10 w-full sm:w-auto px-4 rounded-lg font-semibold border-slate-300 text-slate-600 hover:bg-slate-100"
                         >
                             <Filter className="w-4 h-4 mr-2" />
                             {filtersOpen ? "Hide Filters" : "Filter"}
@@ -104,13 +114,12 @@ export default function AuditLogsPage() {
                         <Button
                             variant="outline"
                             onClick={fetchLogs}
-                            className="h-10 w-full sm:w-10 p-0 rounded-lg border-white/30 text-white bg-white/10 hover:bg-white/20"
+                            className="h-10 w-full sm:w-10 p-0 rounded-lg border-slate-300 text-slate-500 hover:bg-slate-100 sm:ml-auto"
                             title="Refresh"
                         >
                             <RefreshCw className="w-4 h-4" />
                         </Button>
                     </div>
-                </div>
 
                 {filtersOpen && (
                     <AuditFilterPanel initialFilters={filters} onApply={applyFilters} onClear={clearFilters} />
@@ -189,6 +198,8 @@ export default function AuditLogsPage() {
                         onViewDetails={setSelectedLog}
                         hasActiveFilters={hasActiveFilters}
                     />
+                </div>
+                </div>
                 </div>
             </main>
             <AuditDetailModal log={selectedLog} onClose={() => setSelectedLog(null)} />

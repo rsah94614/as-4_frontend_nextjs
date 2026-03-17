@@ -11,8 +11,7 @@
 // i.e. `/${id}` not `/v1/employees/${id}` (which would double-path to
 // /api/proxy/employees/v1/employees/${id} → 404).
 
-import { createAuthenticatedClient } from '@/lib/api-utils'
-import { requireAuthenticatedUserId } from '@/lib/api-utils'
+import { createAuthenticatedClient, requireAuthenticatedUserId } from '@/lib/api-utils'
 import { extractErrorMessage } from '@/lib/error-utils'
 
 const employeesClient = createAuthenticatedClient('/api/proxy/employees')

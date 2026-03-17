@@ -47,16 +47,23 @@ export function StatusModal({ isOpen, onClose, onCreate, saving }: StatusModalPr
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>Add New Status</DialogTitle>
-                    <DialogDescription>
-                        Create a status label that can be assigned to employees, reviews,
-                        transactions, or rewards.
-                    </DialogDescription>
-                </DialogHeader>
+            <DialogContent className="sm:max-w-lg p-0 overflow-hidden rounded-xl border-0 [&>button]:hidden">
+                {/* Blue header */}
+                <div className="px-6 py-4" style={{ background: "#004C8F" }}>
+                    <DialogHeader>
+                        <DialogTitle className="text-white font-bold text-sm">
+                            Add New Status
+                        </DialogTitle>
+                        <DialogDescription className="text-blue-200 text-xs mt-0.5">
+                            Create a status label that can be assigned to employees, reviews,
+                            transactions, or rewards.
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
+                {/* Red accent line */}
+                <div className="h-0.5" style={{ background: "#E31837" }} />
 
-                <div className="space-y-4 mt-2">
+                <div className="space-y-4 p-6 bg-white">
                     <Field
                         label="Category *"
                         hint="Which area of the system will this status be used for?"
@@ -69,7 +76,7 @@ export function StatusModal({ isOpen, onClose, onCreate, saving }: StatusModalPr
                                     entity_type: e.target.value as EntityType,
                                 }))
                             }
-                            className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition text-gray-800"
+                            className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 transition text-gray-800"
                         >
                             {ENTITY_TYPES.map((t) => (
                                 <option key={t} value={t}>
@@ -95,6 +102,7 @@ export function StatusModal({ isOpen, onClose, onCreate, saving }: StatusModalPr
                             }
                             placeholder="e.g. ON_LEAVE"
                             maxLength={50}
+                            className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F]"
                         />
                         <p className="text-xs text-gray-400 mt-1.5">
                             ⚠ This code is permanent and used by the system internally.
@@ -113,6 +121,7 @@ export function StatusModal({ isOpen, onClose, onCreate, saving }: StatusModalPr
                             }
                             placeholder="e.g. On Leave"
                             maxLength={100}
+                            className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F]"
                         />
                     </Field>
 
@@ -125,33 +134,35 @@ export function StatusModal({ isOpen, onClose, onCreate, saving }: StatusModalPr
                             onChange={(e) =>
                                 setForm((p) => ({ ...p, description: e.target.value }))
                             }
-                            className="resize-none"
+                            className="resize-none border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F]"
                             rows={2}
                             placeholder="e.g. Employee is temporarily on approved leave."
                         />
                     </Field>
+                </div>
 
-                    <div className="flex flex-col-reverse sm:flex-row gap-2.5 pt-5 border-t border-gray-100 sm:justify-end">
-                        <Button
-                            variant="ghost"
-                            onClick={handleClose}
-                            disabled={saving}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={saving}
-                            className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm shadow-amber-200 gap-2"
-                        >
-                            {saving ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Plus className="w-4 h-4" />
-                            )}
-                            {saving ? "Creating…" : "Create Status"}
-                        </Button>
-                    </div>
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+                    <Button
+                        variant="outline"
+                        onClick={handleClose}
+                        disabled={saving}
+                        className="border-gray-200 text-xs font-semibold"
+                    >
+                        Cancel
+                    </Button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                        style={{ background: "#E31837" }}
+                    >
+                        {saving ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Plus className="w-4 h-4" />
+                        )}
+                        {saving ? "Creating…" : "Create Status"}
+                    </button>
                 </div>
             </DialogContent>
         </Dialog>

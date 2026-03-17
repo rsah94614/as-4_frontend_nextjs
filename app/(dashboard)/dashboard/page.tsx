@@ -26,7 +26,7 @@ export default function DashboardPage() {
 
     const isAdmin = user?.roles?.some(role => (ADMIN_ROLES as readonly string[]).includes(role.toUpperCase()));
 
+    if (isAdmin === null) return null;
     if (isAdmin) return <AdminDashboard />;
-
     return <UserDashboard />;
 }

@@ -5,34 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
+import ExcelJS from "exceljs";
 import AdminTeamsSection from "./AdminTeamsSection";
-import { fetchTeamReport } from "@/services/analytics-service";
+import { fetchTeamReport, fetchTeamsSummary } from "@/services/analytics-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import type { TeamSummaryResponse } from "@/types/dashboard-types";
 
 type SortOption = "score" | "points" | "members" | "name";
 
-const ANALYTICS_API =
-    process.env.NEXT_PUBLIC_ANALYTICS_API_URL || "http://localhost:8008";
-
 async function fetchTeamsWithDetail(): Promise<{
     data: TeamSummaryResponse[] | null;
     error: string | null;
 }> {
-    const url = `${ANALYTICS_API}/v1/analytics/dashboard/teams`;
     try {
-        const { fetchWithAuth } = await import("@/services/auth-service");
-        const res = await fetchWithAuth(url);
-        if (res.ok) {
-            const data = await res.json();
-            return { data: Array.isArray(data) ? data : data?.teams ?? [], error: null };
-        }
-        let detail = "";
-        try {
-            const body = await res.json();
-            detail = body?.detail ?? body?.message ?? "";
-        } catch { /* */ }
-        return { data: null, error: detail || `HTTP ${res.status}` };
+        const data = await fetchTeamsSummary();
+        return { data, error: null };
     } catch (e: unknown) {
         return { data: null, error: extractErrorMessage(e, "Unexpected error") };
     }

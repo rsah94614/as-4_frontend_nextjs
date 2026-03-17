@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import ProtectedRoute from "@/components/features/auth/ProtectedRoute";
-import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 
 export default function AdminLayout({
@@ -10,22 +8,17 @@ export default function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
         <ProtectedRoute adminOnly>
-            <div className="flex min-h-screen bg-[#F0F4F8]">
-                {/* Left Sidebar */}
-                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-                {/* Main Content Area */}
-                <div className="flex flex-col flex-1 min-w-0 w-full overflow-hidden">
-                    <Navbar onMenuClick={() => setSidebarOpen(true)} />
-                    <main className="flex-1 overflow-y-auto">
-                        {children}
-                    </main>
+            <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#eef0f8" }}>
+                <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+                    <Navbar onMenuClick={() => { }} />
+                    {children}
                 </div>
             </div>
+
         </ProtectedRoute>
     );
 }

@@ -1,6 +1,4 @@
 "use client";
-
-import React from "react";
 import { Edit2, Loader2, Check, X } from "lucide-react";
 import {
     Status,
@@ -148,7 +146,7 @@ export function StatusTable({
                                                                         e.target.value
                                                                     )
                                                                 }
-                                                                className="border border-amber-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 w-full bg-amber-50/30"
+                                                                className="border border-[#004C8F]/30 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004C8F]/20 w-full bg-blue-50/30"
                                                             />
                                                         ) : (
                                                             <span className="font-semibold text-gray-800">
@@ -166,7 +164,7 @@ export function StatusTable({
                                                                         e.target.value
                                                                     )
                                                                 }
-                                                                className="border border-amber-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 w-full bg-amber-50/30"
+                                                                className="border border-[#004C8F]/30 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004C8F]/20 w-full bg-blue-50/30"
                                                                 placeholder="Optional description"
                                                             />
                                                         ) : (
@@ -190,7 +188,8 @@ export function StatusTable({
                                                                             )
                                                                         }
                                                                         disabled={saving}
-                                                                        className="flex items-center gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl disabled:opacity-50 font-semibold transition"
+                                                                        className="flex items-center gap-1.5 text-xs text-white px-3.5 py-2 rounded-xl disabled:opacity-50 font-semibold transition hover:opacity-90"
+                                                                        style={{ background: "#004C8F" }}
                                                                     >
                                                                         {saving ? (
                                                                             <Loader2 className="w-3 h-3 animate-spin" />
@@ -209,7 +208,7 @@ export function StatusTable({
                                                             ) : (
                                                                 <button
                                                                     onClick={() => onEdit(status)}
-                                                                    className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 text-xs text-gray-500 hover:text-amber-600 hover:bg-amber-50 border border-gray-200 hover:border-amber-200 px-3 py-1.5 rounded-xl transition font-medium"
+                                                                    className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 text-xs text-gray-500 hover:text-[#004C8F] hover:bg-blue-50 border border-gray-200 hover:border-[#004C8F]/30 px-3 py-1.5 rounded-xl transition font-medium"
                                                                 >
                                                                     <Edit2 className="w-3 h-3" />{" "}
                                                                     Edit
@@ -245,7 +244,7 @@ export function StatusTable({
                                                                         e.target.value
                                                                     )
                                                                 }
-                                                                className="w-full border border-amber-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 bg-amber-50/30"
+                                                                className="w-full border border-[#004C8F]/30 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004C8F]/20 bg-blue-50/30"
                                                             />
                                                             <input
                                                                 value={editForm.description}
@@ -256,7 +255,7 @@ export function StatusTable({
                                                                     )
                                                                 }
                                                                 placeholder="Description (optional)"
-                                                                className="w-full border border-amber-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/50 bg-amber-50/30"
+                                                                className="w-full border border-[#004C8F]/30 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#004C8F]/20 bg-blue-50/30"
                                                             />
                                                         </div>
                                                     ) : (
@@ -282,7 +281,8 @@ export function StatusTable({
                                                                     onUpdate(status.status_id)
                                                                 }
                                                                 disabled={saving}
-                                                                className="flex items-center gap-1 text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-xl disabled:opacity-50 font-semibold transition"
+                                                                className="flex items-center gap-1 text-xs text-white px-3 py-1.5 rounded-xl disabled:opacity-50 font-semibold transition hover:opacity-90"
+                                                                style={{ background: "#004C8F" }}
                                                             >
                                                                 {saving ? (
                                                                     <Loader2 className="w-3 h-3 animate-spin" />

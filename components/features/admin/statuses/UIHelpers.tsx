@@ -1,17 +1,91 @@
 "use client";
 
 import React from "react";
-import { Check, AlertCircle, X, Info, HelpCircle } from "lucide-react";
+import { Check, AlertCircle, X, Info, HelpCircle,} from "lucide-react";
+
 
 // ─── Page Shell ───────────────────────────────────────────────────────────────
 
 export function PageShell({ children }: { children: React.ReactNode }) {
     return (
-        <main className="flex-1 overflow-y-auto bg-slate-50">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {children}
-            </div>
+        <main className="flex-1 overflow-y-auto bg-white">
+            {children}
         </main>
+    );
+}
+
+// ─── Page Header ──────────────────────────────────────────────────────────────
+
+export function PageHeader({
+    title,
+    subtitle,
+}: {
+    title: string;
+    subtitle: string;
+}) {
+    return (
+        <>
+            <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+                <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+                    <div>
+                        <h1
+                            className="text-2xl font-bold leading-tight"
+                            style={{ color: "#004C8F" }}
+                        >
+                            {title}
+                        </h1>
+                        <p className="text-sm text-gray-400 mt-1">{subtitle}</p>
+                    </div>
+                    <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
+                        <span style={{ color: "#E31837" }}>A</span>
+                        <span style={{ color: "#004C8F" }}>abhar</span>
+                    </span>
+                </div>
+            </div>
+            {/* Red accent line */}
+            <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+        </>
+    );
+}
+
+// ─── Content Wrapper ──────────────────────────────────────────────────────────
+
+export function ContentWrapper({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
+            <div className="max-w-[1200px] mx-auto">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+                    {children}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ─── Stats Pills ──────────────────────────────────────────────────────────────
+
+export function StatusStats({
+    stats,
+}: {
+    stats: { label: string; value: number; color: string }[];
+}) {
+    return (
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+            {stats.map((s) => (
+                <div
+                    key={s.label}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50"
+                >
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${s.color}`} />
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                        {s.label}
+                    </span>
+                    <span className="text-xs font-black text-gray-800 tabular-nums">
+                        {s.value}
+                    </span>
+                </div>
+            ))}
+        </div>
     );
 }
 
@@ -19,7 +93,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
 
 export function InfoBanner({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex gap-3 items-start bg-blue-50 border border-blue-100 rounded-2xl px-4 py-3.5 mb-6">
+        <div className="flex gap-3 items-start bg-blue-50 border border-blue-100 rounded-xl px-4 py-3.5 mb-6">
             <Info className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
             <p className="text-sm text-blue-700 leading-relaxed">{children}</p>
         </div>
@@ -40,7 +114,7 @@ export function FlashBanner({
     const ok = type === "success";
     return (
         <div
-            className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-sm mb-6 ${ok
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm mb-6 ${ok
                     ? "bg-emerald-50 border-emerald-200 text-emerald-800"
                     : "bg-red-50 border-red-200 text-red-800"
                 }`}
@@ -64,7 +138,7 @@ export function FlashBanner({
 // ─── Field ────────────────────────────────────────────────────────────────────
 
 export const inputCls =
-    "w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition placeholder-gray-300 text-gray-800";
+    "w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 transition placeholder-gray-300 text-gray-800";
 
 export function Field({
     label,

@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { fetchWithAuth } from "@/services/auth-service";
+import { createAuthenticatedClient } from "@/lib/api-utils";
+
+const rewardsApiClient = createAuthenticatedClient("/api/proxy/rewards");
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Category, CreateCategoryPayload, UpdateCategoryPayload } from "@/types/reward-types";
 import { RewardField } from "./UIHelpers";
@@ -16,7 +18,6 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 
-const API = process.env.NEXT_PUBLIC_REWARDS_API_URL ?? "http://localhost:8006";
 
 interface CategoryModalProps {
     category?: Category;
@@ -43,30 +44,20 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
         setSaving(true);
         setError(null);
         try {
-            const url = isEdit
-                ? `${API}/v1/rewards/categories/${category!.category_id}`
-                : `${API}/v1/rewards/categories`;
-            const method = isEdit ? "PATCH" : "POST";
-            const body = isEdit
-                ? {
+            if (isEdit) {
+                const body: UpdateCategoryPayload = {
                     category_name: form.category_name,
                     description: form.description,
                     is_active: form.is_active,
-                } as UpdateCategoryPayload
-                : {
+                };
+                await rewardsApiClient.patch(`/categories/${category!.category_id}`, body);
+            } else {
+                const body: CreateCategoryPayload = {
                     category_name: form.category_name,
                     category_code: form.category_code,
                     description: form.description,
-                } as CreateCategoryPayload;
-
-            const r = await fetchWithAuth(url, { method, body: JSON.stringify(body) });
-            if (!r.ok) {
-                const d = await r.json();
-                throw new Error(
-                    Array.isArray(d.detail)
-                        ? d.detail.map((e: { msg?: string }) => e.msg).join(", ")
-                        : d.detail ?? "Request failed"
-                );
+                };
+                await rewardsApiClient.post(`/categories`, body);
             }
             onSave();
         } catch (e: unknown) {
