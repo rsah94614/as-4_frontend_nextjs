@@ -139,94 +139,67 @@ export default function LoginPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#d9a05b]/10 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-[#004C8F]/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        {/* Header containing HDFC Logo and Aabhar Text */}
-        <div className="flex items-center mb-16 relative z-10 bg-white/60 p-4 rounded-xl shadow-sm self-start backdrop-blur-sm">
-          <div className="flex items-center gap-5">
-            <Image
-              src="logo.svg"
-              alt="HDFC Bank Logo"
-              width={180}
-              height={40}
-              className="object-contain"
-              priority
-            />
-            <div className="h-10 w-px bg-gray-300"></div>
-            <span className="text-[#E31837] text-2xl font-black tracking-widest uppercase">A</span>
-          </div>
-          <span className="text-[#004C8F] text-2xl font-black tracking-widest">abhar</span>
-        </div>
-
-        {/* Typography */}
-        <div className="relative z-10 max-w-2xl mt-4">
-          <h1 className="text-4xl xl:text-5xl font-bold text-[#b8860b] mb-4 leading-tight">
-            CELEBRATING SUCCESS, TOGETHER.
-          </h1>
-          <h2 className="text-2xl xl:text-3xl font-medium text-[#1c2c5b] mb-12 uppercase tracking-wide">
-            Aabhar: Recognizing Your Impact.
-          </h2>
-
-          {/* Grid of features mimicking the graphic */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 mt-12 relative">
-            {/* Feature 1 */}
-            <div className="flex items-start gap-4 group">
-              <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300">
-                <ThumbsUp className="w-7 h-7" />
-              </div>
-              <div className="pt-1">
-                <h3 className="font-bold text-gray-900 text-lg">Peer Recognition</h3>
-              </div>
-              <span className="text-[#004C8F] text-2xl font-black tracking-widest">abhar</span>
+          {/* Header containing HDFC Logo and Aabhar Text */}
+          <div className="flex items-center mb-16 relative z-10 bg-white/60 p-4 rounded-xl shadow-sm self-start backdrop-blur-sm">
+            <div className="flex items-center gap-5">
+              <Image
+                src="logo.svg"
+                alt="HDFC Bank Logo"
+                width={180}
+                height={40}
+                className="object-contain"
+                priority
+              />
+              <div className="h-10 w-px bg-gray-300"></div>
+              <span className="text-[#E31837] text-2xl font-black tracking-widest uppercase">A</span>
             </div>
+            <span className="text-[#004C8F] text-2xl font-black tracking-widest">abhar</span>
+          </div>
 
-            {/* Typography */}
-            <div className="mt-4">
-              <h1 className="text-4xl xl:text-5xl font-bold text-[#b8860b] mb-4 leading-tight">
-                CELEBRATING SUCCESS, TOGETHER.
-              </h1>
-              <h2 className="text-2xl xl:text-3xl font-medium text-[#1c2c5b] mb-12 uppercase tracking-wide">
-                Aabhar: Recognizing Your Impact.
-              </h2>
+          {/* Typography & Features */}
+          <div className="relative z-10 max-w-2xl mt-4">
+            <h1 className="text-4xl xl:text-5xl font-bold text-[#b8860b] mb-4 leading-tight">
+              CELEBRATING SUCCESS, TOGETHER.
+            </h1>
+            <h2 className="text-2xl xl:text-3xl font-medium text-[#1c2c5b] mb-12 uppercase tracking-wide">
+              Aabhar: Recognizing Your Impact.
+            </h2>
 
-              {/* Grid of features mimicking the graphic */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 mt-12 relative">
-                {/* Feature 1 */}
-                <div className="flex items-start gap-4 group">
-                  <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300">
-                    <ThumbsUp className="w-7 h-7" />
-                  </div>
-                  <div className="pt-1">
-                    <h3 className="font-bold text-gray-900 text-lg">Peer Recognition</h3>
-                  </div>
+            {/* Grid of features */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 mt-12 relative">
+              <div className="flex items-start gap-4 group">
+                <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300">
+                  <ThumbsUp className="w-7 h-7" />
                 </div>
-
-                {/* Feature 2 */}
-                <div className="flex items-start gap-4 group">
-                  <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300 mt-8 sm:mt-0">
-                    <Gift className="w-7 h-7" />
-                  </div>
-                  <div className="pt-1">
-                    <h3 className="font-bold text-gray-900 text-lg">Points to Rewards</h3>
-                  </div>
+                <div className="pt-1">
+                  <h3 className="font-bold text-gray-900 text-lg">Peer Recognition</h3>
                 </div>
+              </div>
 
-                {/* Feature 3 */}
-                <div className="flex items-start gap-4 group">
-                  <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300">
-                    <Award className="w-7 h-7" />
-                  </div>
-                  <div className="pt-1">
-                    <h3 className="font-bold text-gray-900 text-lg">Achievement Badges</h3>
-                  </div>
+              <div className="flex items-start gap-4 group">
+                <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300 mt-8 sm:mt-0">
+                  <Gift className="w-7 h-7" />
                 </div>
+                <div className="pt-1">
+                  <h3 className="font-bold text-gray-900 text-lg">Points to Rewards</h3>
+                </div>
+              </div>
 
-                {/* Feature 4 */}
-                <div className="flex items-start gap-4 group">
-                  <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300 mt-8 sm:mt-0">
-                    <LineChart className="w-7 h-7" />
-                  </div>
-                  <div className="pt-1">
-                    <h3 className="font-bold text-gray-900 text-lg">R&R Dashboard</h3>
-                  </div>
+              <div className="flex items-start gap-4 group">
+                <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300">
+                  <Award className="w-7 h-7" />
+                </div>
+                <div className="pt-1">
+                  <h3 className="font-bold text-gray-900 text-lg">Achievement Badges</h3>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4 group">
+                <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300 mt-8 sm:mt-0">
+                  <LineChart className="w-7 h-7" />
+                </div>
+                <div className="pt-1">
+                  <h3 className="font-bold text-gray-900 text-lg">R&R Dashboard</h3>
                 </div>
               </div>
             </div>
@@ -239,16 +212,10 @@ export default function LoginPage() {
 
         {/* Right Column - 45% */}
         <div className="w-full lg:w-[45%] flex flex-col items-center justify-center p-4 bg-[#f4f6f9] relative border-l border-gray-200">
-
-          {/* Background Pattern for right side */}
           <div className="absolute inset-0 z-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M54.627 0l.83.83-1.66 1.66-.83-.83.83-.83zM27.83 0l.83.83-1.66 1.66-.83-.83.83-.83zM1.033 0l.83.83-1.66 1.66-.83-.83.83-.83zM0 60l54.627-54.627.83.83L.83 60H0zm0-26.797l27.83-27.83.83.83L.83 34.033H0zm0-26.797L1.033 5.373l.83.83L.83 7.23H0zM26.797 60H60V26.797L26.797 60zM60 0v26.797L33.203 0H60zM0 0h26.797L0 26.797V0z\' fill=\'%23000000\' fill-opacity=\'1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")' }}></div>
 
           <div className="w-full max-w-md mt-auto mb-auto z-10">
-
-            {/* Form Card */}
             <div className="w-full bg-white border border-gray-200 rounded-xl shadow-xl p-8 max-w-[420px] mx-auto mt-10">
-
-              {/* Logo inside card (for mobile or generic view) */}
               <div className="mb-6 flex flex-col items-center justify-center">
                 <Image
                   src="logo.svg"
@@ -266,7 +233,6 @@ export default function LoginPage() {
                 </h2>
               </div>
 
-              {/* General Error Message */}
               {errors.general && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-300 text-red-700 rounded-md text-sm">
                   {errors.general}
@@ -274,7 +240,6 @@ export default function LoginPage() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Email */}
                 <div className="space-y-1.5">
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -297,7 +262,6 @@ export default function LoginPage() {
                   )}
                 </div>
 
-                {/* Password */}
                 <div className="space-y-1.5">
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -320,11 +284,7 @@ export default function LoginPage() {
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
                       tabIndex={-1}
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   {errors.password && touched.password && (
@@ -332,7 +292,6 @@ export default function LoginPage() {
                   )}
                 </div>
 
-                {/* Login Button */}
                 <Button
                   type="submit"
                   disabled={loading}
@@ -348,7 +307,6 @@ export default function LoginPage() {
                   )}
                 </Button>
 
-                {/* Forgot Password */}
                 <div className="text-right pt-2">
                   <Link
                     href="/forgot-password"
@@ -361,13 +319,11 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Footer */}
           <div className="mt-8 pb-4 text-xs text-center text-gray-500 w-full z-10">
             Secure Login | © HDFC Bank Ltd.
           </div>
         </div>
-
       </div>
     </div>
-  )
+  );
 }
