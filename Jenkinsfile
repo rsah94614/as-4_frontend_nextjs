@@ -18,6 +18,9 @@ pipeline {
         TARGET_EC2_HOST = "aabhar.top"
         HOST_PORT = "3000"
 
+        NEXT_PUBLIC_S3_REGION = "us-east-1"
+        NEXT_PUBLIC_S3_BUCKET = "aabhar-storage-gu-2026"
+
         // --- Frontend API Routing Variables ---
         NEXT_PUBLIC_API_URL = "https://bn1.aabhar.top"
         NEXT_PUBLIC_RECOGNITION_API_URL = "https://bn1.aabhar.top"
@@ -101,6 +104,8 @@ pipeline {
                   --build-arg NEXT_PUBLIC_ANALYTICS_API_URL=${NEXT_PUBLIC_ANALYTICS_API_URL} \\
                   --build-arg NEXT_PUBLIC_ORG_API_URL=${NEXT_PUBLIC_ORG_API_URL} \\
                   --build-arg NEXT_PUBLIC_ROLES_API_URL=${NEXT_PUBLIC_ROLES_API_URL} \\
+                  --build-arg NEXT_PUBLIC_S3_REGION=${NEXT_PUBLIC_S3_REGION} \\
+                  --build-arg NEXT_PUBLIC_S3_BUCKET=${NEXT_PUBLIC_S3_BUCKET} \\
                   -t ${IMAGE}:${TAG} .
                 """
             }
@@ -133,25 +138,35 @@ pipeline {
             when { branch 'pipeline-branch' }
             steps {
                 script {
-                    sshagent(credentials: ['frontend-ec2-ssh-key']) {
-                        sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@${TARGET_EC2_HOST} "
-                            docker stop ${CONTAINER_NAME} || true
-                            docker rm ${CONTAINER_NAME} || true
-                            
-                            docker pull ${IMAGE}:${TAG}
-                            
-                            docker run -d \\
-                            --name ${CONTAINER_NAME} \\
-                            --restart always \\
-                            -p ${HOST_PORT}:3000 \\
-                            ${IMAGE}:${TAG}
-                            
-                            echo '🧹 Running cleanup...'
-                            docker system prune -f
-                            docker image prune -af --filter 'until=24h'
-                        "
-                        """
+                    withCredentials([
+                        string(credentialsId: 'aws-s3-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                        string(credentialsId: 'aws-s3-secret-key', variable: 'AWS_SECRET_ACCESS_KEY'),
+                        string(credentialsId: 'aws-s3-session-token', variable: 'AWS_SESSION_TOKEN')
+                    ]) {
+                        sshagent(credentials: ['frontend-ec2-ssh-key']) {
+                            sh """
+                            ssh -o StrictHostKeyChecking=no ubuntu@${TARGET_EC2_HOST} "
+                                docker stop ${CONTAINER_NAME} || true
+                                docker rm ${CONTAINER_NAME} || true
+                                
+                                docker pull ${IMAGE}:${TAG}
+                                
+                                # Inject AWS Secrets at runtime via -e flags
+                                docker run -d \\
+                                --name ${CONTAINER_NAME} \\
+                                --restart always \\
+                                -p ${HOST_PORT}:3000 \\
+                                -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \\
+                                -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \\
+                                -e AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN} \\
+                                ${IMAGE}:${TAG}
+                                
+                                echo '🧹 Running cleanup...'
+                                docker system prune -f
+                                docker image prune -af --filter 'until=24h'
+                            "
+                            """
+                        }
                     }
 
                     echo "🚀 Application deployed successfully. Traffic handled by Nginx." 
