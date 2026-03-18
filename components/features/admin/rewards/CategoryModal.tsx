@@ -69,7 +69,10 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
 
     return (
         <Dialog open={isOpen} onOpenChange={(val) => !val && onClose()}>
-            <DialogContent className="max-w-lg p-0 border-none bg-white rounded-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <DialogContent 
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                className="max-w-lg p-0 border-none bg-white rounded-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
+            >
                 <DialogHeader className="flex flex-row items-center justify-between px-8 py-6 border-b border-slate-50 bg-slate-50/50">
                     <div className="flex items-center gap-3 text-left">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isEdit ? "bg-blue-100 text-[#004C8F]" : "bg-green-100 text-green-600"} shadow-inner`}>
