@@ -38,11 +38,7 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
 
     return (
         <Card className="rounded-xl overflow-hidden hover:border-gray-300 hover:shadow-md transition-all duration-200 group border-gray-200">
-            {/* Top accent stripe */}
-            <div className={cn(
-                "h-0.5 w-full",
-                isMine ? "bg-[#004C8F]" : "bg-[#E31837]"
-            )} />
+
 
             <CardContent className="p-4 sm:p-5">
                 {/* Header row */}
@@ -54,8 +50,8 @@ export default function ReviewCard({ review, myId, categories }: ReviewCardProps
                             className={cn(
                                 "gap-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md border-0 pointer-events-none",
                                 isMine
-                                    ? "bg-[#004C8F]/8 text-[#004C8F] hover:bg-[#004C8F]/8"
-                                    : "bg-[#E31837]/8 text-[#E31837] hover:bg-[#E31837]/8"
+                                    ? "bg-[#004C8F]/10 text-[#004C8F] hover:bg-[#004C8F]/10"
+                                    : "bg-green-600/10 text-green-600 hover:bg-green-600/10"
                             )}
                         >
                             {isMine
