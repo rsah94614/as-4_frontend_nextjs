@@ -130,16 +130,6 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
                 <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6 overflow-y-auto flex-1">
                     {!isEdit && (
                         <>
-                            <RewardField label="REWARD CODE">
-                                <Input
-                                    className="w-full h-12 px-5 rounded-2xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white placeholder:text-slate-300 transition-all uppercase"
-                                    value={form.reward_code}
-                                    onChange={(e) => setForm({ ...form, reward_code: e.target.value.toUpperCase() })}
-                                    placeholder="e.g. REW-AMZ-50"
-                                    required
-                                />
-                            </RewardField>
-
                             <RewardField label="CATEGORY">
                                 <Select
                                     value={form.category_id}
@@ -156,6 +146,16 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
                                         ))}
                                     </SelectContent>
                                 </Select>
+                            </RewardField>
+
+                            <RewardField label="REWARD CODE">
+                                <Input
+                                    className="w-full h-12 px-5 rounded-2xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white placeholder:text-slate-300 transition-all uppercase"
+                                    value={form.reward_code}
+                                    onChange={(e) => setForm({ ...form, reward_code: e.target.value.toUpperCase() })}
+                                    placeholder="e.g. REW-AMZ-50"
+                                    required
+                                />
                             </RewardField>
                         </>
                     )}
