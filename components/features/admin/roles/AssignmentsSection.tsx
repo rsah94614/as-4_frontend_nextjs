@@ -29,10 +29,10 @@ interface AssignmentsSectionProps {
 
 function rolePillStyle(name: string): React.CSSProperties {
     const n = name.toLowerCase();
-    if (n.includes("super"))                          return { background: "#E31837", color: "#fff" };
-    if (n.includes("hr"))                             return { background: "#004C8F", color: "#fff" };
-    if (n.includes("head") || n.includes("manager"))  return { background: "#6D28D9", color: "#fff" };
-    if (n.includes("audit"))                          return { background: "#0F766E", color: "#fff" };
+    if (n.includes("super")) return { background: "#E31837", color: "#fff" };
+    if (n.includes("hr")) return { background: "#004C8F", color: "#fff" };
+    if (n.includes("head") || n.includes("manager")) return { background: "#6D28D9", color: "#fff" };
+    if (n.includes("audit")) return { background: "#0F766E", color: "#fff" };
     return { background: "#1E3A5F", color: "#fff" };
 }
 
@@ -43,10 +43,10 @@ function initials(name: string) {
 }
 
 const HOW_IT_WORKS = [
-    { n: "01", title: "Find Employee ID",  desc: "Employee IDs are found on the employee profile page in the admin panel." },
-    { n: "02", title: "Select Role",       desc: "Choose the appropriate role based on the employee's responsibilities." },
-    { n: "03", title: "Confirm Access",    desc: "Role takes effect immediately on the employee's next login." },
-    { n: "04", title: "Revoke Anytime",    desc: "Remove a role assignment at any time using the Revoke button in the table." },
+    { n: "01", title: "Find Employee ID", desc: "Employee IDs are found on the employee profile page in the admin panel." },
+    { n: "02", title: "Select Role", desc: "Choose the appropriate role based on the employee's responsibilities." },
+    { n: "03", title: "Confirm Access", desc: "Role takes effect immediately on the employee's next login." },
+    { n: "04", title: "Revoke Anytime", desc: "Remove a role assignment at any time using the Revoke button in the table." },
 ];
 
 function HowItWorks() {
@@ -84,14 +84,14 @@ function HowItWorks() {
 }
 
 export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
-    const [records, setRecords]   = useState<EmployeeRole[]>([]);
-    const [roles, setRoles]       = useState<Role[]>([]);
-    const [loading, setLoading]   = useState(true);
-    const [open, setOpen]         = useState(false);
-    const [submitting, setSub]    = useState(false);
+    const [records, setRecords] = useState<EmployeeRole[]>([]);
+    const [roles, setRoles] = useState<Role[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [open, setOpen] = useState(false);
+    const [submitting, setSub] = useState(false);
     const [revoking, setRevoking] = useState<string | null>(null);
-    const [form, setForm]         = useState({ employee_id: "", role_id: "" });
-    const [search, setSearch]     = useState("");
+    const [form, setForm] = useState({ employee_id: "", role_id: "" });
+    const [search, setSearch] = useState("");
     const [confirmRevoke, setConfirmRevoke] = useState<EmployeeRole | null>(null);
 
     const load = useCallback(async () => {

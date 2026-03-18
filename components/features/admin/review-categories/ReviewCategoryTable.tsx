@@ -1,6 +1,7 @@
 "use client";
 
-import { Pencil, X, Check, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
+import { Pencil, X, Check, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { ReviewCategory } from "@/types/review-category-types";
 
 interface EditForm {
@@ -108,22 +109,11 @@ export function ReviewCategoryTable({
                 </td>
                 {/* Status toggle */}
                 <td className="px-5 py-3">
-                  <button
-                    type="button"
-                    onClick={() => onEditFormChange("is_active", !editForm.is_active)}
-                    className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
-                      editForm.is_active
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
-                  >
-                    {editForm.is_active ? (
-                      <ToggleRight className="w-3.5 h-3.5" />
-                    ) : (
-                      <ToggleLeft className="w-3.5 h-3.5" />
-                    )}
-                    {editForm.is_active ? "Active" : "Inactive"}
-                  </button>
+                  <Switch
+                    checked={editForm.is_active}
+                    onCheckedChange={() => onEditFormChange("is_active", !editForm.is_active)}
+                    className="data-[state=checked]:bg-[#34C759] data-[state=unchecked]:bg-gray-300 h-[26px] w-[46px] [&>span]:h-[22px] [&>span]:w-[22px]"
+                  />
                 </td>
                 {/* Actions */}
                 <td className="px-5 py-3">
@@ -165,26 +155,15 @@ export function ReviewCategoryTable({
                 </td>
                 {/* Status */}
                 <td className="px-5 py-3.5">
-                  <button
-                    onClick={() => onToggleActive(c)}
-                    className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
-                      c.is_active
-                        ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                    }`}
-                    title={c.is_active ? "Click to deactivate" : "Click to activate"}
-                  >
-                    {c.is_active ? (
-                      <ToggleRight className="w-3.5 h-3.5" />
-                    ) : (
-                      <ToggleLeft className="w-3.5 h-3.5" />
-                    )}
-                    {c.is_active ? "Active" : "Inactive"}
-                  </button>
+                  <Switch
+                    checked={c.is_active}
+                    onCheckedChange={() => onToggleActive(c)}
+                    className="data-[state=checked]:bg-[#34C759] data-[state=unchecked]:bg-gray-300 h-[26px] w-[46px] [&>span]:h-[22px] [&>span]:w-[22px]"
+                  />
                 </td>
                 {/* Actions */}
                 <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 justify-end transition-opacity">
                     <button
                       onClick={() => onEdit(c)}
                       className="p-1.5 text-gray-400 hover:text-[#004C8F] hover:bg-blue-50 rounded-lg transition-colors"

@@ -19,7 +19,6 @@ import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast, ToastContainer } from "@/components/features/admin/roles/UIHelpers";
-import { auth } from "@/services/auth-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { employeesClient as empClient, authClient, orgClient } from "@/services/api-clients";
 
@@ -868,7 +867,7 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 setDepartments(arr.sort((a, b) => a.department_name.localeCompare(b.department_name)));
             }
         } catch {/* best-effort */ }
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     const load = useCallback(async () => {
         try {
@@ -928,15 +927,9 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                         <input
                             placeholder="Search name or email…"
                             value={search}
-<<<<<<< Updated upstream
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => setSearch(e.target.value.trimStart())}
                             className="w-full pl-9 pr-8 py-2 rounded-lg border border-border bg-muted text-sm
                                 placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 transition-all"
-=======
-                            onChange={(e) => setSearch(e.target.value.trimStart())}
-                            className="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm
-                                placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/10 focus:border-[#003580]/40 transition-all"
->>>>>>> Stashed changes
                         />
                         {search && (
                             <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
