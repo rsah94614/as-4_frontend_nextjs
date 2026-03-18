@@ -119,7 +119,7 @@ export function RolesSection({ toast }: RolesSectionProps) {
                         <Shield size={14} className="text-[#004C8F]" />
                         <h2 className="text-sm font-bold text-[#004C8F]">System Roles</h2>
                         {!loading && (
-                            <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full tabular-nums">
+                            <span className="text-xs font-bold text-[#004C8F] bg-[#F0F5FA] px-2 py-0.5 rounded-md tabular-nums">
                                 {roles.length}
                             </span>
                         )}
@@ -127,7 +127,7 @@ export function RolesSection({ toast }: RolesSectionProps) {
                     <button
                         onClick={() => setOpen(true)}
                         className="flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
-                        style={{ background: "#E31837" }}
+                        style={{ background: "#004C8F" }}
                     >
                         <Plus size={13} /> New Role
                     </button>
@@ -188,18 +188,7 @@ export function RolesSection({ toast }: RolesSectionProps) {
                     )}
                 </div>
 
-                {/* Footer bar */}
-                <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <p className="text-xs text-gray-500">
-                        {loading ? "Loading roles…" : `${roles.length} role${roles.length !== 1 ? "s" : ""} configured`}
-                    </p>
-                    <button
-                        onClick={() => setOpen(true)}
-                        className="flex items-center gap-1 text-xs font-semibold text-[#004C8F] hover:text-[#E31837] transition-colors w-fit"
-                    >
-                        <Plus size={12} /> Add another
-                    </button>
-                </div>
+
             </div>
 
             {/* Create Role Dialog */}
@@ -213,7 +202,6 @@ export function RolesSection({ toast }: RolesSectionProps) {
                             </DialogDescription>
                         </DialogHeader>
                     </div>
-                    <div className="h-0.5" style={{ background: "#E31837" }} />
 
                     <div className="p-4 sm:p-6 space-y-4 bg-white">
                         <div className="space-y-1.5">

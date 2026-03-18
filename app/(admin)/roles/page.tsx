@@ -48,7 +48,7 @@ export default function RolesPage() {
 
                 {/* ── Tab bar ── */}
                 <div className="bg-white border-b border-border px-3 sm:px-5 lg:px-8">
-                    <div className="max-w-[1200px] mx-auto flex overflow-x-auto scrollbar-thin">
+                    <div className="max-w-[1200px] mx-auto flex overflow-x-auto overflow-y-hidden scrollbar-thin">
                         {TABS.map((t) => {
                             const active = tab === t.id;
                             return (
