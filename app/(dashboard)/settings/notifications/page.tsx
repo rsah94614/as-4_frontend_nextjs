@@ -30,17 +30,17 @@ function ToggleItem({ icon: Icon, label, description, enabled, onToggle, accentC
     return (
         <div className="flex items-center justify-between py-4 group">
             <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${enabled ? accentColor : "bg-gray-100"}`}>
-                    <Icon className={`w-4.5 h-4.5 transition-colors ${enabled ? "text-white" : "text-gray-500"}`} />
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${enabled ? accentColor : "bg-muted"}`}>
+                    <Icon className={`w-4.5 h-4.5 transition-colors ${enabled ? "text-white" : "text-muted-foreground"}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">{label}</p>
-                    <p className="text-xs text-gray-500 mt-0.5 truncate">{description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{description}</p>
                 </div>
             </div>
             <button
                 onClick={onToggle}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 ${enabled ? "bg-orange-500" : "bg-gray-200"}`}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 ${enabled ? "bg-orange-500" : "bg-secondary"}`}
                 role="switch"
                 aria-checked={enabled}
             >
@@ -83,7 +83,7 @@ export default function NotificationsPage() {
             <div className="mb-8">
                 <Link
                     href="/settings"
-                    className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-orange-600 transition-colors mb-4 group no-underline"
+                    className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-orange-600 transition-colors mb-4 group no-underline"
                 >
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
                     Back to Settings
@@ -103,7 +103,7 @@ export default function NotificationsPage() {
                         </div>
                         <div>
                             <h2 className="text-sm font-semibold text-gray-900">Push Notifications</h2>
-                            <p className="text-xs text-gray-500">Alerts delivered to your device</p>
+                            <p className="text-xs text-muted-foreground">Alerts delivered to your device</p>
                         </div>
                     </div>
                 </div>
@@ -141,7 +141,7 @@ export default function NotificationsPage() {
                         </div>
                         <div>
                             <h2 className="text-sm font-semibold text-gray-900">Email Notifications</h2>
-                            <p className="text-xs text-gray-500">Updates sent to your email inbox</p>
+                            <p className="text-xs text-muted-foreground">Updates sent to your email inbox</p>
                         </div>
                     </div>
                 </div>
@@ -182,7 +182,7 @@ export default function NotificationsPage() {
                         </div>
                         <div>
                             <h2 className="text-sm font-semibold text-gray-900">In-App Notifications</h2>
-                            <p className="text-xs text-gray-500">Control how notifications appear in the app</p>
+                            <p className="text-xs text-muted-foreground">Control how notifications appear in the app</p>
                         </div>
                     </div>
                 </div>
@@ -223,7 +223,7 @@ export default function NotificationsPage() {
                         </div>
                         <div>
                             <h2 className="text-sm font-semibold text-gray-900">Do Not Disturb</h2>
-                            <p className="text-xs text-gray-500">Pause all notifications during set hours</p>
+                            <p className="text-xs text-muted-foreground">Pause all notifications during set hours</p>
                         </div>
                     </div>
                 </div>

@@ -94,19 +94,19 @@ export default function ControlPanelHub() {
 
     if (!allowed) {
         return (
-            <div className="flex-1 w-full min-h-screen bg-[#F0F2F5] flex items-center justify-center">
-                <div className="bg-white rounded-xl border border-gray-300 p-10 text-center space-y-4 max-w-sm shadow-sm">
-                    <div className="mx-auto w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+            <div className="flex-1 w-full min-h-screen bg-muted flex items-center justify-center">
+                <div className="bg-white rounded-xl border border-border p-10 text-center space-y-4 max-w-sm shadow-sm">
+                    <div className="mx-auto w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
                         <ShieldAlert className="w-6 h-6 text-[#C0392B]" />
                     </div>
                     <h2 className="text-lg font-bold text-[#111827]">Access Restricted</h2>
-                    <p className="text-sm text-gray-500 leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                         You don&apos;t have permission to view the Control Panel.
                         Please contact your HR Admin.
                     </p>
                     <Link
                         href="/dashboard"
-                        className="inline-block mt-2 px-6 py-2.5 rounded-md bg-[#003580] text-white text-sm font-semibold hover:bg-[#002a6b] transition-colors"
+                        className="inline-block mt-2 px-6 py-2.5 rounded-md bg-primary text-white text-sm font-semibold hover:bg-[#002a6b] transition-colors"
                     >
                         Back to Dashboard
                     </Link>
@@ -116,21 +116,21 @@ export default function ControlPanelHub() {
     }
 
     return (
-        <div className="flex-1 w-full min-h-screen bg-[#F0F2F5]">
+        <div className="flex-1 w-full min-h-screen bg-muted">
 
             {/* ── Page Header ── */}
-            <div className="bg-white border border-gray-300 rounded-xl px-8 md:px-10 py-6 flex items-center justify-between">
+            <div className="bg-white border border-border rounded-xl px-8 md:px-10 py-6 flex items-center justify-between">
                 <div>
-                    <h1 className="text-[20px] font-bold text-[#003580] leading-tight tracking-tight">
+                    <h1 className="text-[20px] font-bold text-primary leading-tight tracking-tight">
                         Control Panel
                     </h1>
-                    <p className="text-[14px] text-gray-500 mt-1">
+                    <p className="text-[14px] text-muted-foreground mt-1">
                         System administration &amp; configuration
                     </p>
                 </div>
                 <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-                    <span className="text-[#E74C3C]">A</span>
-                    <span className="text-[#003580]">abhar</span>
+                    <span className="text-destructive">A</span>
+                    <span className="text-primary">abhar</span>
                 </span>
             </div>
 
@@ -139,13 +139,13 @@ export default function ControlPanelHub() {
 
                 {/* Meta row */}
                 <div className="flex items-center justify-between mb-6">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-white border border-gray-300">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-white border border-border">
                         <div className="w-2 h-2 rounded-full bg-[#C0392B]" />
                         <span className="text-[11px] font-bold uppercase tracking-widest text-[#C0392B]">
                             Admin Access
                         </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[12px] text-gray-400 font-medium">
+                    <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground font-medium">
                         <LayoutGrid size={12} />
                         <span>{categories.length} modules</span>
                     </div>
@@ -157,18 +157,18 @@ export default function ControlPanelHub() {
                         <Link key={cat.href} href={cat.href} className="group block">
                             <div
                                 className="bg-white rounded-xl h-full flex flex-col p-6
-                                    border border-gray-300
+                                    border border-border
                                     hover:border-gray-400 hover:shadow-md
                                     transition-all duration-150"
                             >
                                 {/* Icon + arrow */}
                                 <div className="flex items-start justify-between mb-5">
                                     <div className="w-10 h-10 rounded-lg bg-[#EEF2F7] flex items-center justify-center shrink-0">
-                                        <cat.icon size={18} className="text-[#003580]" />
+                                        <cat.icon size={18} className="text-primary" />
                                     </div>
                                     <ArrowUpRight
                                         size={15}
-                                        className="text-gray-300 group-hover:text-[#003580] transition-colors duration-150 mt-0.5"
+                                        className="text-gray-300 group-hover:text-primary transition-colors duration-150 mt-0.5"
                                     />
                                 </div>
 
@@ -176,13 +176,13 @@ export default function ControlPanelHub() {
                                 <h3 className="text-[14px] font-semibold text-[#111827] mb-2">
                                     {cat.title}
                                 </h3>
-                                <p className="text-[12.5px] text-gray-400 leading-relaxed flex-1">
+                                <p className="text-[12.5px] text-muted-foreground leading-relaxed flex-1">
                                     {cat.description}
                                 </p>
 
                                 {/* Footer */}
-                                <div className="mt-5 pt-4 border-t border-gray-200 flex items-center justify-center">
-                                    <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-[#003580] transition-colors duration-150">
+                                <div className="mt-5 pt-4 border-t border-border flex items-center justify-center">
+                                    <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors duration-150">
                                         Manage
                                     </span>
                                 </div>

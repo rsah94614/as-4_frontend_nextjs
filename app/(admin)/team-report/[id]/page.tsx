@@ -44,17 +44,17 @@ export default function TeamReportPage() {
 
             {state.status === "error" && (
                 <div className="flex flex-col items-center justify-center py-32 gap-5 text-center">
-                    <div className="p-4 rounded-2xl bg-red-50 border border-red-100">
+                    <div className="p-4 rounded-2xl bg-destructive/10 border border-red-100">
                         <AlertTriangle className="w-8 h-8 text-red-400" />
                     </div>
                     <div className="space-y-1">
                         <p className="text-base font-bold text-gray-900">Something went wrong</p>
-                        <p className="text-sm text-gray-400 max-w-xs">{state.message}</p>
+                        <p className="text-sm text-muted-foreground max-w-xs">{state.message}</p>
                     </div>
                     <Button
                         size="sm"
                         onClick={() => router.back()}
-                        className="gap-2 rounded-xl bg-[#004C8F] hover:bg-[#003A70] text-white font-semibold px-5"
+                        className="gap-2 rounded-xl bg-primary hover:bg-[#003A70] text-white font-semibold px-5"
                     >
                         Go back
                     </Button>

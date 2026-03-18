@@ -67,13 +67,13 @@ export default function DesignationsPage() {
             <main className="flex-1 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5">
                 {/* ─── Page Header (matches Employee page) ─── */}
                 <div>
-                    <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+                    <div className="bg-white border-b border-border px-8 md:px-10 py-5">
                         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
                                     Designations
                                 </h1>
-                                <p className="text-sm text-gray-400 mt-1">
+                                <p className="text-sm text-muted-foreground mt-1">
                                     Create and manage employee designations
                                 </p>
                             </div>
@@ -91,13 +91,13 @@ export default function DesignationsPage() {
                     <div className="bg-white rounded-xl shadow-sm px-3 sm:px-4 lg:px-6 py-4 sm:py-5 space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                             <div className="relative w-full sm:flex-1 sm:max-w-sm">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
                                 <Input
                                     value={searchInput}
                                     onChange={e => setSearchInput(e.target.value)}
                                     onKeyDown={e => e.key === "Enter" && handleSearch()}
                                     placeholder="Search by name or code..."
-                                    className="pl-9 h-10 rounded-lg border-slate-300 focus-visible:ring-0 focus-visible:border-[#1a4ab5]"
+                                    className="pl-9 h-10 rounded-lg border-border focus-visible:ring-0 focus-visible:border-primary"
                                 />
                             </div>
                             <Button
@@ -111,7 +111,7 @@ export default function DesignationsPage() {
                                 <Button
                                     variant="outline"
                                     onClick={clearSearch}
-                                    className="h-10 w-full sm:w-auto px-4 rounded-lg border-slate-300 text-slate-600 hover:bg-slate-100"
+                                    className="h-10 w-full sm:w-auto px-4 rounded-lg border-border text-foreground hover:bg-muted"
                                 >
                                     <X className="w-3 h-3 mr-1.5" /> Clear
                                 </Button>
@@ -126,7 +126,7 @@ export default function DesignationsPage() {
                             <Button
                                 variant="outline"
                                 onClick={refresh}
-                                className="h-10 w-full sm:w-10 sm:ml-auto p-0 rounded-lg border-slate-300 text-slate-500 hover:bg-slate-100"
+                                className="h-10 w-full sm:w-10 sm:ml-auto p-0 rounded-lg border-border text-muted-foreground hover:bg-muted"
                             >
                                 <RefreshCw className="w-4 h-4" />
                             </Button>

@@ -33,8 +33,8 @@ export default function ResetPasswordForm({
   const [showConfirm, setShowConfirm] = useState(false)
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#f4f7fb]">
-      <div className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-6 md:p-8 max-w-[420px]">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-muted">
+      <div className="w-full bg-white border border-border rounded-md shadow-sm p-6 md:p-8 max-w-[420px]">
         <div className="w-full max-w-md items-center mt-auto mb-auto">
           {/* Logo */}
           <div className="mb-6 flex items-center justify-center">
@@ -49,7 +49,7 @@ export default function ResetPasswordForm({
           {/* Icon */}
           <div className="flex justify-center mb-6">
             <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
-              <Lock className="w-8 h-8 text-[#0b4a8b]" />
+              <Lock className="w-8 h-8 text-primary" />
             </div>
           </div>
 
@@ -58,7 +58,7 @@ export default function ResetPasswordForm({
           </h2>
 
           {state.errors.general && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-300 text-red-700 rounded-md text-sm flex gap-2">
+            <div className="mb-6 p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-md text-sm flex gap-2">
               <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>{state.errors.general}</span>
             </div>
@@ -72,7 +72,7 @@ export default function ResetPasswordForm({
             className="space-y-5"
           >
             <div className="space-y-1.5">
-              <Label className="font-semibold text-gray-700 text-sm">New Password</Label>
+              <Label className="font-semibold text-foreground text-sm">New Password</Label>
               <div className="relative">
                 <Input
                   type={showNew ? 'text' : 'password'}
@@ -81,27 +81,27 @@ export default function ResetPasswordForm({
                   onChange={(e) =>
                     handlers.setNewPassword(e.target.value)
                   }
-                  className={`h-11 rounded-md border-gray-300 pr-12 ${state.errors.newPassword ? 'border-red-500 focus-visible:ring-red-500/20' : ''}`}
+                  className={`h-11 rounded-md border-border pr-12 ${state.errors.newPassword ? 'border-destructive/20 focus-visible:ring-red-500/20' : ''}`}
                   disabled={state.loading || !token}
                 />
                 <button
                   type="button"
                   onClick={() => setShowNew(!showNew)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   tabIndex={-1}
                 >
                   {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {state.errors.newPassword && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-destructive text-sm mt-1">
                   {state.errors.newPassword}
                 </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label className="font-semibold text-gray-700 text-sm">Confirm Password</Label>
+              <Label className="font-semibold text-foreground text-sm">Confirm Password</Label>
               <div className="relative">
                 <Input
                   type={showConfirm ? 'text' : 'password'}
@@ -110,20 +110,20 @@ export default function ResetPasswordForm({
                   onChange={(e) =>
                     handlers.setConfirmPassword(e.target.value)
                   }
-                  className={`h-11 rounded-md border-gray-300 pr-12 ${state.errors.confirmPassword ? 'border-red-500 focus-visible:ring-red-500/20' : ''}`}
+                  className={`h-11 rounded-md border-border pr-12 ${state.errors.confirmPassword ? 'border-destructive/20 focus-visible:ring-red-500/20' : ''}`}
                   disabled={state.loading || !token}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   tabIndex={-1}
                 >
                   {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {state.errors.confirmPassword && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-destructive text-sm mt-1">
                   {state.errors.confirmPassword}
                 </p>
               )}
@@ -132,7 +132,7 @@ export default function ResetPasswordForm({
             <Button
               type="submit"
               disabled={state.loading || !token}
-              className="w-full h-11 rounded-md text-base bg-[#0b4a8b] hover:bg-[#093c71] active:scale-[0.98] transition-all duration-150 disabled:opacity-50 cursor-pointer text-white font-medium mt-2"
+              className="w-full h-11 rounded-md text-base bg-primary hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 disabled:opacity-50 cursor-pointer text-white font-medium mt-2"
             >
               {state.loading ? (
                 <span className="flex gap-2 items-center">
@@ -149,7 +149,7 @@ export default function ResetPasswordForm({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="w-full h-11 rounded-md text-gray-600 hover:text-blue-600 hover:underline"
+                  className="w-full h-11 rounded-md text-foreground hover:text-blue-600 hover:underline"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to login
@@ -161,7 +161,7 @@ export default function ResetPasswordForm({
       </div>
 
       {/* Footer */}
-      <div className="mt-8 pb-4 text-xs text-center text-gray-600 w-full absolute bottom-0">
+      <div className="mt-8 pb-4 text-xs text-center text-foreground w-full absolute bottom-0">
         Secure Login | © HDFC Bank Ltd.
       </div>
     </div>

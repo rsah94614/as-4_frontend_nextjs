@@ -80,13 +80,13 @@ export default function AuditLogsPage() {
             <main className="flex-1 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5">
                 {/* ─── Page Header (matches Employee page) ─── */}
                 <div>
-                    <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+                    <div className="bg-white border-b border-border px-8 md:px-10 py-5">
                         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
                                     Audit Logs
                                 </h1>
-                                <p className="text-sm text-gray-400 mt-1">
+                                <p className="text-sm text-muted-foreground mt-1">
                                     Track and monitor all system activity
                                 </p>
                             </div>
@@ -104,7 +104,7 @@ export default function AuditLogsPage() {
                         <Button
                             variant="outline"
                             onClick={() => setFiltersOpen(f => !f)}
-                            className="h-10 w-full sm:w-auto px-4 rounded-lg font-semibold border-slate-300 text-slate-600 hover:bg-slate-100"
+                            className="h-10 w-full sm:w-auto px-4 rounded-lg font-semibold border-border text-foreground hover:bg-muted"
                         >
                             <Filter className="w-4 h-4 mr-2" />
                             {filtersOpen ? "Hide Filters" : "Filter"}
@@ -113,7 +113,7 @@ export default function AuditLogsPage() {
                         <Button
                             variant="outline"
                             onClick={fetchLogs}
-                            className="h-10 w-full sm:w-10 p-0 rounded-lg border-slate-300 text-slate-500 hover:bg-slate-100 sm:ml-auto"
+                            className="h-10 w-full sm:w-10 p-0 rounded-lg border-border text-muted-foreground hover:bg-muted sm:ml-auto"
                             title="Refresh"
                         >
                             <RefreshCw className="w-4 h-4" />
@@ -171,7 +171,7 @@ export default function AuditLogsPage() {
                         )}
                         <button
                             onClick={clearFilters}
-                            className="text-xs flex items-center gap-1 px-2.5 py-1 rounded-full transition-all hover:bg-red-50"
+                            className="text-xs flex items-center gap-1 px-2.5 py-1 rounded-full transition-all hover:bg-destructive/10"
                             style={{ color: "#e8192c", border: "1px solid #fecaca" }}
                         >
                             <X className="w-3 h-3" /> Clear all

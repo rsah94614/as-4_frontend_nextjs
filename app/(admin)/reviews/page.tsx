@@ -45,13 +45,13 @@ export default function AdminReviewsPage() {
             <main className="flex-1 overflow-y-auto bg-white">
 
                     {/* ── Page Header ── */}
-                    <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+                    <div className="bg-white border-b border-border px-8 md:px-10 py-5">
                         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
                                     Recognition Admin
                                 </h1>
-                                <p className="text-sm text-gray-400 mt-1">
+                                <p className="text-sm text-muted-foreground mt-1">
                                     Monitor team recognitions · Points credited automatically
                                 </p>
                             </div>
@@ -69,10 +69,10 @@ export default function AdminReviewsPage() {
                         {/* ── Summary Stats ── */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Reviews card */}
-                            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow overflow-hidden relative">
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                    <span className="w-5 h-5 rounded-lg bg-gray-100 flex items-center justify-center">
-                                        <MessageSquare className="w-3 h-3 text-gray-400" />
+                            <div className="bg-white border border-border rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow overflow-hidden relative">
+                                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-lg bg-muted flex items-center justify-center">
+                                        <MessageSquare className="w-3 h-3 text-muted-foreground" />
                                     </span>
                                     Total Reviews
                                 </p>
@@ -82,8 +82,8 @@ export default function AdminReviewsPage() {
                             </div>
 
                             {/* Points card */}
-                            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow overflow-hidden relative">
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <div className="bg-white border border-border rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow overflow-hidden relative">
+                                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
                                     <span className="w-5 h-5 rounded-lg bg-amber-50 flex items-center justify-center">
                                         <Zap className="w-3 h-3 text-amber-400" />
                                     </span>
@@ -96,10 +96,10 @@ export default function AdminReviewsPage() {
                         </div>
 
                         {/* ── Calendar Period ── */}
-                        <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-6 py-4 flex items-center gap-4 flex-wrap">
+                        <div className="bg-white border border-border rounded-xl shadow-sm px-6 py-4 flex items-center gap-4 flex-wrap">
                             <div className="flex items-center gap-2 shrink-0 border-r border-gray-100 pr-4">
-                                <div className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center">
-                                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                                <div className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center">
+                                    <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                                 </div>
                             </div>
                             <CalendarStrip
@@ -113,26 +113,26 @@ export default function AdminReviewsPage() {
                         <div className="flex items-center gap-3 flex-wrap">
                             {/* Search */}
                             <div className="relative max-w-xs flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                                 <input
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Search team or member…"
-                                    className="w-full h-10 pl-10 pr-4 rounded-xl border border-gray-200 text-sm font-medium text-gray-800
-                                        focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 bg-white"
+                                    className="w-full h-10 pl-10 pr-4 rounded-xl border border-border text-sm font-medium text-foreground
+                                        focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 bg-white"
                                 />
                             </div>
 
                             {search && (
                                 <button onClick={() => setSearch("")}
-                                    className="flex items-center gap-1.5 h-10 px-4 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200 transition-colors">
+                                    className="flex items-center gap-1.5 h-10 px-4 rounded-xl text-xs font-semibold bg-muted text-foreground border border-border hover:bg-secondary transition-colors">
                                     <X className="w-3.5 h-3.5" /> Clear
                                 </button>
                             )}
 
                             {/* Refresh */}
                             <button onClick={refresh}
-                                className="ml-auto h-10 w-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors">
+                                className="ml-auto h-10 w-10 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors">
                                 <RefreshCw className="w-4 h-4" />
                             </button>
                         </div>
@@ -145,14 +145,14 @@ export default function AdminReviewsPage() {
                                     <p className="text-xs font-bold text-gray-300 uppercase tracking-widest">Loading reviews…</p>
                                 </div>
                             ) : error ? (
-                                <div className="flex flex-col items-center justify-center py-24 gap-4 bg-white rounded-xl border border-gray-200">
+                                <div className="flex flex-col items-center justify-center py-24 gap-4 bg-white rounded-xl border border-border">
                                     <div className="w-12 h-12 rounded-full flex items-center justify-center"
                                         style={{ background: "#E3183718" }}>
                                         <AlertCircle className="w-6 h-6" style={{ color: "#E31837" }} />
                                     </div>
                                     <div className="text-center">
-                                        <p className="font-bold text-gray-800">Failed to load</p>
-                                        <p className="text-sm text-gray-400 mt-1">{error}</p>
+                                        <p className="font-bold text-foreground">Failed to load</p>
+                                        <p className="text-sm text-muted-foreground mt-1">{error}</p>
                                     </div>
                                     <button onClick={refresh}
                                         className="px-6 h-10 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
@@ -161,13 +161,13 @@ export default function AdminReviewsPage() {
                                     </button>
                                 </div>
                             ) : filteredManagers.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-24 gap-4 bg-white rounded-xl border border-dashed border-gray-200">
-                                    <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+                                <div className="flex flex-col items-center justify-center py-24 gap-4 bg-white rounded-xl border border-dashed border-border">
+                                    <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
                                         <Search className="w-6 h-6 text-gray-300" strokeWidth={1.5} />
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-sm font-semibold text-gray-600">No teams found</p>
-                                        <p className="text-xs text-gray-400 mt-1">
+                                        <p className="text-sm font-semibold text-foreground">No teams found</p>
+                                        <p className="text-xs text-muted-foreground mt-1">
                                             {search ? "No matches for your search." : "No reviews for this period."}
                                         </p>
                                     </div>

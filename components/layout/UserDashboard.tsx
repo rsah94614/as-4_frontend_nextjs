@@ -1,7 +1,7 @@
-import DashboardHeroSection from "../features/dashboard/user/DashboardHeroSection";
-import DashboardLeaderboardSection from "../features/dashboard/user/DashboardLeaderboardSection";
-import DashboardRecognitionSection from "../features/dashboard/user/DashboardRecognitionSection";
-import DashboardStatsSection from "../features/dashboard/user/DashboardStatsSection";
+import DashboardHeroSection from "../features/dashboard/dashboard/user/DashboardHeroSection";
+import DashboardLeaderboardSection from "../features/dashboard/dashboard/user/DashboardLeaderboardSection";
+import DashboardRecognitionSection from "../features/dashboard/dashboard/user/DashboardRecognitionSection";
+import DashboardStatsSection from "../features/dashboard/dashboard/user/DashboardStatsSection";
 
 
 

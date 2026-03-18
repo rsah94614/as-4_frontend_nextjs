@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useResetPassword } from './useResetPassword'
+import { useResetPassword } from '@/hooks/useResetPassword'
 import ResetPasswordForm from './ResetPasswordForm'
 import ResetPasswordSuccess from './ResetPasswordSuccess'
 
