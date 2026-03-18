@@ -28,7 +28,7 @@ import {
   PAGE_CONTENT,
   HDFC_RED,
   HDFC_BLUE,
-} from "@/components/features/history/history-styles";
+} from "@/components/features/dashboard/history/history-styles";
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { auth } from "@/services/auth-service";
 import { extractErrorMessage } from "@/lib/error-utils";
@@ -179,7 +179,7 @@ function Skeleton({ className = "" }: { className?: string }) {
 }
 
 function SkeletonLight({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse bg-gray-100 rounded-xl ${className}`} />;
+  return <div className={`animate-pulse bg-muted rounded-xl ${className}`} />;
 }
 
 function ErrorBanner({
@@ -190,11 +190,11 @@ function ErrorBanner({
   onRetry: () => void;
 }) {
   return (
-    <div className="rounded-2xl bg-red-50 border border-red-200 px-5 py-4 flex items-center justify-between">
-      <p className="text-sm text-red-700">{message}</p>
+    <div className="rounded-2xl bg-destructive/10 border border-destructive/20 px-5 py-4 flex items-center justify-between">
+      <p className="text-sm text-destructive">{message}</p>
       <button
         onClick={onRetry}
-        className="flex items-center gap-1.5 text-sm text-red-700 font-medium hover:underline ml-4"
+        className="flex items-center gap-1.5 text-sm text-destructive font-medium hover:underline ml-4"
       >
         <RefreshCw size={13} />
         Retry
@@ -216,7 +216,7 @@ function ActivityRow({ txn }: { txn: Transaction }) {
         {isCredit ? (
           <TrendingUp size={16} className="text-[#0b5b9f]" />
         ) : (
-          <Ticket size={16} className="text-[#E31837]" />
+          <Ticket size={16} className="text-destructive" />
         )}
       </div>
 
@@ -225,7 +225,7 @@ function ActivityRow({ txn }: { txn: Transaction }) {
         <p className="text-xs sm:text-sm font-bold text-[#1f2630] truncate transition-colors">
           {txn.description || txn.transaction_type.name}
         </p>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <p className="text-xs text-muted-foreground mt-0.5">
           {isCredit
             ? `Received ${txn.amount.toLocaleString()} Points`
             : `Redeemed ${txn.amount.toLocaleString()} Points`}
@@ -237,7 +237,7 @@ function ActivityRow({ txn }: { txn: Transaction }) {
         <p className="text-xs text-[#6a7684]">
           {formatDate(txn.transaction_at)}
         </p>
-        <p className={`mt-0.5 text-xs font-bold ${isCredit ? "text-[#167e3f]" : "text-[#E31837]"}`}>
+        <p className={`mt-0.5 text-xs font-bold ${isCredit ? "text-[#167e3f]" : "text-destructive"}`}>
           {isCredit ? "SUCCESS" : "REDEEMED"}
         </p>
       </div>
@@ -349,7 +349,7 @@ export default function Wallet() {
             <h1 className="text-xl sm:text-2xl font-bold leading-tight" style={{ color: HDFC_BLUE }}>
               Wallet
             </h1>
-            <p className="text-xs sm:text-sm text-gray-400 mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Manage your points balance and transactions
             </p>
           </div>
@@ -472,7 +472,7 @@ export default function Wallet() {
                     Recent Wallet Activity
                   </h3>
                   {txnData && (
-                    <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       {txnData.total.toLocaleString()} total transactions
                     </p>
                   )}
@@ -485,7 +485,7 @@ export default function Wallet() {
                   }}
                   disabled={loadingTxns || !wallet}
                   size="sm"
-                  className="text-[#E31837] bg-[#fff0f3] border border-[#f6c2cc] hover:bg-[#ffe5ea] hover:text-[#bf122e] shadow-none transition-all text-xs sm:text-sm font-bold"
+                  className="text-destructive bg-[#fff0f3] border border-[#f6c2cc] hover:bg-[#ffe5ea] hover:text-[#bf122e] shadow-none transition-all text-xs sm:text-sm font-bold"
                 >
                   <RefreshCw
                     size={13}
@@ -515,7 +515,7 @@ export default function Wallet() {
                     ))}
                   </div>
                 ) : txnData?.transactions.length === 0 ? (
-                  <div className="flex flex-col items-center py-14 gap-3 text-gray-400">
+                  <div className="flex flex-col items-center py-14 gap-3 text-muted-foreground">
                     <ArrowDownCircle size={32} strokeWidth={1.2} />
                     <p className="text-xs sm:text-sm">No transactions yet.</p>
                   </div>
@@ -531,9 +531,9 @@ export default function Wallet() {
               {/* Pagination footer */}
               {!loadingTxns && txnData && txnData.total > TXN_PAGE_SIZE && (
                 <div className="flex items-center justify-between px-6 py-3 border-t border-[#d9e4f2]">
-                  <span className="text-xs text-gray-400">
-                    Page <b className="text-gray-700">{txnPage}</b> of{" "}
-                    <b className="text-gray-700">{totalPages}</b>
+                  <span className="text-xs text-muted-foreground">
+                    Page <b className="text-foreground">{txnPage}</b> of{" "}
+                    <b className="text-foreground">{totalPages}</b>
                   </span>
                   <div className="flex gap-2">
                     <Button
@@ -541,7 +541,7 @@ export default function Wallet() {
                       size="sm"
                       onClick={() => handlePageChange(-1)}
                       disabled={txnPage === 1}
-                      className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-none"
+                      className="bg-white hover:bg-muted text-foreground border-border shadow-none"
                     >
                       <ChevronLeft size={14} className="mr-1" />
                       Prev
@@ -551,7 +551,7 @@ export default function Wallet() {
                       size="sm"
                       onClick={() => handlePageChange(1)}
                       disabled={txnPage >= totalPages}
-                      className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 shadow-none"
+                      className="bg-white hover:bg-muted text-foreground border-border shadow-none"
                     >
                       Next
                       <ChevronRight size={14} className="ml-1" />
@@ -588,7 +588,7 @@ export default function Wallet() {
                     className="w-7 h-7 rounded-lg flex items-center justify-center"
                     style={{ background: "#fdecef" }}
                   >
-                    <Star size={14} className="text-[#E31837]" />
+                    <Star size={14} className="text-destructive" />
                   </div>
                   <h4 className="text-sm sm:text-base font-bold leading-tight" style={{ color: HDFC_BLUE }}>Period Summary</h4>
                 </div>
@@ -596,25 +596,25 @@ export default function Wallet() {
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border"
                     style={{ background: "#fbfdff", borderColor: "#d9e4f2" }}>
-                    <span className="text-xs sm:text-sm font-bold text-gray-500">This Month</span>
+                    <span className="text-xs sm:text-sm font-bold text-muted-foreground">This Month</span>
                     {loadingSummary ? (
                       <Skeleton className="h-5 w-16" />
                     ) : (
                       <span className="text-sm sm:text-base font-bold leading-tight" style={{ color: HDFC_BLUE }}>
                         {(summary?.points_this_month ?? 0).toLocaleString()}
-                        <span className="text-xs sm:text-sm font-normal text-gray-400 ml-1">pts</span>
+                        <span className="text-xs sm:text-sm font-normal text-muted-foreground ml-1">pts</span>
                       </span>
                     )}
                   </div>
                   <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border"
                     style={{ background: "#fbfdff", borderColor: "#d9e4f2" }}>
-                    <span className="text-xs sm:text-sm font-bold text-gray-500">This Year</span>
+                    <span className="text-xs sm:text-sm font-bold text-muted-foreground">This Year</span>
                     {loadingSummary ? (
                       <Skeleton className="h-5 w-16" />
                     ) : (
                       <span className="text-sm sm:text-base font-bold leading-tight" style={{ color: HDFC_BLUE }}>
                         {(summary?.points_this_year ?? 0).toLocaleString()}
-                        <span className="text-xs sm:text-sm font-normal text-gray-400 ml-1">pts</span>
+                        <span className="text-xs sm:text-sm font-normal text-muted-foreground ml-1">pts</span>
                       </span>
                     )}
                   </div>

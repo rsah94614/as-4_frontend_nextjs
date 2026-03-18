@@ -22,18 +22,18 @@ export default function GlobalError({
         
         {/* Warning Icon with Glow */}
         <div className="relative inline-block">
-          <div className="absolute inset-0 bg-red-100 rounded-full blur-3xl opacity-60 animate-pulse" />
+          <div className="absolute inset-0 bg-destructive/10 rounded-full blur-3xl opacity-60 animate-pulse" />
           <div className="relative w-28 h-28 bg-white rounded-[40px] shadow-2xl border border-red-50 flex items-center justify-center mx-auto">
-            <AlertTriangle size={56} className="text-[#E31837]" strokeWidth={1.5} />
+            <AlertTriangle size={56} className="text-destructive" strokeWidth={1.5} />
           </div>
         </div>
 
         {/* Textual Content */}
         <div className="space-y-4">
-          <h1 className="text-4xl font-black text-[#004C8F] tracking-tight">
+          <h1 className="text-4xl font-black text-primary tracking-tight">
             Something went wrong
           </h1>
-          <p className="text-gray-500 text-lg leading-relaxed px-4">
+          <p className="text-muted-foreground text-lg leading-relaxed px-4">
             We encountered an unexpected error while rendering this page. 
             Our team has been notified and we&apos;re working on it.
           </p>
@@ -56,7 +56,7 @@ export default function GlobalError({
           
           <Link
             href="/dashboard"
-            className="flex items-center justify-center gap-2 px-8 py-4 bg-white border border-gray-200 text-[#004C8F] font-bold rounded-2xl shadow-sm hover:shadow-md hover:border-blue-100 transition-all active:scale-95 no-underline"
+            className="flex items-center justify-center gap-2 px-8 py-4 bg-white border border-border text-primary font-bold rounded-2xl shadow-sm hover:shadow-md hover:border-blue-100 transition-all active:scale-95 no-underline"
           >
             <Home className="w-5 h-5" />
             Take Me Home
@@ -64,7 +64,7 @@ export default function GlobalError({
         </div>
 
         {/* Help Link */}
-        <div className="pt-8 opacity-60 flex items-center justify-center gap-2 text-sm text-gray-400 font-medium">
+        <div className="pt-8 opacity-60 flex items-center justify-center gap-2 text-sm text-muted-foreground font-medium">
           <LifeBuoy size={18} />
           <span>Need help? Contact IT Support</span>
         </div>

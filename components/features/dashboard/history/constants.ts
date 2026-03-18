@@ -1,4 +1,4 @@
-import type { PeriodFilter, TypeFilter } from "../../../types/history-types";
+import type { PeriodFilter, TypeFilter } from "@/types/history-types";
 
 export const PAGE_SIZE = 10;
 

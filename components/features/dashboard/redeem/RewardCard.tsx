@@ -1,7 +1,7 @@
 "use client";
 
 import { TicketPercent, Package } from "lucide-react";
-import StockBadge from "@/components/features/redeem/StockBadge";
+import StockBadge from "@/components/features/dashboard/redeem/StockBadge";
 import { RewardItem } from "@/types/redeem-types";
 import {
   CARD_CONTAINER,
@@ -12,7 +12,7 @@ import {
   GRADIENT_PRIMARY,
   GRADIENT_PRIMARY_HOVER,
   ANIMATE_FADE_IN_UP,
-} from "@/components/features/redeem/redeem-styles";
+} from "@/components/features/dashboard/redeem/redeem-styles";
 
 interface Props {
   item: RewardItem;
@@ -41,9 +41,8 @@ export default function RewardCard({ item, canAfford, onRedeem, staggerIndex = 0
       <div className={CARD_BODY}>
         <div className="flex items-start justify-between mb-3">
           <div
-            className={`${ICON_BOX} transition-transform duration-200 group-hover:scale-110 ${
-              isVoucher ? "bg-fuchsia-50" : "bg-blue-50"
-            }`}
+            className={`${ICON_BOX} transition-transform duration-200 group-hover:scale-110 ${isVoucher ? "bg-fuchsia-50" : "bg-blue-50"
+              }`}
           >
             {isVoucher ? (
               <TicketPercent size={22} className="text-fuchsia-600" />
@@ -76,9 +75,8 @@ export default function RewardCard({ item, canAfford, onRedeem, staggerIndex = 0
               <p className="text-[11px] text-slate-400 mb-0.5">
                 Points required
               </p>
-              <p className={`text-lg font-bold text-slate-800 transition-all duration-300 ${
-                canAfford && !outOfStock ? "group-hover:text-[#004C8F]" : ""
-              }`}>
+              <p className={`text-lg font-bold text-slate-800 transition-all duration-300 ${canAfford && !outOfStock ? "group-hover:text-[#004C8F]" : ""
+                }`}>
                 {item.default_points.toLocaleString()}
                 <span className="text-xs font-normal text-slate-400 ml-1">
                   pts
@@ -89,17 +87,16 @@ export default function RewardCard({ item, canAfford, onRedeem, staggerIndex = 0
             <button
               disabled={disabled}
               onClick={() => !disabled && onRedeem(item)}
-              className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
-                disabled
+              className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${disabled
                   ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                   : `${GRADIENT_PRIMARY} text-white ${GRADIENT_PRIMARY_HOVER} active:scale-95 hover:shadow-md hover:shadow-blue-200`
-              }`}
+                }`}
             >
               {outOfStock
                 ? "Sold out"
                 : !canAfford
-                ? "Not enough pts"
-                : "Redeem"}
+                  ? "Not enough pts"
+                  : "Redeem"}
             </button>
           </div>
         </div>

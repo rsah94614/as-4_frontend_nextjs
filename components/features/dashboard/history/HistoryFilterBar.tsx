@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { periodOptions, typeOptions } from "./constants";
-import type { PeriodFilter, TypeFilter } from "../../../types/history-types";
+import type { PeriodFilter, TypeFilter } from "@/types/history-types";
 
 import {
     FILTER_BTN_BASE,
@@ -89,46 +89,46 @@ export default function HistoryFilterBar({
 
                 {/* Transaction Type Dropdown */}
                 {selectedPeriod !== "Points History" && (
-                <div
-                    className="relative"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <button
-                        onClick={() => {
-                            setTypeDropdownOpen(!typeDropdownOpen);
-                            setPeriodDropdownOpen(false);
-                        }}
-                        className={`${FILTER_BTN_BASE} ${selectedType !== "All" ? FILTER_BTN_ACTIVE : ""
-                            }`}
+                    <div
+                        className="relative"
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <span className="truncate max-w-[120px] sm:max-w-none">
-                            {selectedType === "All" ? "Transaction Type" : selectedType}
-                        </span>
-                        <ChevronDown
-                            className={`w-4 h-4 shrink-0 transition-transform duration-200 ${typeDropdownOpen ? "rotate-180" : ""}`}
-                        />
-                    </button>
+                        <button
+                            onClick={() => {
+                                setTypeDropdownOpen(!typeDropdownOpen);
+                                setPeriodDropdownOpen(false);
+                            }}
+                            className={`${FILTER_BTN_BASE} ${selectedType !== "All" ? FILTER_BTN_ACTIVE : ""
+                                }`}
+                        >
+                            <span className="truncate max-w-[120px] sm:max-w-none">
+                                {selectedType === "All" ? "Transaction Type" : selectedType}
+                            </span>
+                            <ChevronDown
+                                className={`w-4 h-4 shrink-0 transition-transform duration-200 ${typeDropdownOpen ? "rotate-180" : ""}`}
+                            />
+                        </button>
 
-                    {typeDropdownOpen && (
-                        <div className={DROPDOWN_MENU}>
-                            {typeOptions.map((option) => (
-                                <button
-                                    key={option}
-                                    onClick={() => {
-                                        setSelectedType(option);
-                                        setTypeDropdownOpen(false);
-                                    }}
-                                    className={`${DROPDOWN_ITEM} ${selectedType === option
-                                        ? DROPDOWN_ITEM_ACTIVE
-                                        : DROPDOWN_ITEM_INACTIVE
-                                        }`}
-                                >
-                                    {option}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                        {typeDropdownOpen && (
+                            <div className={DROPDOWN_MENU}>
+                                {typeOptions.map((option) => (
+                                    <button
+                                        key={option}
+                                        onClick={() => {
+                                            setSelectedType(option);
+                                            setTypeDropdownOpen(false);
+                                        }}
+                                        className={`${DROPDOWN_ITEM} ${selectedType === option
+                                            ? DROPDOWN_ITEM_ACTIVE
+                                            : DROPDOWN_ITEM_INACTIVE
+                                            }`}
+                                    >
+                                        {option}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {/* Clear filters button */}

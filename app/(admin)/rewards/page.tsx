@@ -121,13 +121,13 @@ export default function RewardsPage() {
     <main className="flex-1 overflow-y-auto bg-white">
 
       {/* ─── Page Header (matches Employee page) ─── */}
-      <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+      <div className="bg-white border-b border-border px-8 md:px-10 py-5">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
               Reward Catalog
             </h1>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Create and manage individual items in your reward list
             </p>
           </div>
@@ -149,15 +149,15 @@ export default function RewardsPage() {
             <div className="flex flex-wrap items-center gap-3 mb-6">
               {/* Search */}
               <div className="relative flex-1 min-w-[200px] max-w-sm">
-                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search by name or code…"
-                  className="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 transition-all"
+                  className="w-full pl-9 pr-8 py-2 rounded-lg border border-border bg-muted text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 transition-all"
                 />
                 {search && (
-                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <X size={13} />
                   </button>
                 )}
@@ -171,19 +171,19 @@ export default function RewardsPage() {
                     setFilterState(e.target.value as "all" | "active" | "inactive");
                     setPage(1);
                   }}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium text-gray-600"
+                  className="border border-border rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 font-medium text-foreground"
                 >
                   <option value="all">All Status</option>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               </div>
 
               {/* Item count */}
               {displayPagination && (
                 <div className="ml-auto flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full tabular-nums">
+                  <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full tabular-nums">
                     {displayPagination.total} items
                   </span>
                 </div>
@@ -191,7 +191,7 @@ export default function RewardsPage() {
 
               <button
                 onClick={() => setModal("create")}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 bg-[#004C8F]"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 bg-primary"
               >
                 <Plus size={13} />
                 Add Reward

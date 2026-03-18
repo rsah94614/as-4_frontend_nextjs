@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { auth } from "@/services/auth-service";
-import { matchesPeriod, matchesType } from "../lib/history-utils";
-import { PAGE_SIZE } from "../components/features/history/constants";
+import { matchesPeriod, matchesType } from "@/lib/history-utils";
+import { PAGE_SIZE } from "@/components/features/dashboard/history/constants";
 import type {
     HistoryItem,
     PaginatedHistoryResponse,
     PeriodFilter,
     TypeFilter,
-} from "../types/history-types";
+} from "@/types/history-types";
 
 // ── Proxy clients ────────────────────────────────────────────────────────────
 const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
-const walletClient  = createAuthenticatedClient("/api/proxy/wallet");
+const walletClient = createAuthenticatedClient("/api/proxy/wallet");
 
 // ── Wallet transaction types (mirrors backend) ──────────────────────────────
 interface TransactionType {
@@ -47,18 +47,12 @@ interface WalletData {
     available_points: number;
 }
 
-/**
- * Convert a credit (points-earned) transaction into a HistoryItem shape.
- * These items have NO `reward_catalog`, so matchesPeriod("Points History")
- * returns true for them.
- */
 function transactionToHistoryItem(txn: Transaction): HistoryItem {
     return {
         history_id: txn.transaction_id,
         points: txn.amount,
         comment: txn.description ?? "Points earned",
         granted_at: txn.transaction_at,
-        // No reward_catalog → "Points History" filter will include these
         reward_catalog: undefined,
     };
 }
@@ -75,82 +69,92 @@ export function useHistoryData() {
     const [page, setPage] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
 
-    // Cache walletId so we don't re-fetch it on every pagination
-    const [cachedWalletId, setCachedWalletId] = useState<string | null>(null);
+    // Use a ref so caching the wallet ID doesn't trigger a re-render mid-fetch
+    const cachedWalletIdRef = useRef<string | null>(null);
 
-    // ── Fetch on page change ──────────────────────────────────────────────────
-    useEffect(() => {
-        fetchHistory(page);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page]);
-
-    // ── Reset to page 1 when filters change ──────────────────────────────────
-    useEffect(() => {
-        setPage(1);
-    }, [selectedPeriod, selectedType]);
-
-    async function fetchHistory(pageNum: number) {
+    // ── Fetch history ─────────────────────────────────────────────────────────
+    const fetchHistory = useCallback(async (pageNum: number) => {
         setLoading(true);
         setError(null);
         try {
             const user = auth.getUser();
-            
-            // 1. Kick off rewards fetch immediately
-            const rewardsPromise = rewardsClient.get<PaginatedHistoryResponse>(
-                `/history/me?page=${pageNum}&size=${PAGE_SIZE}`
-            );
 
-            // 2. Fetch Wallet transactions concurrently
-            const walletTxnPromise = (async () => {
-                if (!user?.employee_id) return [];
-                
+            // 1. Fetch reward redemptions — handled gracefully so a missing/failing
+            //    endpoint doesn't block the wallet transaction data from showing.
+            const rewardsPromise = (async (): Promise<{ items: HistoryItem[]; total: number }> => {
                 try {
-                    let wId = cachedWalletId;
-                    
-                    // Only fetch wallet_id if we don't have it cached
-                    if (!wId) {
+                    const res = await rewardsClient.get<PaginatedHistoryResponse>(
+                        `/history/me?page=${pageNum}&size=${PAGE_SIZE}`
+                    );
+                    return {
+                        items: res.data.data ?? [],
+                        total: res.data.total_items ?? 0,
+                    };
+                } catch {
+                    return { items: [], total: 0 };
+                }
+            })();
+
+            // 2. Fetch wallet credit transactions concurrently
+            const walletTxnPromise = (async (): Promise<{ items: HistoryItem[]; total: number }> => {
+                if (!user?.employee_id) return { items: [], total: 0 };
+
+                try {
+                    // Only fetch wallet_id once; reuse from ref on subsequent calls
+                    if (!cachedWalletIdRef.current) {
                         const walletRes = await walletClient.get<WalletData>(
                             `/employees/${user.employee_id}`
                         );
-                        wId = walletRes.data.wallet_id;
-                        setCachedWalletId(wId);
+                        cachedWalletIdRef.current = walletRes.data.wallet_id;
                     }
 
+                    const wId = cachedWalletIdRef.current;
                     if (wId) {
                         const txnRes = await walletClient.get<TransactionListResponse>(
                             `/transactions?wallet_id=${wId}&page=${pageNum}&limit=${PAGE_SIZE}`
                         );
-                        return txnRes.data.transactions
+                        const items = txnRes.data.transactions
                             .filter((txn) => txn.transaction_type.is_credit)
                             .map(transactionToHistoryItem);
+                        return { items, total: txnRes.data.total };
                     }
                 } catch (err) {
                     console.warn("Failed to fetch wallet transactions", err);
                 }
-                return [];
+                return { items: [], total: 0 };
             })();
 
-            // 3. Await both promises concurrently (eliminating waterfall)
-            const [rewardsRes, pointsItems] = await Promise.all([
+            // 3. Await both concurrently — neither can crash the other
+            const [rewardsResult, walletResult] = await Promise.all([
                 rewardsPromise,
-                walletTxnPromise
+                walletTxnPromise,
             ]);
 
-            const redemptionItems: HistoryItem[] = rewardsRes.data.data || [];
-
-            // 4. Merge and sort
-            const merged = [...redemptionItems, ...pointsItems].sort(
+            // 4. Merge and sort by date descending
+            const merged = [...rewardsResult.items, ...walletResult.items].sort(
                 (a, b) => new Date(b.granted_at).getTime() - new Date(a.granted_at).getTime()
             );
 
             setAllHistory(merged);
-            setTotalItems((rewardsRes.data.total_items || 0) + pointsItems.length);
+            setTotalItems(rewardsResult.total + walletResult.total);
         } catch (err) {
             setError(extractErrorMessage(err, "Something went wrong fetching history"));
         } finally {
             setLoading(false);
         }
-    }
+    }, []);
+
+    // ── Fetch on page change ──────────────────────────────────────────────────
+    useEffect(() => {
+        fetchHistory(page);
+    }, [page, fetchHistory]);
+
+    // ── Reset to page 1 when filters change ──────────────────────────────────
+    // Filtering is client-side so no re-fetch needed; resetting page to 1
+    // is enough (and will trigger a re-fetch if page was > 1).
+    useEffect(() => {
+        setPage(1);
+    }, [selectedPeriod, selectedType]);
 
     // ── Client-side filtering ─────────────────────────────────────────────────
     const filteredHistory = useMemo(
@@ -163,7 +167,7 @@ export function useHistoryData() {
         [allHistory, selectedPeriod, selectedType]
     );
 
-    const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+    const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
     function clearFilters() {
         setSelectedPeriod("All History");

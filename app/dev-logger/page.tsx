@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import SuperdevGuard from "@/components/features/SuperdevGuard";
+import SuperdevGuard from "@/components/features/dev-logger/SuperdevGuard";
 import {
     useLoggerStore,
     type LogEntry,
@@ -49,19 +49,19 @@ const METHOD_COLORS: Record<string, string> = {
     GET: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
     POST: "bg-blue-500/20 text-blue-400 border-blue-500/30",
     PUT: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-    DELETE: "bg-red-500/20 text-red-400 border-red-500/30",
+    DELETE: "bg-destructive/100/20 text-red-400 border-destructive/20/30",
     PATCH: "bg-violet-500/20 text-violet-400 border-violet-500/30",
 };
 
 const statusColor = (status: number | null) => {
-    if (status === null) return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+    if (status === null) return "bg-muted0/20 text-muted-foreground border-gray-500/30";
     if (status >= 200 && status < 300)
         return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
     if (status >= 400 && status < 500)
         return "bg-amber-500/20 text-amber-400 border-amber-500/30";
     if (status >= 500)
-        return "bg-red-500/20 text-red-400 border-red-500/30";
-    return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+        return "bg-destructive/100/20 text-red-400 border-destructive/20/30";
+    return "bg-muted0/20 text-muted-foreground border-gray-500/30";
 };
 
 /* ------------------------------------------------------------------ */
@@ -75,7 +75,7 @@ function JsonBlock({ label, data }: { label: string; data: unknown }) {
 
     return (
         <div className="mt-3">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                 {label}
             </p>
             <pre className="bg-gray-950 rounded-lg p-3 text-xs text-gray-300 overflow-x-auto max-h-64 overflow-y-auto leading-relaxed font-mono border border-gray-800">
@@ -168,21 +168,21 @@ function LogCard({ log }: { log: LogEntry }) {
                 </span>
 
                 {/* Duration */}
-                <span className="shrink-0 flex items-center gap-1 text-xs text-gray-500">
+                <span className="shrink-0 flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="w-3.5 h-3.5" />
                     {formatDuration(log.duration)}
                 </span>
 
                 {/* Timestamp */}
-                <span className="shrink-0 text-xs text-gray-600 hidden sm:block">
+                <span className="shrink-0 text-xs text-foreground hidden sm:block">
                     {time}
                 </span>
 
                 {/* Chevron */}
                 {expanded ? (
-                    <ChevronUp className="w-4 h-4 text-gray-500 shrink-0" />
+                    <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
                 ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-500 shrink-0 group-hover:text-gray-400" />
+                    <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 group-hover:text-muted-foreground" />
                 )}
             </button>
 
@@ -192,7 +192,7 @@ function LogCard({ log }: { log: LogEntry }) {
                     {/* Full URL + Timestamp */}
                     <div className="flex flex-wrap items-start gap-x-4 gap-y-1">
                         <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                                 Full URL
                             </p>
                             <p className="text-sm text-gray-300 font-mono break-all">
@@ -200,7 +200,7 @@ function LogCard({ log }: { log: LogEntry }) {
                             </p>
                         </div>
                         <div className="shrink-0">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                                 Timestamp
                             </p>
                             <p className="text-sm text-gray-300">
@@ -208,7 +208,7 @@ function LogCard({ log }: { log: LogEntry }) {
                             </p>
                         </div>
                         <div className="shrink-0">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                                 Duration
                             </p>
                             <p className="text-sm text-gray-300">
@@ -219,7 +219,7 @@ function LogCard({ log }: { log: LogEntry }) {
 
                     {/* Error */}
                     {log.error && (
-                        <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
+                        <div className="flex items-start gap-2 bg-destructive/100/10 border border-destructive/20/20 rounded-lg px-3 py-2.5">
                             <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                             <div className="min-w-0">
                                 <p className="text-sm text-red-300 font-medium">{log.error}</p>
@@ -254,7 +254,7 @@ function LogCard({ log }: { log: LogEntry }) {
                     {/* cURL */}
                     <div>
                         <div className="flex items-center justify-between mb-1.5">
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                                 <Terminal className="w-3.5 h-3.5" />
                                 cURL
                             </p>
@@ -311,7 +311,7 @@ function DevLoggerContent() {
                             className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600 flex items-center justify-center transition-colors"
                             title="Go back"
                         >
-                            <X className="w-5 h-5 text-gray-400" />
+                            <X className="w-5 h-5 text-muted-foreground" />
                         </button>
 
                         <div className="w-9 h-9 rounded-lg bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
@@ -321,15 +321,15 @@ function DevLoggerContent() {
                             <h1 className="text-lg font-bold text-white tracking-tight">
                                 Developer Logger
                             </h1>
-                            <p className="text-xs text-gray-500">Admin internal tool</p>
+                            <p className="text-xs text-muted-foreground">Admin internal tool</p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3">
                         {/* Log count */}
-                        <span className="px-2.5 py-1 rounded-full bg-gray-800 text-xs font-medium text-gray-400 border border-gray-700">
+                        <span className="px-2.5 py-1 rounded-full bg-gray-800 text-xs font-medium text-muted-foreground border border-gray-700">
                             {filteredLogs.length}
-                            <span className="text-gray-600">
+                            <span className="text-foreground">
                                 {" "}
                                 / {logs.length} logs
                             </span>
@@ -340,7 +340,7 @@ function DevLoggerContent() {
                         <button
                             onClick={clearLogs}
                             disabled={logs.length === 0}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-destructive/100/10 text-red-400 hover:bg-destructive/100/20 border border-destructive/20/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             <Trash2 className="w-3.5 h-3.5" />
                             Clear All
@@ -354,8 +354,8 @@ function DevLoggerContent() {
                 <div className="flex flex-wrap items-center gap-4 mb-6">
                     {/* Method filter */}
                     <div className="flex items-center gap-1.5">
-                        <ArrowUpDown className="w-3.5 h-3.5 text-gray-500" />
-                        <span className="text-xs text-gray-500 font-medium mr-1">
+                        <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground font-medium mr-1">
                             Method
                         </span>
                         {METHOD_FILTERS.map((m) => (
@@ -364,7 +364,7 @@ function DevLoggerContent() {
                                 onClick={() => setFilter({ method: m })}
                                 className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors border ${filters.method === m
                                     ? "bg-violet-500/20 text-violet-300 border-violet-500/40"
-                                    : "bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300 hover:border-gray-700"
+                                    : "bg-gray-900 text-muted-foreground border-gray-800 hover:text-gray-300 hover:border-gray-700"
                                     }`}
                             >
                                 {m}
@@ -374,7 +374,7 @@ function DevLoggerContent() {
 
                     {/* Status filter */}
                     <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-gray-500 font-medium mr-1">
+                        <span className="text-xs text-muted-foreground font-medium mr-1">
                             Status
                         </span>
                         {STATUS_FILTERS.map((s) => (
@@ -383,7 +383,7 @@ function DevLoggerContent() {
                                 onClick={() => setFilter({ status: s })}
                                 className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors border ${filters.status === s
                                     ? "bg-violet-500/20 text-violet-300 border-violet-500/40"
-                                    : "bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300 hover:border-gray-700"
+                                    : "bg-gray-900 text-muted-foreground border-gray-800 hover:text-gray-300 hover:border-gray-700"
                                     }`}
                             >
                                 {s}
@@ -394,11 +394,10 @@ function DevLoggerContent() {
                     {/* Hide Noise toggle */}
                     <button
                         onClick={() => setFilter({ hideNotifications: !filters.hideNotifications })}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border ${
-                            filters.hideNotifications
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors border ${filters.hideNotifications
                                 ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                                : "bg-gray-900 text-gray-500 border-gray-800 hover:text-gray-300 hover:border-gray-700"
-                        }`}
+                                : "bg-gray-900 text-muted-foreground border-gray-800 hover:text-gray-300 hover:border-gray-700"
+                            }`}
                     >
                         {filters.hideNotifications ? (
                             <BellOff className="w-3.5 h-3.5" />
@@ -410,7 +409,7 @@ function DevLoggerContent() {
 
                     {/* URL Search */}
                     <div className="flex items-center gap-1.5 flex-1 min-w-[200px] max-w-sm">
-                        <Search className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                        <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                         <input
                             type="text"
                             placeholder="Filter by URL..."
@@ -423,10 +422,10 @@ function DevLoggerContent() {
 
                 {/* Log list */}
                 {filteredLogs.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 text-gray-600">
+                    <div className="flex flex-col items-center justify-center py-24 text-foreground">
                         <Terminal className="w-12 h-12 mb-4 opacity-30" />
                         <p className="text-sm font-medium">No API logs yet</p>
-                        <p className="text-xs mt-1 text-gray-700">
+                        <p className="text-xs mt-1 text-foreground">
                             Make some API calls and they will appear here.
                         </p>
                     </div>

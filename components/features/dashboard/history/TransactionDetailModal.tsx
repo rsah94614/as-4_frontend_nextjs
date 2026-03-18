@@ -17,8 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { HistoryItem } from "../../../types/history-types";
-import { getMessage } from "../../../lib/history-utils";
+import type { HistoryItem } from "@/types/history-types";
+import { getMessage } from "@/lib/history-utils";
 import {
     SUCCESS_GREEN,
     DESTRUCTIVE_RED,

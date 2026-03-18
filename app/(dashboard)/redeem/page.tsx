@@ -5,8 +5,8 @@ import { Layers } from "lucide-react";
 import { useRedeem } from "@/hooks/useRedeem";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import WalletBanner from "@/components/features/redeem/WalletBanner";
-import RewardCard from "@/components/features/redeem/RewardCard";
+import WalletBanner from "@/components/features/dashboard/redeem/WalletBanner";
+import RewardCard from "@/components/features/dashboard/redeem/RewardCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   PAGE_WRAPPER,
@@ -22,10 +22,10 @@ import {
   PAG_NUM_BASE,
   PAG_NUM_ACTIVE,
   PAG_NUM_INACTIVE,
-} from "@/components/features/redeem/redeem-styles";
+} from "@/components/features/dashboard/redeem/redeem-styles";
 
 const RedeemDialog = dynamic(
-  () => import("@/components/features/redeem/RedeemDialog"),
+  () => import("@/components/features/dashboard/redeem/RedeemDialog"),
   { ssr: false }
 );
 
@@ -41,7 +41,7 @@ export default function RedeemPage() {
         <Card className={PAGE_CARD}>
           <CardContent className={PAGE_CONTENT}>
             {/* Wallet Skeleton */}
-            <div className="rounded-2xl bg-slate-50 p-6 mb-10">
+            <div className="rounded-2xl bg-muted p-6 mb-10">
               <div className="flex items-center gap-4">
                 <Skeleton className="h-10 w-10 rounded-xl" />
                 <div className="flex-1 space-y-2">
@@ -95,8 +95,7 @@ export default function RedeemPage() {
                 variant={redeem.activeCategory === "ALL" ? "default" : "outline"}
                 size="sm"
                 onClick={() => redeem.setActiveCategory("ALL")}
-                className={`${PILL_BASE} ${
-                  redeem.activeCategory === "ALL" ? PILL_ACTIVE : PILL_INACTIVE
+                className={`${PILL_BASE} ${redeem.activeCategory === "ALL" ? PILL_ACTIVE : PILL_INACTIVE
                   }`}
               >
                 All
@@ -107,8 +106,7 @@ export default function RedeemPage() {
                   variant={redeem.activeCategory === cat.category_id ? "default" : "outline"}
                   size="sm"
                   onClick={() => redeem.setActiveCategory(cat.category_id)}
-                  className={`${PILL_BASE} ${
-                    redeem.activeCategory === cat.category_id ? PILL_ACTIVE : PILL_INACTIVE
+                  className={`${PILL_BASE} ${redeem.activeCategory === cat.category_id ? PILL_ACTIVE : PILL_INACTIVE
                     }`}
                 >
                   {cat.category_name}
@@ -120,11 +118,11 @@ export default function RedeemPage() {
           {redeem.productItems.length > 0 ? (
             <>
               <div className={SECTION_HEADER}>
-                <h2 className="text-[22px] font-semibold text-slate-800">
+                <h2 className="text-[22px] font-semibold text-foreground">
                   Products
                 </h2>
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
-                  <Layers size={13} className="text-slate-500" />
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                  <Layers size={13} className="text-muted-foreground" />
                   {redeem.activeCategory === "ALL" && redeem.pagination
                     ? redeem.pagination.total
                     : redeem.productItems.length} items
@@ -175,7 +173,7 @@ export default function RedeemPage() {
 
                     return pages.map((p, idx) =>
                       typeof p === "string" ? (
-                        <span key={`ellipsis-${idx}`} className="px-2 text-slate-600 font-bold text-sm">
+                        <span key={`ellipsis-${idx}`} className="px-2 text-foreground font-bold text-sm">
                           {p}
                         </span>
                       ) : (
@@ -184,8 +182,7 @@ export default function RedeemPage() {
                           variant={p === current ? "default" : "outline"}
                           size="sm"
                           onClick={() => redeem.goToPage(p)}
-                          className={`${PAG_NUM_BASE} ${
-                            p === current ? PAG_NUM_ACTIVE : PAG_NUM_INACTIVE
+                          className={`${PAG_NUM_BASE} ${p === current ? PAG_NUM_ACTIVE : PAG_NUM_INACTIVE
                             }`}
                         >
                           {p}

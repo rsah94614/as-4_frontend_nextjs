@@ -27,13 +27,13 @@ export default function RolesPage() {
 
                 {/* ─── Page Header (matches Employee page) ─── */}
                 <div>
-                    <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+                    <div className="bg-white border-b border-border px-8 md:px-10 py-5">
                         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
                                     Roles &amp; Permissions
                                 </h1>
-                                <p className="text-sm text-gray-400 mt-1">
+                                <p className="text-sm text-muted-foreground mt-1">
                                     Manage roles, assignments and route permissions
                                 </p>
                             </div>
@@ -47,7 +47,7 @@ export default function RolesPage() {
                 </div>
 
                 {/* ── Tab bar ── */}
-                <div className="bg-white border-b border-gray-200 px-3 sm:px-5 lg:px-8">
+                <div className="bg-white border-b border-border px-3 sm:px-5 lg:px-8">
                     <div className="max-w-[1200px] mx-auto flex overflow-x-auto scrollbar-thin">
                         {TABS.map((t) => {
                             const active = tab === t.id;
