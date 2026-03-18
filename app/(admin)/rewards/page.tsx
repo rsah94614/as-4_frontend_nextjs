@@ -118,7 +118,7 @@ export default function RewardsPage() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto bg-white">
+    <main className="flex-1 overflow-y-auto flex flex-col bg-white">
 
       {/* ─── Page Header (matches Employee page) ─── */}
       <div className="bg-white border-b border-border px-8 md:px-10 py-5">
@@ -141,9 +141,9 @@ export default function RewardsPage() {
 
 
       {/* ─── Content Area ─── */}
-      <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
-        <div className="max-w-[1200px] mx-auto">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+      <div className="flex-1 px-8 md:px-10 py-8 flex flex-col" style={{ background: "#F7F9FC" }}>
+        <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
+          <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
 
             {/* ─── Toolbar ─── */}
             <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -152,7 +152,7 @@ export default function RewardsPage() {
                 <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => setSearch(e.target.value.trimStart())}
                   placeholder="Search by name or code…"
                   className="w-full pl-9 pr-8 py-2 rounded-lg border border-border bg-muted text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 transition-all"
                 />

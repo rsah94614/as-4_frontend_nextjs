@@ -168,7 +168,7 @@ export default function ReviewCategoriesPage() {
 
   return (
     <>
-      <main className="flex-1 overflow-y-auto bg-white">
+      <main className="flex-1 overflow-y-auto flex flex-col bg-white">
 
         {/* ── Page Header ── */}
         <div className="bg-white border-b border-border px-8 md:px-10 py-5">
@@ -191,9 +191,9 @@ export default function ReviewCategoriesPage() {
 
 
         {/* ── Main content ── */}
-        <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
-          <div className="max-w-[1200px] mx-auto">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+        <div className="flex-1 px-8 md:px-10 py-8 flex flex-col" style={{ background: "#F7F9FC" }}>
+          <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
+            <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
 
               {/* ── How It Works ── */}
               <HowItWorks />

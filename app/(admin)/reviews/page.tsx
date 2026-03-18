@@ -116,7 +116,7 @@ export default function AdminReviewsPage() {
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                                 <input
                                     value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
+                                    onChange={(e) => setSearch(e.target.value.trimStart())}
                                     placeholder="Search team or member…"
                                     className="w-full h-10 pl-10 pr-4 rounded-xl border border-border text-sm font-medium text-foreground
                                         focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 bg-white"
