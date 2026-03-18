@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { auth } from "@/services/auth-service";
+import { rewardsClient, walletClient } from "@/services/api-clients";
 import { matchesPeriod, matchesType } from "@/lib/history-utils";
 import { PAGE_SIZE } from "@/components/features/dashboard/history/constants";
 import type {
@@ -13,9 +13,7 @@ import type {
     TypeFilter,
 } from "@/types/history-types";
 
-// ── Proxy clients ────────────────────────────────────────────────────────────
-const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
-const walletClient = createAuthenticatedClient("/api/proxy/wallet");
+
 
 // ── Wallet transaction types (mirrors backend) ──────────────────────────────
 interface TransactionType {

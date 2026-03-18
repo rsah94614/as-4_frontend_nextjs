@@ -89,9 +89,10 @@ export const auth = {
         refreshPromise = (async () => {
             try {
                 // 5. Use BARE axios, NOT axiosClient, to avoid infinite 401 loops!
-                // We must provide the full proxy path since bare axios doesn't have the baseURL.
+                // We use the full auth microservice URL now.
+                const authBase = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8001") + "/v1/auth"
                 const response = await axios.post(
-                    '/api/proxy/auth/refresh',
+                    `${authBase}/refresh`,
                     { refresh_token: refreshToken },
                     { headers: { "Content-Type": "application/json" } }
                 )

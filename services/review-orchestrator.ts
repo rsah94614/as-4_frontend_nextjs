@@ -11,10 +11,9 @@
  * The frontend does NOT pass rating — the backend computes everything from categories.
  */
 
-import { createAuthenticatedClient, requireAuthenticatedUserId, categorizeFileUrls } from "@/lib/api-utils";
+import { requireAuthenticatedUserId, categorizeFileUrls } from "@/lib/api-utils";
 import { uploadToStorage } from "@/services/s3";
-
-const recognitionClient = createAuthenticatedClient("/api/proxy/recognition");
+import { recognitionClient } from "@/services/api-clients";
 import { extractErrorMessage } from "@/lib/error-utils";
 import type { ReviewResponse, PaginatedReviewResponse } from "@/types/review";
 

@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Employee, Review } from "@/types/admin-review-types";
+import { employeesClient as employeeClient, recognitionClient } from "@/services/api-clients";
 
-const employeeClient    = createAuthenticatedClient("/api/proxy/employees");
-const recognitionClient = createAuthenticatedClient("/api/proxy/recognition");
+
 
 export function useAdminReviews() {
     const [employees, setEmployees] = useState<Employee[]>([]);

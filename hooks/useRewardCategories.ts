@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { rewardsClient } from "@/services/api-clients";
 import { Category, CategoryFilter } from "@/types/reward-types";
 
-// 2. Instantiate the proxy client right here (or import it if you have it exported globally)
-const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
+
 
 export function useRewardCategories() {
     const [categories, setCategories] = useState<Category[]>([]);
