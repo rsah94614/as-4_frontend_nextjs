@@ -33,10 +33,10 @@ const CARD_THEMES = [
 ];
 
 const HOW_IT_WORKS = [
-    { n: "01", title: "Create a Role",      desc: "Define a role with a unique name and code (e.g. HR_ADMIN). Add an optional description." },
+    { n: "01", title: "Create a Role", desc: "Define a role with a unique name and code (e.g. HR_ADMIN). Add an optional description." },
     { n: "02", title: "Assign to Employees", desc: "Go to the Assignments tab to link a role to specific employees by their ID." },
-    { n: "03", title: "Set Route Access",   desc: "Use Route Permissions to control which API routes each role can access." },
-    { n: "04", title: "Immediate Effect",   desc: "Role changes take effect on the employee's next login." },
+    { n: "03", title: "Set Route Access", desc: "Use Route Permissions to control which API routes each role can access." },
+    { n: "04", title: "Immediate Effect", desc: "Role changes take effect on the employee's next login." },
 ];
 
 function HowItWorks() {
@@ -77,11 +77,11 @@ function HowItWorks() {
 }
 
 export function RolesSection({ toast }: RolesSectionProps) {
-    const [roles, setRoles]     = useState<Role[]>([]);
+    const [roles, setRoles] = useState<Role[]>([]);
     const [loading, setLoading] = useState(true);
-    const [open, setOpen]       = useState(false);
-    const [submitting, setSub]  = useState(false);
-    const [form, setForm]       = useState({ role_name: "", role_code: "", description: "" });
+    const [open, setOpen] = useState(false);
+    const [submitting, setSub] = useState(false);
+    const [form, setForm] = useState({ role_name: "", role_code: "", description: "" });
 
     const load = useCallback(async () => {
         try {
@@ -165,8 +165,6 @@ export function RolesSection({ toast }: RolesSectionProps) {
                                 return (
                                     <div key={role.role_id}
                                         className="group bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200">
-                                        {/* Top accent bar */}
-                                        <div className="h-0.5 w-full" style={{ background: theme.accent }} />
 
                                         <div className="p-5">
                                             {/* Icon + arrow row */}
