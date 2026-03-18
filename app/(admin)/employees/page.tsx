@@ -446,7 +446,7 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
                             <Label htmlFor="dob" className={fieldLabel}>Date of Birth</Label>
                             <Input id="dob" type="date" value={form.date_of_birth} onChange={set("date_of_birth")}
                                 max={maxDobStr()}
-                                className="border-gray-200 text-sm focus-visible:ring-0 focus-visible:border-[#003580]" />
+                                className="border-gray-200 text-sm focus-visible:ring-0 focus-visible:border-[#004C8F]" />
                         </div>
                     </div>
                 </div>

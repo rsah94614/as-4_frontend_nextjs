@@ -125,14 +125,14 @@ export default function StatusesPage() {
       {/* ─── Content ─── */}
       <ContentWrapper>
         {/* Stats pills */}
-        {!loading && totalCount > 0 && (
+        {/* {!loading && totalCount > 0 && (
           <StatusStats
             stats={[
               { label: "Total", value: totalCount, color: "bg-[#004C8F]" },
               ...entityCounts,
             ]}
           />
-        )}
+        )} */}
 
         <HowItWorks />
 
