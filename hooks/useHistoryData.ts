@@ -75,6 +75,9 @@ export function useHistoryData() {
     const [page, setPage] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
 
+    // Cache walletId so we don't re-fetch it on every pagination
+    const [cachedWalletId, setCachedWalletId] = useState<string | null>(null);
+
     // ── Fetch on page change ──────────────────────────────────────────────────
     useEffect(() => {
         fetchHistory(page);
@@ -89,49 +92,59 @@ export function useHistoryData() {
         setLoading(true);
         setError(null);
         try {
-            // 1. Fetch reward redemption history (items WITH reward_catalog)
-            const rewardsRes = await rewardsClient.get<PaginatedHistoryResponse>(
+            const user = auth.getUser();
+            
+            // 1. Kick off rewards fetch immediately
+            const rewardsPromise = rewardsClient.get<PaginatedHistoryResponse>(
                 `/history/me?page=${pageNum}&size=${PAGE_SIZE}`
             );
-            const redemptionItems: HistoryItem[] = rewardsRes.data.data;
 
-            // 2. Fetch credit transactions (points earned) from wallet service
-            let pointsItems: HistoryItem[] = [];
-            try {
-                const user = auth.getUser();
-                if (user?.employee_id) {
-                    const walletRes = await walletClient.get<WalletData>(
-                        `/employees/${user.employee_id}`
-                    );
-                    const walletId = walletRes.data.wallet_id;
-
-                    if (walletId) {
-                        const txnRes = await walletClient.get<TransactionListResponse>(
-                            `/transactions?wallet_id=${walletId}&page=${pageNum}&limit=${PAGE_SIZE}`
+            // 2. Fetch Wallet transactions concurrently
+            const walletTxnPromise = (async () => {
+                if (!user?.employee_id) return [];
+                
+                try {
+                    let wId = cachedWalletId;
+                    
+                    // Only fetch wallet_id if we don't have it cached
+                    if (!wId) {
+                        const walletRes = await walletClient.get<WalletData>(
+                            `/employees/${user.employee_id}`
                         );
-                        // Only include credit (points-earned) transactions
-                        pointsItems = txnRes.data.transactions
+                        wId = walletRes.data.wallet_id;
+                        setCachedWalletId(wId);
+                    }
+
+                    if (wId) {
+                        const txnRes = await walletClient.get<TransactionListResponse>(
+                            `/transactions?wallet_id=${wId}&page=${pageNum}&limit=${PAGE_SIZE}`
+                        );
+                        return txnRes.data.transactions
                             .filter((txn) => txn.transaction_type.is_credit)
                             .map(transactionToHistoryItem);
                     }
+                } catch (err) {
+                    console.warn("Failed to fetch wallet transactions", err);
                 }
-            } catch (err) {
-                // Wallet fetch failed — still show redemption history
-                console.warn("Failed to fetch wallet transactions for points history", err);
-            }
+                return [];
+            })();
 
-            // 3. Merge both sources, sort by date descending
+            // 3. Await both promises concurrently (eliminating waterfall)
+            const [rewardsRes, pointsItems] = await Promise.all([
+                rewardsPromise,
+                walletTxnPromise
+            ]);
+
+            const redemptionItems: HistoryItem[] = rewardsRes.data.data || [];
+
+            // 4. Merge and sort
             const merged = [...redemptionItems, ...pointsItems].sort(
                 (a, b) => new Date(b.granted_at).getTime() - new Date(a.granted_at).getTime()
             );
 
             setAllHistory(merged);
-            // Total items = redemption total + points items fetched
-            setTotalItems(
-                rewardsRes.data.total_items + pointsItems.length
-            );
+            setTotalItems((rewardsRes.data.total_items || 0) + pointsItems.length);
         } catch (err) {
-            // 4. Handle Axios errors properly using the extraction utility
             setError(extractErrorMessage(err, "Something went wrong fetching history"));
         } finally {
             setLoading(false);

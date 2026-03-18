@@ -34,8 +34,6 @@ export default function HistoryFilterBar({
     selectedType,
     setSelectedType,
     clearFilters,
-    filteredCount,
-    loading,
     periodDropdownOpen,
     setPeriodDropdownOpen,
     typeDropdownOpen,
@@ -90,6 +88,7 @@ export default function HistoryFilterBar({
                 </div>
 
                 {/* Transaction Type Dropdown */}
+                {selectedPeriod !== "Points History" && (
                 <div
                     className="relative"
                     onClick={(e) => e.stopPropagation()}
@@ -130,6 +129,7 @@ export default function HistoryFilterBar({
                         </div>
                     )}
                 </div>
+                )}
 
                 {/* Clear filters button */}
                 {hasActiveFilter && (
@@ -141,30 +141,6 @@ export default function HistoryFilterBar({
                     </button>
                 )}
             </div>
-
-            {/* Result count chip */}
-            {hasActiveFilter && !loading && (
-                <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 px-4 py-2 rounded-xl w-fit animate-in fade-in slide-in-from-left-2 duration-300">
-                    <p className="text-xs text-gray-500">
-                        Showing{" "}
-                        <span className="font-bold text-gray-700">{filteredCount}</span>{" "}
-                        result{filteredCount !== 1 ? "s" : ""} for{" "}
-                        {selectedPeriod !== "All History" && (
-                            <span className="font-semibold text-[#004C8F]">
-                                {selectedPeriod}
-                            </span>
-                        )}
-                        {selectedPeriod !== "All History" && selectedType !== "All" && (
-                            <span className="mx-1 text-gray-300">·</span>
-                        )}
-                        {selectedType !== "All" && (
-                            <span className="font-semibold text-[#004C8F]">
-                                {selectedType}
-                            </span>
-                        )}
-                    </p>
-                </div>
-            )}
         </div>
     );
 }

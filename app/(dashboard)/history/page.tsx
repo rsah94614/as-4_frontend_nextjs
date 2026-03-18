@@ -5,8 +5,13 @@ import { useHistoryData } from "@/hooks/useHistoryData";
 import HistoryFilterBar from "@/components/features/history/HistoryFilterBar";
 import HistoryList from "@/components/features/history/HistoryList";
 import HistoryPagination from "@/components/features/history/HistoryPagination";
-import TransactionDetailModal from "@/components/features/history/TransactionDetailModal";
+import dynamic from "next/dynamic";
 import type { HistoryItem } from "@/types/history-types";
+
+// Dynamically import the modal to reduce initial JS evaluation time
+const TransactionDetailModal = dynamic(() => import("@/components/features/history/TransactionDetailModal"), {
+    ssr: false
+});
 
 import {
     PAGE_WRAPPER,
@@ -59,7 +64,7 @@ export default function HistoryPage() {
                 </div>
             </div>
 
-
+            <div className="h-0.5 shrink-0" />
 
             {/* ── Main content ── */}
             <div className={PAGE_CONTENT}>
@@ -87,7 +92,7 @@ export default function HistoryPage() {
                     onItemClick={setSelectedItem}
                 />
 
-                {!loading && !error && (
+                {!loading && !error && filteredHistory.length > 0 && (
                     <HistoryPagination
                         page={page}
                         totalPages={totalPages}

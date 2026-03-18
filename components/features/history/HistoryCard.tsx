@@ -13,11 +13,13 @@ interface HistoryCardProps {
     onClick?: (item: HistoryItem) => void;
 }
 
-export default function HistoryCard({ item, onClick }: HistoryCardProps) {
+import React from "react";
+
+export default React.memo(function HistoryCard({ item, onClick }: HistoryCardProps) {
     const isRedemption = !!item.reward_catalog;
 
-    const badgeBg = isRedemption 
-        ? "bg-rose-50 text-rose-600 border-rose-100" 
+    const badgeBg = isRedemption
+        ? "bg-rose-50 text-rose-600 border-rose-100"
         : "bg-emerald-50 text-emerald-600 border-emerald-100";
     const amountColor = isRedemption ? "#374151" : SUCCESS_GREEN; // Use neutral slate for redemptions or the green for earnings
 
@@ -27,7 +29,6 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
             onClick={() => onClick?.(item)}
             className={CARD_CONTAINER}
         >
-
 
             <div className="p-5 flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
@@ -53,7 +54,7 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
                         </span>
                     </div>
 
-                    <p className="text-sm font-semibold text-gray-800 leading-snug group-hover:text-[#004C8F] transition-colors">
+                    <p className="text-sm font-semibold text-gray-800 leading-snug transition-colors">
                         {getMessage(item)}
                     </p>
 
@@ -70,14 +71,10 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
                         className="text-base font-bold tracking-tight"
                         style={{ color: amountColor }}
                     >
-                        {isRedemption ? `-${item.points}` : `+${item.points}`}
+                        {isRedemption ? `${item.points}` : `${item.points}`}
                     </span>
-
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter -mt-1">
-                        Pts
-                    </p>
                 </div>
             </div>
         </button>
     );
-}
+});

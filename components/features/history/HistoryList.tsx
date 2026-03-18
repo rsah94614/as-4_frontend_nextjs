@@ -51,12 +51,12 @@ export default function HistoryList({
             {/* Empty — filters wiped everything */}
             {!loading && !error && allItemsCount > 0 && items.length === 0 && (
                 <div className="text-center py-12">
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-600">
                         No results match the selected filters.
                     </p>
                     <button
                         onClick={onClearFilters}
-                        className="mt-3 text-sm text-[#004C8F] font-semibold hover:underline"
+                        className="mt-3 text-sm text-gray-600 font-semibold hover:underline"
                     >
                         Clear filters
                     </button>
