@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback } from "react"
 import {
     Loader2, Send, Check, X, Image as ImageIcon, Video,
-    CheckCircle2, Zap, Paperclip, AlertCircle,
+    CheckCircle2, Zap, Paperclip, AlertCircle, Info,
 } from "lucide-react"
 import type { ToastState } from "@/types/review-types"
 import { Card, CardContent } from "@/components/ui/card"
@@ -348,6 +348,26 @@ export default function ReviewComposeForm({
                                                 (at ×{(reviewerWeight ?? 1.0).toFixed(1)} weight)
                                             </span>
                                         </span>
+                                        <div className="relative ml-auto group">
+                                            <Info size={16} className="text-[#004C8F]/50 cursor-help" />
+                                            <div className="absolute bottom-full right-0 mb-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg p-4 hidden group-hover:block z-50">
+                                                <p className="text-[11px] font-bold text-[#004C8F] mb-2">How points are calculated</p>
+                                                <div className="space-y-1.5 text-[11px] text-gray-600 leading-relaxed">
+                                                    <p>1. Each category you pick has a <span className="font-semibold text-[#004C8F]">point value</span></p>
+                                                    <p>2. All selected category values are <span className="font-semibold text-[#004C8F]">added together</span></p>
+                                                    <p>3. The total is multiplied by your <span className="font-semibold text-[#004C8F]">role weight</span></p>
+                                                </div>
+                                                <div className="mt-3 pt-2 border-t border-gray-100">
+                                                    <p className="text-[10px] font-bold text-gray-400 mb-1">Role weights:</p>
+                                                    <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] text-gray-500">
+                                                        <span>Super Admin: ×1.5</span>
+                                                        <span>Manager: ×1.3</span>
+                                                        <span>HR: ×1.2</span>
+                                                        <span>Employee: ×1.0</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                                 <FieldError message={touched.categories ? errors.categories : undefined} />

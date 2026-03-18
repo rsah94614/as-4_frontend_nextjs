@@ -156,7 +156,7 @@ export default function RewardsPage() {
                 style={{ background: "#E31837" }}
               >
                 <Plus size={13} />
-                Build New Reward
+                Add Reward
               </button>
             </div>
 
