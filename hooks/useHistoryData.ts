@@ -81,6 +81,7 @@ export function useHistoryData() {
     // ── Fetch on page change ──────────────────────────────────────────────────
     useEffect(() => {
         fetchHistory(page);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page]);
 
     // ── Reset to page 1 when filters change ──────────────────────────────────

@@ -23,14 +23,7 @@ interface RolesSectionProps {
     toast: (msg: string, t?: ToastType) => void;
 }
 
-const CARD_THEMES = [
-    { accent: "#004C8F", lightBg: "#E8F1FA" },
-    { accent: "#E31837", lightBg: "#FDEAED" },
-    { accent: "#1E3A5F", lightBg: "#E2EAF3" },
-    { accent: "#7C2D12", lightBg: "#FEF0E8" },
-    { accent: "#14532D", lightBg: "#E5F7EC" },
-    { accent: "#581C87", lightBg: "#F3E8FF" },
-];
+
 
 const HOW_IT_WORKS = [
     { n: "01", title: "Create a Role", desc: "Define a role with a unique name and code (e.g. HR_ADMIN). Add an optional description." },
@@ -160,8 +153,7 @@ export function RolesSection({ toast }: RolesSectionProps) {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 cursor-pointer">
-                            {roles.map((role, i) => {
-                                const theme = CARD_THEMES[i % CARD_THEMES.length];
+                            {roles.map((role) => {
                                 return (
                                     <div key={role.role_id}
                                         className="group bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200">
@@ -170,21 +162,14 @@ export function RolesSection({ toast }: RolesSectionProps) {
                                             {/* Icon + arrow row */}
                                             <div className="flex items-start justify-between mb-4">
                                                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                                                    style={{ background: theme.lightBg }}>
-                                                    <Shield size={18} style={{ color: theme.accent }} />
+                                                    style={{ background: "#F0F5FA" }}>
+                                                    <Shield size={18} style={{ color: "#004C8F" }} />
                                                 </div>
-                                                <div className="w-7 h-7 rounded-lg flex items-center justify-center border border-gray-100
-                                                    opacity-0 group-hover:opacity-100 transition-all duration-150 translate-x-1 group-hover:translate-x-0"
-                                                    style={{ background: theme.lightBg }}>
-                                                    <ArrowUpRight size={13} style={{ color: theme.accent }} />
+                                                <div className="w-7 h-7 rounded-lg flex items-center justify-center
+                                                    opacity-0 group-hover:opacity-100 transition-all duration-150 translate-x-1 group-hover:translate-x-0">
+                                                    <ArrowUpRight size={14} className="text-gray-400 group-hover:text-[#004C8F] transition-colors" />
                                                 </div>
                                             </div>
-
-                                            {/* Role code pill */}
-                                            <span className="inline-block text-[9px] font-black font-mono px-2 py-0.5 rounded mb-2 tracking-wider"
-                                                style={{ background: theme.lightBg, color: theme.accent }}>
-                                                {role.role_code}
-                                            </span>
 
                                             {/* Name */}
                                             <p className="text-sm font-bold mb-1" style={{ color: '#004C8F' }}>
@@ -195,18 +180,6 @@ export function RolesSection({ toast }: RolesSectionProps) {
                                             <p className="text-[12px] text-gray-500 leading-relaxed">
                                                 {role.description || "No description provided"}
                                             </p>
-
-                                            {/* Footer */}
-                                            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
-                                                <span className="text-[10px] font-bold uppercase tracking-widest"
-                                                    style={{ color: theme.accent }}>
-                                                    Role
-                                                </span>
-                                                <div className="h-1 w-8 shrink-0 rounded-full" style={{ background: theme.lightBg }}>
-                                                    <div className="h-1 w-0 rounded-full group-hover:w-full transition-all duration-300"
-                                                        style={{ background: theme.accent }} />
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 );
