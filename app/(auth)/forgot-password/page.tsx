@@ -9,6 +9,12 @@ import { forgotPassword } from '@/services/auth-service'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import {
+  EMAIL_LENGTH_ERROR,
+  MAX_EMAIL_LENGTH,
+  trimToMaxLength,
+  validateAuthEmail,
+} from '@/lib/auth-validation'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -17,27 +23,20 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [touched, setTouched] = useState(false)
 
-  // Email validation
-  const validateEmail = (email: string): string | null => {
-    if (!email) {
-      return 'Email address is required'
-    }
-
-    const strictSyntax = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!strictSyntax.test(email)) {
-      return 'Please enter a valid email address'
-    }
-
-    return null
-  }
-
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
+    const rawValue = e.target.value
+    const value = trimToMaxLength(rawValue, MAX_EMAIL_LENGTH)
+    const exceededLimit = rawValue.length > MAX_EMAIL_LENGTH
     setEmail(value)
-    if (touched) {
-      const emailError = validateEmail(value)
-      setError(emailError)
+    if (exceededLimit) {
+      setTouched(true)
     }
+    const emailError = exceededLimit
+      ? EMAIL_LENGTH_ERROR
+      : touched
+        ? validateAuthEmail(value)
+        : null
+    setError(emailError)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,7 +44,7 @@ export default function ForgotPasswordPage() {
     setTouched(true)
 
     // Validate email
-    const emailError = validateEmail(email)
+    const emailError = validateAuthEmail(email)
     if (emailError) {
       setError(emailError)
       return
@@ -90,7 +89,7 @@ export default function ForgotPasswordPage() {
             Welcome to NetBanking
           </h1>
 
-          <div className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-6 md:p-8 max-w-[420px]">
+          <div className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-6 md:p-8 max-w-105">
             {/* Success Icon */}
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
@@ -103,7 +102,7 @@ export default function ForgotPasswordPage() {
               Check your email
             </h2>
             <p className="text-gray-600 text-center mb-8">
-              We&apos;ve sent a password reset link to <strong className="break-words">{email}</strong>
+              We&apos;ve sent a password reset link to <strong className="wrap-break-words">{email}</strong>
             </p>
 
             {/* Instructions */}
@@ -157,7 +156,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#f4f7fb]">
       <div className="w-full max-w-md flex flex-col items-center mt-auto mb-auto">
-        <div className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-6 md:p-8 max-w-[420px]">
+        <div className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-6 md:p-8 max-w-105">
           {/* Logo */}
           <div className="mb-6 flex items-center justify-center">
             <Image

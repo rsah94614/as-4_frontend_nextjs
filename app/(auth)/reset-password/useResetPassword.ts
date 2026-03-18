@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { resetPassword } from '@/services/auth-service'
 import { extractErrorMessage } from '@/lib/error-utils'
+import {
+  PASSWORD_LENGTH_ERROR,
+  MAX_PASSWORD_LENGTH,
+  trimToMaxLength,
+  validateAuthPassword,
+} from '@/lib/auth-validation'
 
 type Errors = {
   newPassword?: string
@@ -25,17 +31,46 @@ export function useResetPassword(
     }
   }, [token])
 
-  const validatePassword = (pwd: string) => {
-    if (!pwd) return 'Password is required'
-    if (pwd.length < 8) return 'At least 8 characters required'
-    if (!/[A-Z]/.test(pwd)) return 'Must include uppercase letter'
-    if (!/[a-z]/.test(pwd)) return 'Must include lowercase letter'
-    if (!/[0-9]/.test(pwd)) return 'Must include a number'
-    return null
+  const handleNewPasswordChange = (value: string) => {
+    const trimmedValue = trimToMaxLength(value, MAX_PASSWORD_LENGTH)
+    setNewPassword(trimmedValue)
+
+    setErrors(prev => ({
+      ...prev,
+      newPassword:
+        value.length > MAX_PASSWORD_LENGTH
+          ? PASSWORD_LENGTH_ERROR
+          : touched.newPassword
+            ? validateAuthPassword(trimmedValue) || undefined
+            : undefined,
+      confirmPassword:
+        confirmPassword.length > 0 && confirmPassword !== trimmedValue
+          ? 'Passwords do not match'
+          : undefined,
+      general: undefined,
+    }))
+  }
+
+  const handleConfirmPasswordChange = (value: string) => {
+    const trimmedValue = trimToMaxLength(value, MAX_PASSWORD_LENGTH)
+    setConfirmPassword(trimmedValue)
+
+    setErrors(prev => ({
+      ...prev,
+      confirmPassword:
+        value.length > MAX_PASSWORD_LENGTH
+          ? PASSWORD_LENGTH_ERROR
+          : touched.confirmPassword
+            ? (
+              trimmedValue !== newPassword ? 'Passwords do not match' : undefined
+            )
+            : undefined,
+      general: undefined,
+    }))
   }
 
   const submit = async () => {
-    const pwdError = validatePassword(newPassword)
+    const pwdError = validateAuthPassword(newPassword)
     const confirmError =
       confirmPassword !== newPassword ? 'Passwords do not match' : null
 
@@ -81,8 +116,8 @@ export function useResetPassword(
       touched,
     },
     handlers: {
-      setNewPassword,
-      setConfirmPassword,
+      setNewPassword: handleNewPasswordChange,
+      setConfirmPassword: handleConfirmPasswordChange,
       setTouched,
       submit,
     },

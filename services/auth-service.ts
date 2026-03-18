@@ -188,7 +188,14 @@ export async function login(email: string, password: string) {
             data.expires_in
         )
         return { success: true as const, data }
-    } catch (error) {
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+            return {
+                success: false as const,
+                error: 'Wrong credentials. Please check your email and password.',
+            }
+        }
+
         return createErrorResponse(error, 'Login failed');
     }
 }

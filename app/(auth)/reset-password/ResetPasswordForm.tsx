@@ -8,7 +8,6 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-
 interface ResetPasswordFormProps {
   token: string | null;
   state: {
@@ -34,7 +33,7 @@ export default function ResetPasswordForm({
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#f4f7fb]">
-      <div className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-6 md:p-8 max-w-[420px]">
+      <div className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-6 md:p-8 max-w-105">
         <div className="w-full max-w-md items-center mt-auto mb-auto">
           {/* Logo */}
           <div className="mb-6 flex items-center justify-center">

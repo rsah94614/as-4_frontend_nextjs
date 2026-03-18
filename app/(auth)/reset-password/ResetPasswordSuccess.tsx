@@ -24,7 +24,7 @@ export default function ResetPasswordSuccess() {
           Welcome to NetBanking
         </h1>
 
-        <div className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-6 md:p-8 max-w-[420px] flex flex-col items-center text-center">
+        <div className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-6 md:p-8 max-w-105 flex flex-col items-center text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6 mt-2">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
