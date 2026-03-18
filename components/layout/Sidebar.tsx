@@ -70,104 +70,78 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* ── Nav ── */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          <ul className="space-y-0.5">
-            {navItems
-              .filter(item => !item.adminOnly || isAdmin)
-              .map(item => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      className="flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer"
-                      style={isActive
-                        ? { background: 'rgba(255,255,255,0.18)', color: '#fff', paddingLeft: '9px', borderLeft: '3px solid #E31837' }
-                        : { color: 'rgba(255,255,255,0.75)', paddingLeft: '12px' }
-                      }
-                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)'; }}
-                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                    >
-                      <item.icon
-                        className="w-4 h-4 shrink-0"
-                        style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.5)' }}
-                      />
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-          </ul>
+        <nav className="flex-1 px-3 py-6 overflow-y-auto custom-scrollbar">
+            <ul className="space-y-1">
+                {navItems
+                    .filter(item => !item.adminOnly || isAdmin)
+                    .map(item => {
+                        const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                        return (
+                            <li key={item.href}>
+                                <Link
+                                    href={item.href}
+                                    onClick={onClose}
+                                    className="flex items-center gap-3 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+                                    style={isActive
+                                        ? { background: 'rgba(255,255,255,0.12)', color: '#fff', paddingLeft: '11px', borderLeft: '4px solid #E31837' }
+                                        : { color: 'rgba(255,255,255,0.65)', paddingLeft: '14px' }
+                                    }
+                                    onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
+                                    onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                                >
+                                    <item.icon
+                                        className="w-4.5 h-4.5 shrink-0"
+                                        style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.4)' }}
+                                    />
+                                    {item.label}
+                                </Link>
+                            </li>
+                        );
+                    })}
+            </ul>
         </nav>
 
-        {/* Dev Logger — admin only */}
-        {mounted && isAdmin && (
-          <div className="px-3 py-2 shrink-0" style={{ background: '#004C8F' }}>
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: '8px' }}>
-              <Link
-                href="/dev-logger"
-                onClick={onClose}
-                className="flex items-center gap-3 py-2.5 rounded-lg text-sm font-medium transition-all"
-                style={pathname.startsWith('/dev-logger')
-                  ? {
-                    background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.2))',
-                    color: '#fff',
-                    paddingLeft: '9px',
-                    borderLeft: '3px solid #a78bfa',
-                    boxShadow: '0 0 12px rgba(139,92,246,0.25)',
-                  }
-                  : {
-                    color: 'rgba(255,255,255,0.75)',
-                    paddingLeft: '12px',
-                  }
-                }
-                onMouseEnter={e => {
-                  if (!pathname.startsWith('/dev-logger')) {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(139,92,246,0.15)';
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!pathname.startsWith('/dev-logger')) {
-                    (e.currentTarget as HTMLElement).style.background = 'transparent';
-                  }
-                }}
-              >
-                <Bug
-                  className="w-4 h-4 shrink-0"
-                  style={{ color: pathname.startsWith('/dev-logger') ? '#c4b5fd' : 'rgba(255,255,255,0.5)' }}
-                />
-                <span>Dev Logger</span>
-                <span
-                  className="ml-auto text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
-                  style={{
-                    background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-                    color: '#fff',
-                    letterSpacing: '0.05em',
-                  }}
+        {/* ── Bottom Section (Logout & Tools) ── */}
+        <div className="mt-auto px-4 pb-8 pt-4 space-y-4 shrink-0"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.05)' }}>
+            
+            {/* Dev Logger — admin only (Moved inside bottom container for better grouping) */}
+            {mounted && isAdmin && (
+                <Link
+                    href="/dev-logger"
+                    onClick={onClose}
+                    className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all border border-white/5"
+                    style={pathname.startsWith('/dev-logger')
+                        ? {
+                            background: 'rgba(139,92,246,0.2)',
+                            color: '#fff',
+                            borderLeft: '3px solid #a78bfa',
+                        }
+                        : {
+                            color: 'rgba(255,255,255,0.5)',
+                            background: 'rgba(255,255,255,0.03)',
+                        }
+                    }
                 >
-                  API
-                </span>
-              </Link>
-            </div>
-          </div>
-        )}
+                    <Bug className="w-3.5 h-3.5" />
+                    <span>Dev Logger</span>
+                    <span className="ml-auto bg-violet-500 text-white px-1.5 py-0.5 rounded text-[9px]">API</span>
+                </Link>
+            )}
 
-        {/* ── Logout ── */}
-        <div className="px-4 py-5 shrink-0"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <Dialog>
-            <DialogTrigger asChild>
-              <button
-                className="flex items-center justify-center gap-2.5 w-full py-2.5 rounded-lg text-sm font-bold transition-all cursor-pointer"
-                style={{ background: '#E31837', color: '#fff', border: 'none', letterSpacing: '0.01em' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#c41230')}
-                onMouseLeave={e => (e.currentTarget.style.background = '#E31837')}
-              >
-                <LogOut className="w-4 h-4 shrink-0" />
-                Log out
-              </button>
-            </DialogTrigger>
+            <Dialog>
+                <DialogTrigger asChild>
+                    <button
+                        className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-sm font-bold shadow-lg transition-all cursor-pointer active:scale-95"
+                        style={{ background: '#E31837', color: '#fff', border: 'none', letterSpacing: '0.02em' }}
+                        onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
+                        onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+                    >
+                        <LogOut className="w-4 h-4 shrink-0" />
+                        Log out
+                    </button>
+                </DialogTrigger>
+
             <DialogContent showCloseButton={false} className="sm:max-w-sm">
               <DialogHeader>
                 <DialogTitle>Confirm Logout</DialogTitle>

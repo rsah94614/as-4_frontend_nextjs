@@ -64,8 +64,7 @@ export default function AdminReviewsPage() {
                         </div>
                     </div>
 
-                    {/* Red accent line */}
-                    <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+
 
                     <div className="px-8 md:px-10 py-8 max-w-[1200px] mx-auto space-y-6">
 

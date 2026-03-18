@@ -17,8 +17,8 @@ const categories = [
         description: 'Manage individual reward items and point values.',
         href: '/rewards',
         icon: Trophy,
-        accent: '#F97316',
-        lightBg: '#FFF7ED',
+        accent: '#004C8F', // HDFC Blue
+        lightBg: '#E8F1FA',
     },
     {
         title: 'Departments',
@@ -33,39 +33,39 @@ const categories = [
         description: 'Manage employee job titles and hierarchy levels.',
         href: '/designations',
         icon: UserRound,
-        accent: '#059669',
-        lightBg: '#ECFDF5',
+        accent: '#004C8F',
+        lightBg: '#E8F1FA',
     },
     {
         title: 'Employees',
         description: 'View and manage staff profiles and access.',
         href: '/employees',
         icon: Users,
-        accent: '#7C3AED',
-        lightBg: '#F5F3FF',
+        accent: '#004C8F',
+        lightBg: '#E8F1FA',
     },
     {
         title: 'Reward Categories',
         description: 'Organise rewards into logical groupings.',
         href: '/reward-categories',
         icon: Tags,
-        accent: '#DB2777',
-        lightBg: '#FDF2F8',
+        accent: '#004C8F',
+        lightBg: '#E8F1FA',
     },
     {
         title: 'Reviews',
         description: 'Monitor all peer reviews. Low ratings are flagged automatically.',
         href: '/reviews',
         icon: Star,
-        accent: '#D97706',
-        lightBg: '#FFFBEB',
+        accent: '#004C8F',
+        lightBg: '#E8F1FA',
     },
     {
         title: 'Roles',
         description: 'Manage roles, assignments and route-level permissions.',
         href: '/roles',
         icon: Shield,
-        accent: '#E31837',
+        accent: '#E31837', // Kept Red for security/roles as a standard convention
         lightBg: '#FDEAED',
     },
     {
@@ -73,26 +73,27 @@ const categories = [
         description: 'Track and review all system activity and admin actions.',
         href: '/audit-logs',
         icon: ClipboardList,
-        accent: '#0F766E',
-        lightBg: '#F0FDFA',
+        accent: '#004C8F',
+        lightBg: '#E8F1FA',
     },
     {
         title: 'Review Categories',
         description: 'Manage review category tags and their point multipliers.',
         href: '/review-categories',
         icon: Tags,
-        accent: '#7C3AED',
-        lightBg: '#F5F3FF',
+        accent: '#004C8F',
+        lightBg: '#E8F1FA',
     },
     {
         title: 'Statuses',
         description: 'Define and manage employee and reward status types.',
         href: '/statuses',
         icon: Activity,
-        accent: '#0284C7',
-        lightBg: '#F0F9FF',
+        accent: '#004C8F',
+        lightBg: '#E8F1FA',
     },
 ];
+
 
 export default function ControlPanelHub() {
     const router = useRouter();
@@ -158,7 +159,7 @@ export default function ControlPanelHub() {
             </div>
 
             {/* Red accent line */}
-            <div className="h-0.5 shrink-0" style={{ background: '#E31837' }} />
+
 
             {/* ── Content ── */}
             <div className="px-8 md:px-10 py-8" style={{ background: '#F7F9FC' }}>

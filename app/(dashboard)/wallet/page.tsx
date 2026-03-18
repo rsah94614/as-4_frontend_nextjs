@@ -360,8 +360,7 @@ export default function Wallet() {
         </div>
       </div>
 
-      {/* Red accent line */}
-      <div className="h-0.5 shrink-0" style={{ background: HDFC_RED }} />
+
 
       {/* ── Main content ── */}
       <div className={PAGE_CONTENT}>

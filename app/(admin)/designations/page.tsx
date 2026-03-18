@@ -83,8 +83,7 @@ export default function DesignationsPage() {
                             </span>
                         </div>
                     </div>
-                    {/* Red accent line */}
-                    <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+
                 </div>
                 <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
                 <DesignationStats total={totalCount} active={activeCount} avgLevel={avgLevel} />
