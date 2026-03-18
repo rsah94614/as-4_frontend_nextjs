@@ -11,7 +11,6 @@ import {
   ICON_BOX,
   GRADIENT_PRIMARY,
   GRADIENT_PRIMARY_HOVER,
-  GRADIENT_SECONDARY,
   ANIMATE_FADE_IN_UP,
 } from "@/components/features/redeem/redeem-styles";
 
