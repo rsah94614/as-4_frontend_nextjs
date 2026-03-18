@@ -31,11 +31,7 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
             onClick={() => onClick?.(item)}
             className={CARD_CONTAINER}
         >
-            {/* Top accent stripe - subtle */}
-            <div
-                className="h-1 w-full transition-colors"
-                style={{ backgroundColor: isRedemption ? "#F1F5F9" : SUCCESS_GREEN }} 
-            />
+
 
             <div className="p-5 flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
