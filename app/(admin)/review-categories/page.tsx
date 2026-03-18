@@ -68,7 +68,7 @@ interface EditForm {
 export default function ReviewCategoriesPage() {
   const [activeOnly, setActiveOnly] = useState<FilterValue>(null);
 
-  const { categories, loading, error, createCategory, updateCategory } =
+  const { categories, allCategories, loading, error, createCategory, updateCategory } =
     useReviewCategories(activeOnly);
 
   const [flash, setFlash] = useState<{ type: "success" | "error"; msg: string } | null>(null);
@@ -163,8 +163,8 @@ export default function ReviewCategoriesPage() {
     }
   };
 
-  const activeCount = categories.filter(c => c.is_active).length;
-  const inactiveCount = categories.filter(c => !c.is_active).length;
+  const activeCount = (allCategories || []).filter(c => c.is_active).length;
+  const inactiveCount = (allCategories || []).filter(c => !c.is_active).length;
 
   return (
     <>
@@ -248,7 +248,7 @@ export default function ReviewCategoriesPage() {
                 <span className="text-xs text-gray-400">
                   {loading
                     ? "Loading…"
-                    : `${categories.length} total${activeCount > 0 ? ` · ${activeCount} active` : ""}${inactiveCount > 0 ? ` · ${inactiveCount} inactive` : ""}`}
+                    : `${(allCategories || []).length} total${activeCount > 0 ? ` · ${activeCount} active` : ""}${inactiveCount > 0 ? ` · ${inactiveCount} inactive` : ""}`}
                 </span>
               </div>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 import {
@@ -20,7 +20,7 @@ export function useReviewCategories(activeOnly: boolean | null = null) {
     setError(null);
     try {
       const params: Record<string, string> = { page: "1", page_size: "100" };
-      if (activeOnly !== null) params.active_only = String(activeOnly);
+      params.active_only = "false"; // Fetch all to filter locally
 
       const res = await client.get<{ data: ReviewCategory[] }>(BASE_URL, { params });
       setCategories(res.data?.data ?? []);
@@ -29,7 +29,7 @@ export function useReviewCategories(activeOnly: boolean | null = null) {
     } finally {
       setLoading(false);
     }
-  }, [activeOnly]);
+  }, []);
 
   useEffect(() => {
     fetchCategories();
@@ -53,8 +53,14 @@ export function useReviewCategories(activeOnly: boolean | null = null) {
     [fetchCategories]
   );
 
+  const filteredCategories = useMemo(() => {
+    if (activeOnly === null) return categories;
+    return categories.filter((c) => c.is_active === activeOnly);
+  }, [categories, activeOnly]);
+
   return {
-    categories,
+    categories: filteredCategories,
+    allCategories: categories,
     loading,
     error,
     createCategory,
