@@ -70,35 +70,35 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* ── Nav ── */}
-        <nav className="flex-1 px-3 pt-6 overflow-y-auto custom-scrollbar">
-          <ul className="space-y-1">
-            {navItems
-              .filter(item => !item.adminOnly || isAdmin)
-              .map(item => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      className="flex items-center gap-3 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer"
-                      style={isActive
-                        ? { background: 'rgba(255,255,255,0.12)', color: '#fff', paddingLeft: '11px' }
-                        : { color: 'rgba(255,255,255,0.65)', paddingLeft: '14px' }
-                      }
-                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
-                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                    >
-                      <item.icon
-                        className="w-4.5 h-4.5 shrink-0"
-                        style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.4)' }}
-                      />
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-          </ul>
+        <nav className="flex-1 px-3 py-6 overflow-y-auto custom-scrollbar">
+            <ul className="space-y-1">
+                {navItems
+                    .filter(item => !item.adminOnly || isAdmin)
+                    .map(item => {
+                        const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                        return (
+                            <li key={item.href}>
+                                <Link
+                                    href={item.href}
+                                    onClick={onClose}
+                                    className="flex items-center gap-3 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+                                    style={isActive
+                                        ? { background: 'rgba(255,255,255,0.12)', color: '#fff', paddingLeft: '14px' }
+                                        : { color: 'rgba(255,255,255,0.65)', paddingLeft: '14px' }
+                                    }
+                                    onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
+                                    onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                                >
+                                    <item.icon
+                                        className="w-4.5 h-4.5 shrink-0"
+                                        style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.4)' }}
+                                    />
+                                    {item.label}
+                                </Link>
+                            </li>
+                        );
+                    })}
+            </ul>
         </nav>
 
         {/* ── Bottom Section (Logout & Tools) ── */}
