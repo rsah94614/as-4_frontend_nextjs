@@ -96,8 +96,7 @@ export default function AuditLogsPage() {
                             </span>
                         </div>
                     </div>
-                    {/* Red accent line */}
-                    <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+
                 </div>
                 <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
                 <div className="bg-white rounded-xl shadow-sm px-3 sm:px-4 lg:px-6 py-4 sm:py-5 space-y-4">

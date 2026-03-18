@@ -2,21 +2,24 @@
 
 // ── Page layout ──────────────────────────────────────────────────────────────
 
-export const PAGE_WRAPPER = "flex-1 w-full min-h-screen bg-white mx-auto max-w-[1920px] shadow-[0_0_40px_rgba(0,0,0,0.05)] rounded-[20px]";
+export const PAGE_WRAPPER = "flex-1 w-full min-h-screen bg-white mx-auto max-w-[1920px] shadow-[0_10px_50px_rgba(0,0,0,0.04)] rounded-[24px]";
 
 export const PAGE_HEADER =
-    "bg-white border-b border-gray-200 px-8 md:px-10 py-5 rounded-[20px]";
+    "bg-white border-b border-gray-100 px-8 md:px-10 py-6 rounded-t-[24px]";
 
 export const PAGE_HEADER_INNER =
     "max-w-[1200px] mx-auto flex items-center justify-between";
 
-export const PAGE_CONTENT = "px-8 md:px-10 py-8 max-w-[1200px] mx-auto rounded-[20px]";
+export const PAGE_CONTENT = "px-8 md:px-10 py-8 max-w-[1200px] mx-auto rounded-b-[24px]";
 
-export const HDFC_RED = "#c41230";
-export const HDFC_BLUE = "#003366";
 
-export const SUCCESS_GREEN = "#16a34a"; // Classic green (green-600)
-export const DESTRUCTIVE_RED = "#dc2626"; // Classic red (red-600)
+export const HDFC_RED = "#E31837";
+export const HDFC_BLUE = "#004C8F"; // Standardized HDFC Blue
+
+export const SUCCESS_GREEN = "#10b981"; // Emerald-500
+export const DESTRUCTIVE_RED = "#f43f5e"; // Rose-500 (Softer than the previous dark red)
+export const NEUTRAL_BLUE = "#004C8F";
+
 
 // ── Dropdown Buttons ────────────────────────────────────────────────────────
 
@@ -46,7 +49,8 @@ export const DROPDOWN_ITEM_INACTIVE =
 // ── History Card ─────────────────────────────────────────────────────────────
 
 export const CARD_CONTAINER =
-    "bg-white border border-gray-100 rounded-xl overflow-hidden hover:border-gray-200 hover:shadow-md transition-all duration-200 group text-left w-full block cursor-pointer";
+    "bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-blue-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 group text-left w-full block cursor-pointer";
+
 
 // ── Pagination ───────────────────────────────────────────────────────────────
 

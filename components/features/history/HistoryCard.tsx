@@ -18,11 +18,12 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
     const isRedemption = !!item.reward_catalog;
 
     // Mimic the ReviewCard top-stripe and direction badge logic
-    // Earned (Points) = Green, Redeemed = Red
-    const stripeColor = isRedemption ? DESTRUCTIVE_RED : SUCCESS_GREEN;
+    // Earned (Points) = Green, Redeemed = Soft Rose or Neutral Blue
+    const stripeColor = isRedemption ? "#004C8F" : SUCCESS_GREEN; 
     const badgeBg = isRedemption 
-        ? "bg-red-50 text-red-600 border-red-100" 
-        : "bg-green-50 text-green-600 border-green-100";
+        ? "bg-rose-50 text-rose-600 border-rose-100" 
+        : "bg-emerald-50 text-emerald-600 border-emerald-100";
+    const amountColor = isRedemption ? "#374151" : SUCCESS_GREEN; // Use neutral slate for redemptions or the green for earnings
 
     return (
         <button
@@ -30,18 +31,16 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
             onClick={() => onClick?.(item)}
             className={CARD_CONTAINER}
         >
-            {/* Top accent stripe */}
+            {/* Top accent stripe - subtle */}
             <div
-
-              className="h-1 w-full transition-colors"
-
-                style={{ backgroundColor: stripeColor }}
+                className="h-1 w-full transition-colors"
+                style={{ backgroundColor: isRedemption ? "#F1F5F9" : SUCCESS_GREEN }} 
             />
 
             <div className="p-5 flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                        {/* Direction badge mimicking ReviewCard */}
+                        {/* Direction badge */}
                         <span className={cn(
                             "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded border",
                             badgeBg
@@ -53,10 +52,7 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
                             {isRedemption ? "Redeemed" : "Earned"}
                         </span>
 
-
-                        
-                        <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">
-
+                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                             {new Date(item.granted_at).toLocaleDateString("en-US", {
                                 year: "numeric",
                                 month: "short",
@@ -70,17 +66,21 @@ export default function HistoryCard({ item, onClick }: HistoryCardProps) {
                     </p>
 
                     {item.comment && isRedemption && (
-                        <p className="text-xs text-gray-500 truncate mt-1.5">{item.comment}</p>
+                        <p className="text-xs text-gray-400 italic mt-1.5 flex items-center gap-1.5">
+                            <span className="w-1 h-1 rounded-full bg-gray-300" />
+                            {item.comment}
+                        </p>
                     )}
                 </div>
 
                 <div className="text-right shrink-0">
                     <span
                         className="text-base font-bold tracking-tight"
-                        style={{ color: stripeColor }}
+                        style={{ color: amountColor }}
                     >
                         {isRedemption ? `-${item.points}` : `+${item.points}`}
                     </span>
+
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter -mt-1">
                         Pts
                     </p>

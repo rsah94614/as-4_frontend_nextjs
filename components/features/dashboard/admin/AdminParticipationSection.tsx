@@ -121,55 +121,59 @@ export default function AdminParticipationSection() {
 
     return (
         <Card className="rounded-3xl border-0 shadow-none h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm uppercase tracking-wide">
-                    <Activity className="w-4 h-4 text-[#004C8F]" />
+            <CardHeader className="pb-0">
+                <CardTitle className="flex items-center gap-2.5 text-xs font-bold uppercase tracking-widest text-slate-400">
+                    <Activity className="w-3.5 h-3.5 text-[#004C8F]" />
                     Participation Overview
                 </CardTitle>
             </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500 delay-100">
+            <CardContent className="pt-2">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    {/* Left: Chart area (shrunk slightly for better balance) */}
+                    <div className="lg:col-span-7 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500 delay-100">
                         <div className="relative w-full">
-                            <ResponsiveContainer width="100%" height={380}>
+                            <ResponsiveContainer width="100%" height={320}>
                                 <PieChart>
-                                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={110} outerRadius={155} paddingAngle={3} dataKey="value" isAnimationActive animationBegin={100} animationDuration={800}>
+                                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={85} outerRadius={120} paddingAngle={4} dataKey="value" stroke="none" isAnimationActive animationBegin={100} animationDuration={800}>
                                         {pieData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
                                     </Pie>
-                                    <Tooltip formatter={(v: number | undefined) => [`${v ?? 0}%`, ""]} contentStyle={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #e5e7eb" }} />
+                                    <Tooltip formatter={(v: number | undefined) => [`${v ?? 0}%`, ""]} contentStyle={{ borderRadius: "12px", fontSize: "12px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)" }} />
                                 </PieChart>
                             </ResponsiveContainer>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <p className="text-3xl font-bold text-gray-900">{activePct}%</p>
-                                <p className="text-xs text-muted-foreground font-medium">Active</p>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none translate-y-[-10px]">
+                                <p className="text-4xl font-extrabold text-slate-800 tracking-tight">{activePct}%</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Active</p>
                             </div>
                         </div>
-                        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-1">
+                        <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 mt-0">
                             {pieData.map(({ name, color }) => (
-                                <div key={name} className="flex items-center gap-1.5">
-                                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                                    <span className="text-[10px] text-muted-foreground">{name}</span>
+                                <div key={name} className="flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{name}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
-                    <div className="flex flex-col gap-3 self-center">
+
+                    {/* Right: Detailed Stats (widened and better spaced) */}
+                    <div className="lg:col-span-5 flex flex-col gap-4">
                         {stats.map(({ label, value, sub, icon: Icon, color }, i) => (
-                            <div key={label} className="flex items-center gap-3 p-3 rounded-xl border bg-muted/30 animate-in fade-in slide-in-from-right-4 duration-500" style={{ animationDelay: `${i * 80}ms` }}>
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${color}`}>
-                                    <Icon className="w-4 h-4" />
+                            <div key={label} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-50 border-b-slate-100 bg-white shadow-sm transition-all hover:shadow-md animate-in fade-in slide-in-from-right-4 duration-500" style={{ animationDelay: `${i * 100}ms` }}>
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+                                    <Icon className="w-5 h-5" />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-lg font-bold text-gray-900 leading-tight">
+                                    <p className="text-xl font-bold text-slate-900 leading-none mb-1">
                                         {typeof value === "number" && !Number.isInteger(value) ? value.toFixed(1) : value}
                                     </p>
-                                    <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
-                                    <p className="text-[10px] text-muted-foreground/70 truncate">{sub}</p>
+                                    <p className="text-xs font-bold text-slate-700">{label}</p>
+                                    <p className="text-[10px] text-slate-400 font-medium">{sub}</p>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
+
 
                 {(data.by_department ?? []).length > 0 && (
                     <div className="mt-6 pt-5 border-t border-muted animate-in fade-in slide-in-from-bottom-2 duration-500 delay-300">

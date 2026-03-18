@@ -249,7 +249,7 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
                         <DialogDescription className="text-blue-200 text-xs mt-0.5">Add a new employee to the platform</DialogDescription>
                     </DialogHeader>
                 </div>
-                <div className="h-0.5" style={{ background: "#E31837" }} />
+
 
                 <div className="p-4 sm:p-6 space-y-4 bg-white max-h-[70vh] overflow-y-auto">
                     {/* Stack on mobile, 2-col on sm+ */}
@@ -1060,8 +1060,7 @@ export default function EmployeesPage() {
                     </div>
                 </div>
 
-                {/* Red accent line */}
-                <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+
 
                 {/* Tab bar */}
                 <div className="bg-white border-b border-gray-200 px-4 sm:px-6 md:px-8 lg:px-10">
