@@ -32,7 +32,7 @@ export default function ReviewPage() {
         </div>
       </div>
 
-      <div className="h-0.5 shrink-0" style={{ background: '#E31837' }} />
+ {/* <div className="h-0.5 shrink-0" style={{ background: '#E31837' }} />      */}
 
       {/* ── Main content ── */}
       <div className="px-4 sm:px-6 md:px-10 py-6 sm:py-8 w-full">

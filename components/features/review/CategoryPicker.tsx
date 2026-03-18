@@ -38,15 +38,9 @@ function CategoryCard({
             <Card className={cn(
                 "relative !flex-row items-center !gap-0 overflow-hidden transition-all duration-150 shadow-sm !py-0 h-[52px]",
                 selected
-                    ? "border-[#E31837] bg-[#E31837]/5"
+                    ? "border-[#004C8F] bg-[#004C8F]/5"
                     : "border-gray-200 bg-white group-hover:border-[#004C8F]/30 group-hover:bg-gray-50"
             )}>
-                {/* Left accent bar */}
-                <div className={cn(
-                    "absolute left-0 top-0 bottom-0 w-0.5 transition-all",
-                    selected ? "bg-[#E31837]" : "bg-transparent group-hover:bg-gray-200"
-                )} />
-
                 <div className="flex-1 min-w-0 py-1.5 pl-4 pr-2">
                     <span className={cn(
                         "text-xs font-semibold leading-tight block",
@@ -68,7 +62,7 @@ function CategoryCard({
                         className={cn(
                             "gap-0.5 text-[9px] font-black rounded-md px-1.5 py-0.5 border-0 hover:bg-transparent transition-colors",
                             selected
-                                ? "bg-[#E31837] text-white hover:bg-[#E31837]/90"
+                                ? "bg-[#004C8F] text-white hover:bg-[#004C8F]/90"
                                 : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
                         )}
                     >

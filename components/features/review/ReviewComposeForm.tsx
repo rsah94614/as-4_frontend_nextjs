@@ -307,9 +307,9 @@ export default function ReviewComposeForm({
 
                             {/* 01 — Receiver */}
                             <div>
-                                <Label className="flex items-center text-[11px] font-bold text-[#004C8F] uppercase tracking-widest mb-3">
+                                <Label className="flex items-center text-[11px] font-bold text-[#004C8F] tracking-widest mb-3">
                                     <span className="text-[#E31837] mr-1.5 text-xs">01</span>
-                                    Who are you recognising?
+                                    Who are you Recognizing?
                                     <span className="text-[#E31837] ml-0.5 text-xs">*</span>
                                 </Label>
                                 <ReceiverPicker
@@ -324,9 +324,9 @@ export default function ReviewComposeForm({
                             {/* 02 — Categories */}
                             <div>
                                 <div className="flex items-center justify-between mb-3">
-                                    <Label className="flex items-center text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">
+                                    <Label className="flex items-center text-[11px] font-bold text-[#004C8F] tracking-widest">
                                         <span className="text-[#E31837] mr-1.5 text-xs">02</span>
-                                        Recognition categories
+                                        Recognition Categories
                                         <span className="text-[#E31837] ml-0.5 text-xs">*</span>
                                     </Label>
                                     <span className="text-[11px] text-gray-400 tabular-nums">
@@ -356,11 +356,11 @@ export default function ReviewComposeForm({
                             {/* 03 — Comment */}
                             <div>
                                 <Label
-                                    className="flex items-center text-[11px] font-bold text-[#004C8F] uppercase tracking-widest mb-3"
+                                    className="flex items-center text-[11px] font-bold text-[#004C8F] tracking-widest mb-3"
                                     htmlFor="comment"
                                 >
                                     <span className="text-[#E31837] mr-1.5 text-xs">03</span>
-                                    Your feedback
+                                    Your Feedback
                                     <span className="text-[#E31837] ml-0.5 text-xs">*</span>
                                 </Label>
                                 <div className="relative">
