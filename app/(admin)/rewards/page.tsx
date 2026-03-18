@@ -30,9 +30,17 @@ export default function RewardsPage() {
     setLoading(true);
     setError("");
     try {
+      const isInactive = filterState === "inactive";
+      const fetchPage = isInactive ? 1 : page; // Fetch page 1 always for inactive bulk
+      const fetchSize = isInactive ? 1000 : 12; // Fetch max items to filter inactive locally
+
       const [cats, catalog] = await Promise.all([
         fetchAdminCategories(),
-        fetchAdminCatalog({ page, size: 12, active_only: filterState === "active" ? true : undefined }),
+        fetchAdminCatalog({ 
+          page: fetchPage, 
+          size: fetchSize, 
+          active_only: filterState === "active" ? true : undefined 
+        }),
       ]);
 
       setCategories(cats as Category[]);
@@ -51,21 +59,53 @@ export default function RewardsPage() {
   }, [load]);
 
   // ─── Filtering ────────────────────────────────────────────────────────────
-  const filtered = useMemo(
-    () =>
-      items
-        .filter((i) => {
-          if (filterState === "active") return i.is_active;
-          if (filterState === "inactive") return !i.is_active;
-          return true;
-        })
-        .filter(
+  const isInactive = filterState === "inactive";
+
+  const displayItems = useMemo(() => {
+    let result = items;
+    if (isInactive) result = result.filter((i) => !i.is_active);
+    else if (filterState === "active") result = result.filter((i) => i.is_active);
+
+    if (search) {
+      const lowerSearch = search.toLowerCase();
+      result = result.filter(
+        (i) =>
+          i.reward_name.toLowerCase().includes(lowerSearch) ||
+          i.reward_code.toLowerCase().includes(lowerSearch)
+      );
+    }
+    
+    if (isInactive) {
+      // Local pagination for inactive
+      return result.slice((page - 1) * 12, page * 12);
+    }
+    return result;
+  }, [items, search, filterState, page, isInactive]);
+
+  const displayPagination = useMemo(() => {
+    if (isInactive) {
+      let result = items.filter((i) => !i.is_active);
+      if (search) {
+        const lowerSearch = search.toLowerCase();
+        result = result.filter(
           (i) =>
-            i.reward_name.toLowerCase().includes(search.toLowerCase()) ||
-            i.reward_code.toLowerCase().includes(search.toLowerCase())
-        ),
-    [items, search, filterState]
-  );
+            i.reward_name.toLowerCase().includes(lowerSearch) ||
+            i.reward_code.toLowerCase().includes(lowerSearch)
+        );
+      }
+      const total = result.length;
+      const total_pages = Math.ceil(total / 12) || 1;
+      return {
+        current_page: page,
+        per_page: 12,
+        total: total,
+        total_pages: total_pages,
+        has_next: page < total_pages,
+        has_previous: page > 1,
+      };
+    }
+    return pagination;
+  }, [items, search, page, isInactive, pagination]);
 
   // ─── Modal Helpers ────────────────────────────────────────────────────────
   const close = () => {
@@ -141,19 +181,17 @@ export default function RewardsPage() {
               </div>
 
               {/* Item count */}
-              {pagination && (
+              {displayPagination && (
                 <div className="ml-auto flex items-center gap-2">
                   <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full tabular-nums">
-                    {pagination.total} items
+                    {displayPagination.total} items
                   </span>
                 </div>
               )}
 
-              {/* Create button */}
               <button
                 onClick={() => setModal("create")}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
-                style={{ background: "#E31837" }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 bg-[#004C8F]"
               >
                 <Plus size={13} />
                 Add Reward
@@ -162,10 +200,10 @@ export default function RewardsPage() {
 
             {/* ─── Grid / Empty / Error / Loading ─── */}
             <RewardGrid
-              items={filtered}
+              items={displayItems}
               loading={loading}
               error={error}
-              pagination={pagination}
+              pagination={displayPagination}
               page={page}
               setPage={setPage}
               onRetry={load}

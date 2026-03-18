@@ -17,7 +17,7 @@ import type {
 } from "@/types/reward-types";
 
 const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
-const walletClient  = createAuthenticatedClient("/api/proxy/wallet");
+const walletClient = createAuthenticatedClient("/api/proxy/wallet");
 
 // ── User-facing catalog ───────────────────────────────────────────────────────
 
@@ -53,14 +53,14 @@ export async function fetchWallet(employeeId: string): Promise<WalletData> {
 }
 
 export async function redeemReward(
-    walletId:  string,
+    walletId: string,
     catalogId: string,
-    points:    number,
-    comment?:  string,
+    points: number,
+    comment?: string,
 ): Promise<RedemptionResponse> {
     try {
         const res = await rewardsClient.post<RedemptionResponse>(`/redeem`, {
-            wallet_id:  walletId,
+            wallet_id: walletId,
             catalog_id: catalogId,
             points,
             comment: comment || null,
@@ -74,8 +74,8 @@ export async function redeemReward(
 // ── Admin catalog management ──────────────────────────────────────────────────
 
 export interface AdminCatalogParams {
-    page?:        number;
-    size?:        number;
+    page?: number;
+    size?: number;
     active_only?: boolean;
 }
 
@@ -92,13 +92,13 @@ export async function fetchAdminCatalog(params: AdminCatalogParams = {}): Promis
 }
 
 export interface CreateCatalogItemPayload {
-    reward_name:     string;
-    reward_code:     string;
-    description:     string;
-    category_id:     string;
-    default_points:  number;
-    min_points:      number;
-    max_points:      number;
+    reward_name: string;
+    reward_code: string;
+    description: string;
+    category_id: string;
+    default_points: number;
+    min_points: number;
+    max_points: number;
     available_stock: number;
 }
 
@@ -112,12 +112,12 @@ export async function createCatalogItem(payload: CreateCatalogItemPayload): Prom
 }
 
 export interface UpdateCatalogItemPayload {
-    reward_name?:   string;
-    description?:   string;
+    reward_name?: string;
+    description?: string;
     default_points?: number;
-    min_points?:    number;
-    max_points?:    number;
-    is_active?:     boolean;
+    min_points?: number;
+    max_points?: number;
+    is_active?: boolean;
 }
 
 export async function updateCatalogItem(catalogId: string, payload: UpdateCatalogItemPayload): Promise<RewardItem> {
