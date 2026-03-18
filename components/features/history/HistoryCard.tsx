@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import {
     CARD_CONTAINER,
     SUCCESS_GREEN,
-    DESTRUCTIVE_RED
 } from "./history-styles";
 
 interface HistoryCardProps {
@@ -17,9 +16,6 @@ interface HistoryCardProps {
 export default function HistoryCard({ item, onClick }: HistoryCardProps) {
     const isRedemption = !!item.reward_catalog;
 
-    // Mimic the ReviewCard top-stripe and direction badge logic
-    // Earned (Points) = Green, Redeemed = Soft Rose or Neutral Blue
-    const stripeColor = isRedemption ? "#004C8F" : SUCCESS_GREEN; 
     const badgeBg = isRedemption 
         ? "bg-rose-50 text-rose-600 border-rose-100" 
         : "bg-emerald-50 text-emerald-600 border-emerald-100";
