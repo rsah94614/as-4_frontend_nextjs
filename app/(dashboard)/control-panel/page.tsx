@@ -185,8 +185,7 @@ export default function ControlPanelHub() {
                                 <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm
                                     hover:shadow-md hover:border-gray-300 transition-all duration-200 h-full">
 
-                                    {/* Top accent bar */}
-                                    <div className="h-0.5 w-full" style={{ background: cat.accent }} />
+
 
                                     <div className="p-5 flex flex-col h-full">
                                         {/* Icon + arrow row */}

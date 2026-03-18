@@ -37,12 +37,7 @@ export default function RewardCard({ item, canAfford, onRedeem, staggerIndex = 0
     <div
       className={`${CARD_CONTAINER} ${disabled ? CARD_DISABLED : CARD_ENABLED} ${ANIMATE_FADE_IN_UP} ${staggerDelay}`}
     >
-      {/* Top gradient stripe with shimmer on hover */}
-      <div
-        className={`h-2 w-full hover-gradient-shimmer transition-all duration-300 ${
-          isVoucher ? GRADIENT_SECONDARY : GRADIENT_PRIMARY
-        }`}
-      />
+
 
       <div className={CARD_BODY}>
         <div className="flex items-start justify-between mb-3">
