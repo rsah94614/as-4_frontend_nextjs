@@ -29,14 +29,12 @@ import {
   HDFC_RED,
   HDFC_BLUE,
 } from "@/components/features/dashboard/history/history-styles";
-import { createAuthenticatedClient } from "@/lib/api-utils";
+import { walletClient } from "@/services/api-clients";
 import { auth } from "@/services/auth-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Button } from "@/components/ui/button";
 
-// ─── Proxy client ─────────────────────────────────────────────────────────────
 
-const walletClient = createAuthenticatedClient("/api/proxy/wallet");
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 

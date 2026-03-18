@@ -1,13 +1,13 @@
 // services/org-service.ts
 // All requests routed through Next.js proxy — no direct microservice URLs in browser.
 
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { orgClient } from "@/services/api-clients";
 import type { AuditLog, AuditLogsResponse } from "@/types/audit-types";
 import type { PaginationMeta } from "@/types/pagination";
 import type { Status, EntityType } from "@/types/status-types";
 
-const orgClient = createAuthenticatedClient("/api/proxy/org");
+
 
 // ── Audit Logs ────────────────────────────────────────────────────────────────
 

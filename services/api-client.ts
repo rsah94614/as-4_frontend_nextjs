@@ -1,6 +1,9 @@
-import { createAuthenticatedClient } from "@/lib/api-utils";
+import { authClient } from "./api-clients";
 
-// Routes through Next.js proxy — no direct microservice URL in browser
-const axiosClient = createAuthenticatedClient("/api/proxy/auth");
-
-export default axiosClient;
+/**
+ * Default Axios client, primarily used for authentication.
+ * 
+ * NOTE: For other microservices, please import the specific client 
+ * from @/services/api-clients.
+ */
+export default authClient;

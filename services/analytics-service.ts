@@ -1,8 +1,5 @@
-// services/analytics-service.ts
-// All requests routed through Next.js proxy — no direct microservice URL in browser.
-
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { analyticsClient } from "@/services/api-clients";
 import type {
     PlatformStatsResponse,
     RecentReviewResponse,
@@ -15,9 +12,22 @@ import type {
     PaginatedTeamRecognition,
 } from "@/types/dashboard-types";
 
-const analyticsClient = createAuthenticatedClient("/api/proxy/analytics");
-
 // ── Individual fetchers (used by pages that need only one panel) ──────────────
+
+/**
+ * Aggregates all dashboard data in parallel.
+ * Replaces the server-side proxy aggregate.
+ */
+export async function fetchDashboardAggregate() {
+    const [platformStats, recentReviews, leaderboard, teams] = await Promise.all([
+        fetchDashboardPlatformStats(),
+        fetchDashboardRecentReviews(),
+        fetchDashboardLeaderboard(),
+        fetchTeamsSummary(),
+    ]);
+
+    return { platformStats, recentReviews, leaderboard, teams };
+}
 
 export async function fetchDashboardPlatformStats(): Promise<PlatformStatsResponse | null> {
     try {

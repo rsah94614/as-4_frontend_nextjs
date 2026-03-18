@@ -18,6 +18,11 @@ import {
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { 
+    employeesClient as employeeClient, 
+    orgClient, 
+    recognitionClient 
+} from "@/services/api-clients";
 import type {
     Notification,
     NotificationType,
@@ -79,19 +84,7 @@ function toIsoDatetime(dateStr: string): string {
     return `${dateStr}T00:00:00Z`;
 }
 
-/**
- * Read the JWT from localStorage (where auth-service.ts stores it) and return
- * an Authorization header ready to spread into any fetch() call.
- *
- * The proxy at /api/proxy/[...path]/route.ts reads this header and forwards it
- * to the upstream microservice. Without it the proxy sends no token and the
- * microservice returns 401 "Authorization header missing".
- */
-function getAuthHeaders(): Record<string, string> {
-    if (typeof window === "undefined") return {};
-    const token = localStorage.getItem("access_token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-}
+
 
 const TYPE_META: Record<
     NotificationType,
@@ -120,21 +113,13 @@ const TYPE_META: Record<
 // forward the Bearer token. axiosClient does this automatically via its
 // interceptor; raw fetch() calls must do it explicitly.
 
-/** POST /api/proxy/employees/notifications/announcements */
+/** POST /notifications/announcements */
 async function postAnnouncement(payload: AnnouncementRequest): Promise<AnnouncementResponse> {
-    const res = await fetch("/api/proxy/employees/notifications/announcements", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders(),
-        },
-        body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(extractErrorMessage(errData, `Failed (${res.status})`));
-    }
-    return res.json();
+    const res = await employeeClient.post<AnnouncementResponse>(
+        "/notifications/announcements", 
+        payload
+    );
+    return res.data;
 }
 
 // ─── Department / Employee lookup helpers ─────────────────────────────────────
@@ -153,12 +138,8 @@ interface Department { department_id: string; department_name: string; }
 interface EmployeeOption { employee_id: string; username: string; email: string; }
 
 async function fetchDepartments(): Promise<Department[]> {
-    const res = await fetch("/api/proxy/org/departments?limit=100", {
-        headers: { ...getAuthHeaders() },
-    });
-    if (!res.ok) throw new Error(`Could not load departments (${res.status})`);
-    const data = await res.json();
-    // DepartmentListResponse: { departments: [...], total, page, limit }
+    const res = await orgClient.get("/departments", { params: { limit: 100 } });
+    const data = res.data;
     if (Array.isArray(data))             return data;
     if (Array.isArray(data.departments)) return data.departments;
     if (Array.isArray(data.data))        return data.data;
@@ -166,51 +147,30 @@ async function fetchDepartments(): Promise<Department[]> {
 }
 
 async function fetchEmployeeOptions(search: string): Promise<EmployeeOption[]> {
-    const url = new URL("/api/proxy/employees/list", window.location.origin);
-    if (search) url.searchParams.set("search", search);
-    url.searchParams.set("limit", "30");
-    const res = await fetch(url.toString(), {
-        headers: { ...getAuthHeaders() },
-    });
-    if (!res.ok) throw new Error(`Could not load employees (${res.status})`);
-    const data = await res.json();
+    const params: Record<string, string> = { limit: "30" };
+    if (search) params.search = search;
+    const res = await employeeClient.get("/list", { params });
+    const data = res.data;
     return Array.isArray(data) ? data : (data.employees ?? data.data ?? []);
 }
 
-/** GET /api/proxy/recognition/digest?week_start=...&manager_id=... */
+/** GET /digest?week_start=...&manager_id=... */
 async function getDigest(weekStart?: string, managerId?: string): Promise<WeeklyDigestData> {
-    const url = new URL("/api/proxy/recognition/digest", window.location.origin);
-    if (weekStart)  url.searchParams.set("week_start",  toIsoDatetime(weekStart));
-    if (managerId)  url.searchParams.set("manager_id",  managerId);
-    const res = await fetch(url.toString(), {
-        headers: { ...getAuthHeaders() },
-    });
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(extractErrorMessage(errData, `Failed (${res.status})`));
-    }
-    return res.json();
+    const params: Record<string, string> = {};
+    if (weekStart) params.week_start = toIsoDatetime(weekStart);
+    if (managerId) params.manager_id = managerId;
+    const res = await recognitionClient.get<WeeklyDigestData>("/digest", { params });
+    return res.data;
 }
 
-/** POST /api/proxy/recognition/digest/send */
+/** POST /digest/send */
 async function postDigest(payload: DigestEmailRequest): Promise<DigestResponse> {
     const body: Record<string, string> = { manager_email: payload.manager_email };
     if (payload.week_start) body.week_start = toIsoDatetime(payload.week_start);
     if (payload.manager_id) body.manager_id = payload.manager_id;
 
-    const res = await fetch("/api/proxy/recognition/digest/send", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders(),
-        },
-        body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(extractErrorMessage(errData, `Failed (${res.status})`));
-    }
-    return res.json();
+    const res = await recognitionClient.post<DigestResponse>("/digest/send", body);
+    return res.data;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -757,15 +717,10 @@ async function fetchManagerOptions(): Promise<ManagerOption[]> {
     // so that any future changes to admin role names only need one edit.
     const ALLOWED = new Set([...ADMIN_ROLES, "MANAGER"]);
 
-    const headers = { ...getAuthHeaders() };
-
-    type EmpListResponse = { employees?: EmployeeOption[]; data?: EmployeeOption[] } | EmployeeOption[];
-
+    // Roles and employee list are now fetched using direct microservice calls.
     const [rolesRes, empRes] = await Promise.all([
-        fetch("/api/proxy/roles/employees", { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
-        fetch(new URL("/api/proxy/employees/list?limit=100", window.location.origin).toString(), { headers })
-            .then(r => r.ok ? r.json() as Promise<EmpListResponse> : ({} as EmpListResponse))
-            .catch((): EmpListResponse => ({})),
+        employeeClient.get("/roles/employees").then(r => r.data).catch(() => []),
+        employeeClient.get("/list", { params: { limit: 100 } }).then(r => r.data).catch(() => ({})),
     ]);
 
     // Build a set of employee emails that have an allowed active role

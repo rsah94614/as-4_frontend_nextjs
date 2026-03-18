@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { recognitionClient as client } from "@/services/api-clients";
 import {
   ReviewCategory,
   ReviewCategoryCreatePayload,
   ReviewCategoryUpdatePayload,
 } from "@/types/review-category-types";
 
-const client = createAuthenticatedClient("");
-const BASE_URL = "/api/proxy/recognition/review-categories";
+const BASE_URL = "/review-categories";
 
 export function useReviewCategories(activeOnly: boolean | null = null) {
   const [categories, setCategories] = useState<ReviewCategory[]>([]);

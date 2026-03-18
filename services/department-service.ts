@@ -3,8 +3,8 @@
 // All requests routed through Next.js proxy (/api/proxy/org/*)
 // — no direct microservice URL exposed to the browser.
 
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { orgClient } from "@/services/api-clients";
 import {
     DepartmentType,
     Department,
@@ -14,8 +14,6 @@ import {
     UpdateDepartmentPayload
 } from "@/types/department-types";
 
-// Create the proxied client pointing to your Next.js route
-const orgClient = createAuthenticatedClient("/api/proxy/org");
 
 // ─────────────────────────────────────────────
 // Service

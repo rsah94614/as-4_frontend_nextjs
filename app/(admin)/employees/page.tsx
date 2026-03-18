@@ -19,27 +19,19 @@ import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast, ToastContainer } from "@/components/features/admin/roles/UIHelpers";
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { auth } from "@/services/auth-service";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { employeesClient as empClient, authClient, orgClient } from "@/services/api-clients";
 
-// ─── API clients ──────────────────────────────────────────────────────────────
-const empClient = createAuthenticatedClient("/api/proxy/employees");
+
 
 async function authBulkImport(file: File) {
-    const token = auth.getAccessToken();
     const form = new FormData();
     form.append("file", file);
-    const res = await fetch("/api/proxy/auth/bulk-import", {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: form,
+    const res = await authClient.post<BulkImportResponse>("/bulk-import", form, {
+        headers: { "Content-Type": "multipart/form-data" }
     });
-    if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(extractErrorMessage(errorData, `HTTP ${res.status}`));
-    }
-    return res.json() as Promise<BulkImportResponse>;
+    return res.data;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -346,27 +338,14 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
         }
         try {
             setSub(true);
-            const token = auth.getAccessToken();
-            await fetch("/api/proxy/auth/signup", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-                body: JSON.stringify({
-                    username: form.username,
-                    email: form.email,
-                    password: form.password,
-                    designation_id: form.designation_id,
-                    department_id: form.department_id,
-                    manager_id: form.manager_id || undefined,
-                    date_of_birth: form.date_of_birth || undefined,
-                }),
-            }).then(async (res) => {
-                if (!res.ok) {
-                    const errorData = await res.json().catch(() => ({}));
-                    throw new Error(extractErrorMessage(errorData, `HTTP ${res.status}`));
-                }
+            await authClient.post("/signup", {
+                username: form.username,
+                email: form.email,
+                password: form.password,
+                designation_id: form.designation_id,
+                department_id: form.department_id,
+                manager_id: form.manager_id || undefined,
+                date_of_birth: form.date_of_birth || undefined,
             });
             toast("Employee created successfully");
             onClose();
@@ -870,7 +849,7 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
         }
     }, [search]);
 
-    const orgClient = createAuthenticatedClient("/api/proxy/org");
+
 
     const loadMeta = useCallback(async () => {
         try {
