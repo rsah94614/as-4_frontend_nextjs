@@ -98,7 +98,7 @@ export default function AdminParticipationSection() {
     }, [loadTick]); // re-runs whenever load() is called
 
     if (state.status === "loading") return <ParticipationSkeleton />;
-    if (state.status === "error")   return <ParticipationError onRetry={load} />;
+    if (state.status === "error") return <ParticipationError onRetry={load} />;
 
     const { data } = state;
     const s = data.stats;
@@ -106,16 +106,16 @@ export default function AdminParticipationSection() {
 
     const PIE_COLORS = ["#004C8F", "#1D6EC5", "#93C5FD", "#e5e7eb"];
     const pieData = (data.pie ?? []).map((slice, i) => ({
-        name:  slice.name,
+        name: slice.name,
         value: slice.value,
         color: PIE_COLORS[i % PIE_COLORS.length],
     }));
 
     const avgDelta = s.avg_reviews_per_employee - s.avg_reviews_last_month;
     const stats = [
-        { label: "Total Employees",        value: s.total_employees,          sub: "across all teams",                                                icon: Users,      color: "bg-[#EEF4FB] text-[#004C8F]" },
-        { label: "Active Participants",    value: s.active_participants,      sub: `${activePct}% participation`,                                     icon: UserCheck,  color: "bg-[#DBEAFE] text-[#1D6EC5]" },
-        { label: "Non-Participants",       value: s.non_participants,         sub: `${100 - activePct}% of workforce`,                                icon: UserX,      color: "bg-red-100 text-red-600"      },
+        { label: "Total Employees", value: s.total_employees, sub: "across all teams", icon: Users, color: "bg-[#EEF4FB] text-[#004C8F]" },
+        { label: "Active Participants", value: s.active_participants, sub: `${activePct}% participation`, icon: UserCheck, color: "bg-[#DBEAFE] text-[#1D6EC5]" },
+        { label: "Non-Participants", value: s.non_participants, sub: `${100 - activePct}% of workforce`, icon: UserX, color: "bg-red-100 text-red-600" },
         { label: "Avg Reviews / Employee", value: s.avg_reviews_per_employee, sub: `${avgDelta >= 0 ? "+" : ""}${avgDelta.toFixed(1)} vs last month`, icon: TrendingUp, color: "bg-[#BFDBFE] text-[#004C8F]" },
     ];
 
@@ -137,7 +137,7 @@ export default function AdminParticipationSection() {
                                     <Pie data={pieData} cx="50%" cy="50%" innerRadius={85} outerRadius={120} paddingAngle={4} dataKey="value" stroke="none" isAnimationActive animationBegin={100} animationDuration={800}>
                                         {pieData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
                                     </Pie>
-                                    <Tooltip formatter={(v: number | undefined) => [`${v ?? 0}%`, ""]} contentStyle={{ borderRadius: "12px", fontSize: "12px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)" }} />
+                                    <Tooltip formatter={(v: number | undefined) => [`${v ?? 0}%`, ""]} contentStyle={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #e5e7eb" }} separator="" />
                                 </PieChart>
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none translate-y-[-10px]">

@@ -15,9 +15,9 @@ interface AuditTableProps {
 }
 
 const OP_STYLES: Record<string, { label: string; bg: string; color: string }> = {
-    INSERT: { label: "Added", bg: "#1a4ab5", color: "#fff" },
-    UPDATE: { label: "Updated", bg: "#14a882", color: "#fff" },
-    DELETE: { label: "Deleted", bg: "#e8192c", color: "#fff" },
+    INSERT: { label: "Added", bg: "#F3F4F6", color: "#374151" },
+    UPDATE: { label: "Updated", bg: "#F3F4F6", color: "#374151" },
+    DELETE: { label: "Deleted", bg: "#F3F4F6", color: "#374151" },
 };
 
 export function OperationBadge({ op, tableName }: { op: string; tableName?: string }) {
