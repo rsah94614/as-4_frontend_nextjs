@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Zap } from "lucide-react";
 import { Review, Employee } from "@/types/admin-review-types";
 

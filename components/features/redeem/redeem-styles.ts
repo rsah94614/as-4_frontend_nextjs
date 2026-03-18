@@ -57,10 +57,10 @@ export const PAG_NUM_INACTIVE =
 // ── Reward card ──────────────────────────────────────────────────────────────
 
 export const CARD_CONTAINER =
-    "group relative rounded-lg border border-slate-200 bg-white flex flex-col overflow-hidden transition-all duration-200";
+    "group relative rounded-xl border border-slate-300 bg-white flex flex-col overflow-hidden transition-all duration-300 shadow-md shadow-slate-400";
 
 export const CARD_ENABLED =
-    "cursor-pointer hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 shadow-sm";
+    "cursor-pointer hover:shadow-xl hover:shadow-slate-300 hover:-translate-y-0.5";
 
 export const CARD_DISABLED = "opacity-60 cursor-not-allowed border-slate-100";
 

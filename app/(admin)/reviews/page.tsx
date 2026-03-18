@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import {
-    Search, RefreshCw, X, ChevronDown, ChevronUp,
+    Search, RefreshCw, X,
     Loader2, MessageSquare, Zap, Calendar, AlertCircle,
 } from "lucide-react";
 import { useAdminReviews } from "@/hooks/useAdminReviews";
@@ -32,8 +32,6 @@ export default function AdminReviewsPage() {
         });
     }, [managers, getTeam, search]);
 
-    const handleExpandAll = () => setExpandedIds(new Set(filteredManagers.map((m) => m.employee_id)));
-    const handleCollapseAll = () => setExpandedIds(new Set());
     const toggleTeam = (id: string) => {
         setExpandedIds((prev) => {
             const next = new Set(prev);
@@ -64,8 +62,7 @@ export default function AdminReviewsPage() {
                         </div>
                     </div>
 
-                    {/* Red accent line */}
-                    <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+
 
                     <div className="px-8 md:px-10 py-8 max-w-[1200px] mx-auto space-y-6">
 
@@ -73,7 +70,6 @@ export default function AdminReviewsPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Reviews card */}
                             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow overflow-hidden relative">
-                                <div className="absolute top-0 left-0 w-full h-0.5" style={{ background: "#004C8F" }} />
                                 <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                                     <span className="w-5 h-5 rounded-lg bg-gray-100 flex items-center justify-center">
                                         <MessageSquare className="w-3 h-3 text-gray-400" />
@@ -87,7 +83,6 @@ export default function AdminReviewsPage() {
 
                             {/* Points card */}
                             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow overflow-hidden relative">
-                                <div className="absolute top-0 left-0 w-full h-0.5" style={{ background: "#E31837" }} />
                                 <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                                     <span className="w-5 h-5 rounded-lg bg-amber-50 flex items-center justify-center">
                                         <Zap className="w-3 h-3 text-amber-400" />
@@ -106,7 +101,6 @@ export default function AdminReviewsPage() {
                                 <div className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center">
                                     <Calendar className="w-3.5 h-3.5 text-gray-400" />
                                 </div>
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Period</span>
                             </div>
                             <CalendarStrip
                                 month={month}
@@ -135,19 +129,6 @@ export default function AdminReviewsPage() {
                                     <X className="w-3.5 h-3.5" /> Clear
                                 </button>
                             )}
-
-                            {/* Expand / Collapse */}
-                            <div className="flex items-center bg-white rounded-xl border border-gray-200 p-1 gap-1 shadow-sm">
-                                <button onClick={handleExpandAll}
-                                    className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-[11px] font-bold text-gray-600 hover:bg-gray-50 uppercase tracking-widest transition-colors">
-                                    <ChevronDown className="w-3.5 h-3.5" /> Expand all
-                                </button>
-                                <div className="w-px h-4 bg-gray-100" />
-                                <button onClick={handleCollapseAll}
-                                    className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-[11px] font-bold text-gray-600 hover:bg-gray-50 uppercase tracking-widest transition-colors">
-                                    <ChevronUp className="w-3.5 h-3.5" /> Collapse all
-                                </button>
-                            </div>
 
                             {/* Refresh */}
                             <button onClick={refresh}

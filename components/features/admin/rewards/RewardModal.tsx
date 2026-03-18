@@ -110,7 +110,10 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
 
     return (
         <Dialog open={isOpen} onOpenChange={(val) => !val && onClose()}>
-            <DialogContent className="max-w-lg p-0 border-none bg-white rounded-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+            <DialogContent
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                className="max-w-lg p-0 border-none bg-white rounded-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh] selection:bg-[#004C8F] selection:text-white"
+            >
                 <DialogHeader className="flex flex-row items-center justify-between px-8 py-6 border-b border-slate-50 bg-slate-50/50 shrink-0">
                     <div className="flex items-center gap-3 text-left">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isEdit ? "bg-blue-100 text-[#004C8F]" : "bg-green-100 text-green-600"} shadow-inner`}>
@@ -130,16 +133,6 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
                 <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6 overflow-y-auto flex-1">
                     {!isEdit && (
                         <>
-                            <RewardField label="REWARD CODE">
-                                <Input
-                                    className="w-full h-12 px-5 rounded-2xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white placeholder:text-slate-300 transition-all uppercase"
-                                    value={form.reward_code}
-                                    onChange={(e) => setForm({ ...form, reward_code: e.target.value.toUpperCase() })}
-                                    placeholder="e.g. REW-AMZ-50"
-                                    required
-                                />
-                            </RewardField>
-
                             <RewardField label="CATEGORY">
                                 <Select
                                     value={form.category_id}
@@ -156,6 +149,16 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
                                         ))}
                                     </SelectContent>
                                 </Select>
+                            </RewardField>
+
+                            <RewardField label="REWARD CODE">
+                                <Input
+                                    className="w-full h-12 px-5 rounded-2xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white placeholder:text-slate-300 transition-all uppercase"
+                                    value={form.reward_code}
+                                    onChange={(e) => setForm({ ...form, reward_code: e.target.value.toUpperCase() })}
+                                    placeholder="e.g. REW-AMZ-50"
+                                    required
+                                />
                             </RewardField>
                         </>
                     )}

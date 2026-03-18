@@ -74,6 +74,7 @@ const categories = [
     },
 ];
 
+
 export default function ControlPanelHub() {
     const router = useRouter();
     const user = auth.getUser();

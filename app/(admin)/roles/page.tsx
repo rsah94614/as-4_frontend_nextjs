@@ -43,8 +43,7 @@ export default function RolesPage() {
                             </span>
                         </div>
                     </div>
-                    {/* Red accent line */}
-                    <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+
                 </div>
 
                 {/* ── Tab bar ── */}

@@ -59,7 +59,7 @@ export default function HistoryPage() {
                 </div>
             </div>
 
-            <div className="h-0.5 shrink-0" style={{ background: HDFC_RED }} />
+
 
             {/* ── Main content ── */}
             <div className={PAGE_CONTENT}>

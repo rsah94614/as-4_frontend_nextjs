@@ -98,8 +98,7 @@ export default function RewardsPage() {
         </div>
       </div>
 
-      {/* Red accent line */}
-      <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
+
 
       {/* ─── Content Area ─── */}
       <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
