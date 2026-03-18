@@ -122,11 +122,9 @@ export default function CategoriesPage() {
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
               </div>
 
-              {/* Create button */}
               <button
                 onClick={openCreate}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
-                style={{ background: "#E31837" }}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 bg-[#004C8F]"
               >
                 <Plus size={13} />
                 Add Category

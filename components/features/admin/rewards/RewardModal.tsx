@@ -36,7 +36,17 @@ interface RewardModalProps {
 
 export function RewardModal({ item, categories, isOpen, onClose, onSave }: RewardModalProps) {
     const isEdit = !!item;
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<{
+        reward_name: string;
+        reward_code: string;
+        description: string;
+        category_id: string;
+        default_points: number | "";
+        min_points: number | "";
+        max_points: number | "";
+        available_stock: number | "";
+        is_active: boolean;
+    }>({
         reward_name: item?.reward_name ?? "",
         reward_code: item?.reward_code ?? "",
         description: item?.description ?? "",
@@ -75,13 +85,14 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
         setSaving(true);
         setError(null);
         try {
+            const defaultPointsNum = Number(form.default_points) || 0;
             const body = isEdit
                 ? {
                     reward_name: form.reward_name,
                     description: form.description,
-                    default_points: form.default_points,
-                    min_points: form.default_points,
-                    max_points: form.default_points,
+                    default_points: defaultPointsNum,
+                    min_points: defaultPointsNum,
+                    max_points: defaultPointsNum,
                     is_active: form.is_active,
                 }
                 : {
@@ -89,10 +100,10 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
                     reward_code: form.reward_code,
                     description: form.description,
                     category_id: form.category_id,
-                    default_points: form.default_points,
-                    min_points: form.default_points,
-                    max_points: form.default_points,
-                    available_stock: form.available_stock,
+                    default_points: defaultPointsNum,
+                    min_points: defaultPointsNum,
+                    max_points: defaultPointsNum,
+                    available_stock: Number(form.available_stock) || 0,
                 };
 
             if (isEdit) {
@@ -188,12 +199,15 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
                                 type="number"
                                 className="w-full h-12 px-5 rounded-2xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white transition-all"
                                 value={form.default_points}
-                                onChange={(e) => setForm({ 
-                                    ...form, 
-                                    default_points: Number(e.target.value),
-                                    min_points: Number(e.target.value),
-                                    max_points: Number(e.target.value)
-                                })}
+                                onChange={(e) => {
+                                    const val = e.target.value === "" ? "" : Number(e.target.value);
+                                    setForm({ 
+                                        ...form, 
+                                        default_points: val,
+                                        min_points: val,
+                                        max_points: val
+                                    });
+                                }}
                             />
                         </RewardField>
                     </div>
@@ -205,7 +219,7 @@ export function RewardModal({ item, categories, isOpen, onClose, onSave }: Rewar
                                 className="w-full h-12 px-5 rounded-2xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white transition-all"
                                 value={form.available_stock}
                                 min={0}
-                                onChange={(e) => setForm({ ...form, available_stock: Number(e.target.value) })}
+                                onChange={(e) => setForm({ ...form, available_stock: e.target.value === "" ? "" : Number(e.target.value) })}
                             />
                         </RewardField>
                     )}

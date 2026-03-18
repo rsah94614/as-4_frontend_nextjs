@@ -16,7 +16,7 @@ interface RewardCardProps {
 
 export function RewardCard({ item, onEdit, onRestock }: RewardCardProps) {
     return (
-        <Card className="rounded-xl border border-slate-100 p-5 flex flex-col gap-3.5 shadow-sm hover:shadow-lg transition-all duration-300 group cursor-default animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <Card className="rounded-xl border border-slate-300 p-5 flex flex-col gap-3.5 shadow-md shadow-slate-400 hover:shadow-xl hover:shadow-slate-300 hover:-translate-y-0.5 transition-all duration-300 group cursor-default animate-in fade-in slide-in-from-bottom-2 duration-500">
             {/* Title Row */}
             <div className="flex justify-between items-start gap-3">
                 <div className="flex-1 min-w-0">
