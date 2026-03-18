@@ -27,9 +27,6 @@ export function TeamSection({ manager, members, reviews, employees, expanded, on
 
     return (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all">
-            {/* Top accent bar */}
-            <div className="h-0.5 w-full" style={{ background: "#004C8F" }} />
-
             {/* Team header */}
             <button
                 onClick={onToggle}
