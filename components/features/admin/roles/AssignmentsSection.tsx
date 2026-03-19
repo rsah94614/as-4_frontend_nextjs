@@ -27,20 +27,9 @@ interface AssignmentsSectionProps {
     toast: (msg: string, t?: ToastType) => void;
 }
 
-function rolePillStyle(name: string): React.CSSProperties {
-    const n = name.toLowerCase();
-    if (n.includes("super")) return { background: "#E31837", color: "#fff" };
-    if (n.includes("hr")) return { background: "#004C8F", color: "#fff" };
-    if (n.includes("head") || n.includes("manager")) return { background: "#6D28D9", color: "#fff" };
-    if (n.includes("audit")) return { background: "#0F766E", color: "#fff" };
-    return { background: "#1E3A5F", color: "#fff" };
-}
 
-const AVATAR_COLORS = ["#004C8F", "#E31837", "#1E3A5F", "#7C2D12", "#14532D", "#6D28D9"];
 
-function initials(name: string) {
-    return name.split(/[\s._-]/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
-}
+
 
 const HOW_IT_WORKS = [
     { n: "01", title: "Find Employee ID", desc: "Employee IDs are found on the employee profile page in the admin panel." },
@@ -173,7 +162,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                     <button
                         onClick={() => setOpen(true)}
                         className="flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
-                        style={{ background: "#E31837" }}
+                        style={{ background: "#004C8F" }}
                     >
                         <UserPlus size={13} /> Assign Role
                     </button>
@@ -213,13 +202,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                         <div className="md:hidden divide-y divide-gray-100">
                             {filtered.map((r, i) => (
                                 <div key={r.employee_role_id} className="px-4 py-3.5 space-y-3">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div
-                                            className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                                            style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
-                                        >
-                                            {initials(r.employee.username)}
-                                        </div>
+                                    <div className="flex items-center min-w-0">
                                         <div className="min-w-0">
                                             <p className="text-sm font-semibold text-[#004C8F] truncate">{r.employee.username}</p>
                                             <p className="text-[11px] text-gray-400 truncate">{r.employee.email}</p>
@@ -227,10 +210,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                                     </div>
 
                                     <div className="flex items-center justify-between gap-2">
-                                        <span
-                                            className="inline-flex items-center justify-center min-w-[96px] px-2.5 py-1 rounded text-[10px] font-bold"
-                                            style={rolePillStyle(r.role.name)}
-                                        >
+                                        <span className="text-[13px] font-semibold text-black">
                                             {r.role.name}
                                         </span>
                                         <p className="text-[11px] text-gray-400 text-right">
@@ -258,9 +238,9 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
 
                         {/* Table head */}
                         <div className="hidden md:grid px-4 sm:px-6 py-2.5 bg-gray-50 border-b border-gray-100"
-                            style={{ gridTemplateColumns: "1fr 160px 120px 90px" }}>
+                            style={{ gridTemplateColumns: "2fr 1fr 120px 90px" }}>
                             {["Employee", "Role", "Assigned", ""].map((h) => (
-                                <span key={h} className="text-[10px] font-black uppercase tracking-widest text-gray-400">{h}</span>
+                                <span key={h} className={cn("text-[10px] font-black uppercase tracking-widest text-gray-400", h === "Role" && "text-center")}>{h}</span>
                             ))}
                         </div>
 
@@ -270,16 +250,10 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                                 <div
                                     key={r.employee_role_id}
                                     className="grid px-4 sm:px-6 py-3.5 items-center hover:bg-gray-50 transition-colors"
-                                    style={{ gridTemplateColumns: "1fr 160px 120px 90px" }}
+                                    style={{ gridTemplateColumns: "2fr 1fr 120px 90px" }}
                                 >
                                     {/* Employee */}
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div
-                                            className="w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                                            style={{ background: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
-                                        >
-                                            {initials(r.employee.username)}
-                                        </div>
+                                    <div className="flex items-center min-w-0">
                                         <div className="min-w-0">
                                             <p className="text-sm font-semibold text-[#004C8F] truncate">{r.employee.username}</p>
                                             <p className="text-[11px] text-gray-400 truncate">{r.employee.email}</p>
@@ -287,11 +261,8 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                                     </div>
 
                                     {/* Role — name only, no duplicate code below */}
-                                    <div>
-                                        <span
-                                            className="inline-flex items-center justify-center min-w-[96px] px-2.5 py-1 rounded text-[10px] font-bold"
-                                            style={rolePillStyle(r.role.name)}
-                                        >
+                                    <div className="text-center">
+                                        <span className="text-[13px] font-semibold text-gray-400">
                                             {r.role.name}
                                         </span>
                                     </div>
@@ -323,19 +294,6 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                         </div>
                     </div>
                 )}
-
-                {/* Footer bar */}
-                <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <p className="text-xs text-gray-500">
-                        {loading ? "Loading…" : `${records.length} assignment${records.length !== 1 ? "s" : ""}`}
-                    </p>
-                    <button
-                        onClick={() => setOpen(true)}
-                        className="flex items-center gap-1 text-xs font-semibold text-[#004C8F] hover:text-[#E31837] transition-colors w-fit"
-                    >
-                        <UserPlus size={12} /> Assign another
-                    </button>
-                </div>
             </div>
 
             {/* Assign Dialog */}
