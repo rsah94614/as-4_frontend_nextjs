@@ -9,6 +9,12 @@ import { forgotPassword } from '@/services/auth-service'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import {
+  EMAIL_LENGTH_ERROR,
+  MAX_EMAIL_LENGTH,
+  trimToMaxLength,
+  validateAuthEmail,
+} from '@/lib/auth-validation'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -17,27 +23,20 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [touched, setTouched] = useState(false)
 
-  // Email validation
-  const validateEmail = (email: string): string | null => {
-    if (!email) {
-      return 'Email address is required'
-    }
-
-    const strictSyntax = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!strictSyntax.test(email)) {
-      return 'Please enter a valid email address'
-    }
-
-    return null
-  }
-
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
+    const rawValue = e.target.value
+    const value = trimToMaxLength(rawValue, MAX_EMAIL_LENGTH)
+    const exceededLimit = rawValue.length > MAX_EMAIL_LENGTH
     setEmail(value)
-    if (touched) {
-      const emailError = validateEmail(value)
-      setError(emailError)
+    if (exceededLimit) {
+      setTouched(true)
     }
+    const emailError = exceededLimit
+      ? EMAIL_LENGTH_ERROR
+      : touched
+        ? validateAuthEmail(value)
+        : null
+    setError(emailError)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,7 +44,7 @@ export default function ForgotPasswordPage() {
     setTouched(true)
 
     // Validate email
-    const emailError = validateEmail(email)
+    const emailError = validateAuthEmail(email)
     if (emailError) {
       setError(emailError)
       return
@@ -78,7 +77,7 @@ export default function ForgotPasswordPage() {
           {/* Logo */}
           <div className="mb-6">
             <Image
-              src="/images/Logo.png"
+              src="logo.svg"
               alt="HDFC Bank Logo"
               width={240}
               height={80}

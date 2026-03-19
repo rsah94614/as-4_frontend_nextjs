@@ -1,5 +1,9 @@
 import type { HistoryItem, PeriodFilter, TypeFilter } from "../types/history-types";
 
+function normalizeFilterValue(value?: string | null): string {
+    return value?.trim().toLowerCase() ?? "";
+}
+
 /** Returns true if the item matches the chosen period filter */
 export function matchesPeriod(item: HistoryItem, period: PeriodFilter): boolean {
     if (period === "All History") return true;
@@ -8,47 +12,38 @@ export function matchesPeriod(item: HistoryItem, period: PeriodFilter): boolean 
     return true;
 }
 
-/**
- * Maps a reward_code prefix to its category.
- *
- * Reward codes follow the pattern: REW-{CATEGORY}-{ITEM}
- *   - REW-AMZ-*, REW-FLIP-*   → Gift Cards
- *   - REW-MERCH-*              → Merchandise
- *   - REW-LEARN-*, REW-EXP-*  → Experiences
- *   - REW-WELL-*               → Wellness
- */
-function getRewardCategory(rewardCode: string): TypeFilter {
-    const code = rewardCode.toUpperCase();
+export function getHistoryCategoryValue(item: HistoryItem): string | null {
+    const categoryCode = item.reward_catalog?.category_code?.trim();
+    if (categoryCode) {
+        return categoryCode;
+    }
 
-    // Gift Cards
-    if (code.startsWith("REW-AMZ") || code.startsWith("REW-FLIP"))
-        return "Gift Cards";
+    const categoryName = item.reward_catalog?.category_name?.trim();
+    if (categoryName) {
+        return categoryName;
+    }
 
-    // Merchandise
-    if (code.startsWith("REW-MERCH"))
-        return "Merchandise";
+    return null;
+}
 
-    // Experiences (learning + experiential)
-    if (code.startsWith("REW-LEARN") || code.startsWith("REW-EXP"))
-        return "Experiences";
+export function getHistoryCategoryLabel(item: HistoryItem): string | null {
+    const categoryName = item.reward_catalog?.category_name?.trim();
+    if (categoryName) {
+        return categoryName;
+    }
 
-    // Wellness
-    if (code.startsWith("REW-WELL"))
-        return "Wellness";
+    const categoryCode = item.reward_catalog?.category_code?.trim();
+    if (categoryCode) {
+        return categoryCode;
+    }
 
-    // Fallback — unknown category, return "All" so it's always visible
-    return "All";
+    return null;
 }
 
 /** Returns true if the item matches the chosen transaction-type filter */
 export function matchesType(item: HistoryItem, type: TypeFilter): boolean {
     if (type === "All") return true;
-
-    // Points-earned transactions (no reward_catalog) don't belong to any reward category
-    if (!item.reward_catalog) return false;
-
-    // Match by reward_code category
-    return getRewardCategory(item.reward_catalog.reward_code) === type;
+    return normalizeFilterValue(getHistoryCategoryValue(item)) === normalizeFilterValue(type);
 }
 
 /** Derives a human-readable message for a history row */

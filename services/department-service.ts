@@ -1,7 +1,6 @@
 // services/department-service.ts
 //
-// All requests routed through Next.js proxy (/api/proxy/org/*)
-// — no direct microservice URL exposed to the browser.
+// Uses the direct organization microservice client from services/api-clients.ts.
 
 import { extractErrorMessage } from "@/lib/error-utils";
 import { orgClient } from "@/services/api-clients";
@@ -21,7 +20,7 @@ import {
 
 export const departmentService = {
     /**
-     * GET /api/proxy/org/departments
+     * GET /departments
      * Paginated list with optional search filter.
      */
     async list(params?: {
@@ -46,7 +45,7 @@ export const departmentService = {
     },
 
     /**
-     * GET /api/proxy/org/departments/:id
+     * GET /departments/:id
      */
     async getById(departmentId: string): Promise<DepartmentDetail> {
         try {
@@ -60,7 +59,7 @@ export const departmentService = {
     },
 
     /**
-     * POST /api/proxy/org/departments
+     * POST /departments
      */
     async create(payload: CreateDepartmentPayload): Promise<Department> {
         try {
@@ -72,7 +71,7 @@ export const departmentService = {
     },
 
     /**
-     * PUT /api/proxy/org/departments/:id
+     * PUT /departments/:id
      */
     async update(
         departmentId: string,
@@ -90,7 +89,7 @@ export const departmentService = {
     },
 
     /**
-     * GET /api/proxy/org/department-types
+     * GET /department-types
      * Fetches all department types for the create/edit dropdown.
      */
     async listTypes(): Promise<DepartmentType[]> {

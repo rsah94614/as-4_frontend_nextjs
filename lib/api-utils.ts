@@ -17,6 +17,85 @@ interface LoggerMeta {
     __loggerStartTime?: number;
 }
 
+export const SENSITIVE_FIELD_NAMES = new Set([
+    "authorization",
+    "password",
+    "new_password",
+    "current_password",
+    "confirm_password",
+    "refresh_token",
+    "access_token",
+    "token",
+    "id_token",
+    "client_secret",
+    "secret",
+    "cookie",
+    "set-cookie",
+    "x-api-key",
+    "api_key",
+]);
+
+export const REDACTED_VALUE = "***REDACTED***";
+const AUTH_401_BYPASS_PATHS = [
+    "/login",
+    "/forgot-password",
+    "/reset-password",
+    "/refresh",
+];
+
+function isSensitiveKey(key: string): boolean {
+    return SENSITIVE_FIELD_NAMES.has(key.toLowerCase());
+}
+
+export function sanitizeLoggedValue(value: unknown, keyHint?: string): unknown {
+    if (keyHint && isSensitiveKey(keyHint)) {
+        return REDACTED_VALUE;
+    }
+
+    if (Array.isArray(value)) {
+        return value.map((item) => sanitizeLoggedValue(item));
+    }
+
+    if (value && typeof value === "object") {
+        if (value instanceof FormData) {
+            return "[FormData omitted]";
+        }
+
+        return Object.fromEntries(
+            Object.entries(value).map(([key, nestedValue]) => [
+                key,
+                sanitizeLoggedValue(nestedValue, key),
+            ])
+        );
+    }
+
+    return value;
+}
+
+export function sanitizeLoggedHeaders(headers: Record<string, string>): Record<string, string> {
+    return Object.fromEntries(
+        Object.entries(headers).map(([key, value]) => [
+            key,
+            isSensitiveKey(key) ? REDACTED_VALUE : value,
+        ])
+    );
+}
+
+function extractStringHeaders(headers: unknown): Record<string, string> {
+    if (!headers || typeof headers !== "object") {
+        return {};
+    }
+
+    return Object.fromEntries(
+        Object.entries(headers).filter(([, value]) => typeof value === "string")
+    ) as Record<string, string>;
+}
+
+function shouldBypass401Handling(url?: string): boolean {
+    if (!url) return false;
+    return AUTH_401_BYPASS_PATHS.some((path) => url.endsWith(path));
+}
+
 /**
  * Creates an Axios instance with:
  *   • Content-Type: application/json
@@ -50,7 +129,12 @@ export function createAuthenticatedClient(baseURL: string): AxiosInstance {
         async (error) => {
             const originalRequest = error.config;
 
-            if (error.response?.status === 401 && !originalRequest._retry) {
+            if (
+                error.response?.status === 401 &&
+                originalRequest &&
+                !originalRequest._retry &&
+                !shouldBypass401Handling(originalRequest.url)
+            ) {
                 originalRequest._retry = true;
 
                 try {
@@ -98,24 +182,12 @@ export function createAuthenticatedClient(baseURL: string): AxiosInstance {
                 timestamp: new Date().toISOString(),
                 method: (config.method ?? "GET").toUpperCase(),
                 url: fullUrl,
-                requestHeaders: config.headers
-                    ? Object.fromEntries(
-                        Object.entries(config.headers).filter(
-                            ([, v]) => typeof v === "string"
-                        )
-                    )
-                    : {},
-                requestBody: config.data ?? null,
-                requestParams: config.params ?? {},
+                requestHeaders: sanitizeLoggedHeaders(extractStringHeaders(config.headers)),
+                requestBody: sanitizeLoggedValue(config.data ?? null),
+                requestParams: sanitizeLoggedValue(config.params ?? {}) as Record<string, string>,
                 status: response.status,
-                responseData: response.data,
-                responseHeaders: response.headers
-                    ? Object.fromEntries(
-                        Object.entries(response.headers).filter(
-                            ([, v]) => typeof v === "string"
-                        )
-                    )
-                    : {},
+                responseData: sanitizeLoggedValue(response.data),
+                responseHeaders: sanitizeLoggedHeaders(extractStringHeaders(response.headers)),
                 duration,
                 error: null,
                 errorStack: null,
@@ -138,24 +210,14 @@ export function createAuthenticatedClient(baseURL: string): AxiosInstance {
                 timestamp: new Date().toISOString(),
                 method: (config.method ?? "GET").toUpperCase(),
                 url: fullUrl,
-                requestHeaders: config.headers
-                    ? Object.fromEntries(
-                        Object.entries(config.headers).filter(
-                            ([, v]) => typeof v === "string"
-                        )
-                    )
-                    : {},
-                requestBody: config.data ?? null,
-                requestParams: config.params ?? {},
+                requestHeaders: sanitizeLoggedHeaders(extractStringHeaders(config.headers)),
+                requestBody: sanitizeLoggedValue(config.data ?? null),
+                requestParams: sanitizeLoggedValue(config.params ?? {}) as Record<string, string>,
                 status: error.response?.status ?? null,
-                responseData: error.response?.data ?? null,
-                responseHeaders: error.response?.headers
-                    ? (Object.fromEntries(
-                        Object.entries(error.response.headers).filter(
-                            ([, v]) => typeof v === "string"
-                        )
-                    ) as Record<string, string>)
-                    : {},
+                responseData: sanitizeLoggedValue(error.response?.data ?? null),
+                responseHeaders: sanitizeLoggedHeaders(
+                    extractStringHeaders(error.response?.headers)
+                ),
                 duration,
                 error: error.message ?? "Unknown error",
                 errorStack: error.stack ?? null,

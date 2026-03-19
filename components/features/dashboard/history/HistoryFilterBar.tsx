@@ -1,8 +1,8 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { periodOptions, typeOptions } from "./constants";
-import type { PeriodFilter, TypeFilter } from "@/types/history-types";
+import { periodOptions } from "./constants";
+import type { HistoryTypeOption, PeriodFilter, TypeFilter } from "@/types/history-types";
 
 import {
     FILTER_BTN_BASE,
@@ -19,6 +19,7 @@ interface HistoryFilterBarProps {
     setSelectedPeriod: (v: PeriodFilter) => void;
     selectedType: TypeFilter;
     setSelectedType: (v: TypeFilter) => void;
+    typeOptions: HistoryTypeOption[];
     clearFilters: () => void;
     filteredCount: number;
     loading: boolean;
@@ -33,6 +34,7 @@ export default function HistoryFilterBar({
     setSelectedPeriod,
     selectedType,
     setSelectedType,
+    typeOptions,
     clearFilters,
     periodDropdownOpen,
     setPeriodDropdownOpen,
@@ -41,6 +43,11 @@ export default function HistoryFilterBar({
 }: HistoryFilterBarProps) {
     const hasActiveFilter =
         selectedPeriod !== "All History" || selectedType !== "All";
+    const disableTypeFilter = selectedPeriod === "Points History";
+    const selectedTypeLabel =
+        selectedType === "All"
+            ? "Transaction Type"
+            : typeOptions.find((option) => option.value === selectedType)?.label ?? selectedType;
 
     return (
         <div className="space-y-6">
@@ -87,49 +94,61 @@ export default function HistoryFilterBar({
                     )}
                 </div>
 
-                {/* Transaction Type Dropdown */}
-                {selectedPeriod !== "Points History" && (
-                    <div
-                        className="relative"
-                        onClick={(e) => e.stopPropagation()}
+                <div
+                    className={`relative ${disableTypeFilter ? "opacity-50" : ""}`}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (disableTypeFilter) return;
+                            setTypeDropdownOpen(!typeDropdownOpen);
+                            setPeriodDropdownOpen(false);
+                        }}
+                        disabled={disableTypeFilter}
+                        className={`${FILTER_BTN_BASE} ${selectedType !== "All" ? FILTER_BTN_ACTIVE : ""
+                            }`}
                     >
-                        <button
-                            onClick={() => {
-                                setTypeDropdownOpen(!typeDropdownOpen);
-                                setPeriodDropdownOpen(false);
-                            }}
-                            className={`${FILTER_BTN_BASE} ${selectedType !== "All" ? FILTER_BTN_ACTIVE : ""
-                                }`}
-                        >
-                            <span className="truncate max-w-[120px] sm:max-w-none">
-                                {selectedType === "All" ? "Transaction Type" : selectedType}
-                            </span>
-                            <ChevronDown
-                                className={`w-4 h-4 shrink-0 transition-transform duration-200 ${typeDropdownOpen ? "rotate-180" : ""}`}
-                            />
-                        </button>
+                        <span className="truncate max-w-[120px] sm:max-w-none">
+                            {selectedTypeLabel}
+                        </span>
+                        <ChevronDown
+                            className={`w-4 h-4 shrink-0 transition-transform duration-200 ${typeDropdownOpen ? "rotate-180" : ""}`}
+                        />
+                    </button>
 
-                        {typeDropdownOpen && (
-                            <div className={DROPDOWN_MENU}>
-                                {typeOptions.map((option) => (
-                                    <button
-                                        key={option}
-                                        onClick={() => {
-                                            setSelectedType(option);
-                                            setTypeDropdownOpen(false);
-                                        }}
-                                        className={`${DROPDOWN_ITEM} ${selectedType === option
-                                            ? DROPDOWN_ITEM_ACTIVE
-                                            : DROPDOWN_ITEM_INACTIVE
-                                            }`}
-                                    >
-                                        {option}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
+                    {typeDropdownOpen && (
+                        <div className={DROPDOWN_MENU}>
+                            <button
+                                onClick={() => {
+                                    setSelectedType("All");
+                                    setTypeDropdownOpen(false);
+                                }}
+                                className={`${DROPDOWN_ITEM} ${selectedType === "All"
+                                    ? DROPDOWN_ITEM_ACTIVE
+                                    : DROPDOWN_ITEM_INACTIVE
+                                    }`}
+                            >
+                                All
+                            </button>
+                            {typeOptions.map((option) => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => {
+                                        setSelectedType(option.value);
+                                        setTypeDropdownOpen(false);
+                                    }}
+                                    className={`${DROPDOWN_ITEM} ${selectedType === option.value
+                                        ? DROPDOWN_ITEM_ACTIVE
+                                        : DROPDOWN_ITEM_INACTIVE
+                                        }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
                 {/* Clear filters button */}
                 {hasActiveFilter && (

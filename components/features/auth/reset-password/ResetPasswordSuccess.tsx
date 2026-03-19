@@ -12,7 +12,7 @@ export default function ResetPasswordSuccess() {
         {/* Logo */}
         <div className="mb-6">
           <Image
-            src="/images/Logo.png"
+            src="logo.svg"
             alt="HDFC Bank Logo"
             width={240}
             height={80}

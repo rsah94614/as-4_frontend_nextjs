@@ -33,105 +33,15 @@ import type {
     WeeklyDigestData,
 } from "@/types/notification-types";
 import { Skeleton } from "@/components/ui/skeleton";
-// FIX: import from the single ADMIN_ROLES / SUPER_DEV_ROLES constants so
-// page-level role checks stay consistent with role-utils.ts definitions.
-import { getRolesFromToken, ADMIN_ROLES } from "@/lib/role-utils";
-
-type UserRole = "SUPER_ADMIN" | "HR_ADMIN" | "MANAGER" | "EMPLOYEE";
-
-const CAN_POST_ANNOUNCEMENT: UserRole[] = ["SUPER_ADMIN", "HR_ADMIN"];
-const CAN_GET_DIGEST:        UserRole[] = ["SUPER_ADMIN", "HR_ADMIN", "MANAGER"];
-const CAN_POST_DIGEST:       UserRole[] = ["SUPER_ADMIN", "HR_ADMIN"];
-
-// ─── Brand colours ────────────────────────────────────────────────────────────
-
-const BRAND = {
-    red:       "#E31837",
-    navy:      "#004C8F",
-    navyLight: "#EEF4FB",
-} as const;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatRelativeTime(iso: string): string {
-    const date     = new Date(iso);
-    const diffMs   = Date.now() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60_000);
-    if (diffMins < 1)   return "just now";
-    if (diffMins < 60)  return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    const diffDays  = Math.floor(diffHours / 24);
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7)   return `${diffDays}d ago`;
-    return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-}
-
-function formatWeekLabel(iso: string): string {
-    return new Date(iso).toLocaleDateString("en-GB", {
-        day: "numeric", month: "short", year: "numeric",
-    });
-}
-
-/**
- * <input type="date"> produces "YYYY-MM-DD".
- * FastAPI's `datetime` parser requires a full ISO-8601 string with time.
- * Pass-through if a time component is already present.
- */
-function toIsoDatetime(dateStr: string): string {
-    if (!dateStr) return dateStr;
-    if (dateStr.includes("T")) return dateStr;
-    return `${dateStr}T00:00:00Z`;
-}
-
-
-
-const TYPE_META: Record<
-    NotificationType,
-    { label: string; dot: string; textColor: string; bgColor: string }
-> = {
-    REVIEW:       { label: "Review",       dot: BRAND.navy, textColor: "#004C8F", bgColor: "#EEF4FB" },
-    REWARD:       { label: "Reward",       dot: BRAND.red,  textColor: "#B91C1C", bgColor: "#FEF2F2" },
-    SYSTEM:       { label: "System",       dot: "#6B7280",  textColor: "#374151", bgColor: "#F3F4F6" },
-    CELEBRATION:  { label: "Celebration",  dot: BRAND.red,  textColor: "#9D174D", bgColor: "#FDF2F8" },
-    ANNOUNCEMENT: { label: "Announcement", dot: BRAND.navy, textColor: "#004C8F", bgColor: "#EEF4FB" },
-};
-
-// ─── API helpers ──────────────────────────────────────────────────────────────
+// Department / Employee lookup helpers
 //
-// ALL requests go through the Next.js proxy at /api/proxy/[...path]/route.ts.
-// The proxy strips the first path segment, resolves it in SERVICE_MAP, and
-// forwards the rest (plus query params + Authorization header) to the upstream.
-//
-// Route resolution:
-//   Notifications  → /api/proxy/employees/notifications/...
-//                    EMPLOYEE_API_URL/v1/employees/notifications/...
-//   Digest         → /api/proxy/recognition/digest/...
-//                    RECOGNITION_API_URL/v1/recognitions/digest/...
-//
-// IMPORTANT: Every fetch() must include getAuthHeaders() so the proxy can
-// forward the Bearer token. axiosClient does this automatically via its
-// interceptor; raw fetch() calls must do it explicitly.
+// These calls use the direct org/employees clients and are only made when the
+// user opens the targeting section, not on page load.
 
-/** POST /notifications/announcements */
-async function postAnnouncement(payload: AnnouncementRequest): Promise<AnnouncementResponse> {
-    const res = await employeeClient.post<AnnouncementResponse>(
-        "/notifications/announcements", 
-        payload
-    );
-    return res.data;
-}
-
-// ─── Department / Employee lookup helpers ─────────────────────────────────────
+// Department / Employee lookup helpers
 //
-// These endpoints are best-guesses based on the proxy SERVICE_MAP pattern.
-// If yours differ, update the URL strings below:
-//   Departments → /api/proxy/org/departments
-//   Employees   → /api/proxy/employees/list
-//
-// Both return their lists and are only called when the user opens the
-// targeting section — not on page load.
-
+// These calls use the direct org/employees clients and are only made when the
+// user opens the targeting section, not on page load.
 // department_name matches the actual API field (Prisma schema + department-service.ts).
 // Response shape: DepartmentListResponse { departments: [], total, page, limit }
 interface Department { department_id: string; department_name: string; }
@@ -1171,3 +1081,4 @@ export default function NotificationsPage() {
         </div>
     );
 }
+

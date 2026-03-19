@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * Wallet page — live API calls via Next.js proxy.
+ * Wallet page � live API calls via the direct wallet microservice client.
  *
- * Endpoints (via /api/proxy/wallet → http://localhost:8004/v1/wallets):
- *   GET /employees/{employee_id}        → WalletResponse
- *   GET /{wallet_id}/points-summary     → PointsSummary
- *   GET /transactions?wallet_id=...     → TransactionListResponse
+ * Endpoints:
+ *   GET /employees/{employee_id}        ? WalletResponse
+ *   GET /{wallet_id}/points-summary     ? PointsSummary
+ *   GET /transactions?wallet_id=...     ? TransactionListResponse
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -126,7 +126,7 @@ interface TransactionListResponse {
   transactions: Transaction[];
 }
 
-// ─── Fetchers — all go through /api/proxy/wallet ─────────────────────────────
+// Fetchers � all use the direct wallet client
 
 async function fetchWallet(employeeId: string): Promise<WalletData> {
   try {
@@ -645,3 +645,4 @@ export default function Wallet() {
     </div>
   );
 }
+

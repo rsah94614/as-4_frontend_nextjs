@@ -1,6 +1,13 @@
 export interface RewardCatalog {
     reward_name: string;
     reward_code: string;
+    category_name?: string;
+    category_code?: string;
+}
+
+export interface HistoryTypeOption {
+    value: string;
+    label: string;
 }
 
 export interface GrantedByEmployee {
@@ -25,4 +32,4 @@ export interface PaginatedHistoryResponse {
 }
 
 export type PeriodFilter = "All History" | "Redeem History" | "Points History";
-export type TypeFilter = "All" | "Gift Cards" | "Merchandise" | "Experiences" | "Wellness";
+export type TypeFilter = "All" | string;

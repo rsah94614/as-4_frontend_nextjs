@@ -1,7 +1,6 @@
 // services/designation-service.ts
 //
-// All requests routed through Next.js proxy (/api/proxy/org/*)
-// — no direct microservice URL exposed to the browser.
+// Uses the direct organization microservice client from services/api-clients.ts.
 
 import { extractErrorMessage } from "@/lib/error-utils";
 import { orgClient } from "@/services/api-clients";
@@ -21,7 +20,7 @@ import {
 
 export const designationService = {
     /**
-     * GET /api/proxy/org/designations
+     * GET /designations
      */
     async list(params?: {
         page?: number;
@@ -43,7 +42,7 @@ export const designationService = {
     },
 
     /**
-     * GET /api/proxy/org/designations/:id
+     * GET /designations/:id
      */
     async getById(designationId: string): Promise<DesignationDetail> {
         try {
@@ -57,7 +56,7 @@ export const designationService = {
     },
 
     /**
-     * POST /api/proxy/org/designations
+     * POST /designations
      */
     async create(payload: CreateDesignationPayload): Promise<Designation> {
         try {
@@ -69,7 +68,7 @@ export const designationService = {
     },
 
     /**
-     * PUT /api/proxy/org/designations/:id
+     * PUT /designations/:id
      */
     async update(
         designationId: string,

@@ -9,6 +9,14 @@ import { useAuth } from '@/providers/AuthProvider'
 
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+  EMAIL_LENGTH_ERROR,
+  MAX_EMAIL_LENGTH,
+  MAX_PASSWORD_LENGTH,
+  PASSWORD_LENGTH_ERROR,
+  trimToMaxLength,
+  validateAuthEmail,
+} from '@/lib/auth-validation'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -23,34 +31,9 @@ export default function LoginPage() {
   // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.push('/dashboard')
+      router.replace('/dashboard')
     }
   }, [authLoading, isAuthenticated, router])
-
-  // Email validation function
-  const validateEmail = (email: string): string | null => {
-    if (!email) {
-      return 'Email address is required'
-    }
-
-    // Reject nonsense like just "@" or "a@b"
-    const strictSyntax = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!strictSyntax.test(email)) {
-      return 'Please enter a valid email address'
-    }
-
-    return null
-  }
-
-  // Password validation function
-  const validatePassword = (password: string) => {
-    if (!password) return 'Password is required'
-    if (password.length < 8) return 'At least 8 characters required'
-    if (!/[A-Z]/.test(password)) return 'Must include uppercase letter'
-    if (!/[a-z]/.test(password)) return 'Must include lowercase letter'
-    if (!/[0-9]/.test(password)) return 'Must include a number'
-    return null
-  }
 
   // Handle field blur to mark as touched
   const handleBlur = (field: 'email' | 'password') => {
@@ -59,22 +42,42 @@ export default function LoginPage() {
 
   // Handle email change
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
+    const rawValue = e.target.value
+    const value = trimToMaxLength(rawValue, MAX_EMAIL_LENGTH)
+    const exceededLimit = rawValue.length > MAX_EMAIL_LENGTH
     setEmail(value)
-    if (touched.email) {
-      const error = validateEmail(value)
-      setErrors(prev => ({ ...prev, email: error || undefined, general: undefined }))
+    if (exceededLimit) {
+      setTouched(prev => ({ ...prev, email: true }))
     }
+    const error = exceededLimit
+      ? EMAIL_LENGTH_ERROR
+      : touched.email
+        ? validateAuthEmail(value)
+        : undefined
+
+    setErrors(prev => ({ ...prev, email: error || undefined, general: undefined }))
   }
 
   // Handle password change
+  const validateLoginPassword = (password: string): string | null => {
+    if (!password) return 'Password is required'
+    if (password.length > MAX_PASSWORD_LENGTH) {
+      return PASSWORD_LENGTH_ERROR
+    }
+    return null
+  }
+
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setPassword(value)
-    if (touched.password) {
-      const error = validatePassword(value)
-      setErrors(prev => ({ ...prev, password: error || undefined, general: undefined }))
+    if (value.length > MAX_PASSWORD_LENGTH) {
+      setTouched(prev => ({ ...prev, password: true }))
     }
+    const error = touched.password
+        ? validateLoginPassword(value)
+        : undefined
+
+    setErrors(prev => ({ ...prev, password: error || undefined, general: undefined }))
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -84,8 +87,8 @@ export default function LoginPage() {
     setTouched({ email: true, password: true })
 
     // Validate all fields
-    const emailError = validateEmail(email)
-    const passwordError = validatePassword(password)
+    const emailError = validateAuthEmail(email)
+    const passwordError = validateLoginPassword(password)
 
     if (emailError || passwordError) {
       setErrors({
@@ -129,7 +132,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex justify-center bg-[#f5f7fb]">
-      <div className="w-full max-w-[1920px] flex shadow-[0_0_40px_rgba(0,0,0,0.05)] bg-white relative">
+      <div className="w-full max-w-480 flex shadow-[0_0_40px_rgba(0,0,0,0.05)] bg-white relative">
 
         {/* Left Column - 55% */}
         <div className="hidden lg:flex flex-col items-center justify-center w-[55%] relative overflow-hidden bg-linear-to-br from-[#fdfdff] to-[#e4ebf5] p-12 lg:p-20">
@@ -169,7 +172,7 @@ export default function LoginPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 mt-12 relative">
                 {/* Feature 1 */}
                 <div className="flex items-start gap-4 group">
-                  <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300">
+                  <div className="shrink-0 p-3 bg-linear-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300">
                     <ThumbsUp className="w-7 h-7" />
                   </div>
                   <div className="pt-1">
@@ -179,7 +182,7 @@ export default function LoginPage() {
 
                 {/* Feature 2 */}
                 <div className="flex items-start gap-4 group">
-                  <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300 mt-8 sm:mt-0">
+                  <div className="shrink-0 p-3 bg-linear-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300 mt-8 sm:mt-0">
                     <Gift className="w-7 h-7" />
                   </div>
                   <div className="pt-1">
@@ -189,7 +192,7 @@ export default function LoginPage() {
 
                 {/* Feature 3 */}
                 <div className="flex items-start gap-4 group">
-                  <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300">
+                  <div className="shrink-0 p-3 bg-linear-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300">
                     <Award className="w-7 h-7" />
                   </div>
                   <div className="pt-1">
@@ -199,7 +202,7 @@ export default function LoginPage() {
 
                 {/* Feature 4 */}
                 <div className="flex items-start gap-4 group">
-                  <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300 mt-8 sm:mt-0">
+                  <div className="shrink-0 p-3 bg-linear-to-br from-[#1c2c5b] to-[#2d468e] rounded-full shadow-md text-white group-hover:scale-110 transition-transform duration-300 mt-8 sm:mt-0">
                     <LineChart className="w-7 h-7" />
                   </div>
                   <div className="pt-1">
