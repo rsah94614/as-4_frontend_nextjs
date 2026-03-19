@@ -200,7 +200,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                 ) : (
                     <div>
                         <div className="md:hidden divide-y divide-gray-100">
-                            {filtered.map((r, i) => (
+                            {filtered.map((r) => (
                                 <div key={r.employee_role_id} className="px-4 py-3.5 space-y-3">
                                     <div className="flex items-center min-w-0">
                                         <div className="min-w-0">
@@ -246,7 +246,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
 
                         {/* Rows */}
                         <div className="hidden md:block divide-y divide-gray-100">
-                            {filtered.map((r, i) => (
+                            {filtered.map((r) => (
                                 <div
                                     key={r.employee_role_id}
                                     className="grid px-4 sm:px-6 py-3.5 items-center hover:bg-gray-50 transition-colors"

@@ -198,9 +198,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                                         )}
                                     </div>
 
-                                    {/* HDFC red underline */}
-                                    <div className="h-0.5 shrink-0" style={{ background: '#E31837' }} />
-
                                     {/* List */}
                                     <div className="max-h-80 overflow-y-auto divide-y" style={{ borderColor: '#f0f4f8' }}>
                                         {previewItems.length === 0 ? (

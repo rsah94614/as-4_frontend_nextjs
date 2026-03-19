@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Plus, Search, ChevronDown, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Category, RewardItem, Pagination } from "@/types/reward-types";
