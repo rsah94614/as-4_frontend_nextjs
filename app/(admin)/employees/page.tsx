@@ -842,6 +842,7 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
     } | null>(null);
     const [statusTarget, setStatusTarget] = useState<Employee | null>(null);
     const [statusSubmitting, setStatusSubmitting] = useState(false);
+    const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
 
     // Search only fires after 3+ characters (or empty to reset)
     useEffect(() => {
@@ -896,8 +897,26 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
         } finally { setLoading(false); }
     }, [page, debouncedSearch, filterDept, filterStatus, toast]);
 
+    const loadAllEmployees = useCallback(async () => {
+        try {
+            let all: Employee[] = [];
+            let pg = 1;
+            let hasMore = true;
+            while (hasMore) {
+                const res = await empClient.get<{ data: Employee[]; pagination: PaginationMeta }>(
+                    "/list", { params: { page: pg, limit: 100 } }
+                );
+                all = all.concat(res.data.data);
+                hasMore = res.data.pagination.has_next;
+                pg++;
+            }
+            setAllEmployees(all);
+        } catch (err) { console.error("[loadAllEmployees]", err); }
+    }, []);
+
     useEffect(() => { loadMeta(); }, [loadMeta]);
     useEffect(() => { load(); }, [load]);
+    useEffect(() => { loadAllEmployees(); }, [loadAllEmployees]);
 
     const getStatusByCode = useCallback(
         (code: "ACTIVE" | "INACTIVE") =>
@@ -1202,11 +1221,11 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 </div>
             </div>
 
-            <CreateEmployeeDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={load}
-                toast={toast} designations={designations} departments={departments} employees={employees} />
+            <CreateEmployeeDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={() => { load(); loadAllEmployees(); }}
+                toast={toast} designations={designations} departments={departments} employees={allEmployees} />
             <EmployeeDetailDialog employee={selected} open={detailOpen} onClose={closeDetails}
-                onUpdated={load} toast={toast} designations={designations} departments={departments}
-                statuses={statuses} employees={employees} startInEdit={startEditMode} />
+                onUpdated={() => { load(); loadAllEmployees(); }} toast={toast} designations={designations} departments={departments}
+                statuses={statuses} employees={allEmployees} startInEdit={startEditMode} />
             {actionMenu && (() => {
                 const MENU_WIDTH = 160;
                 const MENU_HEIGHT = 112;
