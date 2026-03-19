@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import {
     Search, RefreshCw, X,
-    Loader2, MessageSquare, Zap, Calendar, AlertCircle,
+    Loader2, MessageSquare, Calendar, AlertCircle,
 } from "lucide-react";
 import { useAdminReviews } from "@/hooks/useAdminReviews";
 import { TeamSection } from "@/components/features/admin/reviews/TeamSection";
@@ -84,8 +84,8 @@ export default function AdminReviewsPage() {
                             {/* Points card */}
                             <div className="bg-white border border-border rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow overflow-hidden relative">
                                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
-                                    <span className="w-5 h-5 rounded-lg bg-amber-50 flex items-center justify-center">
-                                        <Zap className="w-3 h-3 text-amber-400" />
+                                    <span className="w-5 h-5 rounded-lg bg-muted flex items-center justify-center">
+                                        <MessageSquare className="w-3 h-3 text-muted-foreground" />
                                     </span>
                                     Total Points Awarded
                                 </p>

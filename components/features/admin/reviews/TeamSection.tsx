@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { MessageSquare, Zap, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import { Review, Employee } from "@/types/admin-review-types";
 import { MemberSection } from "./MemberSection";
 
@@ -44,8 +44,7 @@ export function TeamSection({ manager, members, reviews, employees, expanded, on
                         <p className="text-sm font-bold group-hover:text-[#004C8F] transition-colors" style={{ color: "#004C8F" }}>
                             {manager.username}
                         </p>
-                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded text-white"
-                            style={{ background: "#E31837" }}>
+                        <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded text-[#004C8F] bg-[#EEF4FB]">
                             Manager
                         </span>
                     </div>
@@ -63,8 +62,7 @@ export function TeamSection({ manager, members, reviews, employees, expanded, on
                         {totalCount}
                     </span>
                     {totalPoints > 0 && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800">
-                            <Zap className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 border border-emerald-200 text-emerald-700">
                             {totalPoints.toFixed(2)} pts
                         </span>
                     )}
