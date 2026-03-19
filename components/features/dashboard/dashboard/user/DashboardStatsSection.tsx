@@ -1,5 +1,5 @@
 import { LayoutGrid, Users, Trophy, TrendingUp } from "lucide-react";
-import DashboardCard from "@/components/features/dashboard/user/DashboardCard";
+import DashboardCard from "@/components/features/dashboard/dashboard/user/DashboardCard";
 import { useEffect, useState } from "react";
 import { PlatformStatsResponse } from "@/types/dashboard-types";
 import { fetchDashboardPlatformStats } from "@/services/analytics-service";

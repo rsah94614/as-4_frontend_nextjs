@@ -19,27 +19,18 @@ import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast, ToastContainer } from "@/components/features/admin/roles/UIHelpers";
-import { createAuthenticatedClient } from "@/lib/api-utils";
-import { auth } from "@/services/auth-service";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { employeesClient as empClient, authClient, orgClient } from "@/services/api-clients";
 
-// ─── API clients ──────────────────────────────────────────────────────────────
-const empClient = createAuthenticatedClient("/api/proxy/employees");
+
 
 async function authBulkImport(file: File) {
-    const token = auth.getAccessToken();
     const form = new FormData();
     form.append("file", file);
-    const res = await fetch("/api/proxy/auth/bulk-import", {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: form,
+    const res = await authClient.post<BulkImportResponse>("/bulk-import", form, {
+        headers: { "Content-Type": "multipart/form-data" }
     });
-    if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(extractErrorMessage(errorData, `HTTP ${res.status}`));
-    }
-    return res.json() as Promise<BulkImportResponse>;
+    return res.data;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -133,16 +124,16 @@ function ConfirmDeactivateDialog({ open, username, onConfirm, onCancel, loading 
                         <AlertTriangle size={22} className="text-amber-500" />
                     </div>
                     <div>
-                        <DialogTitle className="text-[15px] font-bold text-gray-800 mb-1">Deactivate Employee?</DialogTitle>
-                        <DialogDescription className="text-[13px] text-gray-500 leading-relaxed">
-                            Are you sure you want to deactivate <span className="font-semibold text-gray-700">{username}</span>?
+                        <DialogTitle className="text-[15px] font-bold text-foreground mb-1">Deactivate Employee?</DialogTitle>
+                        <DialogDescription className="text-[13px] text-muted-foreground leading-relaxed">
+                            Are you sure you want to deactivate <span className="font-semibold text-foreground">{username}</span>?
                             Their history will be preserved.
                         </DialogDescription>
                     </div>
                 </div>
                 <div className="px-6 pb-5 flex items-center justify-center gap-3">
                     <Button variant="outline" onClick={onCancel} disabled={loading}
-                        className="border-gray-200 text-sm font-semibold px-5">
+                        className="border-border text-sm font-semibold px-5">
                         Cancel
                     </Button>
                     <button onClick={onConfirm} disabled={loading}
@@ -174,27 +165,27 @@ const HOW_IT_WORKS_BULK = [
 function HowItWorks({ steps }: { steps: typeof HOW_IT_WORKS_LIST }) {
     const [open, setOpen] = useState(false);
     return (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-4">
+        <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
             <button
                 type="button"
                 onClick={() => setOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-3 hover:bg-muted transition-colors"
             >
                 <div className="flex items-center gap-2">
-                    <Info size={13} className="text-[#E31837] shrink-0" />
-                    <span className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</span>
+                    <Info size={13} className="text-destructive shrink-0" />
+                    <span className="text-[11px] font-bold text-primary uppercase tracking-widest">How It Works</span>
                 </div>
-                <ChevronDown size={15} className={cn("text-gray-400 transition-transform duration-200 shrink-0", open && "rotate-180")} />
+                <ChevronDown size={15} className={cn("text-muted-foreground transition-transform duration-200 shrink-0", open && "rotate-180")} />
             </button>
             {open && (
                 <div className="border-t border-gray-100">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-gray-100 sm:divide-x">
                         {steps.map((s) => (
                             <div key={s.n} className="flex gap-3 px-5 py-4">
-                                <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
+                                <span className="text-[11px] font-black text-destructive w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
                                 <div>
-                                    <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
-                                    <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
+                                    <p className="text-xs font-semibold text-primary mb-0.5">{s.title}</p>
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed">{s.desc}</p>
                                 </div>
                             </div>
                         ))}
@@ -229,48 +220,48 @@ function SearchableSelect({ id, label, value, onChange, options, placeholder, re
 
     return (
         <div className="space-y-1.5" ref={ref}>
-            <Label htmlFor={id} className="text-[12px] font-bold text-gray-500 uppercase tracking-widest">
-                {label} {required && <span className="text-red-500">*</span>}
+            <Label htmlFor={id} className="text-[12px] font-bold text-muted-foreground uppercase tracking-widest">
+                {label} {required && <span className="text-destructive">*</span>}
             </Label>
             <div className="relative">
                 <button type="button" id={id}
                     onClick={() => { setOpen((o) => !o); setQuery(""); }}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white text-left flex items-center justify-between
-                        focus:outline-none focus:ring-2 focus:ring-[#003580]/10 focus:border-[#003580]/40 transition-all">
-                    <span className={selected ? "text-gray-800 font-medium" : "text-gray-400"}>
+                    className="w-full border border-border rounded-lg px-3 py-2.5 text-sm bg-white text-left flex items-center justify-between
+                        focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 transition-all">
+                    <span className={selected ? "text-foreground font-medium" : "text-muted-foreground"}>
                         {selected ? selected.label : placeholder}
                     </span>
-                    <ChevronDown size={14} className={cn("text-gray-400 transition-transform shrink-0", open && "rotate-180")} />
+                    <ChevronDown size={14} className={cn("text-muted-foreground transition-transform shrink-0", open && "rotate-180")} />
                 </button>
 
                 {open && (
-                    <div className="absolute z-[200] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                    <div className="absolute z-200 w-full mt-1 bg-white border border-border rounded-lg shadow-lg overflow-hidden">
                         <div className="p-2 border-b border-gray-100">
                             <div className="relative">
-                                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                 <input
                                     autoFocus
                                     placeholder="Search…"
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
-                                    className="w-full pl-7 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-[#003580]/40"
+                                    className="w-full pl-7 pr-3 py-1.5 text-sm border border-border rounded-md focus:outline-none focus:border-primary/40"
                                 />
                             </div>
                         </div>
                         <div className="max-h-44 overflow-y-auto">
                             <button type="button"
                                 onClick={() => { onChange(""); setOpen(false); }}
-                                className="w-full px-3 py-2 text-sm text-left text-gray-400 hover:bg-gray-50 transition-colors">
+                                className="w-full px-3 py-2 text-sm text-left text-muted-foreground hover:bg-muted transition-colors">
                                 {placeholder}
                             </button>
                             {filtered.length === 0 ? (
-                                <p className="px-3 py-2 text-sm text-gray-400">No results</p>
+                                <p className="px-3 py-2 text-sm text-muted-foreground">No results</p>
                             ) : filtered.map((o) => (
                                 <button type="button" key={o.value}
                                     onClick={() => { onChange(o.value); setOpen(false); setQuery(""); }}
                                     className={cn(
-                                        "w-full px-3 py-2 text-sm text-left hover:bg-gray-50 transition-colors",
-                                        o.value === value ? "font-semibold text-[#003580] bg-blue-50/50" : "text-gray-700"
+                                        "w-full px-3 py-2 text-sm text-left hover:bg-muted transition-colors",
+                                        o.value === value ? "font-semibold text-primary bg-blue-50/50" : "text-foreground"
                                     )}>
                                     {o.label}
                                 </button>
@@ -292,17 +283,17 @@ function SelectField({ id, label, value, onChange, options, placeholder, require
 }) {
     return (
         <div className="space-y-1.5">
-            <Label htmlFor={id} className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
-                {label} {required && <span className="text-red-500">*</span>}
+            <Label htmlFor={id} className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                {label} {required && <span className="text-destructive">*</span>}
             </Label>
             <div className="relative">
                 <select id={id} value={value} onChange={onChange}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white appearance-none pr-9
-                        focus:outline-none focus:ring-2 focus:ring-[#003580]/10 focus:border-[#003580]/40 font-medium transition-all text-gray-700">
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white appearance-none pr-9
+                        focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 font-medium transition-all text-foreground">
                     <option value="">{placeholder}</option>
                     {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             </div>
         </div>
     );
@@ -346,27 +337,14 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
         }
         try {
             setSub(true);
-            const token = auth.getAccessToken();
-            await fetch("/api/proxy/auth/signup", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-                body: JSON.stringify({
-                    username: form.username,
-                    email: form.email,
-                    password: form.password,
-                    designation_id: form.designation_id,
-                    department_id: form.department_id,
-                    manager_id: form.manager_id || undefined,
-                    date_of_birth: form.date_of_birth || undefined,
-                }),
-            }).then(async (res) => {
-                if (!res.ok) {
-                    const errorData = await res.json().catch(() => ({}));
-                    throw new Error(extractErrorMessage(errorData, `HTTP ${res.status}`));
-                }
+            await authClient.post("/signup", {
+                username: form.username,
+                email: form.email,
+                password: form.password,
+                designation_id: form.designation_id,
+                department_id: form.department_id,
+                manager_id: form.manager_id || undefined,
+                date_of_birth: form.date_of_birth || undefined,
             });
             toast("Employee created successfully");
             onClose();
@@ -379,44 +357,44 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
         }
     };
 
-    const fieldLabel = "text-[11px] font-bold text-gray-500 uppercase tracking-widest";
+    const fieldLabel = "text-[11px] font-bold text-muted-foreground uppercase tracking-widest";
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="w-full max-w-[95vw] sm:max-w-lg p-0 rounded-xl border-0 [&>button]:hidden">
-                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div className="px-6 py-4 border-b border-border flex items-center justify-between">
                     <div>
-                        <DialogTitle className="text-[15px] font-bold text-[#003580]">Create New Employee</DialogTitle>
-                        <DialogDescription className="text-[12px] text-gray-400 mt-0.5">Add a new employee to the platform</DialogDescription>
+                        <DialogTitle className="text-[15px] font-bold text-primary">Create New Employee</DialogTitle>
+                        <DialogDescription className="text-[12px] text-muted-foreground mt-0.5">Add a new employee to the platform</DialogDescription>
                     </div>
-                    <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors">
-                        <X size={14} className="text-gray-500" />
+                    <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-muted transition-colors">
+                        <X size={14} className="text-muted-foreground" />
                     </button>
                 </div>
 
                 <div className="p-6 space-y-4 bg-white max-h-[70vh] overflow-y-auto overflow-x-visible">
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <Label htmlFor="username" className={fieldLabel}>Username <span className="text-red-500">*</span></Label>
+                            <Label htmlFor="username" className={fieldLabel}>Username <span className="text-destructive">*</span></Label>
                             <Input id="username" placeholder="john.doe" value={form.username} onChange={set("username")}
-                                className="border-gray-200 text-sm focus-visible:ring-0 focus-visible:border-[#003580]" />
+                                className="border-border text-sm focus-visible:ring-0 focus-visible:border-primary" />
                         </div>
                         <div className="space-y-1.5">
-                            <Label htmlFor="email" className={fieldLabel}>Email <span className="text-red-500">*</span></Label>
+                            <Label htmlFor="email" className={fieldLabel}>Email <span className="text-destructive">*</span></Label>
                             <Input id="email" type="email" placeholder="john@company.com" value={form.email} onChange={set("email")}
-                                className="border-gray-200 text-sm focus-visible:ring-0 focus-visible:border-[#003580]" />
+                                className="border-border text-sm focus-visible:ring-0 focus-visible:border-primary" />
                         </div>
                     </div>
 
                     <div className="space-y-1.5">
-                        <Label htmlFor="password" className={fieldLabel}>Password <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="password" className={fieldLabel}>Password <span className="text-destructive">*</span></Label>
                         <div className="relative">
                             <Input id="password" type={showPwd ? "text" : "password"}
                                 placeholder="Min 8 chars, upper, lower, number, special"
                                 value={form.password} onChange={set("password")}
-                                className="border-gray-200 text-sm focus-visible:ring-0 focus-visible:border-[#003580] pr-10" />
+                                className="border-border text-sm focus-visible:ring-0 focus-visible:border-primary pr-10" />
                             <button type="button" onClick={() => setShowPwd((v) => !v)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                                 {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
                             </button>
                         </div>
@@ -437,22 +415,22 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <Label htmlFor="doj" className={fieldLabel}>Date of Joining <span className="text-red-500">*</span></Label>
+                            <Label htmlFor="doj" className={fieldLabel}>Date of Joining <span className="text-destructive">*</span></Label>
                             <Input id="doj" type="date" value={form.date_of_joining} onChange={set("date_of_joining")}
                                 max={todayStr()}
-                                className="border-gray-200 text-sm focus-visible:ring-0 focus-visible:border-[#003580]" />
+                                className="border-border text-sm focus-visible:ring-0 focus-visible:border-primary" />
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="dob" className={fieldLabel}>Date of Birth</Label>
                             <Input id="dob" type="date" value={form.date_of_birth} onChange={set("date_of_birth")}
                                 max={maxDobStr()}
-                                className="border-gray-200 text-sm focus-visible:ring-0 focus-visible:border-[#003580]" />
+                                className="border-border text-sm focus-visible:ring-0 focus-visible:border-primary" />
                         </div>
                     </div>
                 </div>
 
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-2">
-                    <Button variant="outline" onClick={onClose} disabled={submitting} className="border-gray-200 text-xs font-semibold">Cancel</Button>
+                <div className="px-6 py-4 bg-muted border-t border-gray-100 flex items-center justify-end gap-2">
+                    <Button variant="outline" onClick={onClose} disabled={submitting} className="border-border text-xs font-semibold">Cancel</Button>
                     <button onClick={handleCreate} disabled={submitting || !isFormValid}
                         className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                         style={{ background: "#003580" }}>
@@ -531,12 +509,12 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
         } finally { setDeact(false); }
     };
 
-    const fieldLabel = "text-[11px] font-bold text-gray-500 uppercase tracking-widest";
+    const fieldLabel = "text-[11px] font-bold text-muted-foreground uppercase tracking-widest";
 
     const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
         <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{label}</p>
-            <p className="text-sm font-medium text-gray-800 break-words">{value || "—"}</p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{label}</p>
+            <p className="text-sm font-medium text-foreground wrap-words">{value || "—"}</p>
         </div>
     );
 
@@ -545,25 +523,25 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
     return (
         <>
             <Dialog open={open} onOpenChange={onClose}>
-                <DialogContent className="w-full max-w-[95vw] sm:max-w-lg p-0 rounded-xl border border-gray-200 [&>button]:hidden">
+                <DialogContent className="w-full max-w-[95vw] sm:max-w-lg p-0 rounded-xl border border-border [&>button]:hidden">
                     <VisuallyHidden.Root><DialogTitle>Employee Details</DialogTitle></VisuallyHidden.Root>
 
                     {/* Header */}
-                    <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-white">
+                    <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-white">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shrink-0"
                                 style={{ background: AVATAR_COLORS[colorIdx] }}>
                                 {initials(employee.username)}
                             </div>
                             <div>
-                                <p className="text-[15px] font-bold text-[#003580]">{employee.username}</p>
-                                <p className="text-[12px] text-gray-400">{employee.email}</p>
+                                <p className="text-[15px] font-bold text-primary">{employee.username}</p>
+                                <p className="text-[12px] text-muted-foreground">{employee.email}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                             <StatusBadge isActive={employee.is_active} />
-                            <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors">
-                                <X size={14} className="text-gray-500" />
+                            <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-muted transition-colors">
+                                <X size={14} className="text-muted-foreground" />
                             </button>
                         </div>
                     </div>
@@ -584,12 +562,12 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                                     <div className="space-y-1">
                                         <Label htmlFor="e_un" className={fieldLabel}>Username</Label>
                                         <Input id="e_un" value={form.username} onChange={set("username")}
-                                            className="border-gray-200 text-sm focus-visible:ring-0 focus-visible:border-[#003580]" />
+                                            className="border-border text-sm focus-visible:ring-0 focus-visible:border-primary" />
                                     </div>
                                     <div className="space-y-1">
                                         <Label htmlFor="e_em" className={fieldLabel}>Email</Label>
                                         <Input id="e_em" type="email" value={form.email} onChange={set("email")}
-                                            className="border-gray-200 text-sm focus-visible:ring-0 focus-visible:border-[#003580]" />
+                                            className="border-border text-sm focus-visible:ring-0 focus-visible:border-primary" />
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
@@ -611,18 +589,18 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                                         <Label htmlFor="e_dob" className={fieldLabel}>Date of Birth</Label>
                                         <Input id="e_dob" type="date" value={form.date_of_birth} onChange={set("date_of_birth")}
                                             max={maxDobStr()}
-                                            className="border-gray-200 text-sm focus-visible:ring-0 focus-visible:border-[#003580]" />
+                                            className="border-border text-sm focus-visible:ring-0 focus-visible:border-primary" />
                                     </div>
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
+                    <div className="px-6 py-4 bg-muted border-t border-gray-100 flex items-center justify-between gap-3">
                         <div>
                             {!editing && employee.is_active && (
                                 <button onClick={() => setConfirmDeactivate(true)}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-gray-500 border border-gray-200 hover:border-gray-300 hover:bg-white transition-all">
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-muted-foreground border border-border hover:border-border hover:bg-white transition-all">
                                     <XCircle size={13} />
                                     Deactivate
                                 </button>
@@ -631,7 +609,7 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                         <div className="flex items-center gap-2">
                             {editing ? (
                                 <>
-                                    <Button variant="outline" onClick={() => setEditing(false)} disabled={submitting} className="border-gray-200 text-xs font-semibold">Cancel</Button>
+                                    <Button variant="outline" onClick={() => setEditing(false)} disabled={submitting} className="border-border text-xs font-semibold">Cancel</Button>
                                     <button onClick={handleUpdate} disabled={submitting}
                                         className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
                                         style={{ background: "#003580" }}>
@@ -641,7 +619,7 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                                 </>
                             ) : (
                                 <>
-                                    <Button variant="outline" onClick={onClose} className="border-gray-200 text-xs font-semibold">Close</Button>
+                                    <Button variant="outline" onClick={onClose} className="border-border text-xs font-semibold">Close</Button>
                                     <button onClick={() => setEditing(true)}
                                         className="px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
                                         style={{ background: "#003580" }}>
@@ -717,14 +695,14 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
         <div className="w-full">
             <HowItWorks steps={HOW_IT_WORKS_BULK} />
 
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-4">
+            <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <FileSpreadsheet size={14} className="text-[#003580] shrink-0" />
-                        <h2 className="text-sm font-bold text-[#003580]">Bulk Import Employees</h2>
+                        <FileSpreadsheet size={14} className="text-primary shrink-0" />
+                        <h2 className="text-sm font-bold text-primary">Bulk Import Employees</h2>
                     </div>
                     <button onClick={downloadTemplate}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all">
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-foreground hover:bg-muted transition-all">
                         <Download size={12} /> Download Template
                     </button>
                 </div>
@@ -734,7 +712,7 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
                     <div
                         className={cn(
                             "border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer",
-                            file ? "border-[#003580] bg-blue-50/30" : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                            file ? "border-primary bg-blue-50/30" : "border-border hover:border-border hover:bg-muted"
                         )}
                         onClick={() => inputRef.current?.click()}
                         onDragOver={(e) => e.preventDefault()}
@@ -749,29 +727,29 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
                                     <FileSpreadsheet size={18} style={{ color: "#003580" }} />
                                 </div>
                                 <div className="text-left">
-                                    <p className="text-sm font-semibold text-[#003580] truncate max-w-xs">{file.name}</p>
-                                    <p className="text-[11px] text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
+                                    <p className="text-sm font-semibold text-primary truncate max-w-xs">{file.name}</p>
+                                    <p className="text-[11px] text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
                                 </div>
                                 <button type="button"
                                     onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); if (inputRef.current) inputRef.current.value = ""; }}
-                                    className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 transition-colors shrink-0">
-                                    <X size={12} className="text-gray-500" />
+                                    className="w-6 h-6 rounded-full flex items-center justify-center bg-muted hover:bg-secondary transition-colors shrink-0">
+                                    <X size={12} className="text-muted-foreground" />
                                 </button>
                             </div>
                         ) : (
                             <>
-                                <div className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3 bg-gray-100">
-                                    <Upload size={18} className="text-gray-400" />
+                                <div className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3 bg-muted">
+                                    <Upload size={18} className="text-muted-foreground" />
                                 </div>
-                                <p className="text-sm font-semibold text-gray-600 mb-1">Drop your CSV or XLSX here</p>
-                                <p className="text-[11px] text-gray-400">or click to browse</p>
+                                <p className="text-sm font-semibold text-foreground mb-1">Drop your CSV or XLSX here</p>
+                                <p className="text-[11px] text-muted-foreground">or click to browse</p>
                             </>
                         )}
                     </div>
                 </div>
 
-                <div className="px-5 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
-                    <p className="text-xs text-gray-500 truncate">
+                <div className="px-5 py-4 bg-muted border-t border-gray-100 flex items-center justify-between gap-3">
+                    <p className="text-xs text-muted-foreground truncate">
                         {file ? `Ready: ${file.name}` : "No file selected"}
                     </p>
                     <button onClick={handleUpload} disabled={!file || uploading}
@@ -784,11 +762,11 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
             </div>
 
             {result && (
-                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div className="bg-white border border-border rounded-xl overflow-hidden">
                     <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <p className="text-sm font-bold text-[#003580]">Import Results</p>
-                            <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full tabular-nums">
+                            <p className="text-sm font-bold text-primary">Import Results</p>
+                            <span className="text-[10px] font-bold bg-muted text-muted-foreground px-2 py-0.5 rounded-full tabular-nums">
                                 {result.total} rows
                             </span>
                         </div>
@@ -797,7 +775,7 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
                                 <CheckCircle2 size={13} /> {result.succeeded}
                             </span>
                             {result.failed > 0 && (
-                                <span className="flex items-center gap-1 text-xs font-bold text-gray-500">
+                                <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
                                     <XCircle size={13} /> {result.failed} failed
                                 </span>
                             )}
@@ -819,21 +797,21 @@ function BulkImportSection({ toast }: { toast: (msg: string, t?: "success" | "er
                     <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
                         {filtered.map((row) => (
                             <div key={row.row} className="flex items-center px-5 py-3 gap-4">
-                                <span className="text-[10px] font-black text-gray-400 tabular-nums w-8 shrink-0">#{row.row}</span>
+                                <span className="text-[10px] font-black text-muted-foreground tabular-nums w-8 shrink-0">#{row.row}</span>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-gray-700 truncate">{row.username ?? "—"}</p>
-                                    <p className="text-[11px] text-gray-400 truncate">{row.email ?? "—"}</p>
+                                    <p className="text-xs font-semibold text-foreground truncate">{row.username ?? "—"}</p>
+                                    <p className="text-[11px] text-muted-foreground truncate">{row.email ?? "—"}</p>
                                 </div>
                                 {row.status === "success" ? (
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded shrink-0" style={{ background: "#D1FAE5", color: "#065F46" }}>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded shrink-0 bg-emerald-100 text-emerald-800">
                                         Created
                                     </span>
                                 ) : (
                                     <div className="flex items-center gap-2 shrink-0">
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: "#F3F4F6", color: "#6B7280" }}>
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-muted text-muted-foreground">
                                             Error
                                         </span>
-                                        <span className="text-[11px] text-gray-500 truncate max-w-[200px]">{row.error}</span>
+                                        <span className="text-[11px] text-muted-foreground truncate max-w-[200px]">{row.error}</span>
                                     </div>
                                 )}
                             </div>
@@ -870,7 +848,7 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
         }
     }, [search]);
 
-    const orgClient = createAuthenticatedClient("/api/proxy/org");
+
 
     const loadMeta = useCallback(async () => {
         try {
@@ -889,7 +867,7 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 setDepartments(arr.sort((a, b) => a.department_name.localeCompare(b.department_name)));
             }
         } catch {/* best-effort */ }
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     const load = useCallback(async () => {
         try {
@@ -922,14 +900,14 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
         <div className="w-full">
             <HowItWorks steps={HOW_IT_WORKS_LIST} />
 
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="bg-white border border-border rounded-xl overflow-hidden">
                 {/* Header */}
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <Users size={14} className="text-[#003580] shrink-0" />
-                        <h2 className="text-sm font-bold text-[#003580]">Employees</h2>
+                        <Users size={14} className="text-primary shrink-0" />
+                        <h2 className="text-sm font-bold text-primary">Employees</h2>
                         {!loading && pagination && (
-                            <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full tabular-nums">
+                            <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full tabular-nums">
                                 {pagination.total}
                             </span>
                         )}
@@ -945,16 +923,16 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 {/* Filters */}
                 <div className="px-5 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2">
                     <div className="relative flex-1 min-w-[180px] max-w-sm">
-                        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <input
                             placeholder="Search name or email…"
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm
-                                placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#003580]/10 focus:border-[#003580]/40 transition-all"
+                            onChange={(e) => setSearch(e.target.value.trimStart())}
+                            className="w-full pl-9 pr-8 py-2 rounded-lg border border-border bg-muted text-sm
+                                placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 transition-all"
                         />
                         {search && (
-                            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                                 <X size={13} />
                             </button>
                         )}
@@ -962,23 +940,23 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                     {departments.length > 0 && (
                         <div className="relative">
                             <select value={filterDept} onChange={(e) => { setFilterDept(e.target.value); setPage(1); }}
-                                className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8
-                                    focus:outline-none focus:ring-2 focus:ring-[#003580]/10 focus:border-[#003580]/40 font-medium text-gray-600">
+                                className="border border-border rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8
+                                    focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 font-medium text-foreground">
                                 <option value="">All Departments</option>
                                 {departments.map((d) => <option key={d.department_id} value={d.department_id}>{d.department_name}</option>)}
                             </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
                         </div>
                     )}
                     {statuses.length > 0 && (
                         <div className="relative">
                             <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-                                className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8
-                                    focus:outline-none focus:ring-2 focus:ring-[#003580]/10 focus:border-[#003580]/40 font-medium text-gray-600">
+                                className="border border-border rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8
+                                    focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 font-medium text-foreground">
                                 <option value="">All Statuses</option>
                                 {statuses.map((s) => <option key={s.status_id} value={s.status_id}>{s.status_name}</option>)}
                             </select>
-                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
                         </div>
                     )}
                 </div>
@@ -990,47 +968,47 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                     </div>
                 ) : employees.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-14 gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                             <Users size={20} className="text-gray-300" />
                         </div>
-                        <p className="text-sm font-semibold text-gray-400">
+                        <p className="text-sm font-semibold text-muted-foreground">
                             {debouncedSearch || filterDept || filterStatus ? "No matching employees" : "No employees yet"}
                         </p>
                     </div>
                 ) : (
                     <div>
                         {/* Column headers */}
-                        <div className="grid px-5 py-2 bg-gray-50 border-b border-gray-100"
+                        <div className="grid px-5 py-2 bg-muted border-b border-gray-100"
                             style={{ gridTemplateColumns: "2fr 1.2fr 1.2fr 1fr 100px 32px" }}>
                             {["Employee", "Designation", "Department", "Joined", "Status", ""].map((h) => (
-                                <span key={h} className="text-[11px] font-black uppercase tracking-widest text-gray-400">{h}</span>
+                                <span key={h} className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">{h}</span>
                             ))}
                         </div>
 
                         <div className="divide-y divide-gray-100">
                             {employees.map((emp) => (
                                 <div key={emp.employee_id}
-                                    className="grid px-5 items-center hover:bg-gray-50 transition-colors cursor-pointer"
+                                    className="grid px-5 items-center hover:bg-muted transition-colors cursor-pointer"
                                     style={{ gridTemplateColumns: "2fr 1.2fr 1.2fr 1fr 100px 32px", minHeight: "52px" }}
                                     onClick={() => { setSelected(emp); setDetailOpen(true); }}>
 
                                     {/* Name + email */}
                                     <div className="flex flex-col justify-center min-w-0 py-2">
-                                        <p className="text-[14px] font-semibold text-[#003580] truncate leading-5">{emp.username}</p>
-                                        <p className="text-[12px] text-gray-400 truncate leading-4">{emp.email}</p>
+                                        <p className="text-[14px] font-semibold text-primary truncate leading-5">{emp.username}</p>
+                                        <p className="text-[12px] text-muted-foreground truncate leading-4">{emp.email}</p>
                                     </div>
 
                                     <div className="flex items-center gap-1.5 min-w-0">
                                         <Briefcase size={12} className="text-gray-300 shrink-0" />
-                                        <span className="text-[13px] text-gray-600 truncate">{emp.designation_name ?? "—"}</span>
+                                        <span className="text-[13px] text-foreground truncate">{emp.designation_name ?? "—"}</span>
                                     </div>
                                     <div className="flex items-center gap-1.5 min-w-0">
                                         <Building2 size={12} className="text-gray-300 shrink-0" />
-                                        <span className="text-[13px] text-gray-600 truncate">{emp.department_name ?? "—"}</span>
+                                        <span className="text-[13px] text-foreground truncate">{emp.department_name ?? "—"}</span>
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <Calendar size={12} className="text-gray-300 shrink-0" />
-                                        <span className="text-[12px] text-gray-500">{formatDate(emp.date_of_joining)}</span>
+                                        <span className="text-[12px] text-muted-foreground">{formatDate(emp.date_of_joining)}</span>
                                     </div>
                                     <StatusBadge isActive={emp.is_active} />
                                     <div className="flex justify-end">
@@ -1043,8 +1021,8 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                 )}
 
                 {/* Pagination — 20 per page */}
-                <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-2">
-                    <p className="text-[12px] text-gray-400">
+                <div className="px-5 py-3 bg-muted border-t border-gray-100 flex items-center justify-between gap-2">
+                    <p className="text-[12px] text-muted-foreground">
                         {loading ? "Loading…" : pagination
                             ? `${((page - 1) * 20) + 1}–${Math.min(page * 20, pagination.total)} of ${pagination.total}`
                             : ""}
@@ -1052,12 +1030,12 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                     {pagination && pagination.total_pages > 1 && (
                         <div className="flex items-center gap-1">
                             <button disabled={!pagination.has_previous} onClick={() => setPage((p) => p - 1)}
-                                className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-white disabled:opacity-40 transition-colors">
+                                className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-white disabled:opacity-40 transition-colors">
                                 Prev
                             </button>
-                            <span className="px-3 py-1.5 text-xs font-bold text-[#003580]">{page} / {pagination.total_pages}</span>
+                            <span className="px-3 py-1.5 text-xs font-bold text-primary">{page} / {pagination.total_pages}</span>
                             <button disabled={!pagination.has_next} onClick={() => setPage((p) => p + 1)}
-                                className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-white disabled:opacity-40 transition-colors">
+                                className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-white disabled:opacity-40 transition-colors">
                                 Next
                             </button>
                         </div>
@@ -1087,28 +1065,28 @@ export default function EmployeesPage() {
 
     return (
         <>
-            <main className="flex-1 overflow-y-auto bg-[#F0F2F5]">
+            <main className="flex-1 overflow-y-auto bg-muted">
 
                 {/* Page Header */}
-                <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+                <div className="bg-white border-b border-border px-8 md:px-10 py-5">
                     <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                         <div>
-                            <h1 className="text-[20px] font-bold text-[#003580] leading-tight">
+                            <h1 className="text-[20px] font-bold text-primary leading-tight">
                                 Employee Management
                             </h1>
-                            <p className="text-[14px] text-gray-500 mt-0.5">
+                            <p className="text-[14px] text-muted-foreground mt-0.5">
                                 Create employees · Bulk import · Manage profiles &amp; hierarchy
                             </p>
                         </div>
                         <span className="hidden lg:flex items-center text-xl font-black tracking-tight select-none shrink-0">
-                            <span className="text-[#E74C3C]">A</span>
-                            <span className="text-[#003580]">abhar</span>
+                            <span className="text-destructive">A</span>
+                            <span className="text-primary">abhar</span>
                         </span>
                     </div>
                 </div>
 
                 {/* Tab bar */}
-                <div className="bg-white border-b border-gray-200 px-8 md:px-10">
+                <div className="bg-white border-b border-border px-8 md:px-10">
                     <div className="max-w-[1200px] mx-auto flex">
                         {TABS.map((t) => {
                             const active = tab === t.id;

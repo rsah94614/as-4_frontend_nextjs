@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check, AlertCircle, X, Info, HelpCircle,} from "lucide-react";
+import { Check, AlertCircle, X, Info, HelpCircle, } from "lucide-react";
 
 
 // ─── Page Shell ───────────────────────────────────────────────────────────────
@@ -43,7 +43,6 @@ export function PageHeader({
                 </div>
             </div>
             {/* Red accent line */}
-            <div className="h-0.5 shrink-0" style={{ background: "#E31837" }} />
         </>
     );
 }
@@ -115,8 +114,8 @@ export function FlashBanner({
     return (
         <div
             className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm mb-6 ${ok
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                    : "bg-red-50 border-red-200 text-red-800"
+                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                : "bg-red-50 border-red-200 text-red-800"
                 }`}
         >
             {ok ? (

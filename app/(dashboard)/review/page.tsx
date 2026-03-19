@@ -2,10 +2,10 @@
 
 import { useReviewPage } from "@/hooks/useReviewPage"
 import { useReviewerWeight } from "@/hooks/useReviewerWeight"
-import ReviewComposeForm from "@/components/features/review/ReviewComposeForm"
-import ReviewListSection from "@/components/features/review/ReviewListSection"
-import ReviewToast from "@/components/features/review/ReviewToast"
-import ReviewPageSkeleton from "@/components/features/review/ReviewPageSkeleton"
+import ReviewComposeForm from "@/components/features/dashboard/review/ReviewComposeForm"
+import ReviewListSection from "@/components/features/dashboard/review/ReviewListSection"
+import ReviewToast from "@/components/features/dashboard/review/ReviewToast"
+import ReviewPageSkeleton from "@/components/features/dashboard/review/ReviewPageSkeleton"
 
 export default function ReviewPage() {
   const state = useReviewPage()
@@ -21,7 +21,7 @@ export default function ReviewPage() {
             <h1 className="text-xl sm:text-[26px] font-extrabold leading-tight tracking-tight px-0.5" style={{ color: '#004C8F' }}>
               Employee Recognition
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1.5 font-medium px-0.5">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 font-medium px-0.5">
               Recognise teammates · Points credited automatically
             </p>
           </div>
@@ -69,9 +69,9 @@ export default function ReviewPage() {
         )}
 
         <div className="my-8 sm:my-10 flex items-center gap-4">
-          <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">Recognition History</span>
-          <div className="flex-1 h-px bg-gray-200" />
+          <div className="flex-1 h-px bg-secondary" />
+          <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">Recognition History</span>
+          <div className="flex-1 h-px bg-secondary" />
         </div>
 
         <ReviewListSection

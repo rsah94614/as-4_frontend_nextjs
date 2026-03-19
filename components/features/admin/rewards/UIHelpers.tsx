@@ -7,23 +7,14 @@ import { cn } from "@/lib/utils";
 
 export function RewardBadge({ active }: { active: boolean }) {
     return (
-        <Badge
-            variant={active ? "secondary" : "destructive"}
+        <span
             className={cn(
-                "rounded-full text-[10px] font-semibold tracking-wider px-3 py-1 border shadow-sm",
-                active
-                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                    : "bg-red-100 text-red-800 border-red-200"
+                "inline-flex items-center text-[10px] font-bold tracking-wider",
+                active ? "text-emerald-700" : "text-red-600"
             )}
         >
-            <span
-                className={cn(
-                    "w-1.5 h-1.5 rounded-full mr-1.5",
-                    active ? "bg-green-500 animate-pulse" : "bg-red-500"
-                )}
-            />
             {active ? "ACTIVE" : "INACTIVE"}
-        </Badge>
+        </span>
     );
 }
 
@@ -69,33 +60,53 @@ export function RewardStats({
     total,
     active,
     inactive,
+    filterState,
+    setFilterState,
 }: {
-    total: number;
-    active: number;
-    inactive: number;
+    total?: number;
+    active?: number;
+    inactive?: number;
+    filterState?: string;
+    setFilterState?: (s: "all" | "active" | "inactive") => void;
 }) {
     const stats = [
-        { label: "Total", value: total, color: "bg-[#004C8F]", shadow: "shadow-blue-100" },
-        { label: "Active", value: active, color: "bg-green-500", shadow: "shadow-green-100" },
-        { label: "Inactive", value: inactive, color: "bg-red-500", shadow: "shadow-red-100" },
+        { id: "all", label: "Total", value: total },
+        { id: "active", label: "Active", value: active },
+        { id: "inactive", label: "Inactive", value: inactive },
     ];
 
     return (
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-            {stats.map((s) => (
-                <div
-                    key={s.label}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50"
-                >
-                    <div className={cn("w-2 h-2 rounded-full shrink-0", s.color)} />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
-                        {s.label}
-                    </span>
-                    <span className="text-xs font-black text-gray-800 tabular-nums">
-                        {s.value}
-                    </span>
-                </div>
-            ))}
+        <div className="flex flex-wrap items-center gap-2">
+            {stats.map((s) => {
+                const isActive = filterState === s.id;
+                return (
+                    <button
+                        key={s.label}
+                        onClick={() => setFilterState?.(s.id as "all" | "active" | "inactive")}
+                        className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10",
+                            isActive 
+                                ? "bg-white border-[#004C8F] shadow-[#004C8F]/10 shadow-sm" 
+                                : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                        )}
+                    >
+                        <span className={cn(
+                            "text-[10px] font-bold uppercase tracking-widest whitespace-nowrap",
+                            isActive ? "text-[#004C8F]" : "text-gray-400"
+                        )}>
+                            {s.label}
+                        </span>
+                        {s.value !== undefined && (
+                            <span className={cn(
+                                "text-xs font-black tabular-nums",
+                                isActive ? "text-[#004C8F]" : "text-gray-800"
+                            )}>
+                                {s.value}
+                            </span>
+                        )}
+                    </button>
+                );
+            })}
         </div>
     );
 }
@@ -103,23 +114,14 @@ export function RewardStats({
 // ─── Status Badge (Active / Inactive) ─────────────────────────────────────────
 export function StatusBadge({ active }: { active: boolean }) {
     return (
-        <Badge
-            variant={active ? "secondary" : "destructive"}
+        <span
             className={cn(
-                "rounded-full text-[10px] font-semibold tracking-wider px-3 py-1 border shadow-sm",
-                active
-                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                    : "bg-red-100 text-red-800 border-red-200"
+                "inline-flex items-center text-[10px] font-bold tracking-wider",
+                active ? "text-emerald-400" : "text-red-600"
             )}
         >
-            <span
-                className={cn(
-                    "w-1.5 h-1.5 rounded-full mr-1.5",
-                    active ? "bg-green-500 animate-pulse" : "bg-red-500"
-                )}
-            />
             {active ? "ACTIVE" : "INACTIVE"}
-        </Badge>
+        </span>
     );
 }
 

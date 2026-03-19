@@ -29,10 +29,10 @@ interface AssignmentsSectionProps {
 
 function rolePillStyle(name: string): React.CSSProperties {
     const n = name.toLowerCase();
-    if (n.includes("super"))                          return { background: "#E31837", color: "#fff" };
-    if (n.includes("hr"))                             return { background: "#004C8F", color: "#fff" };
-    if (n.includes("head") || n.includes("manager"))  return { background: "#6D28D9", color: "#fff" };
-    if (n.includes("audit"))                          return { background: "#0F766E", color: "#fff" };
+    if (n.includes("super")) return { background: "#E31837", color: "#fff" };
+    if (n.includes("hr")) return { background: "#004C8F", color: "#fff" };
+    if (n.includes("head") || n.includes("manager")) return { background: "#6D28D9", color: "#fff" };
+    if (n.includes("audit")) return { background: "#0F766E", color: "#fff" };
     return { background: "#1E3A5F", color: "#fff" };
 }
 
@@ -43,10 +43,10 @@ function initials(name: string) {
 }
 
 const HOW_IT_WORKS = [
-    { n: "01", title: "Find Employee ID",  desc: "Employee IDs are found on the employee profile page in the admin panel." },
-    { n: "02", title: "Select Role",       desc: "Choose the appropriate role based on the employee's responsibilities." },
-    { n: "03", title: "Confirm Access",    desc: "Role takes effect immediately on the employee's next login." },
-    { n: "04", title: "Revoke Anytime",    desc: "Remove a role assignment at any time using the Revoke button in the table." },
+    { n: "01", title: "Find Employee ID", desc: "Employee IDs are found on the employee profile page in the admin panel." },
+    { n: "02", title: "Select Role", desc: "Choose the appropriate role based on the employee's responsibilities." },
+    { n: "03", title: "Confirm Access", desc: "Role takes effect immediately on the employee's next login." },
+    { n: "04", title: "Revoke Anytime", desc: "Remove a role assignment at any time using the Revoke button in the table." },
 ];
 
 function HowItWorks() {
@@ -84,14 +84,15 @@ function HowItWorks() {
 }
 
 export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
-    const [records, setRecords]   = useState<EmployeeRole[]>([]);
-    const [roles, setRoles]       = useState<Role[]>([]);
-    const [loading, setLoading]   = useState(true);
-    const [open, setOpen]         = useState(false);
-    const [submitting, setSub]    = useState(false);
+    const [records, setRecords] = useState<EmployeeRole[]>([]);
+    const [roles, setRoles] = useState<Role[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [open, setOpen] = useState(false);
+    const [submitting, setSub] = useState(false);
     const [revoking, setRevoking] = useState<string | null>(null);
-    const [form, setForm]         = useState({ employee_id: "", role_id: "" });
-    const [search, setSearch]     = useState("");
+    const [form, setForm] = useState({ employee_id: "", role_id: "" });
+    const [search, setSearch] = useState("");
+    const [confirmRevoke, setConfirmRevoke] = useState<EmployeeRole | null>(null);
 
     const load = useCallback(async () => {
         try {
@@ -130,11 +131,13 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
         }
     };
 
-    const handleRevoke = async (record: EmployeeRole) => {
+    const handleRevoke = async () => {
+        if (!confirmRevoke) return;
         try {
-            setRevoking(record.employee_role_id);
-            await employeeRolesApi.revokeRole({ employee_id: record.employee.id, role_id: record.role.id });
+            setRevoking(confirmRevoke.employee_role_id);
+            await employeeRolesApi.revokeRole({ employee_id: confirmRevoke.employee.id, role_id: confirmRevoke.role.id });
             toast("Role revoked");
+            setConfirmRevoke(null);
             load();
         } catch (e: unknown) {
             toast(extractErrorMessage(e), "error");
@@ -225,7 +228,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
 
                                     <div className="flex items-center justify-between gap-2">
                                         <span
-                                            className="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold"
+                                            className="inline-flex items-center justify-center min-w-[96px] px-2.5 py-1 rounded text-[10px] font-bold"
                                             style={rolePillStyle(r.role.name)}
                                         >
                                             {r.role.name}
@@ -239,9 +242,9 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
 
                                     <button
                                         disabled={revoking === r.employee_role_id}
-                                        onClick={() => handleRevoke(r)}
-                                        className="inline-flex w-full items-center justify-center gap-1 px-2.5 py-2 rounded-lg text-[11px] font-semibold
-                                            transition-all hover:bg-red-50 disabled:opacity-40 border border-red-100"
+                                        onClick={() => setConfirmRevoke(r)}
+                                        className="inline-flex w-full items-center justify-center gap-1 px-3 py-2 rounded-md text-[11px] font-bold
+                                            transition-all hover:bg-red-50 focus:ring-2 focus:ring-red-100 disabled:opacity-40 border border-red-200 bg-white shadow-sm"
                                         style={{ color: "#E31837" }}
                                     >
                                         {revoking === r.employee_role_id
@@ -286,7 +289,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                                     {/* Role — name only, no duplicate code below */}
                                     <div>
                                         <span
-                                            className="inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold"
+                                            className="inline-flex items-center justify-center min-w-[96px] px-2.5 py-1 rounded text-[10px] font-bold"
                                             style={rolePillStyle(r.role.name)}
                                         >
                                             {r.role.name}
@@ -304,9 +307,9 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                                     <div className="flex justify-end">
                                         <button
                                             disabled={revoking === r.employee_role_id}
-                                            onClick={() => handleRevoke(r)}
-                                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold
-                                                transition-all hover:bg-red-50 disabled:opacity-40"
+                                            onClick={() => setConfirmRevoke(r)}
+                                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold
+                                                transition-all hover:bg-red-50 focus:ring-2 focus:ring-red-100 disabled:opacity-40 border border-red-200 bg-white shadow-sm"
                                             style={{ color: "#E31837" }}
                                         >
                                             {revoking === r.employee_role_id
@@ -346,7 +349,6 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                             </DialogDescription>
                         </DialogHeader>
                     </div>
-                    <div className="h-0.5" style={{ background: "#E31837" }} />
 
                     <div className="p-4 sm:p-6 space-y-4 bg-white">
                         <div className="space-y-1.5">
@@ -390,6 +392,31 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
                             style={{ background: "#004C8F" }}>
                             {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                             Assign Role
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Revoke Confirmation Dialog */}
+            <Dialog open={!!confirmRevoke} onOpenChange={(val) => !val && setConfirmRevoke(null)}>
+                <DialogContent className="sm:max-w-sm p-6 overflow-hidden rounded-xl border-0 bg-white">
+                    <DialogHeader className="mb-4">
+                        <DialogTitle className="text-xl font-bold text-[#E31837]">Confirm Revoke</DialogTitle>
+                        <DialogDescription className="text-sm text-gray-500 mt-2">
+                            Are you sure you want to revoke <span className="font-semibold text-gray-700">{confirmRevoke?.role.name}</span> access from <span className="font-semibold text-gray-700">{confirmRevoke?.employee.username}</span>? This action takes effect immediately.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 mt-6">
+                        <Button variant="outline" onClick={() => setConfirmRevoke(null)} disabled={revoking !== null}
+                            className="border-gray-200 text-xs font-semibold w-full sm:w-auto">
+                            Cancel
+                        </Button>
+                        <button onClick={handleRevoke} disabled={revoking !== null}
+                            className="flex items-center justify-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50 w-full sm:w-auto"
+                            style={{ background: "#E31837" }}>
+                            {revoking !== null && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                            Yes, Revoke
                         </button>
                     </div>
                 </DialogContent>

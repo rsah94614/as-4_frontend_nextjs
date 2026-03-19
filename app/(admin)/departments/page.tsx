@@ -55,13 +55,13 @@ export default function DepartmentsPage() {
             <main className="flex-1 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5">
                 {/* ─── Page Header (matches Employee page) ─── */}
                 <div>
-                    <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+                    <div className="bg-white border-b border-border px-8 md:px-10 py-5">
                         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
                                     Departments
                                 </h1>
-                                <p className="text-sm text-gray-400 mt-1">
+                                <p className="text-sm text-muted-foreground mt-1">
                                     Create and manage your organization&apos;s departments
                                 </p>
                             </div>
@@ -101,7 +101,7 @@ export default function DepartmentsPage() {
                             {search && (
                                 <button
                                     onClick={clearSearch}
-                                    className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-lg transition-all hover:bg-slate-100"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-lg transition-all hover:bg-muted"
                                     style={{ border: "1.5px solid #d1d5db", color: "#6b7280" }}
                                 >
                                     <X className="w-3 h-3" /> Clear
@@ -117,7 +117,7 @@ export default function DepartmentsPage() {
                             </button>
                             <button
                                 onClick={refresh}
-                                className="w-full sm:w-10 h-10 flex items-center justify-center rounded-lg transition-all hover:bg-slate-100 sm:ml-auto"
+                                className="w-full sm:w-10 h-10 flex items-center justify-center rounded-lg transition-all hover:bg-muted sm:ml-auto"
                                 style={{ border: "1.5px solid #d1d5db", color: "#6b7280" }}
                                 title="Refresh"
                             >

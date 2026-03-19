@@ -3,10 +3,10 @@
 // in the browser.  The proxy strips /api/proxy/roles and forwards to the
 // roles microservice, which receives the bare path (e.g. /list).
 
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { rolesClient } from "@/services/api-clients";
 
-const rolesClient = createAuthenticatedClient("/api/proxy/roles");
+
 
 async function request<T>(
     path: string,

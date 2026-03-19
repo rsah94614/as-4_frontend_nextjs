@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { periodOptions, typeOptions } from "./constants";
-import type { PeriodFilter, TypeFilter } from "../../../types/history-types";
+import type { PeriodFilter, TypeFilter } from "@/types/history-types";
 
 import {
     FILTER_BTN_BASE,
@@ -103,6 +103,7 @@ export default function HistoryFilterBar({
                         className={`${FILTER_BTN_BASE} ${selectedType !== "All" ? FILTER_BTN_ACTIVE : ""
                             }`}
                     >
+                        <button
                         <span className="truncate max-w-[120px] sm:max-w-none">
                             {selectedType === "All" ? "Transaction Type" : selectedType}
                         </span>

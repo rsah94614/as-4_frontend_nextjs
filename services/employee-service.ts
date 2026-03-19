@@ -1,20 +1,6 @@
-// services/employee-service.ts
-// Works with the real Employee Service routes:
-//   GET /v1/employees          → paginated list (supports manager_id filter)
-//   GET /v1/employees/{id}     → single employee detail
-//
-// All requests routed through Next.js proxy (/api/proxy/employees/*)
-// — no direct microservice URL exposed to the browser.
-//
-// FIX: employeesClient baseURL is /api/proxy/employees, which the proxy maps to
-// http://localhost:8003/v1/employees. So paths here must be relative to that —
-// i.e. `/${id}` not `/v1/employees/${id}` (which would double-path to
-// /api/proxy/employees/v1/employees/${id} → 404).
-
-import { createAuthenticatedClient, requireAuthenticatedUserId } from '@/lib/api-utils'
+import { requireAuthenticatedUserId } from '@/lib/api-utils'
 import { extractErrorMessage } from '@/lib/error-utils'
-
-const employeesClient = createAuthenticatedClient('/api/proxy/employees')
+import { employeesClient } from '@/services/api-clients'
 
 
 // ─── Types matching backend schemas.py ───────────────────────────────────────

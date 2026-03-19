@@ -20,7 +20,7 @@ const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { label: "Recognize", href: "/review", icon: FileText },
   { label: "Redeem", href: "/redeem", icon: Trophy },
-   { label: "Wallet", href: "/wallet", icon: Wallet },
+  { label: "Wallet", href: "/wallet", icon: Wallet },
   { label: "History", href: "/history", icon: Clock },
   { label: "Control Panel", href: "/control-panel", icon: SlidersHorizontal, adminOnly: true },
 ];
@@ -58,8 +58,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       >
 
         {/* ── Logo area ── */}
-        <div className="flex flex-col items-center justify-center px-6 py-6 shrink-0"
-          style={{ background: '#004C8F', borderBottom: '3px solid #E31837' }}>
+        <div className="flex flex-col items-center justify-center px-6 pt-5 shrink-0"
+          style={{ background: '#004C8F' }}>
           <Image
             src="/logo.svg"
             alt="Aabhar Logo"
@@ -83,7 +83,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     onClick={onClose}
                                     className="flex items-center gap-3 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer"
                                     style={isActive
-                                        ? { background: 'rgba(255,255,255,0.12)', color: '#fff', paddingLeft: '11px', borderLeft: '4px solid #E31837' }
+                                        ? { background: 'rgba(255,255,255,0.12)', color: '#fff', paddingLeft: '14px' }
                                         : { color: 'rgba(255,255,255,0.65)', paddingLeft: '14px' }
                                     }
                                     onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
@@ -103,44 +103,44 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* ── Bottom Section (Logout & Tools) ── */}
         <div className="mt-auto px-4 pb-8 pt-4 space-y-4 shrink-0"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.05)' }}>
-            
-            {/* Dev Logger — admin only (Moved inside bottom container for better grouping) */}
-            {mounted && isAdmin && (
-                <Link
-                    href="/dev-logger"
-                    onClick={onClose}
-                    className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all border border-white/5"
-                    style={pathname.startsWith('/dev-logger')
-                        ? {
-                            background: 'rgba(139,92,246,0.2)',
-                            color: '#fff',
-                            borderLeft: '3px solid #a78bfa',
-                        }
-                        : {
-                            color: 'rgba(255,255,255,0.5)',
-                            background: 'rgba(255,255,255,0.03)',
-                        }
-                    }
-                >
-                    <Bug className="w-3.5 h-3.5" />
-                    <span>Dev Logger</span>
-                    <span className="ml-auto bg-violet-500 text-white px-1.5 py-0.5 rounded text-[9px]">API</span>
-                </Link>
-            )}
+          style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.05)' }}>
 
-            <Dialog>
-                <DialogTrigger asChild>
-                    <button
-                        className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-sm font-bold shadow-lg transition-all cursor-pointer active:scale-95"
-                        style={{ background: '#E31837', color: '#fff', border: 'none', letterSpacing: '0.02em' }}
-                        onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
-                        onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
-                    >
-                        <LogOut className="w-4 h-4 shrink-0" />
-                        Log out
-                    </button>
-                </DialogTrigger>
+          {/* Dev Logger — admin only (Moved inside bottom container for better grouping) */}
+          {mounted && isAdmin && (
+            <Link
+              href="/dev-logger"
+              onClick={onClose}
+              className="flex items-center gap-3 py-2.5 px-3 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all border border-white/5"
+              style={pathname.startsWith('/dev-logger')
+                ? {
+                  background: 'rgba(139,92,246,0.2)',
+                  color: '#fff',
+                  borderLeft: '3px solid #a78bfa',
+                }
+                : {
+                  color: 'rgba(255,255,255,0.5)',
+                  background: 'rgba(255,255,255,0.03)',
+                }
+              }
+            >
+              <Bug className="w-3.5 h-3.5" />
+              <span>Dev Logger</span>
+              <span className="ml-auto bg-violet-500 text-white px-1.5 py-0.5 rounded text-[9px]">API</span>
+            </Link>
+          )}
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl text-sm font-bold shadow-lg transition-all cursor-pointer active:scale-95"
+                style={{ background: '#E31837', color: '#fff', border: 'none', letterSpacing: '0.02em' }}
+                onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
+                onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+              >
+                <LogOut className="w-4 h-4 shrink-0" />
+                Log out
+              </button>
+            </DialogTrigger>
 
             <DialogContent showCloseButton={false} className="sm:max-w-sm">
               <DialogHeader>

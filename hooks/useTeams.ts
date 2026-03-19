@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Employee, Review, MemberStats } from "@/types/team-types";
+import { employeesClient as employeeProxyClient, recognitionClient as recognitionProxyClient } from "@/services/api-clients";
 
-const employeeProxyClient    = createAuthenticatedClient("/api/proxy/employees");
-const recognitionProxyClient = createAuthenticatedClient("/api/proxy/recognition");
+
 
 export function useTeams() {
     const [allEmployees, setAllEmployees] = useState<Employee[]>([]);

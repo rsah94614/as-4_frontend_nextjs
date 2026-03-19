@@ -18,6 +18,11 @@ import {
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { 
+    employeesClient as employeeClient, 
+    orgClient, 
+    recognitionClient 
+} from "@/services/api-clients";
 import type {
     Notification,
     NotificationType,
@@ -79,19 +84,7 @@ function toIsoDatetime(dateStr: string): string {
     return `${dateStr}T00:00:00Z`;
 }
 
-/**
- * Read the JWT from localStorage (where auth-service.ts stores it) and return
- * an Authorization header ready to spread into any fetch() call.
- *
- * The proxy at /api/proxy/[...path]/route.ts reads this header and forwards it
- * to the upstream microservice. Without it the proxy sends no token and the
- * microservice returns 401 "Authorization header missing".
- */
-function getAuthHeaders(): Record<string, string> {
-    if (typeof window === "undefined") return {};
-    const token = localStorage.getItem("access_token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-}
+
 
 const TYPE_META: Record<
     NotificationType,
@@ -120,21 +113,13 @@ const TYPE_META: Record<
 // forward the Bearer token. axiosClient does this automatically via its
 // interceptor; raw fetch() calls must do it explicitly.
 
-/** POST /api/proxy/employees/notifications/announcements */
+/** POST /notifications/announcements */
 async function postAnnouncement(payload: AnnouncementRequest): Promise<AnnouncementResponse> {
-    const res = await fetch("/api/proxy/employees/notifications/announcements", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders(),
-        },
-        body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(extractErrorMessage(errData, `Failed (${res.status})`));
-    }
-    return res.json();
+    const res = await employeeClient.post<AnnouncementResponse>(
+        "/notifications/announcements", 
+        payload
+    );
+    return res.data;
 }
 
 // ─── Department / Employee lookup helpers ─────────────────────────────────────
@@ -153,12 +138,8 @@ interface Department { department_id: string; department_name: string; }
 interface EmployeeOption { employee_id: string; username: string; email: string; }
 
 async function fetchDepartments(): Promise<Department[]> {
-    const res = await fetch("/api/proxy/org/departments?limit=100", {
-        headers: { ...getAuthHeaders() },
-    });
-    if (!res.ok) throw new Error(`Could not load departments (${res.status})`);
-    const data = await res.json();
-    // DepartmentListResponse: { departments: [...], total, page, limit }
+    const res = await orgClient.get("/departments", { params: { limit: 100 } });
+    const data = res.data;
     if (Array.isArray(data))             return data;
     if (Array.isArray(data.departments)) return data.departments;
     if (Array.isArray(data.data))        return data.data;
@@ -166,51 +147,30 @@ async function fetchDepartments(): Promise<Department[]> {
 }
 
 async function fetchEmployeeOptions(search: string): Promise<EmployeeOption[]> {
-    const url = new URL("/api/proxy/employees/list", window.location.origin);
-    if (search) url.searchParams.set("search", search);
-    url.searchParams.set("limit", "30");
-    const res = await fetch(url.toString(), {
-        headers: { ...getAuthHeaders() },
-    });
-    if (!res.ok) throw new Error(`Could not load employees (${res.status})`);
-    const data = await res.json();
+    const params: Record<string, string> = { limit: "30" };
+    if (search) params.search = search;
+    const res = await employeeClient.get("/list", { params });
+    const data = res.data;
     return Array.isArray(data) ? data : (data.employees ?? data.data ?? []);
 }
 
-/** GET /api/proxy/recognition/digest?week_start=...&manager_id=... */
+/** GET /digest?week_start=...&manager_id=... */
 async function getDigest(weekStart?: string, managerId?: string): Promise<WeeklyDigestData> {
-    const url = new URL("/api/proxy/recognition/digest", window.location.origin);
-    if (weekStart)  url.searchParams.set("week_start",  toIsoDatetime(weekStart));
-    if (managerId)  url.searchParams.set("manager_id",  managerId);
-    const res = await fetch(url.toString(), {
-        headers: { ...getAuthHeaders() },
-    });
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(extractErrorMessage(errData, `Failed (${res.status})`));
-    }
-    return res.json();
+    const params: Record<string, string> = {};
+    if (weekStart) params.week_start = toIsoDatetime(weekStart);
+    if (managerId) params.manager_id = managerId;
+    const res = await recognitionClient.get<WeeklyDigestData>("/digest", { params });
+    return res.data;
 }
 
-/** POST /api/proxy/recognition/digest/send */
+/** POST /digest/send */
 async function postDigest(payload: DigestEmailRequest): Promise<DigestResponse> {
     const body: Record<string, string> = { manager_email: payload.manager_email };
     if (payload.week_start) body.week_start = toIsoDatetime(payload.week_start);
     if (payload.manager_id) body.manager_id = payload.manager_id;
 
-    const res = await fetch("/api/proxy/recognition/digest/send", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders(),
-        },
-        body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(extractErrorMessage(errData, `Failed (${res.status})`));
-    }
-    return res.json();
+    const res = await recognitionClient.post<DigestResponse>("/digest/send", body);
+    return res.data;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -254,7 +214,7 @@ function NotificationRow({
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                     <TypeBadge type={notification.type} />
-                    <span className="text-[11px] text-slate-400 ml-auto shrink-0 tabular-nums">
+                    <span className="text-[11px] text-muted-foreground ml-auto shrink-0 tabular-nums">
                         {formatRelativeTime(notification.created_at)}
                     </span>
                 </div>
@@ -268,7 +228,7 @@ function NotificationRow({
                     {notification.title}
                 </p>
                 {notification.message && (
-                    <p className="text-[12px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                    <p className="text-[12px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
                         {notification.message}
                     </p>
                 )}
@@ -306,8 +266,8 @@ function EmptyState() {
             >
                 <Bell className="w-6 h-6" style={{ color: BRAND.navy }} />
             </div>
-            <p className="text-[15px] font-semibold text-slate-700">All caught up</p>
-            <p className="text-[13px] text-slate-400 mt-1.5 max-w-[220px]">
+            <p className="text-[15px] font-semibold text-foreground">All caught up</p>
+            <p className="text-[13px] text-muted-foreground mt-1.5 max-w-[220px]">
                 No notifications yet. Check back later.
             </p>
         </div>
@@ -347,14 +307,14 @@ function ResultBanner({
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
     return (
-        <label className="block text-[11px] font-bold tracking-widest uppercase text-slate-500 mb-1.5">
-            {children}{required && <span className="text-red-500 ml-0.5">*</span>}
+        <label className="block text-[11px] font-bold tracking-widest uppercase text-muted-foreground mb-1.5">
+            {children}{required && <span className="text-destructive ml-0.5">*</span>}
         </label>
     );
 }
 
 const inputClass =
-    "w-full border border-slate-200 rounded-sm px-3 py-2.5 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition bg-white";
+    "w-full border border-border rounded-sm px-3 py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 transition bg-white";
 
 const inputFocus = { "--tw-ring-color": BRAND.navy } as React.CSSProperties;
 
@@ -383,21 +343,21 @@ function AudienceSummary({
 }) {
     if (targetMode === "all") {
         return (
-            <p className="text-[12px] text-slate-400 leading-relaxed">
+            <p className="text-[12px] text-muted-foreground leading-relaxed">
                 This announcement will be broadcast to <strong>all active employees</strong>.
             </p>
         );
     }
     if (targetMode === "departments") {
         return (
-            <p className="text-[12px] text-slate-400 leading-relaxed">
+            <p className="text-[12px] text-muted-foreground leading-relaxed">
                 Will be sent to employees in{" "}
                 <strong>{deptCount === 0 ? "no departments selected" : `${deptCount} department${deptCount !== 1 ? "s" : ""}`}</strong>.
             </p>
         );
     }
     return (
-        <p className="text-[12px] text-slate-400 leading-relaxed">
+        <p className="text-[12px] text-muted-foreground leading-relaxed">
             Will be sent to <strong>{empCount === 0 ? "no employees selected" : `${empCount} employee${empCount !== 1 ? "s" : ""}`}</strong>.
         </p>
     );
@@ -547,7 +507,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
                     maxLength={2000}
                     disabled={isPending}
                 />
-                <p className="text-[11px] text-slate-400 mt-1 text-right">{message.length}/2000</p>
+                <p className="text-[11px] text-muted-foreground mt-1 text-right">{message.length}/2000</p>
             </div>
 
             {/* ── Targeting mode selector ───────────────────────────────────── */}
@@ -586,7 +546,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
                 <div>
                     <FieldLabel required>Select Departments</FieldLabel>
                     {deptLoading && (
-                        <p className="text-[12px] text-slate-400 flex items-center gap-1.5">
+                        <p className="text-[12px] text-muted-foreground flex items-center gap-1.5">
                             <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading departments…
                         </p>
                     )}
@@ -594,7 +554,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
                         <p className="text-[12px]" style={{ color: "#991B1B" }}>{deptError}</p>
                     )}
                     {!deptLoading && !deptError && departments.length === 0 && (
-                        <p className="text-[12px] text-slate-400">No departments found.</p>
+                        <p className="text-[12px] text-muted-foreground">No departments found.</p>
                     )}
                     {departments.length > 0 && (
                         <div
@@ -649,7 +609,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
                             disabled={isPending}
                         />
                         {empLoading && (
-                            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-slate-400" />
+                            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 animate-spin text-muted-foreground" />
                         )}
                     </div>
                     {empError && (
@@ -670,11 +630,11 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
                                         type="button"
                                         onClick={() => toggleEmp(emp)}
                                         disabled={isPending}
-                                        className="w-full flex items-center justify-between px-4 py-2.5 text-left transition hover:bg-slate-50"
+                                        className="w-full flex items-center justify-between px-4 py-2.5 text-left transition hover:bg-muted"
                                     >
                                         <div>
-                                            <p className="text-[13px] font-medium text-slate-800">{emp.username}</p>
-                                            <p className="text-[11px] text-slate-400">{emp.email}</p>
+                                            <p className="text-[13px] font-medium text-foreground">{emp.username}</p>
+                                            <p className="text-[11px] text-muted-foreground">{emp.email}</p>
                                         </div>
                                         <span
                                             className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-sm shrink-0"
@@ -694,7 +654,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
                     {/* Selected employees chips */}
                     {selectedEmps.size > 0 && (
                         <div>
-                            <p className="text-[10.5px] font-bold tracking-widest uppercase text-slate-400 mb-1.5">
+                            <p className="text-[10.5px] font-bold tracking-widest uppercase text-muted-foreground mb-1.5">
                                 Selected ({selectedEmps.size})
                             </p>
                             <div className="flex flex-wrap gap-1.5">
@@ -757,15 +717,10 @@ async function fetchManagerOptions(): Promise<ManagerOption[]> {
     // so that any future changes to admin role names only need one edit.
     const ALLOWED = new Set([...ADMIN_ROLES, "MANAGER"]);
 
-    const headers = { ...getAuthHeaders() };
-
-    type EmpListResponse = { employees?: EmployeeOption[]; data?: EmployeeOption[] } | EmployeeOption[];
-
+    // Roles and employee list are now fetched using direct microservice calls.
     const [rolesRes, empRes] = await Promise.all([
-        fetch("/api/proxy/roles/employees", { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
-        fetch(new URL("/api/proxy/employees/list?limit=100", window.location.origin).toString(), { headers })
-            .then(r => r.ok ? r.json() as Promise<EmpListResponse> : ({} as EmpListResponse))
-            .catch((): EmpListResponse => ({})),
+        employeeClient.get("/roles/employees").then(r => r.data).catch(() => []),
+        employeeClient.get("/list", { params: { limit: 100 } }).then(r => r.data).catch(() => ({})),
     ]);
 
     // Build a set of employee emails that have an allowed active role
@@ -861,7 +816,7 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
                     <div className="flex-1">
                         <FieldLabel>Manager (Team Scope)</FieldLabel>
                         {previewMgrsLoading ? (
-                            <p className="text-[12px] text-slate-400 flex items-center gap-1.5 py-2.5">
+                            <p className="text-[12px] text-muted-foreground flex items-center gap-1.5 py-2.5">
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
                             </p>
                         ) : (
@@ -887,7 +842,7 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
                                 ))}
                             </select>
                         )}
-                        <p className="text-[11px] text-slate-400 mt-1">
+                        <p className="text-[11px] text-muted-foreground mt-1">
                             Select a manager to scope the summary to their direct reports
                         </p>
                     </div>
@@ -896,7 +851,7 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
                     <div className="flex-1">
                         <FieldLabel>Week Starting (Monday)</FieldLabel>
                         <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
                             <input
                                 type="date"
                                 value={weekStart}
@@ -906,7 +861,7 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
                                 disabled={isFetching}
                             />
                         </div>
-                        <p className="text-[11px] text-slate-400 mt-1">Leave blank for last completed week</p>
+                        <p className="text-[11px] text-muted-foreground mt-1">Leave blank for last completed week</p>
                     </div>
                 </div>
 
@@ -927,14 +882,14 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
 
             {canSend && (
                 <form onSubmit={handleSend} className="space-y-4 pt-4 border-t border-slate-100">
-                    <p className="text-[11px] font-bold tracking-widest uppercase text-slate-500">
+                    <p className="text-[11px] font-bold tracking-widest uppercase text-muted-foreground">
                         Send Digest by Email
                     </p>
                     <div className="flex items-end gap-3">
                         <div className="flex-1">
                             <FieldLabel required>Recipient (Managers &amp; Admins only)</FieldLabel>
                             {previewMgrsLoading ? (
-                                <p className="text-[12px] text-slate-400 flex items-center gap-1.5 py-2">
+                                <p className="text-[12px] text-muted-foreground flex items-center gap-1.5 py-2">
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading managers…
                                 </p>
                             ) : (
@@ -958,7 +913,7 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
                                 </select>
                             )}
                             {!previewMgrsLoading && previewManagers.length === 0 && (
-                                <p className="text-[11px] text-slate-400 mt-1">No managers found.</p>
+                                <p className="text-[11px] text-muted-foreground mt-1">No managers found.</p>
                             )}
                         </div>
                         <button
@@ -1006,7 +961,7 @@ function DigestDataCard({ data }: { data: WeeklyDigestData }) {
                         <div className="text-[26px] font-bold leading-none tabular-nums" style={{ color: s.accent }}>
                             {s.value}
                         </div>
-                        <div className="text-[10.5px] font-semibold tracking-widest uppercase text-slate-400 mt-1.5">
+                        <div className="text-[10.5px] font-semibold tracking-widest uppercase text-muted-foreground mt-1.5">
                             {s.label}
                         </div>
                     </div>
@@ -1015,7 +970,7 @@ function DigestDataCard({ data }: { data: WeeklyDigestData }) {
 
             {(data.top_giver || data.top_receiver) && (
                 <div className="px-4 py-3 border-t border-slate-100 space-y-2.5">
-                    <p className="text-[10.5px] font-bold tracking-widest uppercase text-slate-400">
+                    <p className="text-[10.5px] font-bold tracking-widest uppercase text-muted-foreground">
                         Top Performers
                     </p>
                     {data.top_giver && (
@@ -1050,8 +1005,8 @@ function PerformerRow({ label, name, count, accent }: {
             >
                 {label}
             </span>
-            <span className="text-[13px] font-semibold text-slate-800 flex-1 truncate">{name}</span>
-            <span className="text-[12px] text-slate-400 tabular-nums shrink-0">
+            <span className="text-[13px] font-semibold text-foreground flex-1 truncate">{name}</span>
+            <span className="text-[12px] text-muted-foreground tabular-nums shrink-0">
                 {count} {count === 1 ? "recognition" : "recognitions"}
             </span>
         </div>
@@ -1068,7 +1023,7 @@ function AdminPanel({ label, icon, accentColor, children }: {
         <div className="rounded-sm overflow-hidden mb-3" style={{ border: "1px solid #E5E7EB" }}>
             <button
                 onClick={() => setOpen(o => !o)}
-                className="w-full flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-slate-50"
+                className="w-full flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-muted"
             >
                 <div className="flex items-center gap-3">
                     <span
@@ -1077,15 +1032,15 @@ function AdminPanel({ label, icon, accentColor, children }: {
                     >
                         <span style={{ color: accentColor }}>{icon}</span>
                     </span>
-                    <span className="text-[13px] font-semibold text-slate-800">{label}</span>
+                    <span className="text-[13px] font-semibold text-foreground">{label}</span>
                 </div>
-                <span className="text-slate-400">
+                <span className="text-muted-foreground">
                     {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </span>
             </button>
 
             {open && (
-                <div className="px-5 py-5 border-t border-slate-100 bg-slate-50/40">
+                <div className="px-5 py-5 border-t border-slate-100 bg-muted/40">
                     {children}
                 </div>
             )}
@@ -1130,7 +1085,7 @@ export default function NotificationsPage() {
                     <div className="flex items-center gap-2 shrink-0">
                         <button
                             onClick={reload}
-                            className="p-2 rounded-sm hover:bg-slate-100 transition text-slate-400 hover:text-slate-700"
+                            className="p-2 rounded-sm hover:bg-muted transition text-muted-foreground hover:text-foreground"
                             title="Refresh"
                         >
                             <RefreshCw className="w-4 h-4" />
@@ -1161,7 +1116,7 @@ export default function NotificationsPage() {
                 {/* ── Admin controls ───────────────────────────────────────── */}
                 {showAdminArea && (
                     <div className="mb-6">
-                        <p className="text-[10.5px] font-bold tracking-widest uppercase text-slate-400 mb-3">
+                        <p className="text-[10.5px] font-bold tracking-widest uppercase text-muted-foreground mb-3">
                             Admin Controls
                         </p>
 
@@ -1185,11 +1140,11 @@ export default function NotificationsPage() {
                         className="flex items-center justify-between px-5 py-3 border-b"
                         style={{ borderColor: "#E5E7EB", background: "#FAFAFA" }}
                     >
-                        <span className="text-[10.5px] font-bold tracking-widest uppercase text-slate-500">
+                        <span className="text-[10.5px] font-bold tracking-widest uppercase text-muted-foreground">
                             {unreadCount > 0 ? `${unreadCount} Unread` : "All Notifications"}
                         </span>
                         {unreadCount > 0 && (
-                            <span className="text-[11px] text-slate-400">
+                            <span className="text-[11px] text-muted-foreground">
                                 Click a notification to mark as read
                             </span>
                         )}

@@ -1,14 +1,12 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
-import { createAuthenticatedClient } from "@/lib/api-utils"
 import { uploadToStorage } from "@/services/s3"
 import { getTeamMembersForUI, type TeamMember } from "@/services/employee-service"
 import { requireAuthenticatedUserId } from "@/lib/api-utils"
 import { extractErrorMessage } from "@/lib/error-utils"
+import { recognitionClient } from "@/services/api-clients"
 import type { Review, ReviewCategory, ViewMode, ToastState, SubmittedReviewData } from "@/types/review-types"
-
-const recognitionClient = createAuthenticatedClient("/api/proxy/recognition")
 
 const ITEMS_PER_PAGE = 6
 

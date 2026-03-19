@@ -72,12 +72,12 @@ export default function ForgotPasswordPage() {
   // Success state
   if (submitted) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#f4f7fb]">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-muted">
         <div className="w-full max-w-md flex flex-col items-center mt-auto mb-auto">
           {/* Logo */}
           <div className="mb-6">
             <Image
-              src="/images/Logo.png"
+              src="logo.svg"
               alt="HDFC Bank Logo"
               width={240}
               height={80}
@@ -85,11 +85,11 @@ export default function ForgotPasswordPage() {
             />
           </div>
 
-          <h1 className="text-2xl md:text-3xl text-[#333333] mb-6">
+          <h1 className="text-2xl md:text-3xl text-foreground mb-6">
             Welcome to NetBanking
           </h1>
 
-          <div className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-6 md:p-8 max-w-105">
+          <div className="w-full bg-white border border-border rounded-md shadow-sm p-6 md:p-8 max-w-[420px]">
             {/* Success Icon */}
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
@@ -101,8 +101,8 @@ export default function ForgotPasswordPage() {
             <h2 className="text-2xl font-bold text-center mb-4">
               Check your email
             </h2>
-            <p className="text-gray-600 text-center mb-8">
-              We&apos;ve sent a password reset link to <strong className="wrap-break-words">{email}</strong>
+            <p className="text-foreground text-center mb-8">
+              We&apos;ve sent a password reset link to <strong className="break-words">{email}</strong>
             </p>
 
             {/* Instructions */}
@@ -145,8 +145,8 @@ export default function ForgotPasswordPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 pb-4 text-xs text-center text-gray-600 w-full">
-          <span className="text-[#0b4a8b] hover:underline cursor-pointer">Secure Login</span> | © HDFC Bank Ltd.
+        <div className="mt-8 pb-4 text-xs text-center text-foreground w-full">
+          <span className="text-primary hover:underline cursor-pointer">Secure Login</span> | © HDFC Bank Ltd.
         </div>
       </div>
     )
@@ -154,9 +154,9 @@ export default function ForgotPasswordPage() {
 
   // Request form
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#f4f7fb]">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-muted">
       <div className="w-full max-w-md flex flex-col items-center mt-auto mb-auto">
-        <div className="w-full bg-white border border-gray-300 rounded-md shadow-sm p-6 md:p-8 max-w-105">
+        <div className="w-full bg-white border border-border rounded-md shadow-sm p-6 md:p-8 max-w-[420px]">
           {/* Logo */}
           <div className="mb-6 flex items-center justify-center">
             <Image
@@ -171,7 +171,7 @@ export default function ForgotPasswordPage() {
           {/* Icon */}
           <div className="flex justify-center mb-6">
             <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
-              <Mail className="w-8 h-8 text-[#0b4a8b]" />
+              <Mail className="w-8 h-8 text-primary" />
             </div>
           </div>
 
@@ -179,13 +179,13 @@ export default function ForgotPasswordPage() {
           <h2 className="text-xl font-bold text-center mb-3">
             Forgot your password?
           </h2>
-          <p className="text-gray-600 text-center text-sm mb-6">
+          <p className="text-foreground text-center text-sm mb-6">
             No worries! Enter your email and we&apos;ll send you a reset link.
           </p>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-300 text-red-700 rounded-md text-sm">
+            <div className="mb-6 p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-md text-sm">
               {error}
             </div>
           )}
@@ -194,7 +194,7 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Input */}
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="font-semibold text-gray-700 text-sm">Email</Label>
+              <Label htmlFor="email" className="font-semibold text-foreground text-sm">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -202,7 +202,7 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={handleEmailChange}
                 onBlur={() => setTouched(true)}
-                className={`h-11 rounded-md border-gray-300 ${error && touched ? 'border-red-500 focus-visible:ring-red-500/20' : ''
+                className={`h-11 rounded-md border-border ${error && touched ? 'border-destructive/20 focus-visible:ring-red-500/20' : ''
                   }`}
                 disabled={loading}
                 autoFocus
@@ -213,7 +213,7 @@ export default function ForgotPasswordPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-11 rounded-md text-base bg-[#0b4a8b] hover:bg-[#093c71] active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium mt-2"
+              className="w-full h-11 rounded-md text-base bg-primary hover:bg-primary/90 active:scale-[0.98] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium mt-2"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -231,7 +231,7 @@ export default function ForgotPasswordPage() {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="w-full h-11 rounded-md text-gray-600 hover:text-blue-600 hover:underline"
+                  className="w-full h-11 rounded-md text-foreground hover:text-blue-600 hover:underline"
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to login
@@ -243,7 +243,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       {/* Footer */}
-      <div className="mt-8 pb-4 text-xs text-center text-gray-600 w-full">
+      <div className="mt-8 pb-4 text-xs text-center text-foreground w-full">
         Secure Login | © HDFC Bank Ltd.
       </div>
     </div>

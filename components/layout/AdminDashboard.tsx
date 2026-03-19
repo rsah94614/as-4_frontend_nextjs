@@ -1,9 +1,9 @@
 "use client";
 
-import AdminParticipationSection from "../features/dashboard/admin/AdminParticipationSection";
-import AdminRecognitionTrendSection from "../features/dashboard/admin/AdminRecognitionTrendSection";
-import AdminRecognitionSection from "../features/dashboard/admin/AdminRecognitionSection";
-import AdminTeamReportsSection from "../features/dashboard/admin/AdminTeamReportsSection";
+import AdminParticipationSection from "../features/dashboard/dashboard/admin/AdminParticipationSection";
+import AdminRecognitionTrendSection from "../features/dashboard/dashboard/admin/AdminRecognitionTrendSection";
+import AdminRecognitionSection from "../features/dashboard/dashboard/admin/AdminRecognitionSection";
+import AdminTeamReportsSection from "../features/dashboard/dashboard/admin/AdminTeamReportsSection";
 
 export default function AdminDashboard() {
     return (

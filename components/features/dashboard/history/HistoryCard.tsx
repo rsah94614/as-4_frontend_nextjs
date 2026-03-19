@@ -1,6 +1,6 @@
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
-import { getMessage } from "../../../lib/history-utils";
-import type { HistoryItem } from "../../../types/history-types";
+import { getMessage } from "@/lib/history-utils";
+import type { HistoryItem } from "@/types/history-types";
 import { cn } from "@/lib/utils";
 
 import {

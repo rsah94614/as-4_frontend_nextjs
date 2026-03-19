@@ -2,9 +2,7 @@
 
 import React, { useState } from "react";
 import { Loader2, Archive } from "lucide-react";
-import { createAuthenticatedClient } from "@/lib/api-utils";
-
-const rewardsApiClient = createAuthenticatedClient("/api/proxy/rewards");
+import { rewardsClient as rewardsApiClient } from "@/services/api-clients";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { RewardItem } from "@/types/reward-types";
 import { RewardField } from "./UIHelpers";

@@ -16,7 +16,6 @@ import {
   PageShell,
   PageHeader,
   ContentWrapper,
-  StatusStats,
   FlashBanner,
 } from "@/components/features/admin/statuses/UIHelpers";
 import { StatusTable, type EditForm } from "@/components/features/admin/statuses/StatusTable";
@@ -97,13 +96,7 @@ export default function StatusesPage() {
     }
   };
 
-  // ─── Computed ─────────────────────────────────────────────────────────────
-  const totalCount = statuses.length;
-  const entityCounts = ENTITY_TYPES.map((t) => ({
-    label: ENTITY_META[t].label,
-    value: statuses.filter((s) => s.entity_type === t).length,
-    color: ENTITY_META[t].dot,
-  }));
+
 
   // Filter statuses by search text (name or code)
   const filteredStatuses = search.trim()
@@ -124,15 +117,7 @@ export default function StatusesPage() {
 
       {/* ─── Content ─── */}
       <ContentWrapper>
-        {/* Stats pills */}
-        {!loading && totalCount > 0 && (
-          <StatusStats
-            stats={[
-              { label: "Total", value: totalCount, color: "bg-[#004C8F]" },
-              ...entityCounts,
-            ]}
-          />
-        )}
+
 
         <HowItWorks />
 
@@ -148,15 +133,15 @@ export default function StatusesPage() {
         <div className="flex flex-wrap items-center gap-3 mb-6">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value.trimStart())}
               placeholder="Search by name or code…"
-              className="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 transition-all"
+              className="w-full pl-9 pr-8 py-2 rounded-lg border border-border bg-muted text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 transition-all"
             />
             {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 <X size={13} />
               </button>
             )}
@@ -167,14 +152,14 @@ export default function StatusesPage() {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value as EntityType | "")}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium text-gray-600"
+              className="border border-border rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 font-medium text-foreground"
             >
               <option value="">All Categories</option>
               {ENTITY_TYPES.map((t) => (
                 <option key={t} value={t}>{ENTITY_META[t].label}</option>
               ))}
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
           </div>
 
           {/* Add New Status button */}
@@ -227,27 +212,27 @@ const HOW_IT_WORKS_STEPS = [
 function HowItWorks() {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
+    <div className="bg-white border border-border rounded-xl overflow-hidden shadow-sm mb-6">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-3.5 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-3.5 hover:bg-muted transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Info size={13} className="text-[#E31837] shrink-0" />
-          <span className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</span>
+          <Info size={13} className="text-destructive shrink-0" />
+          <span className="text-[11px] font-bold text-primary uppercase tracking-widest">How It Works</span>
         </div>
-        <ChevronDown size={15} className={cn("text-gray-400 transition-transform duration-200 shrink-0", open && "rotate-180")} />
+        <ChevronDown size={15} className={cn("text-muted-foreground transition-transform duration-200 shrink-0", open && "rotate-180")} />
       </button>
       {open && (
         <div className="border-t border-gray-100">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-gray-100 sm:divide-x">
             {HOW_IT_WORKS_STEPS.map((s) => (
               <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-3 sm:py-4">
-                <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
+                <span className="text-[11px] font-black text-destructive w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
                 <div>
-                  <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
-                  <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
+                  <p className="text-xs font-semibold text-primary mb-0.5">{s.title}</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{s.desc}</p>
                 </div>
               </div>
             ))}

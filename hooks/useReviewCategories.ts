@@ -1,22 +1,21 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { recognitionClient as client } from "@/services/api-clients";
 import {
   ReviewCategory,
   ReviewCategoryCreatePayload,
   ReviewCategoryUpdatePayload,
 } from "@/types/review-category-types";
 
-const client = createAuthenticatedClient("");
-const BASE_URL = "/api/proxy/recognition/review-categories";
+const BASE_URL = "/review-categories";
 
 export function useReviewCategories(activeOnly: boolean | null = null) {
   const [categories, setCategories] = useState<ReviewCategory[]>([]);
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState<string | null>(null);
 
-  const fetchCategories = useCallback(async () => {
-    setLoading(true);
+  const fetchCategories = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const params: Record<string, string> = { page: "1", page_size: "100" };
@@ -27,7 +26,7 @@ export function useReviewCategories(activeOnly: boolean | null = null) {
     } catch (e: unknown) {
       setError(extractErrorMessage(e, "Failed to load categories"));
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
@@ -38,7 +37,7 @@ export function useReviewCategories(activeOnly: boolean | null = null) {
   const createCategory = useCallback(
     async (payload: ReviewCategoryCreatePayload): Promise<ReviewCategory> => {
       const res = await client.post<ReviewCategory>(BASE_URL, payload);
-      await fetchCategories();
+      await fetchCategories(true);
       return res.data;
     },
     [fetchCategories]
@@ -46,9 +45,21 @@ export function useReviewCategories(activeOnly: boolean | null = null) {
 
   const updateCategory = useCallback(
     async (id: string, payload: ReviewCategoryUpdatePayload): Promise<ReviewCategory> => {
-      const res = await client.put<ReviewCategory>(`${BASE_URL}/${id}`, payload);
-      await fetchCategories();
-      return res.data;
+      // Optimistically update the local state for instant UI feedback
+      setCategories((prev) =>
+        prev.map((c) => (c.category_id === id ? { ...c, ...payload } : c))
+      );
+
+      try {
+        const res = await client.put<ReviewCategory>(`${BASE_URL}/${id}`, payload);
+        // Refresh silently in background to ensure sync with server
+        fetchCategories(true);
+        return res.data;
+      } catch (err) {
+        // Revert on failure by refetching
+        fetchCategories(true);
+        throw err;
+      }
     },
     [fetchCategories]
   );

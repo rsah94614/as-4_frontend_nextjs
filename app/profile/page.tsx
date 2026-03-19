@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthProvider";
 
 // 1. Swap fetchWithAuth for your dedicated employee service
-import { employeeService } from "@/services/employee-service"; 
+import { employeeService } from "@/services/employee-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 
 import ProtectedRoute from "@/components/features/auth/ProtectedRoute";
@@ -39,14 +39,14 @@ export default function ProfilePage() {
         setError(null);
         try {
             const data = await employeeService.getEmployee(employeeId);
-            
+
             // FIX: Assert the type to match the UI's expectation. 
             // We ensure 'roles' is an array to satisfy the strict UI types.
             setProfile({
                 ...data,
                 roles: data.roles || []
             } as unknown as EmployeeDetail);
-            
+
         } catch (err: unknown) {
             setError(extractErrorMessage(err, "Something went wrong"));
         } finally {
@@ -56,7 +56,7 @@ export default function ProfilePage() {
 
     return (
         <ProtectedRoute>
-            <div className="flex min-h-screen bg-gray-50/50">
+            <div className="flex min-h-screen bg-muted/50">
                 <div className="flex-1 flex flex-col min-w-0 w-full max-w-6xl mx-auto">
                     <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto">
 
@@ -66,11 +66,11 @@ export default function ProfilePage() {
                         {/* Error */}
                         {!authLoading && !loading && error && (
                             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 min-h-[50vh] flex flex-col items-center justify-center p-8">
-                                <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                                <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
                                     <span className="text-2xl">⚠️</span>
                                 </div>
                                 <h3 className="text-lg font-bold text-gray-900 mb-2">Failed to load profile</h3>
-                                <p className="text-sm text-gray-500 text-center max-w-sm">{error}</p>
+                                <p className="text-sm text-muted-foreground text-center max-w-sm">{error}</p>
                                 <Button
                                     onClick={() => user?.employee_id && fetchProfile(user.employee_id)}
                                     className="mt-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
@@ -87,7 +87,7 @@ export default function ProfilePage() {
                                 <Button
                                     variant="ghost"
                                     onClick={() => router.back()}
-                                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 -ml-4 rounded-xl hover:bg-white border-transparent hover:border-gray-200"
+                                    className="flex items-center gap-2 text-foreground hover:text-gray-900 -ml-4 rounded-xl hover:bg-white border-transparent hover:border-border"
                                 >
                                     <ArrowLeft className="w-4 h-4" />
                                     Back to Dashboard

@@ -1,8 +1,8 @@
 // services/rewards-service.ts
 // All requests routed through Next.js proxy — no direct microservice URLs in browser.
 
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { rewardsClient, walletClient } from "@/services/api-clients";
 import type {
     CategoryInfo,
     WalletData,
@@ -16,8 +16,7 @@ import type {
     UpdateCategoryPayload,
 } from "@/types/reward-types";
 
-const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
-const walletClient = createAuthenticatedClient("/api/proxy/wallet");
+
 
 // ── User-facing catalog ───────────────────────────────────────────────────────
 

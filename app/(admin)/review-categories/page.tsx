@@ -24,27 +24,27 @@ const HOW_IT_WORKS_STEPS = [
 function HowItWorks() {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
+    <div className="bg-white border border-border rounded-xl overflow-hidden shadow-sm mb-6">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-3.5 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-3.5 hover:bg-muted transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Info size={13} className="text-[#E31837] shrink-0" />
-          <span className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</span>
+          <Info size={13} className="text-destructive shrink-0" />
+          <span className="text-[11px] font-bold text-primary uppercase tracking-widest">How It Works</span>
         </div>
-        <ChevronDown size={15} className={cn("text-gray-400 transition-transform duration-200 shrink-0", open && "rotate-180")} />
+        <ChevronDown size={15} className={cn("text-muted-foreground transition-transform duration-200 shrink-0", open && "rotate-180")} />
       </button>
       {open && (
         <div className="border-t border-gray-100">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-gray-100 sm:divide-x">
             {HOW_IT_WORKS_STEPS.map((s) => (
               <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-3 sm:py-4">
-                <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
+                <span className="text-[11px] font-black text-destructive w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
                 <div>
-                  <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
-                  <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
+                  <p className="text-xs font-semibold text-primary mb-0.5">{s.title}</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{s.desc}</p>
                 </div>
               </div>
             ))}
@@ -157,7 +157,6 @@ export default function ReviewCategoriesPage() {
   const handleToggleActive = async (c: ReviewCategory) => {
     try {
       await updateCategory(c.category_id, { is_active: !c.is_active });
-      showFlash(`Category ${!c.is_active ? "activated" : "deactivated"} successfully.`);
     } catch (e: unknown) {
       showFlash(extractErrorMessage(e, "Could not toggle category status."), "error");
     }
@@ -168,16 +167,16 @@ export default function ReviewCategoriesPage() {
 
   return (
     <>
-      <main className="flex-1 overflow-y-auto bg-white">
+      <main className="flex-1 overflow-y-auto flex flex-col bg-white">
 
         {/* ── Page Header ── */}
-        <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+        <div className="bg-white border-b border-border px-8 md:px-10 py-5">
           <div className="max-w-[1200px] mx-auto flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
                 Review Categories
               </h1>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Manage category tags · Set point multipliers · Activate or deactivate
               </p>
             </div>
@@ -191,9 +190,9 @@ export default function ReviewCategoriesPage() {
 
 
         {/* ── Main content ── */}
-        <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
-          <div className="max-w-[1200px] mx-auto">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+        <div className="flex-1 px-8 md:px-10 py-8 flex flex-col" style={{ background: "#F7F9FC" }}>
+          <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
+            <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
 
               {/* ── How It Works ── */}
               <HowItWorks />
@@ -217,7 +216,7 @@ export default function ReviewCategoriesPage() {
                 <div
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm mb-5 ${flash.type === "success"
                     ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                    : "bg-red-50 border-red-200 text-red-800"
+                    : "bg-destructive/10 border-destructive/20 text-red-800"
                     }`}
                 >
                   {flash.type === "success"
@@ -232,7 +231,7 @@ export default function ReviewCategoriesPage() {
 
               {/* ── API error ── */}
               {error && !flash && (
-                <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm mb-5 text-center font-medium">
+                <div className="px-4 py-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-sm mb-5 text-center font-medium">
                   {error}
                 </div>
               )}
@@ -245,7 +244,7 @@ export default function ReviewCategoriesPage() {
                     Review Categories
                   </span>
                 </div>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-muted-foreground">
                   {loading
                     ? "Loading…"
                     : `${(allCategories || []).length} total${activeCount > 0 ? ` · ${activeCount} active` : ""}${inactiveCount > 0 ? ` · ${inactiveCount} inactive` : ""}`}

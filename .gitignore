@@ -55,3 +55,6 @@ AGENTS.md
 
 
 .vscode/settings.json
+/.claude
+/.agents/
+skills-lock.json

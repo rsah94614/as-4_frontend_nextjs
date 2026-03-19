@@ -1,11 +1,11 @@
 // services/notification-service.ts
 // All requests routed through Next.js proxy — no direct microservice URL in browser.
 
-import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { employeesClient as notifClient } from "@/services/api-clients";
 import type { Notification, NotificationListResponse } from "@/types/notification-types";
 
-const notifClient = createAuthenticatedClient("/api/proxy/employees");
+
 const BASE = "/notifications";
 
 // ── In-flight deduplication — prevents double-fetch from React StrictMode ────

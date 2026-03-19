@@ -1,22 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { createAuthenticatedClient } from "@/lib/api-utils";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { matchesPeriod, matchesType } from "@/lib/history-utils";
+import { PAGE_SIZE } from "@/components/features/dashboard/history/constants";
+import { rewardsClient, walletClient } from "@/services/api-clients";
 import { auth } from "@/services/auth-service";
-import { matchesPeriod, matchesType } from "../lib/history-utils";
-import { PAGE_SIZE } from "../components/features/history/constants";
 import type {
     HistoryItem,
     PaginatedHistoryResponse,
     PeriodFilter,
     TypeFilter,
-} from "../types/history-types";
+} from "@/types/history-types";
 
 const FETCH_BATCH_SIZE = 100;
-
-const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
-const walletClient = createAuthenticatedClient("/api/proxy/wallet");
 
 interface TransactionType {
     type_id: string;
@@ -94,12 +91,8 @@ export function useHistoryData() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
-    const [cachedWalletId, setCachedWalletId] = useState<string | null>(null);
 
-    useEffect(() => {
-        fetchHistory();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    const cachedWalletIdRef = useRef<string | null>(null);
 
     useEffect(() => {
         setPage(1);
@@ -111,7 +104,7 @@ export function useHistoryData() {
         }
     }, [selectedPeriod, selectedType]);
 
-    async function fetchAllRewardHistory(): Promise<HistoryItem[]> {
+    const fetchAllRewardHistory = useCallback(async (): Promise<HistoryItem[]> => {
         let currentPage = 1;
         let totalRewardItems = 0;
         const rewardItems: HistoryItem[] = [];
@@ -131,12 +124,12 @@ export function useHistoryData() {
         } while (rewardItems.length < totalRewardItems);
 
         return rewardItems;
-    }
+    }, []);
 
-    async function fetchAllWalletHistory(employeeId?: string): Promise<{
+    const fetchAllWalletHistory = useCallback(async (employeeId?: string): Promise<{
         pointItems: HistoryItem[];
         walletRedemptionItems: HistoryItem[];
-    }> {
+    }> => {
         if (!employeeId) {
             return {
                 pointItems: [],
@@ -145,14 +138,12 @@ export function useHistoryData() {
         }
 
         try {
-            let walletId = cachedWalletId;
-
-            if (!walletId) {
+            if (!cachedWalletIdRef.current) {
                 const walletRes = await walletClient.get<WalletData>(`/employees/${employeeId}`);
-                walletId = walletRes.data.wallet_id;
-                setCachedWalletId(walletId);
+                cachedWalletIdRef.current = walletRes.data.wallet_id;
             }
 
+            const walletId = cachedWalletIdRef.current;
             if (!walletId) {
                 return {
                     pointItems: [],
@@ -193,9 +184,9 @@ export function useHistoryData() {
                 walletRedemptionItems: [],
             };
         }
-    }
+    }, []);
 
-    async function fetchHistory() {
+    const fetchHistory = useCallback(async () => {
         setLoading(true);
         setError(null);
 
@@ -228,7 +219,11 @@ export function useHistoryData() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [fetchAllRewardHistory, fetchAllWalletHistory]);
+
+    useEffect(() => {
+        fetchHistory();
+    }, [fetchHistory]);
 
     const filteredHistory = useMemo(
         () =>

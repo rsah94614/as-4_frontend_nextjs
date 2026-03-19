@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useHistoryData } from "@/hooks/useHistoryData";
-import HistoryFilterBar from "@/components/features/history/HistoryFilterBar";
-import HistoryList from "@/components/features/history/HistoryList";
-import HistoryPagination from "@/components/features/history/HistoryPagination";
+import HistoryFilterBar from "@/components/features/dashboard/history/HistoryFilterBar";
+import HistoryList from "@/components/features/dashboard/history/HistoryList";
+import HistoryPagination from "@/components/features/dashboard/history/HistoryPagination";
 import dynamic from "next/dynamic";
 import type { HistoryItem } from "@/types/history-types";
 
 // Dynamically import the modal to reduce initial JS evaluation time
-const TransactionDetailModal = dynamic(() => import("@/components/features/history/TransactionDetailModal"), {
+const TransactionDetailModal = dynamic(() => import("@/components/features/dashboard/history/TransactionDetailModal"), {
     ssr: false
 });
 
@@ -20,7 +20,7 @@ import {
     PAGE_HEADER_INNER,
     HDFC_RED,
     HDFC_BLUE
-} from "@/components/features/history/history-styles";
+} from "@/components/features/dashboard/history/history-styles";
 
 export default function HistoryPage() {
     const {
@@ -53,7 +53,7 @@ export default function HistoryPage() {
                         <h1 className="text-2xl font-bold leading-tight" style={{ color: HDFC_BLUE }}>
                             History
                         </h1>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                             View your points transactions and redemptions
                         </p>
                     </div>

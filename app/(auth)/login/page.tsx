@@ -139,8 +139,8 @@ export default function LoginPage() {
 
           {/* Decorative Background Pattern */}
           <div className="absolute inset-0 z-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#004C8F 1.5px, transparent 1.5px)', backgroundSize: '30px 30px' }}></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-[#d9a05b]/10 rounded-full blur-3xl pointer-events-none"></div>
-          <div className="absolute -bottom-20 -right-20 w-125 h-125 bg-[#004C8F]/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#d9a05b]/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
 
           <div className="relative z-10 w-full max-w-2xl flex flex-col mb-20">
             {/* Header containing HDFC Logo and Aabhar Text */}
@@ -154,9 +154,9 @@ export default function LoginPage() {
                   className="object-contain"
                 />
                 <div className="h-10 w-px bg-gray-300"></div>
-                <span className="text-[#E31837] text-2xl font-black tracking-widest uppercase">A</span>
+                <span className="text-destructive text-2xl font-black tracking-widest uppercase">A</span>
               </div>
-              <span className="text-[#004C8F] text-2xl font-black tracking-widest">abhar</span>
+              <span className="text-primary text-2xl font-black tracking-widest">abhar</span>
             </div>
 
             {/* Typography */}
@@ -213,13 +213,13 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="absolute bottom-8 justify-center opacity-50 text-sm text-gray-600 font-medium lg:pl-8">
+          <div className="absolute bottom-8 justify-center opacity-50 text-sm text-foreground font-medium lg:pl-8">
             Empowering our workforce through continuous recognition
           </div>
         </div>
 
         {/* Right Column - 45% */}
-        <div className="w-full lg:w-[45%] flex flex-col items-center justify-center p-4 bg-[#f4f6f9] relative border-l border-gray-200">
+        <div className="w-full lg:w-[45%] flex flex-col items-center justify-center p-4 bg-muted relative border-l border-border">
 
           {/* Background Pattern for right side */}
           <div className="absolute inset-0 z-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M54.627 0l.83.83-1.66 1.66-.83-.83.83-.83zM27.83 0l.83.83-1.66 1.66-.83-.83.83-.83zM1.033 0l.83.83-1.66 1.66-.83-.83.83-.83zM0 60l54.627-54.627.83.83L.83 60H0zm0-26.797l27.83-27.83.83.83L.83 34.033H0zm0-26.797L1.033 5.373l.83.83L.83 7.23H0zM26.797 60H60V26.797L26.797 60zM60 0v26.797L33.203 0H60zM0 0h26.797L0 26.797V0z\' fill=\'%23000000\' fill-opacity=\'1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")' }}></div>
@@ -227,7 +227,7 @@ export default function LoginPage() {
           <div className="w-full max-w-md mt-auto mb-auto z-10">
 
             {/* Form Card */}
-            <div className="w-full bg-white border border-gray-200 rounded-xl shadow-xl p-8 max-w-105 mx-auto mt-10">
+            <div className="w-full bg-white border border-border rounded-xl shadow-xl p-8 max-w-[420px] mx-auto mt-10">
 
               {/* Logo inside card (for mobile or generic view) */}
               <div className="mb-6 flex flex-col items-center justify-center">
@@ -242,14 +242,14 @@ export default function LoginPage() {
                   <span style={{ color: '#E31837' }}>A</span>
                   <span style={{ color: '#004C8F' }}>abhar</span>
                 </h1>
-                <h2 className="text-xl md:text-2xl text-gray-800 font-bold text-center">
+                <h2 className="text-xl md:text-2xl text-foreground font-bold text-center">
                   Welcome back!
                 </h2>
               </div>
 
               {/* General Error Message */}
               {errors.general && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-300 text-red-700 rounded-md text-sm">
+                <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-md text-sm">
                   {errors.general}
                 </div>
               )}
@@ -258,7 +258,7 @@ export default function LoginPage() {
                 {/* Email */}
                 <div className="space-y-1.5">
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                       <Mail className="h-4 w-4" />
                     </div>
                     <Input
@@ -268,20 +268,20 @@ export default function LoginPage() {
                       value={email}
                       onChange={handleEmailChange}
                       onBlur={() => handleBlur('email')}
-                      className={`h-11 rounded-md border-gray-300 pl-10 focus-visible:ring-[#004C8F]/20 focus-visible:border-[#004C8F] ${errors.email && touched.email ? 'border-red-500 focus-visible:ring-red-500/20' : ''}`}
+                      className={`h-11 rounded-md border-border pl-10 focus-visible:ring-ring/20 focus-visible:border-primary ${errors.email && touched.email ? 'border-destructive/20 focus-visible:ring-red-500/20' : ''}`}
                       disabled={loading}
                       autoComplete="email"
                     />
                   </div>
                   {errors.email && touched.email && (
-                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                    <p className="text-destructive text-sm mt-1">{errors.email}</p>
                   )}
                 </div>
 
                 {/* Password */}
                 <div className="space-y-1.5">
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                       <LockKeyhole className="h-4 w-4" />
                     </div>
                     <Input
@@ -291,14 +291,14 @@ export default function LoginPage() {
                       value={password}
                       onChange={handlePasswordChange}
                       onBlur={() => handleBlur('password')}
-                      className={`h-11 rounded-md border-gray-300 pl-10 focus-visible:ring-[#004C8F]/20 focus-visible:border-[#004C8F] ${errors.password && touched.password ? 'border-red-500 focus-visible:ring-red-500/20' : ''}`}
+                      className={`h-11 rounded-md border-border pl-10 focus-visible:ring-ring/20 focus-visible:border-primary ${errors.password && touched.password ? 'border-destructive/20 focus-visible:ring-red-500/20' : ''}`}
                       disabled={loading}
                       autoComplete="current-password"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                       tabIndex={-1}
                     >
                       {showPassword ? (
@@ -309,7 +309,7 @@ export default function LoginPage() {
                     </button>
                   </div>
                   {errors.password && touched.password && (
-                    <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                    <p className="text-destructive text-sm mt-1">{errors.password}</p>
                   )}
                 </div>
 
@@ -343,7 +343,7 @@ export default function LoginPage() {
           </div>
 
           {/* Footer */}
-          <div className="mt-8 pb-4 text-xs text-center text-gray-500 w-full z-10">
+          <div className="mt-8 pb-4 text-xs text-center text-muted-foreground w-full z-10">
             Secure Login | © HDFC Bank Ltd.
           </div>
         </div>

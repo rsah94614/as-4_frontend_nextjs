@@ -11,6 +11,7 @@ import { fetchAdminCatalog, fetchAdminCategories } from "@/services/rewards-serv
 import { RewardGrid } from "@/components/features/admin/rewards/RewardGrid";
 import { RewardModal } from "@/components/features/admin/rewards/RewardModal";
 import { RestockModal } from "@/components/features/admin/rewards/RestockModal";
+import { RewardStats } from "@/components/features/admin/rewards/UIHelpers";
 
 export default function RewardsPage() {
   const [items, setItems] = useState<RewardItem[]>([]);
@@ -25,7 +26,29 @@ export default function RewardsPage() {
   const [modal, setModal] = useState<null | "create" | "edit" | "restock">(null);
   const [selected, setSelected] = useState<RewardItem | undefined>();
 
+  const [globalStats, setGlobalStats] = useState({ total: 0, active: 0, inactive: 0 });
+
   // ─── Data Fetching ────────────────────────────────────────────────────────
+  const loadStats = useCallback(async () => {
+    try {
+      const [all, active] = await Promise.all([
+        fetchAdminCatalog({ page: 1, size: 1 }),
+        fetchAdminCatalog({ page: 1, size: 1, active_only: true })
+      ]);
+      setGlobalStats({
+        total: all.pagination?.total || 0,
+        active: active.pagination?.total || 0,
+        inactive: (all.pagination?.total || 0) - (active.pagination?.total || 0)
+      });
+    } catch(e) {
+      console.error("Failed to load global stats", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -114,20 +137,21 @@ export default function RewardsPage() {
   };
   const saved = () => {
     close();
+    loadStats();
     load();
   };
 
   return (
-    <main className="flex-1 overflow-y-auto bg-white">
+    <main className="flex-1 overflow-y-auto flex flex-col bg-white">
 
       {/* ─── Page Header (matches Employee page) ─── */}
-      <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+      <div className="bg-white border-b border-border px-8 md:px-10 py-5">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
               Reward Catalog
             </h1>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Create and manage individual items in your reward list
             </p>
           </div>
@@ -141,57 +165,43 @@ export default function RewardsPage() {
 
 
       {/* ─── Content Area ─── */}
-      <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
-        <div className="max-w-[1200px] mx-auto">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+      <div className="flex-1 px-8 md:px-10 py-8 flex flex-col" style={{ background: "#F7F9FC" }}>
+        <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
+          <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
 
             {/* ─── Toolbar ─── */}
             <div className="flex flex-wrap items-center gap-3 mb-6">
               {/* Search */}
               <div className="relative flex-1 min-w-[200px] max-w-sm">
-                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => setSearch(e.target.value.trimStart())}
                   placeholder="Search by name or code…"
-                  className="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 transition-all"
+                  className="w-full pl-9 pr-8 py-2 rounded-lg border border-border bg-muted text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 transition-all"
                 />
                 {search && (
-                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <X size={13} />
                   </button>
                 )}
               </div>
 
               {/* Filter tabs */}
-              <div className="relative">
-                <select
-                  value={filterState}
-                  onChange={(e) => {
-                    setFilterState(e.target.value as "all" | "active" | "inactive");
-                    setPage(1);
-                  }}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium text-gray-600"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-              </div>
-
-              {/* Item count */}
-              {displayPagination && (
-                <div className="ml-auto flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full tabular-nums">
-                    {displayPagination.total} items
-                  </span>
-                </div>
-              )}
+              <RewardStats
+                total={globalStats.total}
+                active={globalStats.active}
+                inactive={globalStats.inactive}
+                filterState={filterState}
+                setFilterState={(v: "all" | "active" | "inactive") => {
+                  setFilterState(v);
+                  setPage(1);
+                }}
+              />
 
               <button
                 onClick={() => setModal("create")}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 bg-[#004C8F]"
+                className="ml-auto flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-widest text-white whitespace-nowrap transition-all hover:opacity-90 active:scale-95 bg-primary"
               >
                 <Plus size={13} />
                 Add Reward

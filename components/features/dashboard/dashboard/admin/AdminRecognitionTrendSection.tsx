@@ -120,7 +120,7 @@ export default function AdminRecognitionTrendSection() {
                             <CartesianGrid vertical={false} stroke="#f4f4f5" />
                             <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
                             <YAxis tick={{ fontSize: 11, fill: "#a1a1aa" }} axisLine={false} tickLine={false} />
-                            <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e4e4e7", fontSize: 12 }} />
+                            <Tooltip separator="" contentStyle={{ borderRadius: 8, border: "1px solid #e4e4e7", fontSize: 12 }} />
                             <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                             <Area type="monotone" dataKey="given" name="Given" stroke="#7c3aed" strokeWidth={2} fill="url(#gradGiven)" dot={false} isAnimationActive animationDuration={600} />
                             <Area type="monotone" dataKey="received" name="Received" stroke="#3b82f6" strokeWidth={2} fill="url(#gradReceived)" dot={false} isAnimationActive animationDuration={600} />

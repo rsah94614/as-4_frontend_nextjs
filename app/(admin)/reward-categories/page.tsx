@@ -30,16 +30,16 @@ export default function CategoriesPage() {
   } = useRewardCategories();
 
   return (
-    <main className="flex-1 overflow-y-auto bg-white">
+    <main className="flex-1 overflow-y-auto flex flex-col bg-white">
 
       {/* ─── Page Header ─── */}
-      <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+      <div className="bg-white border-b border-border px-8 md:px-10 py-5">
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
               Reward Categories
             </h1>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Create and manage the categories for reward items
             </p>
           </div>
@@ -53,31 +53,22 @@ export default function CategoriesPage() {
 
 
       {/* ─── Content Area ─── */}
-      <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
-        <div className="max-w-[1200px] mx-auto">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+      <div className="flex-1 px-8 md:px-10 py-8 flex flex-col" style={{ background: "#F7F9FC" }}>
+        <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
+          <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
 
-            {/* Stats */}
-            {!loading && categories.length > 0 && (
-              <div className="mb-6">
-                <RewardStats
-                  total={categories.length}
-                  active={activeCount}
-                  inactive={categories.length - activeCount}
-                />
-              </div>
-            )}
+
 
             {/* Error Banner */}
             {error && !loading && (
-              <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 text-red-700">
+              <div className="mb-6 bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 text-destructive">
                   <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
                     <X size={16} />
                   </div>
                   <div>
                     <p className="text-sm font-bold">Error</p>
-                    <p className="text-xs text-red-600">{error}</p>
+                    <p className="text-xs text-destructive">{error}</p>
                   </div>
                 </div>
                 <button
@@ -94,37 +85,34 @@ export default function CategoriesPage() {
             <div className="flex flex-wrap items-center gap-3 mb-6">
               {/* Search */}
               <div className="relative flex-1 min-w-[200px] max-w-sm">
-                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => setSearch(e.target.value.trimStart())}
                   placeholder="Search by name or code…"
-                  className="w-full pl-9 pr-8 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 transition-all"
+                  className="w-full pl-9 pr-8 py-2 rounded-lg border border-border bg-muted text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 transition-all"
                 />
                 {search && (
-                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <X size={13} />
                   </button>
                 )}
               </div>
 
-              {/* Filter dropdown */}
-              <div className="relative">
-                <select
-                  value={filterState}
-                  onChange={(e) => setFilterState(e.target.value as "all" | "active" | "inactive")}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 font-medium text-gray-600"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-              </div>
+              {/* Filter tabs */}
+              {!loading && categories.length > 0 && (
+                <RewardStats
+                  total={categories.length}
+                  active={activeCount}
+                  inactive={categories.length - activeCount}
+                  filterState={filterState}
+                  setFilterState={setFilterState}
+                />
+              )}
 
               <button
                 onClick={openCreate}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 bg-[#004C8F]"
+                className="ml-auto flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-widest text-white whitespace-nowrap transition-all hover:opacity-90 active:scale-95 bg-primary"
               >
                 <Plus size={13} />
                 Add Category
