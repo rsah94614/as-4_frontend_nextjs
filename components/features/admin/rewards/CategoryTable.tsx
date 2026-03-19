@@ -3,7 +3,7 @@
 import React from "react";
 import { Category, CategoryFilter } from "@/types/reward-types";
 import { RewardBadge, SkeletonRow } from "./UIHelpers";
-import { Edit2, Package, Tag, Clock, ChevronRight } from "lucide-react";
+import { Edit2, Package, Clock, ChevronRight } from "lucide-react";
 
 interface CategoryTableProps {
     categories: Category[];
@@ -13,12 +13,11 @@ interface CategoryTableProps {
     filterState?: CategoryFilter;
 }
 
-export function CategoryTable({ 
-    categories, 
-    loading, 
-    onEdit, 
-    openCreate,
-    filterState = "all" 
+export function CategoryTable({
+    categories,
+    loading,
+    onEdit,
+    filterState = "all"
 }: CategoryTableProps) {
     if (!loading && categories.length === 0) {
         return (
@@ -119,7 +118,7 @@ export function CategoryTable({
                                 >
                                     <td className="px-5 py-3 pl-6">
                                         <div className="flex items-center gap-3">
-                                            
+
                                             <span className="text-sm font-semibold text-gray-800 tracking-tight group-hover:text-[#004C8F] transition-colors uppercase">
                                                 {cat.category_name}
                                             </span>

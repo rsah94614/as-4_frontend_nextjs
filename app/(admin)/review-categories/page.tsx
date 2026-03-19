@@ -157,7 +157,6 @@ export default function ReviewCategoriesPage() {
   const handleToggleActive = async (c: ReviewCategory) => {
     try {
       await updateCategory(c.category_id, { is_active: !c.is_active });
-      showFlash(`Category ${!c.is_active ? "activated" : "deactivated"} successfully.`);
     } catch (e: unknown) {
       showFlash(extractErrorMessage(e, "Could not toggle category status."), "error");
     }
