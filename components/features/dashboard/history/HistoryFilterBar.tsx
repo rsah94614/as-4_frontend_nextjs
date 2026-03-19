@@ -1,8 +1,8 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { periodOptions, typeOptions } from "./constants";
-import type { PeriodFilter, TypeFilter } from "@/types/history-types";
+import { periodOptions } from "./constants";
+import type { HistoryTypeOption, PeriodFilter, TypeFilter } from "@/types/history-types";
 
 import {
     FILTER_BTN_BASE,
@@ -19,6 +19,7 @@ interface HistoryFilterBarProps {
     setSelectedPeriod: (v: PeriodFilter) => void;
     selectedType: TypeFilter;
     setSelectedType: (v: TypeFilter) => void;
+    typeOptions: HistoryTypeOption[];
     clearFilters: () => void;
     filteredCount: number;
     loading: boolean;
@@ -33,6 +34,7 @@ export default function HistoryFilterBar({
     setSelectedPeriod,
     selectedType,
     setSelectedType,
+    typeOptions,
     clearFilters,
     periodDropdownOpen,
     setPeriodDropdownOpen,
@@ -42,6 +44,10 @@ export default function HistoryFilterBar({
     const hasActiveFilter =
         selectedPeriod !== "All History" || selectedType !== "All";
     const disableTypeFilter = selectedPeriod === "Points History";
+    const selectedTypeLabel =
+        selectedType === "All"
+            ? "Transaction Type"
+            : typeOptions.find((option) => option.value === selectedType)?.label ?? selectedType;
 
     return (
         <div className="space-y-6">
@@ -104,7 +110,7 @@ export default function HistoryFilterBar({
                             }`}
                     >
                         <span className="truncate max-w-[120px] sm:max-w-none">
-                            {selectedType === "All" ? "Transaction Type" : selectedType}
+                            {selectedTypeLabel}
                         </span>
                         <ChevronDown
                             className={`w-4 h-4 shrink-0 transition-transform duration-200 ${typeDropdownOpen ? "rotate-180" : ""}`}
@@ -113,19 +119,31 @@ export default function HistoryFilterBar({
 
                     {typeDropdownOpen && (
                         <div className={DROPDOWN_MENU}>
+                            <button
+                                onClick={() => {
+                                    setSelectedType("All");
+                                    setTypeDropdownOpen(false);
+                                }}
+                                className={`${DROPDOWN_ITEM} ${selectedType === "All"
+                                    ? DROPDOWN_ITEM_ACTIVE
+                                    : DROPDOWN_ITEM_INACTIVE
+                                    }`}
+                            >
+                                All
+                            </button>
                             {typeOptions.map((option) => (
                                 <button
-                                    key={option}
+                                    key={option.value}
                                     onClick={() => {
-                                        setSelectedType(option);
+                                        setSelectedType(option.value);
                                         setTypeDropdownOpen(false);
                                     }}
-                                    className={`${DROPDOWN_ITEM} ${selectedType === option
+                                    className={`${DROPDOWN_ITEM} ${selectedType === option.value
                                         ? DROPDOWN_ITEM_ACTIVE
                                         : DROPDOWN_ITEM_INACTIVE
                                         }`}
                                 >
-                                    {option}
+                                    {option.label}
                                 </button>
                             ))}
                         </div>

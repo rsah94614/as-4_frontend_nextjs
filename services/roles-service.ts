@@ -1,7 +1,5 @@
 // services/roles-service.ts
-// All requests routed through the Next.js proxy — no direct microservice URLs
-// in the browser.  The proxy strips /api/proxy/roles and forwards to the
-// roles microservice, which receives the bare path (e.g. /list).
+// Uses the direct roles microservice client from services/api-clients.ts.
 
 import { extractErrorMessage } from "@/lib/error-utils";
 import { rolesClient } from "@/services/api-clients";

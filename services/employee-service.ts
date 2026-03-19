@@ -77,9 +77,7 @@ export function listItemToTeamMember(e: Employee): TeamMember {
 export const employeeService = {
     async getEmployee(id: string): Promise<EmployeeDetail> {
         try {
-            // FIX: was `/v1/employees/${id}` → double-pathed to
-            // /api/proxy/employees/v1/employees/${id} → 404
-            // Now: `/${id}` → /api/proxy/employees/${id} → proxied correctly
+            // Direct client base URL already includes /v1/employees.
             const res = await employeesClient.get<EmployeeDetail>(`/${id}`)
             return res.data
         } catch (error) {
@@ -108,8 +106,7 @@ export const employeeService = {
         if (params?.sort_order)        q.set('sort_order',    params.sort_order)
 
         try {
-            // FIX: backend list route is /list, not / — so path must be `/list?${q}`
-            // → /api/proxy/employees/list?... → proxied to /v1/employees/list?...
+            // Direct client base URL already includes /v1/employees.
             const res = await employeesClient.get<{ data: Employee[]; pagination: Record<string, unknown> }>(
                 `/list?${q.toString()}`
             )

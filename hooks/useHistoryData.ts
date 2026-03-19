@@ -2,12 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { extractErrorMessage } from "@/lib/error-utils";
-import { matchesPeriod, matchesType } from "@/lib/history-utils";
+import {
+    getHistoryCategoryLabel,
+    getHistoryCategoryValue,
+    matchesPeriod,
+    matchesType,
+} from "@/lib/history-utils";
 import { PAGE_SIZE } from "@/components/features/dashboard/history/constants";
 import { rewardsClient, walletClient } from "@/services/api-clients";
 import { auth } from "@/services/auth-service";
 import type {
     HistoryItem,
+    HistoryTypeOption,
     PaginatedHistoryResponse,
     PeriodFilter,
     TypeFilter,
@@ -103,6 +109,44 @@ export function useHistoryData() {
             setSelectedType("All");
         }
     }, [selectedPeriod, selectedType]);
+
+    const typeOptions = useMemo<HistoryTypeOption[]>(() => {
+        const seen = new Set<string>();
+        const options: HistoryTypeOption[] = [];
+
+        for (const item of allHistory) {
+            const value = getHistoryCategoryValue(item);
+            const label = getHistoryCategoryLabel(item);
+
+            if (!value || !label) {
+                continue;
+            }
+
+            const normalizedValue = value.toLowerCase();
+            if (seen.has(normalizedValue)) {
+                continue;
+            }
+
+            seen.add(normalizedValue);
+            options.push({ value, label });
+        }
+
+        return options.sort((a, b) => a.label.localeCompare(b.label));
+    }, [allHistory]);
+
+    useEffect(() => {
+        if (selectedType === "All") {
+            return;
+        }
+
+        const selectedTypeStillExists = typeOptions.some(
+            (option) => option.value.toLowerCase() === selectedType.toLowerCase()
+        );
+
+        if (!selectedTypeStillExists) {
+            setSelectedType("All");
+        }
+    }, [selectedType, typeOptions]);
 
     const fetchAllRewardHistory = useCallback(async (): Promise<HistoryItem[]> => {
         let currentPage = 1;
@@ -258,6 +302,7 @@ export function useHistoryData() {
         setSelectedPeriod,
         selectedType,
         setSelectedType,
+        typeOptions,
         clearFilters,
         allHistory,
         filteredHistory,

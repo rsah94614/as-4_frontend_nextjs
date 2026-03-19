@@ -26,6 +26,7 @@ export default function HistoryPage() {
     const {
         selectedPeriod, setSelectedPeriod,
         selectedType, setSelectedType,
+        typeOptions,
         clearFilters,
         allHistory, filteredHistory, paginatedHistory,
         loading, error, retry,
@@ -73,6 +74,7 @@ export default function HistoryPage() {
                     setSelectedPeriod={setSelectedPeriod}
                     selectedType={selectedType}
                     setSelectedType={setSelectedType}
+                    typeOptions={typeOptions}
                     clearFilters={clearFilters}
                     filteredCount={filteredHistory.length}
                     loading={loading}
