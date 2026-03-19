@@ -8,9 +8,9 @@ export const PAGE_HEADER =
     "bg-white border-b border-gray-100 px-8 md:px-10 py-6 rounded-t-[24px]";
 
 export const PAGE_HEADER_INNER =
-    "max-w-[1200px] mx-auto flex items-center justify-between";
+    "mx-auto flex items-center justify-between";
 
-export const PAGE_CONTENT = "px-8 md:px-10 py-8 max-w-[1200px] mx-auto rounded-b-[24px]";
+export const PAGE_CONTENT = "px-8 md:px-10 py-8 mx-auto rounded-b-[24px]";
 
 
 export const HDFC_RED = "#E31837";

@@ -85,7 +85,7 @@ export default function RedeemPage() {
 
   return (
     <div className={PAGE_WRAPPER}>
-      <Card className={PAGE_CARD}>
+      <div className={PAGE_CARD}>
         <CardContent className={PAGE_CONTENT}>
           <WalletBanner wallet={redeem.wallet} />
 
@@ -205,7 +205,7 @@ export default function RedeemPage() {
             </>
           ) : null}
         </CardContent>
-      </Card>
+      </div>
 
       {/* Dialog */}
       <RedeemDialog

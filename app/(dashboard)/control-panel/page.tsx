@@ -122,10 +122,10 @@ export default function ControlPanelHub() {
             <div className="bg-white border-b border-gray-100 px-4 sm:px-6 md:px-10 py-6 sm:py-7">
                 <div className="w-full flex items-center justify-between">
                     <div>
-                        <h1 className="text-xl sm:text-[26px] font-extrabold leading-tight tracking-tight px-0.5" style={{ color: '#004C8F' }}>
+                        <h1 className="text-2xl font-bold leading-tight" style={{ color: '#004C8F' }}>
                             Control Panel
                         </h1>
-                        <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 font-medium px-0.5">
+                        <p className="text-sm text-muted-foreground mt-1">
                             System administration &amp; configuration
                         </p>
                     </div>

@@ -37,8 +37,8 @@ export function AuditFilterPanel({ onApply, onClear, initialFilters }: AuditFilt
     const inputClass = "h-10 rounded-lg border-slate-300 focus-visible:ring-0 focus-visible:border-[#1a4ab5]";
 
     return (
-        <div className="bg-white rounded-xl shadow-sm px-3 sm:px-4 lg:px-6 py-4 sm:py-5 space-y-4 overflow-x-hidden" style={{ border: "1px solid #e5e7eb" }}>
-            <div className="flex items-center justify-between">
+        <div className="bg-white rounded-xl shadow-sm px-3 sm:px-4 md:px-5 lg:px-6 py-4 space-y-4 overflow-x-hidden" style={{ border: "1px solid #e5e7eb" }}>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-sm font-bold" style={{ color: "#374151" }}>Filter Audit Logs</h3>
                 {hasStaged && (
                     <button
@@ -59,7 +59,7 @@ export function AuditFilterPanel({ onApply, onClear, initialFilters }: AuditFilt
                 </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
                 {/* Action Type — most useful filter */}
                 <div>
@@ -127,7 +127,7 @@ export function AuditFilterPanel({ onApply, onClear, initialFilters }: AuditFilt
                 </div>
 
                 {/* Apply */}
-                <div className="flex items-end">
+                <div className="flex items-end md:col-span-2 xl:col-span-1">
                     <Button
                         onClick={() => onApply(staged)}
                         className="w-full h-10 rounded-lg font-semibold text-white hover:opacity-90"

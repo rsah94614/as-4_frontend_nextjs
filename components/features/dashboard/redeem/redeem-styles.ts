@@ -7,7 +7,7 @@
 export const PAGE_WRAPPER = "flex-1 w-full";
 
 export const PAGE_CARD =
-    "shadow-none border-none bg-white max-w-[1200px] mx-auto py-0";
+    "shadow-none border-none bg-white mx-auto py-0";
 
 export const PAGE_CONTENT = "px-8 md:px-10 py-10";
 

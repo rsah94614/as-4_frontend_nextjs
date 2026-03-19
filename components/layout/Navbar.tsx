@@ -124,7 +124,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     const username = user?.username || '';
 
     return (
-        <nav className="w-full shrink-0" style={{ background: '#004C8F' }}>
+        <nav className="sticky top-0 z-40 w-full shrink-0 bg-[#004C8F]">
             <div className="px-4 sm:px-6">
                 <div className="flex items-center justify-between h-14 gap-2">
 
