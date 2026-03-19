@@ -69,9 +69,8 @@ export function StatusTable({
                     >
                         {/* Section header */}
                         <div
-                            className={`flex items-center gap-3 px-5 py-3.5 border-b ${meta.header}`}
+                            className={`flex items-center px-5 py-3.5 border-b ${meta.header}`}
                         >
-                            <span className={`w-2.5 h-2.5 rounded-full ${meta.dot}`} />
                             <div>
                                 <span className="text-sm font-bold text-gray-800">
                                     {meta.label} Statuses
@@ -81,7 +80,7 @@ export function StatusTable({
                                 </span>
                             </div>
                             <span
-                                className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border ${meta.pill}`}
+                                className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border ${meta.textColor}`}
                             >
                                 {items.length}
                             </span>
@@ -130,7 +129,7 @@ export function StatusTable({
                                                 >
                                                     <td className="px-5 py-4">
                                                         <span
-                                                            className={`font-mono text-xs font-bold px-2.5 py-1.5 rounded-lg border ${meta.pill}`}
+                                                            className={`font-mono text-xs font-bold ${meta.textColor}`}
                                                         >
                                                             {status.status_code}
                                                         </span>
@@ -229,7 +228,7 @@ export function StatusTable({
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="flex-1 min-w-0">
                                                     <span
-                                                        className={`font-mono text-xs font-bold px-2.5 py-1 rounded-lg border ${meta.pill} inline-block mb-2`}
+                                                        className={`font-mono text-xs font-bold ${meta.textColor} inline-block mb-1`}
                                                     >
                                                         {status.status_code}
                                                     </span>

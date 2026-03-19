@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
     Trophy, Building2, UserRound, Users, Tags, Star,
     ShieldAlert, Loader2, Shield, ClipboardList,
-    Activity, ArrowUpRight, LayoutGrid
+    Activity, ArrowUpRight
 } from 'lucide-react';
 import { auth } from '@/services/auth-service';
 import { isAdminUser } from '@/lib/role-utils';
@@ -116,75 +116,64 @@ export default function ControlPanelHub() {
     }
 
     return (
-        <div className="flex-1 w-full min-h-screen bg-muted">
+        <div className="flex-1 w-full bg-white rounded-[24px] shadow-[0_10px_50px_rgba(0,0,0,0.04)] overflow-hidden min-h-[calc(100vh-2rem)] sm:min-h-[calc(100vh-3rem)] transition-all">
 
             {/* ── Page Header ── */}
-            <div className="bg-white border border-border rounded-xl px-8 md:px-10 py-6 flex items-center justify-between">
-                <div>
-                    <h1 className="text-[20px] font-bold text-primary leading-tight tracking-tight">
-                        Control Panel
-                    </h1>
-                    <p className="text-[14px] text-muted-foreground mt-1">
-                        System administration &amp; configuration
-                    </p>
+            <div className="bg-white border-b border-gray-100 px-4 sm:px-6 md:px-10 py-6 sm:py-7">
+                <div className="w-full flex items-center justify-between">
+                    <div>
+                        <h1 className="text-xl sm:text-[26px] font-extrabold leading-tight tracking-tight px-0.5" style={{ color: '#004C8F' }}>
+                            Control Panel
+                        </h1>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 font-medium px-0.5">
+                            System administration &amp; configuration
+                        </p>
+                    </div>
+                    <span className="hidden md:flex items-center text-2xl font-black tracking-tighter select-none opacity-90">
+                        <span style={{ color: '#E31837' }}>A</span>
+                        <span style={{ color: '#004C8F' }}>abhar</span>
+                    </span>
                 </div>
-                <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-                    <span className="text-destructive">A</span>
-                    <span className="text-primary">abhar</span>
-                </span>
             </div>
 
             {/* ── Content ── */}
-            <div className="max-w-[1200px] mx-auto px-8 md:px-10 py-8">
-
-                {/* Meta row */}
-                <div className="flex items-center justify-between mb-6">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-white border border-border">
-                        <div className="w-2 h-2 rounded-full bg-[#C0392B]" />
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-[#C0392B]">
-                            Admin Access
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground font-medium">
-                        <LayoutGrid size={12} />
-                        <span>{categories.length} modules</span>
-                    </div>
-                </div>
+            <div className="px-4 sm:px-6 md:px-10 py-6 sm:py-8 w-full">
 
                 {/* Cards grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {categories.map((cat) => (
                         <Link key={cat.href} href={cat.href} className="group block">
                             <div
-                                className="bg-white rounded-xl h-full flex flex-col p-6
-                                    border border-border
-                                    hover:border-gray-400 hover:shadow-md
-                                    transition-all duration-150"
+                                className="relative rounded-xl border border-slate-300 bg-white flex flex-col overflow-hidden
+                                    transition-all duration-300 shadow-md shadow-slate-400
+                                    cursor-pointer hover:shadow-xl hover:shadow-slate-300 hover:-translate-y-0.5"
                             >
-                                {/* Icon + arrow */}
-                                <div className="flex items-start justify-between mb-5">
-                                    <div className="w-10 h-10 rounded-lg bg-[#EEF2F7] flex items-center justify-center shrink-0">
-                                        <cat.icon size={18} className="text-primary" />
+                                <div className="flex flex-col flex-1 p-5">
+                                    {/* Icon + arrow */}
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110">
+                                            <cat.icon size={22} className="text-blue-600" />
+                                        </div>
+                                        <ArrowUpRight
+                                            size={15}
+                                            className="text-slate-300 group-hover:text-[#004C8F] transition-colors duration-200 mt-0.5"
+                                        />
                                     </div>
-                                    <ArrowUpRight
-                                        size={15}
-                                        className="text-gray-300 group-hover:text-primary transition-colors duration-150 mt-0.5"
-                                    />
-                                </div>
 
-                                {/* Text */}
-                                <h3 className="text-[14px] font-semibold text-[#111827] mb-2">
-                                    {cat.title}
-                                </h3>
-                                <p className="text-[12.5px] text-muted-foreground leading-relaxed flex-1">
-                                    {cat.description}
-                                </p>
+                                    {/* Text */}
+                                    <p className="font-semibold text-slate-800 text-sm leading-snug mb-1">
+                                        {cat.title}
+                                    </p>
+                                    <p className="text-xs text-slate-400 line-clamp-2 mb-3">
+                                        {cat.description}
+                                    </p>
 
-                                {/* Footer */}
-                                <div className="mt-5 pt-4 border-t border-border flex items-center justify-center">
-                                    <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors duration-150">
-                                        Manage
-                                    </span>
+                                    {/* Footer */}
+                                    <div className="mt-auto pt-3 border-t border-slate-50">
+                                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-[#004C8F] transition-colors duration-200">
+                                            Manage →
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </Link>

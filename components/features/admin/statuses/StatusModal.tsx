@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Loader2 } from "lucide-react";
+import { Loader2, Save, ClipboardList, AlertTriangle } from "lucide-react";
 import { EntityType, ENTITY_TYPES, ENTITY_META } from "@/types/status-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +11,14 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
 } from "@/components/ui/dialog";
-import { Field } from "./UIHelpers";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface StatusModalProps {
     isOpen: boolean;
@@ -35,7 +40,8 @@ export function StatusModal({ isOpen, onClose, onCreate, saving }: StatusModalPr
         entity_type: "EMPLOYEE" as EntityType,
     });
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
         await onCreate(form);
         setForm({ status_code: "", status_name: "", description: "", entity_type: "EMPLOYEE" });
     };
@@ -47,49 +53,57 @@ export function StatusModal({ isOpen, onClose, onCreate, saving }: StatusModalPr
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent className="sm:max-w-lg p-0 overflow-hidden rounded-xl border-0 [&>button]:hidden">
-                {/* Blue header */}
-                <div className="px-6 py-4" style={{ background: "#004C8F" }}>
-                    <DialogHeader>
-                        <DialogTitle className="text-white font-bold text-sm">
-                            Add New Status
-                        </DialogTitle>
-                        <DialogDescription className="text-blue-200 text-xs mt-0.5">
-                            Create a status label that can be assigned to employees, reviews,
-                            transactions, or rewards.
-                        </DialogDescription>
-                    </DialogHeader>
-                </div>
-                {/* Red accent line */}
-                <div className="h-0.5" style={{ background: "#E31837" }} />
+            <DialogContent
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                className="max-w-lg p-0 border-none bg-white rounded-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh] selection:bg-[#004C8F] selection:text-white"
+            >
+                <DialogHeader className="flex flex-row items-center justify-between px-8 py-6 border-b border-slate-50 bg-slate-50/50 shrink-0">
+                    <div className="flex items-center gap-3 text-left">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-green-100 text-green-600 shadow-inner">
+                            <ClipboardList className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <DialogTitle className="text-xl font-semibold text-slate-800 tracking-tight leading-none mb-1">
+                                Add Status
+                            </DialogTitle>
+                            <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
+                                STATUS MANAGEMENT
+                            </p>
+                        </div>
+                    </div>
+                </DialogHeader>
 
-                <div className="space-y-4 p-6 bg-white">
-                    <Field
-                        label="Category *"
-                        hint="Which area of the system will this status be used for?"
-                    >
-                        <select
+                <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6 overflow-y-auto flex-1">
+                    <div className="space-y-1.5 mb-5 group">
+                        <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1 group-focus-within:text-[#004C8F] transition-colors">
+                            CATEGORY
+                        </label>
+                        <Select
                             value={form.entity_type}
-                            onChange={(e) =>
+                            onValueChange={(val) =>
                                 setForm((p) => ({
                                     ...p,
-                                    entity_type: e.target.value as EntityType,
+                                    entity_type: val as EntityType,
                                 }))
                             }
-                            className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10 focus:border-[#004C8F]/40 transition text-gray-800"
                         >
-                            {ENTITY_TYPES.map((t) => (
-                                <option key={t} value={t}>
-                                    {ENTITY_META[t].label}
-                                </option>
-                            ))}
-                        </select>
-                    </Field>
+                            <SelectTrigger className="w-full h-12 px-5 rounded-xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white">
+                                <SelectValue placeholder="Select category…" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                                {ENTITY_TYPES.map((t) => (
+                                    <SelectItem key={t} value={t} className="font-semibold">
+                                        {ENTITY_META[t].label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
 
-                    <Field
-                        label="Status Code *"
-                        hint="A short unique identifier. Use ALL_CAPS with underscores (e.g. ON_LEAVE). Cannot be changed after creation."
-                    >
+                    <div className="space-y-1.5 mb-5 group">
+                        <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1 group-focus-within:text-[#004C8F] transition-colors">
+                            STATUS CODE
+                        </label>
                         <Input
                             value={form.status_code}
                             onChange={(e) =>
@@ -102,18 +116,20 @@ export function StatusModal({ isOpen, onClose, onCreate, saving }: StatusModalPr
                             }
                             placeholder="e.g. ON_LEAVE"
                             maxLength={50}
-                            className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F]"
+                            className="w-full h-12 px-5 rounded-xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white placeholder:text-slate-300 transition-all uppercase"
                         />
-                        <p className="text-xs text-gray-400 mt-1.5">
-                            ⚠ This code is permanent and used by the system internally.
-                            Choose carefully.
-                        </p>
-                    </Field>
+                        <div className="flex items-center gap-1.5 mt-2 ml-1">
+                            <AlertTriangle className="w-3 h-3 text-amber-500" />
+                            <p className="text-[10px] text-slate-500 font-medium">
+                                This code is permanent and used by the system internally. Choose carefully.
+                            </p>
+                        </div>
+                    </div>
 
-                    <Field
-                        label="Display Name *"
-                        hint="The human-readable name shown to employees and managers in the app."
-                    >
+                    <div className="space-y-1.5 mb-5 group">
+                        <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1 group-focus-within:text-[#004C8F] transition-colors">
+                            DISPLAY NAME
+                        </label>
                         <Input
                             value={form.status_name}
                             onChange={(e) =>
@@ -121,50 +137,53 @@ export function StatusModal({ isOpen, onClose, onCreate, saving }: StatusModalPr
                             }
                             placeholder="e.g. On Leave"
                             maxLength={100}
-                            className="border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F]"
+                            className="w-full h-12 px-5 rounded-xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white placeholder:text-slate-300 transition-all"
                         />
-                    </Field>
+                    </div>
 
-                    <Field
-                        label="Description"
-                        hint="Optional. Helps admins understand when to apply this status."
-                    >
+                    <div className="space-y-1.5 mb-5 group">
+                        <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1 group-focus-within:text-[#004C8F] transition-colors">
+                            DESCRIPTION
+                        </label>
                         <Textarea
                             value={form.description}
                             onChange={(e) =>
                                 setForm((p) => ({ ...p, description: e.target.value }))
                             }
-                            className="resize-none border-gray-200 focus-visible:ring-0 focus-visible:border-[#004C8F]"
+                            className="w-full px-5 py-3.5 rounded-xl border-2 border-slate-100 text-sm font-semibold text-black focus-visible:ring-0 focus-visible:border-[#004C8F] bg-white placeholder:text-slate-300 transition-all min-h-[100px] resize-none"
                             rows={2}
                             placeholder="e.g. Employee is temporarily on approved leave."
                         />
-                    </Field>
-                </div>
+                    </div>
 
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
-                    <Button
-                        variant="outline"
-                        onClick={handleClose}
-                        disabled={saving}
-                        className="border-gray-200 text-xs font-semibold"
-                    >
-                        Cancel
-                    </Button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={saving}
-                        className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
-                        style={{ background: "#E31837" }}
-                    >
-                        {saving ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <Plus className="w-4 h-4" />
-                        )}
-                        {saving ? "Creating…" : "Create Status"}
-                    </button>
-                </div>
+                    <div className="flex gap-4 pt-4 border-t border-slate-50">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={handleClose}
+                            disabled={saving}
+                            className="flex-1 h-14 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all tracking-wider uppercase"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={saving}
+                            className="flex-1 h-14 rounded-xl text-xs font-semibold text-white bg-[#004C8F] hover:bg-[#003d73] transition-all tracking-wider uppercase flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:bg-slate-100 disabled:text-slate-300 disabled:shadow-none"
+                        >
+                            {saving ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    Create
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </form>
             </DialogContent>
         </Dialog>
     );
 }
+
