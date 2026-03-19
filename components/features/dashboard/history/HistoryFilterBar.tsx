@@ -103,7 +103,6 @@ export default function HistoryFilterBar({
                         className={`${FILTER_BTN_BASE} ${selectedType !== "All" ? FILTER_BTN_ACTIVE : ""
                             }`}
                     >
-                        <button
                         <span className="truncate max-w-[120px] sm:max-w-none">
                             {selectedType === "All" ? "Transaction Type" : selectedType}
                         </span>
