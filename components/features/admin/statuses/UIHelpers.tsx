@@ -8,7 +8,7 @@ import { Check, AlertCircle, X, Info, HelpCircle, } from "lucide-react";
 
 export function PageShell({ children }: { children: React.ReactNode }) {
     return (
-        <main className="flex-1 overflow-y-auto bg-white">
+        <main className="flex-1 overflow-y-auto flex flex-col bg-white">
             {children}
         </main>
     );
@@ -25,7 +25,7 @@ export function PageHeader({
 }) {
     return (
         <>
-            <div className="bg-white border-b border-gray-200 px-8 md:px-10 py-5">
+            <div className="bg-white border-b border-border px-8 md:px-10 py-5">
                 <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                     <div>
                         <h1
@@ -34,7 +34,7 @@ export function PageHeader({
                         >
                             {title}
                         </h1>
-                        <p className="text-sm text-gray-400 mt-1">{subtitle}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
                     </div>
                     <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
                         <span style={{ color: "#E31837" }}>A</span>
@@ -51,9 +51,9 @@ export function PageHeader({
 
 export function ContentWrapper({ children }: { children: React.ReactNode }) {
     return (
-        <div className="px-8 md:px-10 py-8" style={{ background: "#F7F9FC" }}>
-            <div className="max-w-[1200px] mx-auto">
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+        <div className="flex-1 px-8 md:px-10 py-8 flex flex-col" style={{ background: "#F7F9FC" }}>
+            <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
+                <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                     {children}
                 </div>
             </div>
