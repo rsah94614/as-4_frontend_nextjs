@@ -63,9 +63,9 @@ export function RewardStats({
     filterState,
     setFilterState,
 }: {
-    total: number;
-    active: number;
-    inactive: number;
+    total?: number;
+    active?: number;
+    inactive?: number;
     filterState?: string;
     setFilterState?: (s: "all" | "active" | "inactive") => void;
 }) {
@@ -76,7 +76,7 @@ export function RewardStats({
     ];
 
     return (
-        <div className="flex flex-wrap items-center gap-2 mb-6">
+        <div className="flex flex-wrap items-center gap-2">
             {stats.map((s) => {
                 const isActive = filterState === s.id;
                 return (
@@ -96,12 +96,14 @@ export function RewardStats({
                         )}>
                             {s.label}
                         </span>
-                        <span className={cn(
-                            "text-xs font-black tabular-nums",
-                            isActive ? "text-[#004C8F]" : "text-gray-800"
-                        )}>
-                            {s.value}
-                        </span>
+                        {s.value !== undefined && (
+                            <span className={cn(
+                                "text-xs font-black tabular-nums",
+                                isActive ? "text-[#004C8F]" : "text-gray-800"
+                            )}>
+                                {s.value}
+                            </span>
+                        )}
                     </button>
                 );
             })}
@@ -115,7 +117,7 @@ export function StatusBadge({ active }: { active: boolean }) {
         <span
             className={cn(
                 "inline-flex items-center text-[10px] font-bold tracking-wider",
-                active ? "text-emerald-700" : "text-red-600"
+                active ? "text-emerald-400" : "text-red-600"
             )}
         >
             {active ? "ACTIVE" : "INACTIVE"}

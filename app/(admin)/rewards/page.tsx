@@ -11,6 +11,7 @@ import { fetchAdminCatalog, fetchAdminCategories } from "@/services/rewards-serv
 import { RewardGrid } from "@/components/features/admin/rewards/RewardGrid";
 import { RewardModal } from "@/components/features/admin/rewards/RewardModal";
 import { RestockModal } from "@/components/features/admin/rewards/RestockModal";
+import { RewardStats } from "@/components/features/admin/rewards/UIHelpers";
 
 export default function RewardsPage() {
   const [items, setItems] = useState<RewardItem[]>([]);
@@ -25,7 +26,29 @@ export default function RewardsPage() {
   const [modal, setModal] = useState<null | "create" | "edit" | "restock">(null);
   const [selected, setSelected] = useState<RewardItem | undefined>();
 
+  const [globalStats, setGlobalStats] = useState({ total: 0, active: 0, inactive: 0 });
+
   // ─── Data Fetching ────────────────────────────────────────────────────────
+  const loadStats = useCallback(async () => {
+    try {
+      const [all, active] = await Promise.all([
+        fetchAdminCatalog({ page: 1, size: 1 }),
+        fetchAdminCatalog({ page: 1, size: 1, active_only: true })
+      ]);
+      setGlobalStats({
+        total: all.pagination?.total || 0,
+        active: active.pagination?.total || 0,
+        inactive: (all.pagination?.total || 0) - (active.pagination?.total || 0)
+      });
+    } catch(e) {
+      console.error("Failed to load global stats", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -114,6 +137,7 @@ export default function RewardsPage() {
   };
   const saved = () => {
     close();
+    loadStats();
     load();
   };
 
@@ -164,34 +188,20 @@ export default function RewardsPage() {
               </div>
 
               {/* Filter tabs */}
-              <div className="relative">
-                <select
-                  value={filterState}
-                  onChange={(e) => {
-                    setFilterState(e.target.value as "all" | "active" | "inactive");
-                    setPage(1);
-                  }}
-                  className="border border-border rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 font-medium text-foreground"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-              </div>
-
-              {/* Item count */}
-              {displayPagination && (
-                <div className="ml-auto flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full tabular-nums">
-                    {displayPagination.total} items
-                  </span>
-                </div>
-              )}
+              <RewardStats
+                total={globalStats.total}
+                active={globalStats.active}
+                inactive={globalStats.inactive}
+                filterState={filterState}
+                setFilterState={(v: "all" | "active" | "inactive") => {
+                  setFilterState(v);
+                  setPage(1);
+                }}
+              />
 
               <button
                 onClick={() => setModal("create")}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 bg-primary"
+                className="ml-auto flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-widest text-white whitespace-nowrap transition-all hover:opacity-90 active:scale-95 bg-primary"
               >
                 <Plus size={13} />
                 Add Reward
