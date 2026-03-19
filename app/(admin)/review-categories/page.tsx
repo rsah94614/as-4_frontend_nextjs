@@ -204,7 +204,7 @@ export default function ReviewCategoriesPage() {
                 <button
                   onClick={() => setShowCreate(true)}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white transition-all duration-150"
-                  style={{ background: "#E31837" }}
+                  style={{ background: "#004C8F" }}
                 >
                   <Plus className="w-4 h-4" />
                   New Category

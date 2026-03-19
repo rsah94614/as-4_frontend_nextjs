@@ -85,8 +85,8 @@ export function RewardStats({
                         onClick={() => setFilterState?.(s.id as "all" | "active" | "inactive")}
                         className={cn(
                             "flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#004C8F]/10",
-                            isActive 
-                                ? "bg-white border-[#004C8F] shadow-[#004C8F]/10 shadow-sm" 
+                            isActive
+                                ? "bg-white border-[#004C8F] shadow-[#004C8F]/10 shadow-sm"
                                 : "border-gray-200 bg-gray-50 hover:bg-gray-100"
                         )}
                     >

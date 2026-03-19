@@ -21,10 +21,10 @@ import { useNotificationStore } from '@/lib/notification-store';
 const POLL_INTERVAL_MS = 30_000;
 
 const TYPE_ICON: Record<string, string> = {
-    REVIEW:       "📋",
-    REWARD:       "🏅",
-    SYSTEM:       "⚙️",
-    CELEBRATION:  "🎉",
+    REVIEW: "📋",
+    REWARD: "🏅",
+    SYSTEM: "⚙️",
+    CELEBRATION: "🎉",
     ANNOUNCEMENT: "📣",
 };
 
@@ -45,7 +45,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     const [user] = useState(() => auth.getUser());
     const [showNotifications, setShowNotifications] = useState(false);
     const notificationRef = useRef<HTMLDivElement | null>(null);
-    const prevUnreadRef   = useRef<number>(0);
+    const prevUnreadRef = useRef<number>(0);
     const pathname = usePathname();
     const router = useRouter();
 
@@ -53,7 +53,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     const { notifications, unreadCount, fetchNotifications, fetchUnreadCount } =
         useNotificationStore();
 
-    const hasUnread    = unreadCount > 0;
+    const hasUnread = unreadCount > 0;
     const previewItems = notifications.slice(0, 5);
 
     const ADMIN_ROUTES = [
@@ -82,7 +82,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         }, POLL_INTERVAL_MS);
 
         return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // mount once — store actions are stable references
 
     // ── Close dropdown on route change ────────────────────────────────────────
@@ -218,8 +218,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                                                     }}
                                                     className="w-full text-left flex items-start gap-3 px-5 py-3.5 transition-colors border-b last:border-0"
                                                     style={{
-                                                        background:   !n.is_read ? '#EEF4FB' : '#fff',
-                                                        borderColor:  '#f0f4f8',
+                                                        background: !n.is_read ? '#EEF4FB' : '#fff',
+                                                        borderColor: '#f0f4f8',
                                                     }}
                                                     onMouseEnter={e => (e.currentTarget.style.background = '#EEF4FB')}
                                                     onMouseLeave={e => (e.currentTarget.style.background = !n.is_read ? '#EEF4FB' : '#fff')}
@@ -232,7 +232,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                                                             className="text-sm leading-snug truncate"
                                                             style={{
                                                                 fontWeight: !n.is_read ? 600 : 400,
-                                                                color:      !n.is_read ? '#003366' : '#6b7280',
+                                                                color: !n.is_read ? '#003366' : '#6b7280',
                                                             }}
                                                         >
                                                             {n.title}
