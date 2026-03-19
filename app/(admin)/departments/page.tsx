@@ -110,7 +110,7 @@ export default function DepartmentsPage() {
                             <button
                                 onClick={openCreate}
                                 className="w-full sm:w-auto flex items-center justify-center gap-2 font-semibold text-white px-5 py-2.5 text-sm rounded-lg transition-all hover:opacity-90 active:scale-95"
-                                style={{ backgroundColor: "#e8192c" }}
+                                style={{ backgroundColor: "#004C8F" }}
                             >
                                 <Plus className="w-4 h-4" />
                                 Add Department

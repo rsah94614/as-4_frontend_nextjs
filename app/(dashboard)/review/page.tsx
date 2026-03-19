@@ -15,19 +15,19 @@ export default function ReviewPage() {
     <div className="flex-1 w-full bg-white rounded-[24px] shadow-[0_10px_50px_rgba(0,0,0,0.04)] overflow-hidden min-h-[calc(100vh-2rem)] sm:min-h-[calc(100vh-3rem)] transition-all">
 
       {/* ── Page Header ── */}
-      <div className="bg-white border-b border-gray-100 px-4 sm:px-6 md:px-10 py-6 sm:py-7">
-        <div className="w-full flex items-center justify-between">
+      <div className="bg-white border-b border-border px-8 md:px-10 py-5">
+        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl sm:text-[26px] font-extrabold leading-tight tracking-tight px-0.5" style={{ color: '#004C8F' }}>
+            <h1 className="text-[20px] font-bold text-primary leading-tight">
               Employee Recognition
             </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 font-medium px-0.5">
+            <p className="text-[14px] text-muted-foreground mt-0.5">
               Recognise teammates · Points credited automatically
             </p>
           </div>
-          <span className="hidden md:flex items-center text-2xl font-black tracking-tighter select-none opacity-90">
-            <span style={{ color: '#E31837' }}>A</span>
-            <span style={{ color: '#004C8F' }}>abhar</span>
+          <span className="hidden lg:flex items-center text-xl font-black tracking-tight select-none shrink-0">
+            <span className="text-destructive">A</span>
+            <span className="text-primary">abhar</span>
           </span>
         </div>
       </div>
