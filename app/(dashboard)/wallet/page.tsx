@@ -14,7 +14,6 @@ import {
   Gift,
   Ticket,
   RefreshCw,
-  ChevronLeft,
   ChevronRight,
   ArrowDownCircle,
   TrendingUp,
@@ -245,13 +244,13 @@ function ActivityRow({ txn }: { txn: Transaction }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const TXN_PAGE_SIZE = 10;
+const TXN_PAGE_SIZE = 3;
 
 export default function Wallet() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [summary, setSummary] = useState<PointsSummary | null>(null);
   const [txnData, setTxnData] = useState<TransactionListResponse | null>(null);
-  const [txnPage, setTxnPage] = useState(1);
+  const [showAllTxns, setShowAllTxns] = useState(false);
 
   const [loadingWallet, setLoadingWallet] = useState(true);
   const [loadingSummary, setLoadingSummary] = useState(true);
@@ -297,11 +296,11 @@ export default function Wallet() {
 
   // ── Load transactions ─────────────────────────────────────────────────────
   const loadTransactions = useCallback(
-    async (walletId: string, page: number) => {
+    async (walletId: string) => {
       setLoadingTxns(true);
       setTxnError(null);
       try {
-        const data = await fetchTransactions(walletId, page, TXN_PAGE_SIZE);
+        const data = await fetchTransactions(walletId, 1, TXN_PAGE_SIZE);
         setTxnData(data);
       } catch (e) {
         setTxnError(extractErrorMessage(e, "Failed to load transactions."));
@@ -312,16 +311,49 @@ export default function Wallet() {
     []
   );
 
+  const loadAllTransactions = useCallback(async (walletId: string) => {
+    setLoadingTxns(true);
+    setTxnError(null);
+    try {
+      const limit = 100;
+      let page = 1;
+      let total = 0;
+      let all: Transaction[] = [];
+
+      while (true) {
+        const data = await fetchTransactions(walletId, page, limit);
+        if (page === 1) total = data.total;
+        all = [...all, ...data.transactions];
+
+        if (all.length >= total || data.transactions.length === 0) break;
+        page += 1;
+      }
+
+      setTxnData({
+        page: 1,
+        limit: all.length,
+        total,
+        transactions: all,
+      });
+      setShowAllTxns(true);
+    } catch (e) {
+      setTxnError(extractErrorMessage(e, "Failed to load transactions."));
+    } finally {
+      setLoadingTxns(false);
+    }
+  }, []);
+
   // ── Initial load ──────────────────────────────────────────────────────────
   useEffect(() => {
     loadWallet();
   }, [loadWallet]);
 
-  // ── Load txns whenever wallet_id or page changes ──────────────────────────
+  // ── Load latest 3 txns whenever wallet_id changes (unless in View All) ────
   useEffect(() => {
-    if (wallet?.wallet_id) {
-      loadTransactions(wallet.wallet_id, txnPage);
+    if (wallet?.wallet_id && !showAllTxns) {
+      loadTransactions(wallet.wallet_id);
     }
+<<<<<<< Updated upstream
   }, [wallet?.wallet_id, txnPage, loadTransactions]);
 
   // ── Pagination ────────────────────────────────────────────────────────────
@@ -387,6 +419,9 @@ export default function Wallet() {
       .getElementById("txn-section")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+=======
+  }, [wallet?.wallet_id, showAllTxns, loadTransactions]);
+>>>>>>> Stashed changes
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
@@ -503,7 +538,11 @@ export default function Wallet() {
                 <Button
                   onClick={() => {
                     if (wallet?.wallet_id) {
-                      loadTransactions(wallet.wallet_id, txnPage);
+                      if (showAllTxns) {
+                        loadAllTransactions(wallet.wallet_id);
+                      } else {
+                        loadTransactions(wallet.wallet_id);
+                      }
                     }
                   }}
                   disabled={loadingTxns || !wallet}
@@ -519,13 +558,13 @@ export default function Wallet() {
               </div>
 
               {/* Transaction list */}
-              <div className="px-3 py-2">
+              <div className={`px-3 py-2 ${showAllTxns ? "max-h-[460px] overflow-y-auto" : ""}`}>
                 {txnError && (
                   <div className="mb-4 px-2">
                     <ErrorBanner
                       message={txnError}
                       onRetry={() =>
-                        wallet && loadTransactions(wallet.wallet_id, txnPage)
+                        wallet && loadTransactions(wallet.wallet_id)
                       }
                     />
                   </div>
@@ -551,6 +590,7 @@ export default function Wallet() {
                 )}
               </div>
 
+<<<<<<< Updated upstream
               {/* Pagination footer */}
               {!loadingTxns && txnData && txnData.total > TXN_PAGE_SIZE && (
                 <div className="flex items-center justify-between px-6 py-3 border-t border-border">
@@ -589,10 +629,27 @@ export default function Wallet() {
                   href="/history"
                   className="text-sm font-semibold flex items-center gap-1 transition-colors hover:opacity-80"
                   style={{ color: HDFC_BLUE }}
+=======
+              {/* View All Activity / Back to Paginated View */}
+              <div className="px-5 py-2.5 border-t border-[#d9e4f2] flex justify-center">
+                <button
+                  onClick={() => {
+                    if (!wallet?.wallet_id || loadingTxns) return;
+                    if (showAllTxns) {
+                      setShowAllTxns(false);
+                      loadTransactions(wallet.wallet_id);
+                    } else {
+                      loadAllTransactions(wallet.wallet_id);
+                    }
+                  }}
+                  disabled={loadingTxns || !wallet}
+                  className="text-xs sm:text-sm font-bold flex items-center gap-1 transition-colors hover:opacity-80 disabled:opacity-60"
+                  style={{ color: HDFC_RED }}
+>>>>>>> Stashed changes
                 >
-                  View All Activity
+                  {showAllTxns ? "View Less" : "View All Activity"}
                   <ChevronRight size={15} />
-                </Link>
+                </button>
               </div>
             </div>
 
