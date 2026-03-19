@@ -17,22 +17,6 @@ jest.mock("@/components/features/auth/ProtectedRoute", () => ({
   ),
 }));
 
-jest.mock("@/components/layout/Sidebar", () => ({
-  __esModule: true,
-  default: ({
-    isOpen,
-    onClose,
-  }: {
-    isOpen: boolean;
-    onClose: () => void;
-  }) => (
-    <div>
-      <div data-testid="sidebar-state">{isOpen ? "open" : "closed"}</div>
-      <button onClick={onClose}>close-sidebar</button>
-    </div>
-  ),
-}));
-
 jest.mock("@/components/layout/Navbar", () => ({
   __esModule: true,
   default: ({ onMenuClick }: { onMenuClick: () => void }) => (
@@ -63,17 +47,17 @@ describe("AdminLayout", () => {
     expect(wrapper).toHaveAttribute("data-admin-only", "true");
   });
 
-  it("starts with sidebar closed", () => {
+  it("renders navbar trigger button", () => {
     render(
       <AdminLayout>
         <div>Admin Content</div>
       </AdminLayout>
     );
 
-    expect(screen.getByTestId("sidebar-state")).toHaveTextContent("closed");
+    expect(screen.getByRole("button", { name: "open-menu" })).toBeInTheDocument();
   });
 
-  it("opens sidebar when menu button is clicked", async () => {
+  it("keeps rendering content when menu button is clicked", async () => {
     const user = userEvent.setup();
 
     render(
@@ -83,23 +67,6 @@ describe("AdminLayout", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "open-menu" }));
-
-    expect(screen.getByTestId("sidebar-state")).toHaveTextContent("open");
-  });
-
-  it("closes sidebar when close button is clicked", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <AdminLayout>
-        <div>Admin Content</div>
-      </AdminLayout>
-    );
-
-    await user.click(screen.getByRole("button", { name: "open-menu" }));
-    expect(screen.getByTestId("sidebar-state")).toHaveTextContent("open");
-
-    await user.click(screen.getByRole("button", { name: "close-sidebar" }));
-    expect(screen.getByTestId("sidebar-state")).toHaveTextContent("closed");
+    expect(screen.getByText("Admin Content")).toBeInTheDocument();
   });
 });

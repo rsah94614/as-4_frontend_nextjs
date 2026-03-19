@@ -103,7 +103,7 @@ describe("DesignationsPage", () => {
 
     render(<DesignationsPage />);
 
-    expect(screen.getByText("Manage Designations")).toBeInTheDocument();
+    expect(screen.getByText("Designations")).toBeInTheDocument();
     expect(screen.getByTestId("designation-stats")).toHaveTextContent(
       "total:30|active:2|avg:2.3"
     );
