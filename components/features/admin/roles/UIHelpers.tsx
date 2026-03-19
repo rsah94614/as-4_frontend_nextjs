@@ -20,7 +20,7 @@ export function useToast() {
     return { toasts, show };
 }
 
-// Matches ReviewToast style exactly — white card, left border accent
+// White card toast style (without left accent border)
 export function ToastContainer({ toasts }: { toasts: Toast[] }) {
     if (!toasts || !Array.isArray(toasts)) return null;
     return (
@@ -28,8 +28,7 @@ export function ToastContainer({ toasts }: { toasts: Toast[] }) {
             {toasts.map((t) => (
                 <div
                     key={t.id}
-                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-white shadow-2xl shadow-black/10 ring-1 ring-gray-100 min-w-[260px] border-l-4 animate-in slide-in-from-bottom-4 fade-in duration-300"
-                    style={{ borderLeftColor: t.type === "success" ? "#004C8F" : "#E31837" }}
+                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-white shadow-2xl shadow-black/10 ring-1 ring-gray-100 min-w-[260px] animate-in slide-in-from-bottom-4 fade-in duration-300"
                 >
                     {t.type === "success"
                         ? <CheckCircle2 size={16} className="shrink-0" style={{ color: "#004C8F" }} />
