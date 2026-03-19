@@ -201,7 +201,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
                                                     : { background: "#fff", color: "#6B7280", borderColor: "#E5E7EB" }
                                             }
                                         >
-                                            <Shield size={12} />
+
                                             {role.role_name}
                                             <span
                                                 className="text-[10px] font-black font-mono px-1.5 py-0.5 rounded"

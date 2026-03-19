@@ -165,12 +165,8 @@ export default function StatusesPage() {
           {/* Add Status button */}
           <button
             onClick={() => setShowCreate(true)}
-<<<<<<< Updated upstream
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
-            style={{ background: "#E31837" }}
-=======
             className="ml-auto flex items-center justify-center gap-2 px-2 py-2 rounded-lg text-[10px] uppercase font-bold tracking-widest text-white whitespace-nowrap transition-all hover:opacity-90 active:scale-95 bg-primary"
->>>>>>> Stashed changes
+            style={{ background: "#004C8F" }}
           >
             <Plus size={13} />
             Add Status
