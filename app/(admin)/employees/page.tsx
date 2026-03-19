@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
     Users, UserPlus, Search, Loader2,
-    Building2, Briefcase, Calendar, MoreHorizontal,
+    Building2, Briefcase, Calendar, MoreVertical,
     CheckCircle2, XCircle, Info, ChevronDown, Upload,
     X, Eye, EyeOff, FileSpreadsheet, Download, AlertTriangle,
 } from "lucide-react";
@@ -93,17 +93,19 @@ function formatDate(d?: string) {
     if (!d) return "—";
     return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
+function normalizeId(value: unknown): string {
+    if (value === null || value === undefined) return "";
+    return String(value).trim();
+}
 
-// Active = green, Inactive = gray (no red)
+// Active/Inactive shown as plain text (no filled background badges)
 function StatusBadge({ isActive }: { isActive: boolean }) {
     return (
         <span
-            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-bold whitespace-nowrap"
-            style={
-                isActive
-                    ? { background: "#D1FAE5", color: "#065F46" }
-                    : { background: "#FEE2E2", color: "#991B1B" }
-            }
+            className={cn(
+                "inline-flex items-center gap-1 text-[12px] font-semibold whitespace-nowrap",
+                isActive ? "text-emerald-600" : "text-rose-600"
+            )}
         >
             {isActive ? <CheckCircle2 size={9} /> : <XCircle size={9} />}
             {isActive ? "Active" : "Inactive"}
@@ -444,31 +446,34 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
 }
 
 // ─── Employee Detail Dialog ───────────────────────────────────────────────────
-function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, designations, departments, statuses, employees: allEmployees }: {
+function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, designations, departments, statuses, employees: allEmployees, startInEdit = false }: {
     employee: Employee | null; open: boolean; onClose: () => void; onUpdated: () => void;
     toast: (msg: string, t?: "success" | "error") => void;
     designations: Designation[]; departments: Department[]; statuses: Status[]; employees: Employee[];
+    startInEdit?: boolean;
 }) {
     const [editing, setEditing] = useState(false);
     const [submitting, setSub] = useState(false);
-    const [deactivating, setDeact] = useState(false);
-    const [confirmDeactivate, setConfirmDeactivate] = useState(false);
     const [form, setForm] = useState({ username: "", email: "", designation_id: "", department_id: "", manager_id: "", status_id: "", date_of_birth: "" });
 
     useEffect(() => {
+        if (!open) {
+            setEditing(false);
+            return;
+        }
         if (employee) {
             setForm({
                 username: employee.username ?? "",
                 email: employee.email ?? "",
                 designation_id: employee.designation_id ?? "",
                 department_id: employee.department_id ?? "",
-                manager_id: employee.manager_id ?? "",
+                manager_id: normalizeId(employee.manager_id),
                 status_id: employee.status_id ?? "",
                 date_of_birth: employee.date_of_birth ? employee.date_of_birth.split("T")[0] : "",
             });
-            setEditing(false);
+            setEditing(startInEdit);
         }
-    }, [employee]);
+    }, [open, employee, startInEdit]);
 
     if (!employee) return null;
 
@@ -497,18 +502,6 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
         } finally { setSub(false); }
     };
 
-    const handleDeactivate = async () => {
-        try {
-            setDeact(true);
-            await empClient.patch(`/${employee.employee_id}`);
-            toast("Employee deactivated");
-            setConfirmDeactivate(false);
-            onClose(); onUpdated();
-        } catch (e: unknown) {
-            toast(extractErrorMessage(e, "Deactivation failed"), "error");
-        } finally { setDeact(false); }
-    };
-
     const fieldLabel = "text-[11px] font-bold text-muted-foreground uppercase tracking-widest";
 
     const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
@@ -518,12 +511,39 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
         </div>
     );
 
+    const managerOptions = (() => {
+        const map = new Map<string, { value: string; label: string }>();
+
+        allEmployees
+            .filter((e) => e.employee_id !== employee.employee_id)
+            .forEach((e) => {
+                const managerId = normalizeId(e.employee_id);
+                map.set(managerId, {
+                    value: managerId,
+                    label: `${e.username} (${e.email})`,
+                });
+            });
+
+        const currentManagerId = normalizeId(employee.manager_id);
+        if (currentManagerId && !map.has(currentManagerId)) {
+            map.set(currentManagerId, {
+                value: currentManagerId,
+                label: employee.manager_name || `Manager (${employee.manager_id})`,
+            });
+        }
+
+        return Array.from(map.values());
+    })();
+
     const colorIdx = employee.username.charCodeAt(0) % AVATAR_COLORS.length;
 
     return (
         <>
             <Dialog open={open} onOpenChange={onClose}>
-                <DialogContent className="w-full max-w-[95vw] sm:max-w-lg p-0 rounded-xl border border-border [&>button]:hidden">
+                <DialogContent
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                    className="w-full max-w-[95vw] sm:max-w-lg p-0 gap-0 rounded-2xl border border-border overflow-hidden [&>button]:hidden"
+                >
                     <VisuallyHidden.Root><DialogTitle>Employee Details</DialogTitle></VisuallyHidden.Root>
 
                     {/* Header */}
@@ -540,9 +560,6 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                             <StatusBadge isActive={employee.is_active} />
-                            <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-muted transition-colors">
-                                <X size={14} className="text-muted-foreground" />
-                            </button>
                         </div>
                     </div>
 
@@ -581,7 +598,7 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                                 <SearchableSelect id="e_mgr" label="Manager" value={form.manager_id}
                                     onChange={(v) => setForm((f) => ({ ...f, manager_id: v }))}
                                     placeholder="No manager"
-                                    options={allEmployees.filter((e) => e.employee_id !== employee.employee_id).map((e) => ({ value: e.employee_id, label: `${e.username} (${e.email})` }))} />
+                                    options={managerOptions} />
                                 <div className="grid grid-cols-2 gap-3">
                                     <SelectField id="e_sts" label="Status" value={form.status_id} onChange={set("status_id")}
                                         placeholder="Select…" options={statuses.map((s) => ({ value: s.status_id, label: s.status_name }))} />
@@ -596,20 +613,11 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                         )}
                     </div>
 
-                    <div className="px-6 py-4 bg-muted border-t border-gray-100 flex items-center justify-between gap-3">
-                        <div>
-                            {!editing && employee.is_active && (
-                                <button onClick={() => setConfirmDeactivate(true)}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-muted-foreground border border-border hover:border-border hover:bg-white transition-all">
-                                    <XCircle size={13} />
-                                    Deactivate
-                                </button>
-                            )}
-                        </div>
+                    <div className="px-6 py-4 bg-muted border-t border-gray-100 flex items-center justify-end gap-2">
                         <div className="flex items-center gap-2">
                             {editing ? (
                                 <>
-                                    <Button variant="outline" onClick={() => setEditing(false)} disabled={submitting} className="border-border text-xs font-semibold">Cancel</Button>
+                                    <Button variant="outline" onClick={onClose} disabled={submitting} className="border-border text-xs font-semibold">Cancel</Button>
                                     <button onClick={handleUpdate} disabled={submitting}
                                         className="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
                                         style={{ background: "#003580" }}>
@@ -620,25 +628,12 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
                             ) : (
                                 <>
                                     <Button variant="outline" onClick={onClose} className="border-border text-xs font-semibold">Close</Button>
-                                    <button onClick={() => setEditing(true)}
-                                        className="px-5 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
-                                        style={{ background: "#003580" }}>
-                                        Edit
-                                    </button>
                                 </>
                             )}
                         </div>
                     </div>
                 </DialogContent>
             </Dialog>
-
-            <ConfirmDeactivateDialog
-                open={confirmDeactivate}
-                username={employee.username}
-                onConfirm={handleDeactivate}
-                onCancel={() => setConfirmDeactivate(false)}
-                loading={deactivating}
-            />
         </>
     );
 }
@@ -834,11 +829,19 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
     const [createOpen, setCreateOpen] = useState(false);
     const [selected, setSelected] = useState<Employee | null>(null);
     const [detailOpen, setDetailOpen] = useState(false);
+    const [startEditMode, setStartEditMode] = useState(false);
     const [designations, setDesignations] = useState<Designation[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [statuses, setStatuses] = useState<Status[]>([]);
     const [filterDept, setFilterDept] = useState("");
     const [filterStatus, setFilterStatus] = useState("");
+    const TABLE_COLS = "2fr 1.2fr 1.2fr 1fr 120px 40px";
+    const [actionMenu, setActionMenu] = useState<{
+        employee: Employee;
+        rect: DOMRect;
+    } | null>(null);
+    const [statusTarget, setStatusTarget] = useState<Employee | null>(null);
+    const [statusSubmitting, setStatusSubmitting] = useState(false);
 
     // Search only fires after 3+ characters (or empty to reset)
     useEffect(() => {
@@ -896,6 +899,141 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
     useEffect(() => { loadMeta(); }, [loadMeta]);
     useEffect(() => { load(); }, [load]);
 
+    const getStatusByCode = useCallback(
+        (code: "ACTIVE" | "INACTIVE") =>
+            statuses.find((s) => {
+                const sc = (s.status_code ?? "").toUpperCase();
+                const sn = (s.status_name ?? "").toUpperCase();
+                return sc === code || sn === code;
+            }),
+        [statuses]
+    );
+
+    const openDetails = (emp: Employee, edit = false) => {
+        setStartEditMode(edit);
+        // Open immediately using row data for snappy UX.
+        setSelected(emp);
+        setDetailOpen(true);
+
+        // Hydrate with full detail in background (includes nested manager info).
+        void empClient.get(`/${emp.employee_id}`)
+            .then((res) => {
+                const payload = (res.data && typeof res.data === "object" && "data" in res.data)
+                    ? (res.data as { data: Record<string, unknown> }).data
+                    : (res.data as Record<string, unknown>);
+
+                if (!payload || typeof payload !== "object") return;
+
+                const manager = (payload.manager ?? null) as { employee_id?: string; username?: string } | null;
+                const designation = (payload.designation ?? null) as { designation_id?: string; designation_name?: string } | null;
+                const department = (payload.department ?? null) as { department_id?: string; department_name?: string } | null;
+                const status = (payload.status ?? null) as { status_id?: string; status_name?: string; status_code?: string } | null;
+
+                setSelected((prev) => {
+                    // Ignore stale responses if user switched records meanwhile.
+                    if (!prev || prev.employee_id !== emp.employee_id) return prev;
+
+                    const payloadManagerId = normalizeId(
+                        (payload.manager_id as string | undefined) ?? manager?.employee_id
+                    );
+                    const payloadManagerName =
+                        (payload.manager_name as string | undefined) ?? manager?.username;
+                    const payloadDesignationId =
+                        (payload.designation_id as string | undefined) ?? designation?.designation_id;
+                    const payloadDesignationName =
+                        (payload.designation_name as string | undefined) ?? designation?.designation_name;
+                    const payloadDepartmentId =
+                        (payload.department_id as string | undefined) ?? department?.department_id;
+                    const payloadDepartmentName =
+                        (payload.department_name as string | undefined) ?? department?.department_name;
+                    const payloadStatusId =
+                        (payload.status_id as string | undefined) ?? status?.status_id;
+                    const payloadStatusName =
+                        (payload.status_name as string | undefined) ?? status?.status_name;
+
+                    return {
+                        ...prev,
+                        ...payload,
+                        manager_id: payloadManagerId || normalizeId(prev.manager_id) || normalizeId(emp.manager_id),
+                        manager_name: payloadManagerName ?? prev.manager_name ?? emp.manager_name,
+                        designation_id: payloadDesignationId ?? prev.designation_id ?? emp.designation_id,
+                        designation_name: payloadDesignationName ?? prev.designation_name ?? emp.designation_name,
+                        department_id: payloadDepartmentId ?? prev.department_id ?? emp.department_id,
+                        department_name: payloadDepartmentName ?? prev.department_name ?? emp.department_name,
+                        status_id: payloadStatusId ?? prev.status_id ?? emp.status_id,
+                        status_name: payloadStatusName ?? prev.status_name ?? emp.status_name,
+                        is_active: status?.status_code
+                            ? status.status_code.toUpperCase() === "ACTIVE"
+                            : prev.is_active,
+                    } as Employee;
+                });
+            })
+            .catch(() => {
+                // Keep row data fallback silently.
+            });
+    };
+    const closeDetails = () => {
+        setDetailOpen(false);
+        setStartEditMode(false);
+        setSelected(null);
+    };
+
+    const handleActivate = async (emp: Employee) => {
+        const activeStatus = getStatusByCode("ACTIVE");
+        if (!activeStatus?.status_id) {
+            toast("ACTIVE status not found", "error");
+            return;
+        }
+        try {
+            setStatusSubmitting(true);
+            await empClient.put(`/${emp.employee_id}`, { status_id: activeStatus.status_id });
+            toast("Employee activated");
+            await load();
+        } catch (e: unknown) {
+            toast(extractErrorMessage(e, "Activation failed"), "error");
+        } finally {
+            setStatusSubmitting(false);
+        }
+    };
+
+    const handleDeactivate = async (emp: Employee) => {
+        try {
+            setStatusSubmitting(true);
+            await empClient.patch(`/${emp.employee_id}`);
+            toast("Employee deactivated");
+            setStatusTarget(null);
+            await load();
+        } catch (e: unknown) {
+            toast(extractErrorMessage(e, "Deactivation failed"), "error");
+        } finally {
+            setStatusSubmitting(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!actionMenu) return;
+        const closeMenu = () => setActionMenu(null);
+        const onOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement | null;
+            if (!target) return;
+            if (target.closest("[data-emp-menu]") || target.closest("[data-emp-menu-btn]")) return;
+            closeMenu();
+        };
+        const onEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") closeMenu();
+        };
+        window.addEventListener("mousedown", onOutside);
+        window.addEventListener("resize", closeMenu);
+        window.addEventListener("scroll", closeMenu, true);
+        window.addEventListener("keydown", onEsc);
+        return () => {
+            window.removeEventListener("mousedown", onOutside);
+            window.removeEventListener("resize", closeMenu);
+            window.removeEventListener("scroll", closeMenu, true);
+            window.removeEventListener("keydown", onEsc);
+        };
+    }, [actionMenu]);
+
     return (
         <div className="w-full">
             <HowItWorks steps={HOW_IT_WORKS_LIST} />
@@ -914,7 +1052,7 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                     </div>
                     <button onClick={() => setCreateOpen(true)}
                         className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95"
-                        style={{ background: "#16A34A" }}>
+                        style={{ background: "#004C8F" }}>
                         <UserPlus size={13} />
                         New Employee
                     </button>
@@ -979,18 +1117,21 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                     <div>
                         {/* Column headers */}
                         <div className="grid px-5 py-2 bg-muted border-b border-gray-100"
-                            style={{ gridTemplateColumns: "2fr 1.2fr 1.2fr 1fr 100px 32px" }}>
-                            {["Employee", "Designation", "Department", "Joined", "Status", ""].map((h) => (
-                                <span key={h} className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">{h}</span>
-                            ))}
+                            style={{ gridTemplateColumns: TABLE_COLS }}>
+                            <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Employee</span>
+                            <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Designation</span>
+                            <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Department</span>
+                            <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Joined</span>
+                            <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground text-left">Status</span>
+                            <span className="sr-only">Actions</span>
                         </div>
 
                         <div className="divide-y divide-gray-100">
                             {employees.map((emp) => (
                                 <div key={emp.employee_id}
-                                    className="grid px-5 items-center hover:bg-muted transition-colors cursor-pointer"
-                                    style={{ gridTemplateColumns: "2fr 1.2fr 1.2fr 1fr 100px 32px", minHeight: "52px" }}
-                                    onClick={() => { setSelected(emp); setDetailOpen(true); }}>
+                                    className="grid px-5 items-center gap-x-2"
+                                    style={{ gridTemplateColumns: TABLE_COLS, minHeight: "52px" }}
+                                >
 
                                     {/* Name + email */}
                                     <div className="flex flex-col justify-center min-w-0 py-2">
@@ -1010,9 +1151,27 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                                         <Calendar size={12} className="text-gray-300 shrink-0" />
                                         <span className="text-[12px] text-muted-foreground">{formatDate(emp.date_of_joining)}</span>
                                     </div>
-                                    <StatusBadge isActive={emp.is_active} />
-                                    <div className="flex justify-end">
-                                        <MoreHorizontal size={14} className="text-gray-300" />
+                                    <div className="flex items-center justify-start">
+                                        <StatusBadge isActive={emp.is_active} />
+                                    </div>
+                                    <div className="relative flex items-center justify-center">
+                                        <button
+                                            type="button"
+                                            data-emp-menu-btn
+                                            onClick={(e) => {
+                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                setActionMenu((prev) => {
+                                                    if (prev?.employee.employee_id === emp.employee_id) return null;
+                                                    return { employee: emp, rect };
+                                                });
+                                            }}
+                                            className={cn(
+                                                "w-7 h-7 rounded-md flex items-center justify-center hover:bg-muted transition-colors",
+                                                actionMenu?.employee.employee_id === emp.employee_id && "bg-muted"
+                                            )}
+                                        >
+                                            <MoreVertical size={14} className="text-gray-400" />
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -1045,9 +1204,76 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
 
             <CreateEmployeeDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={load}
                 toast={toast} designations={designations} departments={departments} employees={employees} />
-            <EmployeeDetailDialog employee={selected} open={detailOpen} onClose={() => setDetailOpen(false)}
+            <EmployeeDetailDialog employee={selected} open={detailOpen} onClose={closeDetails}
                 onUpdated={load} toast={toast} designations={designations} departments={departments}
-                statuses={statuses} employees={employees} />
+                statuses={statuses} employees={employees} startInEdit={startEditMode} />
+            {actionMenu && (() => {
+                const MENU_WIDTH = 160;
+                const MENU_HEIGHT = 112;
+                const GAP = 4;
+                const viewportHeight =
+                    typeof window !== "undefined" ? window.innerHeight : 9999;
+                const left = Math.max(8, actionMenu.rect.right - MENU_WIDTH);
+                const topDown = actionMenu.rect.bottom + GAP;
+                const topUp = actionMenu.rect.top - MENU_HEIGHT - GAP;
+                const top =
+                    topDown + MENU_HEIGHT <= viewportHeight - 8 || topUp < 8
+                        ? topDown
+                        : topUp;
+
+                return (
+                    <div
+                        data-emp-menu
+                        className="fixed z-[120] w-[160px] bg-white border border-border rounded-md shadow-xl py-1"
+                        style={{ left, top }}
+                    >
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const selectedEmp = actionMenu.employee;
+                                setActionMenu(null);
+                                openDetails(selectedEmp, false);
+                            }}
+                            className="w-full text-left px-2.5 py-1.5 text-[13px] font-medium text-foreground hover:bg-muted transition-colors"
+                        >
+                            View Details
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const selectedEmp = actionMenu.employee;
+                                setActionMenu(null);
+                                openDetails(selectedEmp, true);
+                            }}
+                            className="w-full text-left px-2.5 py-1.5 text-[13px] font-medium text-foreground hover:bg-muted transition-colors"
+                        >
+                            Edit
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const selectedEmp = actionMenu.employee;
+                                setActionMenu(null);
+                                if (selectedEmp.is_active) setStatusTarget(selectedEmp);
+                                else handleActivate(selectedEmp);
+                            }}
+                            className={cn(
+                                "w-full text-left px-2.5 py-1.5 text-[13px] font-medium hover:bg-muted transition-colors",
+                                actionMenu.employee.is_active ? "text-rose-600" : "text-emerald-600"
+                            )}
+                        >
+                            {actionMenu.employee.is_active ? "Deactivate" : "Activate"}
+                        </button>
+                    </div>
+                );
+            })()}
+            <ConfirmDeactivateDialog
+                open={!!statusTarget}
+                username={statusTarget?.username ?? ""}
+                onConfirm={() => statusTarget && handleDeactivate(statusTarget)}
+                onCancel={() => setStatusTarget(null)}
+                loading={statusSubmitting}
+            />
         </div>
     );
 }
