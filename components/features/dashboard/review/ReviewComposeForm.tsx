@@ -1,5 +1,4 @@
 "use client"
-
 import { useMemo, useState, useCallback } from "react"
 import {
     Loader2, Send, Check, X, Image as ImageIcon, Video,
@@ -30,7 +29,6 @@ const COMMENT_MAX = 2000
 //   - Common punctuation used in chat: . , ! ? ' " - _ ( ) @ # & + = % / : ; newlines
 // Everything else (HTML tags, SQL injection chars like <>"`;\\, etc.) is stripped/blocked.
 const ALLOWED_COMMENT_REGEX = /[^\p{L}\p{N}\s.,!?'"()\-_@#&+=%;/:\n]/gu
-
 // Detects obvious injection attempts — reject outright rather than silently strip
 const INJECTION_PATTERNS = [
     /<[^>]*>/,           // HTML tags
@@ -512,10 +510,10 @@ export default function ReviewComposeForm({
                             </div>
                             <Button
                                 type="submit"
-                                disabled={submitting}
+                                disabled={!canSubmit || submitting}
                                 className={cn(
-                                    "w-full sm:w-auto",
-                                    canSubmit ? "bg-[#E31837] hover:bg-[#c41230] font-bold" : ""
+                                    "w-full sm:w-auto transition-colors",
+                                    canSubmit ? "bg-[#004C8F] hover:bg-[#003A6E] text-white font-bold" : "bg-gray-400 hover:bg-gray-400 text-white cursor-not-allowed"
                                 )}
                             >
                                 {submitting

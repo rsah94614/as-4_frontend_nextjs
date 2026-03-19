@@ -95,7 +95,7 @@ export default function ControlPanelHub() {
     if (!allowed) {
         return (
             <div className="flex-1 w-full min-h-screen bg-muted flex items-center justify-center">
-                <div className="bg-white rounded-xl border border-border p-10 text-center space-y-4 max-w-sm shadow-sm">
+                <div className="bg-white border border-border p-10 text-center space-y-4 max-w-sm shadow-sm">
                     <div className="mx-auto w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
                         <ShieldAlert className="w-6 h-6 text-[#C0392B]" />
                     </div>
@@ -116,7 +116,7 @@ export default function ControlPanelHub() {
     }
 
     return (
-        <div className="flex-1 w-full bg-white rounded-[24px] shadow-[0_10px_50px_rgba(0,0,0,0.04)] overflow-hidden min-h-[calc(100vh-2rem)] sm:min-h-[calc(100vh-3rem)] transition-all">
+        <div className="flex-1 w-full bg-white shadow-[0_10px_50px_rgba(0,0,0,0.04)] overflow-hidden min-h-[calc(100vh-2rem)] sm:min-h-[calc(100vh-3rem)] transition-all">
 
             {/* ── Page Header ── */}
             <div className="bg-white border-b border-gray-100 px-4 sm:px-6 md:px-10 py-6 sm:py-7">

@@ -18,10 +18,10 @@ import {
 } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { extractErrorMessage } from "@/lib/error-utils";
-import { 
-    employeesClient as employeeClient, 
-    orgClient, 
-    recognitionClient 
+import {
+    employeesClient as employeeClient,
+    orgClient,
+    recognitionClient
 } from "@/services/api-clients";
 import type {
     Notification,
@@ -33,15 +33,105 @@ import type {
     WeeklyDigestData,
 } from "@/types/notification-types";
 import { Skeleton } from "@/components/ui/skeleton";
-// Department / Employee lookup helpers
-//
-// These calls use the direct org/employees clients and are only made when the
-// user opens the targeting section, not on page load.
+// FIX: import from the single ADMIN_ROLES / SUPER_DEV_ROLES constants so
+// page-level role checks stay consistent with role-utils.ts definitions.
+import { getRolesFromToken, ADMIN_ROLES } from "@/lib/role-utils";
 
-// Department / Employee lookup helpers
+type UserRole = "SUPER_ADMIN" | "HR_ADMIN" | "MANAGER" | "EMPLOYEE";
+
+const CAN_POST_ANNOUNCEMENT: UserRole[] = ["SUPER_ADMIN", "HR_ADMIN"];
+const CAN_GET_DIGEST: UserRole[] = ["SUPER_ADMIN", "HR_ADMIN", "MANAGER"];
+const CAN_POST_DIGEST: UserRole[] = ["SUPER_ADMIN", "HR_ADMIN"];
+
+// ─── Brand colours ────────────────────────────────────────────────────────────
+
+const BRAND = {
+    red: "#E31837",
+    navy: "#004C8F",
+    navyLight: "#EEF4FB",
+} as const;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatRelativeTime(iso: string): string {
+    const date = new Date(iso);
+    const diffMs = Date.now() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60_000);
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+function formatWeekLabel(iso: string): string {
+    return new Date(iso).toLocaleDateString("en-GB", {
+        day: "numeric", month: "short", year: "numeric",
+    });
+}
+
+/**
+ * <input type="date"> produces "YYYY-MM-DD".
+ * FastAPI's `datetime` parser requires a full ISO-8601 string with time.
+ * Pass-through if a time component is already present.
+ */
+function toIsoDatetime(dateStr: string): string {
+    if (!dateStr) return dateStr;
+    if (dateStr.includes("T")) return dateStr;
+    return `${dateStr}T00:00:00Z`;
+}
+
+
+
+const TYPE_META: Record<
+    NotificationType,
+    { label: string; dot: string; textColor: string; bgColor: string }
+> = {
+    REVIEW: { label: "Review", dot: BRAND.navy, textColor: "#004C8F", bgColor: "#EEF4FB" },
+    REWARD: { label: "Reward", dot: BRAND.red, textColor: "#B91C1C", bgColor: "#FEF2F2" },
+    SYSTEM: { label: "System", dot: "#6B7280", textColor: "#374151", bgColor: "#F3F4F6" },
+    CELEBRATION: { label: "Celebration", dot: BRAND.red, textColor: "#9D174D", bgColor: "#FDF2F8" },
+    ANNOUNCEMENT: { label: "Announcement", dot: BRAND.navy, textColor: "#004C8F", bgColor: "#EEF4FB" },
+};
+
+// ─── API helpers ──────────────────────────────────────────────────────────────
 //
-// These calls use the direct org/employees clients and are only made when the
-// user opens the targeting section, not on page load.
+// ALL requests go through the Next.js proxy at /api/proxy/[...path]/route.ts.
+// The proxy strips the first path segment, resolves it in SERVICE_MAP, and
+// forwards the rest (plus query params + Authorization header) to the upstream.
+//
+// Route resolution:
+//   Notifications  → /api/proxy/employees/notifications/...
+//                    EMPLOYEE_API_URL/v1/employees/notifications/...
+//   Digest         → /api/proxy/recognition/digest/...
+//                    RECOGNITION_API_URL/v1/recognitions/digest/...
+//
+// IMPORTANT: Every fetch() must include getAuthHeaders() so the proxy can
+// forward the Bearer token. axiosClient does this automatically via its
+// interceptor; raw fetch() calls must do it explicitly.
+
+/** POST /notifications/announcements */
+async function postAnnouncement(payload: AnnouncementRequest): Promise<AnnouncementResponse> {
+    const res = await employeeClient.post<AnnouncementResponse>(
+        "/notifications/announcements",
+        payload
+    );
+    return res.data;
+}
+
+// ─── Department / Employee lookup helpers ─────────────────────────────────────
+//
+// These endpoints are best-guesses based on the proxy SERVICE_MAP pattern.
+// If yours differ, update the URL strings below:
+//   Departments → /api/proxy/org/departments
+//   Employees   → /api/proxy/employees/list
+//
+// Both return their lists and are only called when the user opens the
+// targeting section — not on page load.
+
 // department_name matches the actual API field (Prisma schema + department-service.ts).
 // Response shape: DepartmentListResponse { departments: [], total, page, limit }
 interface Department { department_id: string; department_name: string; }
@@ -50,9 +140,9 @@ interface EmployeeOption { employee_id: string; username: string; email: string;
 async function fetchDepartments(): Promise<Department[]> {
     const res = await orgClient.get("/departments", { params: { limit: 100 } });
     const data = res.data;
-    if (Array.isArray(data))             return data;
+    if (Array.isArray(data)) return data;
     if (Array.isArray(data.departments)) return data.departments;
-    if (Array.isArray(data.data))        return data.data;
+    if (Array.isArray(data.data)) return data.data;
     return [];
 }
 
@@ -112,7 +202,7 @@ function NotificationRow({
             className="w-full text-left flex items-start gap-4 px-5 py-4 transition-all duration-150 group"
             style={{
                 background: isUnread ? "#F8FAFF" : "transparent",
-                cursor:     isUnread ? "pointer" : "default",
+                cursor: isUnread ? "pointer" : "default",
             }}
         >
             <span className="pt-[7px] shrink-0 w-3 flex justify-center">
@@ -131,7 +221,7 @@ function NotificationRow({
                 <p
                     className="text-[13px] leading-snug"
                     style={{
-                        color:      isUnread ? "#0D1B2A" : "#6B7280",
+                        color: isUnread ? "#0D1B2A" : "#6B7280",
                         fontWeight: isUnread ? 600 : 400,
                     }}
                 >
@@ -199,13 +289,13 @@ function ResultBanner({
             className="flex items-start gap-3 px-4 py-3 rounded-sm text-[13px] mb-4"
             style={{
                 background: isSuccess ? "#F0FDF4" : "#FEF2F2",
-                border:     `1px solid ${isSuccess ? "#BBF7D0" : "#FECACA"}`,
-                color:      isSuccess ? "#166534" : "#991B1B",
+                border: `1px solid ${isSuccess ? "#BBF7D0" : "#FECACA"}`,
+                color: isSuccess ? "#166534" : "#991B1B",
             }}
         >
             {isSuccess
                 ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                : <AlertCircle  className="w-4 h-4 shrink-0 mt-0.5" />
+                : <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             }
             <span className="flex-1 leading-relaxed">{message}</span>
             <button onClick={onDismiss} className="shrink-0 opacity-60 hover:opacity-100">
@@ -274,24 +364,24 @@ function AudienceSummary({
 }
 
 function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
-    const [title,      setTitle]      = useState("");
-    const [message,    setMessage]    = useState("");
+    const [title, setTitle] = useState("");
+    const [message, setMessage] = useState("");
     const [targetMode, setTargetMode] = useState<TargetMode>("all");
-    const [result,     setResult]     = useState<{ type: "success" | "error"; text: string } | null>(null);
-    const [isPending,  startTransition] = useTransition();
+    const [result, setResult] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [isPending, startTransition] = useTransition();
 
     // ── Department state ──────────────────────────────────────────────────────
-    const [departments,      setDepartments]      = useState<Department[]>([]);
-    const [deptLoading,      setDeptLoading]      = useState(false);
-    const [deptError,        setDeptError]        = useState<string | null>(null);
-    const [selectedDeptIds,  setSelectedDeptIds]  = useState<Set<string>>(new Set());
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [deptLoading, setDeptLoading] = useState(false);
+    const [deptError, setDeptError] = useState<string | null>(null);
+    const [selectedDeptIds, setSelectedDeptIds] = useState<Set<string>>(new Set());
 
     // ── Employee state ────────────────────────────────────────────────────────
-    const [empSearch,        setEmpSearch]        = useState("");
-    const [empResults,       setEmpResults]       = useState<EmployeeOption[]>([]);
-    const [empLoading,       setEmpLoading]       = useState(false);
-    const [empError,         setEmpError]         = useState<string | null>(null);
-    const [selectedEmps,     setSelectedEmps]     = useState<Map<string, EmployeeOption>>(new Map());
+    const [empSearch, setEmpSearch] = useState("");
+    const [empResults, setEmpResults] = useState<EmployeeOption[]>([]);
+    const [empLoading, setEmpLoading] = useState(false);
+    const [empError, setEmpError] = useState<string | null>(null);
+    const [selectedEmps, setSelectedEmps] = useState<Map<string, EmployeeOption>>(new Map());
 
     // Load departments the first time the user switches to department mode
     const deptLoaded = useRef(false);
@@ -344,7 +434,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
     const canSubmit = (() => {
         if (!title.trim() || !message.trim()) return false;
         if (targetMode === "departments") return selectedDeptIds.size > 0;
-        if (targetMode === "employees")   return selectedEmps.size > 0;
+        if (targetMode === "employees") return selectedEmps.size > 0;
         return true; // "all"
     })();
 
@@ -355,7 +445,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
         startTransition(async () => {
             try {
                 const payload: AnnouncementRequest = {
-                    title:   title.trim(),
+                    title: title.trim(),
                     message: message.trim(),
                 };
                 if (targetMode === "departments") {
@@ -426,9 +516,9 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
                 <div className="flex gap-2">
                     {(["all", "departments", "employees"] as TargetMode[]).map(mode => {
                         const labels: Record<TargetMode, string> = {
-                            all:         "All Employees",
+                            all: "All Employees",
                             departments: "By Department",
-                            employees:   "Specific Employees",
+                            employees: "Specific Employees",
                         };
                         const active = targetMode === mode;
                         return (
@@ -439,9 +529,9 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
                                 disabled={isPending}
                                 className="px-3 py-1.5 text-[12px] font-semibold rounded-sm border transition"
                                 style={{
-                                    background:   active ? BRAND.navy : "#fff",
-                                    color:        active ? "#fff"     : "#374151",
-                                    borderColor:  active ? BRAND.navy : "#D1D5DB",
+                                    background: active ? BRAND.navy : "#fff",
+                                    color: active ? "#fff" : "#374151",
+                                    borderColor: active ? BRAND.navy : "#D1D5DB",
                                 }}
                             >
                                 {labels[mode]}
@@ -479,9 +569,9 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
                                         className="flex items-center gap-2 px-3 py-2 rounded-sm border cursor-pointer text-[12.5px] transition select-none"
                                         style={{
                                             borderColor: checked ? BRAND.navy : "#E5E7EB",
-                                            background:  checked ? "#EEF4FB" : "#fff",
-                                            color:       checked ? BRAND.navy : "#374151",
-                                            fontWeight:  checked ? 600 : 400,
+                                            background: checked ? "#EEF4FB" : "#fff",
+                                            color: checked ? BRAND.navy : "#374151",
+                                            fontWeight: checked ? 600 : 400,
                                         }}
                                     >
                                         <input
@@ -550,7 +640,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
                                             className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-sm shrink-0"
                                             style={{
                                                 background: selected ? BRAND.navy : "#F3F4F6",
-                                                color:      selected ? "#fff"     : "#6B7280",
+                                                color: selected ? "#fff" : "#6B7280",
                                             }}
                                         >
                                             {selected ? "Selected" : "Add"}
@@ -601,7 +691,7 @@ function AnnouncementPanel({ onDone }: { onDone?: () => void }) {
             >
                 {isPending
                     ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
-                    : <><Send    className="w-4 h-4" /> Send Announcement</>
+                    : <><Send className="w-4 h-4" /> Send Announcement</>
                 }
             </button>
         </form>
@@ -651,19 +741,19 @@ async function fetchManagerOptions(): Promise<ManagerOption[]> {
         .filter(emp => allowedEmails.has(emp.email))
         .map(emp => ({
             employee_id: emp.employee_id,   // canonical UUID — matches employees.manager_id
-            username:    emp.username,
-            email:       emp.email,
+            username: emp.username,
+            email: emp.email,
         }));
 }
 
 function DigestPanel({ canSend }: { canSend: boolean }) {
-    const [weekStart,      setWeekStart]      = useState("");
-    const [managerEmail,   setManagerEmail]   = useState("");
-    const [managerId,      setManagerId]      = useState("");
-    const [digestData,     setDigestData]     = useState<WeeklyDigestData | null>(null);
-    const [result,         setResult]         = useState<{ type: "success" | "error"; text: string } | null>(null);
-    const [isFetching,     startFetch]        = useTransition();
-    const [isSending,      startSend]         = useTransition();
+    const [weekStart, setWeekStart] = useState("");
+    const [managerEmail, setManagerEmail] = useState("");
+    const [managerId, setManagerId] = useState("");
+    const [digestData, setDigestData] = useState<WeeklyDigestData | null>(null);
+    const [result, setResult] = useState<{ type: "success" | "error"; text: string } | null>(null);
+    const [isFetching, startFetch] = useTransition();
+    const [isSending, startSend] = useTransition();
 
     function handleFetch(e: React.FormEvent) {
         e.preventDefault();
@@ -690,8 +780,8 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
             try {
                 const res = await postDigest({
                     manager_email: managerEmail,
-                    ...(managerId  ? { manager_id:    managerId }                : {}),
-                    ...(weekStart  ? { week_start:    weekStart }                : {}),
+                    ...(managerId ? { manager_id: managerId } : {}),
+                    ...(weekStart ? { week_start: weekStart } : {}),
                 });
                 setResult({ type: res.success ? "success" : "error", text: res.message });
                 if (res.data) setDigestData(res.data);
@@ -705,7 +795,7 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
     }
 
     // Load manager list on mount so the preview filter is populated immediately.
-    const [previewManagers,    setPreviewManagers]    = useState<ManagerOption[]>([]);
+    const [previewManagers, setPreviewManagers] = useState<ManagerOption[]>([]);
     const [previewMgrsLoading, setPreviewMgrsLoading] = useState(true);
 
     useEffect(() => {
@@ -782,7 +872,7 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
                     style={{ background: BRAND.navy }}
                 >
                     {isFetching
-                        ? <><Loader2  className="w-4 h-4 animate-spin" /> Loading…</>
+                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading…</>
                         : <><BarChart3 className="w-4 h-4" /> View Summary</>
                     }
                 </button>
@@ -834,7 +924,7 @@ function DigestPanel({ canSend }: { canSend: boolean }) {
                         >
                             {isSending
                                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
-                                : <><Send    className="w-4 h-4" /> Send</>
+                                : <><Send className="w-4 h-4" /> Send</>
                             }
                         </button>
                     </div>
@@ -850,10 +940,10 @@ function DigestDataCard({ data }: { data: WeeklyDigestData }) {
     const weekLabel = `${formatWeekLabel(data.week_start)} – ${formatWeekLabel(data.week_end)}`;
 
     const stats: { label: string; value: string | number; accent: string }[] = [
-        { label: "Recognitions",   value: data.total_recognitions,   accent: BRAND.navy },
+        { label: "Recognitions", value: data.total_recognitions, accent: BRAND.navy },
         { label: "Points Awarded", value: data.total_points_awarded, accent: BRAND.navy },
-        { label: "Unique Givers",  value: data.unique_givers,        accent: BRAND.red  },
-        { label: "Receivers",      value: data.unique_receivers,     accent: BRAND.red  },
+        { label: "Unique Givers", value: data.unique_givers, accent: BRAND.red },
+        { label: "Receivers", value: data.unique_receivers, accent: BRAND.red },
     ];
 
     return (
@@ -966,11 +1056,11 @@ export default function NotificationsPage() {
 
     const roles = useMemo(() => getRolesFromToken() as UserRole[], []);
 
-    const canAnnounce   = CAN_POST_ANNOUNCEMENT.some(r => roles.includes(r));
+    const canAnnounce = CAN_POST_ANNOUNCEMENT.some(r => roles.includes(r));
     const canViewDigest = CAN_GET_DIGEST.some(r => roles.includes(r));
     const canSendDigest = CAN_POST_DIGEST.some(r => roles.includes(r));
     const showAdminArea = canAnnounce || canViewDigest;
-    const hasUnread     = unreadCount > 0;
+    const hasUnread = unreadCount > 0;
 
     return (
         <div className="flex-1 w-full">
@@ -1081,4 +1171,3 @@ export default function NotificationsPage() {
         </div>
     );
 }
-

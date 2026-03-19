@@ -2,7 +2,7 @@
 
 // ── Page layout ──────────────────────────────────────────────────────────────
 
-export const PAGE_WRAPPER = "flex-1 w-full min-h-screen bg-white mx-auto max-w-[1920px] shadow-[0_10px_50px_rgba(0,0,0,0.04)] rounded-[24px]";
+export const PAGE_WRAPPER = "flex-1 w-full min-h-screen bg-white mx-auto max-w-[1920px] shadow-[0_10px_50px_rgba(0,0,0,0.04)]";
 
 export const PAGE_HEADER =
     "bg-white border-b border-gray-100 px-8 md:px-10 py-6 rounded-t-[24px]";

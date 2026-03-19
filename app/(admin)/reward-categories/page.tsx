@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Search, X, Plus, ChevronDown } from "lucide-react";
+import { Search, X, Plus } from "lucide-react";
 import { useRewardCategories } from "@/hooks/useRewardCategories";
 
 // Modular Components

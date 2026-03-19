@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Shield, Plus, X, Loader2, Search, Lock, Info, ChevronDown } from "lucide-react";
+import { Plus, X, Loader2, Search, Lock, Info, ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
@@ -18,10 +18,10 @@ interface RoutePermissionsSectionProps {
 }
 
 const HOW_IT_WORKS = [
-    { n: "01", title: "Select a Role",    desc: "Click a role pill to load its current route permissions." },
-    { n: "02", title: "Assigned Routes",  desc: "Routes in the left panel are accessible by the selected role." },
-    { n: "03", title: "Grant Access",     desc: "Click + on any available route to grant the role access instantly." },
-    { n: "04", title: "Revoke Access",    desc: "Hover an assigned route and click × to remove access immediately." },
+    { n: "01", title: "Select a Role", desc: "Click a role pill to load its current route permissions." },
+    { n: "02", title: "Assigned Routes", desc: "Routes in the left panel are accessible by the selected role." },
+    { n: "03", title: "Grant Access", desc: "Click + on any available route to grant the role access instantly." },
+    { n: "04", title: "Revoke Access", desc: "Hover an assigned route and click × to remove access immediately." },
 ];
 
 function HowItWorks() {
@@ -59,13 +59,13 @@ function HowItWorks() {
 }
 
 export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps) {
-    const [permissions, setPermissions]         = useState<RoutePermission[]>([]);
-    const [roles, setRoles]                     = useState<Role[]>([]);
-    const [loading, setLoading]                 = useState(true);
-    const [selectedRoleId, setSelectedRoleId]   = useState<string>("");
-    const [removing, setRemoving]               = useState<string | null>(null);
-    const [adding, setAdding]                   = useState<string | null>(null);
-    const [assignedSearch, setAssignedSearch]   = useState("");
+    const [permissions, setPermissions] = useState<RoutePermission[]>([]);
+    const [roles, setRoles] = useState<Role[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedRoleId, setSelectedRoleId] = useState<string>("");
+    const [removing, setRemoving] = useState<string | null>(null);
+    const [adding, setAdding] = useState<string | null>(null);
+    const [assignedSearch, setAssignedSearch] = useState("");
     const [availableSearch, setAvailableSearch] = useState("");
 
     const load = useCallback(async () => {
@@ -106,7 +106,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
         return s;
     }, [permissions, selectedRoleId]);
 
-    const assignedRouteKeys  = useMemo(() => allRouteKeys.filter((k) =>  assignedSet.has(k)), [allRouteKeys, assignedSet]);
+    const assignedRouteKeys = useMemo(() => allRouteKeys.filter((k) => assignedSet.has(k)), [allRouteKeys, assignedSet]);
     const availableRouteKeys = useMemo(() => allRouteKeys.filter((k) => !assignedSet.has(k)), [allRouteKeys, assignedSet]);
 
     const filterRoutes = (keys: string[], query: string) => {
@@ -115,7 +115,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
         return keys.filter((k) => k.toLowerCase().includes(q) || titleMap[k]?.toLowerCase().includes(q));
     };
 
-    const assignedFiltered  = useMemo(() => filterRoutes(assignedRouteKeys,  assignedSearch),  // eslint-disable-next-line react-hooks/exhaustive-deps
+    const assignedFiltered = useMemo(() => filterRoutes(assignedRouteKeys, assignedSearch),  // eslint-disable-next-line react-hooks/exhaustive-deps
         [assignedRouteKeys, assignedSearch, titleMap]);
     const availableFiltered = useMemo(() => filterRoutes(availableRouteKeys, availableSearch), // eslint-disable-next-line react-hooks/exhaustive-deps
         [availableRouteKeys, availableSearch, titleMap]);
