@@ -188,11 +188,11 @@ function ErrorBanner({
   onRetry: () => void;
 }) {
   return (
-    <div className="rounded-2xl bg-destructive/10 border border-destructive/20 px-5 py-4 flex items-center justify-between">
-      <p className="text-sm text-destructive">{message}</p>
+    <div className="rounded-2xl bg-[#f3f8ff] border border-[#c9ddf3] px-5 py-4 flex items-center justify-between">
+      <p className="text-sm text-[#0a4f89]">{message}</p>
       <button
         onClick={onRetry}
-        className="flex items-center gap-1.5 text-sm text-destructive font-medium hover:underline ml-4"
+        className="flex items-center gap-1.5 text-sm text-[#0a4f89] font-medium hover:underline ml-4"
       >
         <RefreshCw size={13} />
         Retry
@@ -208,13 +208,13 @@ function ActivityRow({ txn }: { txn: Transaction }) {
     <div className="flex items-center gap-3 py-3 border-b border-[#d9e4f2] last:border-0 group hover:bg-[#f6faff] px-3 rounded-xl transition-colors">
       {/* Icon circle */}
       <div
-        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isCredit ? "bg-[#e9f2ff]" : "bg-[#fdecef]"
+        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${isCredit ? "bg-[#e9f2ff]" : "bg-[#edf4ff]"
           }`}
       >
         {isCredit ? (
           <TrendingUp size={16} className="text-[#0b5b9f]" />
         ) : (
-          <Ticket size={16} className="text-destructive" />
+          <Ticket size={16} className="text-[#0a4f89]" />
         )}
       </div>
 
@@ -235,7 +235,7 @@ function ActivityRow({ txn }: { txn: Transaction }) {
         <p className="text-xs text-[#6a7684]">
           {formatDate(txn.transaction_at)}
         </p>
-        <p className={`mt-0.5 text-xs font-bold ${isCredit ? "text-[#167e3f]" : "text-destructive"}`}>
+        <p className={`mt-0.5 text-xs font-bold ${isCredit ? "text-[#167e3f]" : "text-[#0a4f89]"}`}>
           {isCredit ? "SUCCESS" : "REDEEMED"}
         </p>
       </div>
@@ -388,8 +388,8 @@ export default function Wallet() {
                   <button
                     className="px-7 py-2.5 rounded-xl font-bold text-white text-sm leading-none shadow-md transition-all duration-200 active:scale-95 hover:brightness-95"
                     style={{
-                      background: "linear-gradient(180deg, #ef2445 0%, #d71130 100%)",
-                      boxShadow: "0 10px 18px rgba(227,24,55,0.35)",
+                      background: "linear-gradient(180deg, #0e6eb8 0%, #0a4f89 100%)",
+                      boxShadow: "0 10px 18px rgba(10,79,137,0.35)",
                     }}
                   >
                     Redeem Reward
@@ -464,7 +464,7 @@ export default function Wallet() {
               style={{ background: "linear-gradient(130deg, #ffffff 0%, #f4f8fd 100%)" }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-3 border-b border-[#d9e4f2]" style={{ borderLeft: "3px solid #E31837" }}>
+              <div className="flex items-center justify-between px-5 py-3 border-b border-[#d9e4f2]">
                 <div>
                   <h3 className="text-sm sm:text-base font-bold leading-tight" style={{ color: HDFC_BLUE }}>
                     Recent Wallet Activity
@@ -483,7 +483,7 @@ export default function Wallet() {
                   }}
                   disabled={loadingTxns || !wallet}
                   size="sm"
-                  className="text-destructive bg-[#fff0f3] border border-[#f6c2cc] hover:bg-[#ffe5ea] hover:text-[#bf122e] shadow-none transition-all text-xs sm:text-sm font-bold"
+                  className="text-[#0a4f89] bg-[#edf4ff] border border-[#c9ddf3] hover:bg-[#dbe9fa] hover:text-[#083f73] shadow-none transition-all text-xs sm:text-sm font-bold"
                 >
                   <RefreshCw
                     size={13}
@@ -563,7 +563,7 @@ export default function Wallet() {
                 <Link
                   href="/history"
                   className="text-xs sm:text-sm font-bold flex items-center gap-1 transition-colors hover:opacity-80"
-                  style={{ color: HDFC_RED }}
+                  style={{ color: HDFC_BLUE }}
                 >
                   View All Activity
                   <ChevronRight size={15} />
@@ -578,15 +578,14 @@ export default function Wallet() {
                 style={{
                   background: "linear-gradient(130deg, #ffffff 0%, #f4f8fd 100%)",
                   border: "1px solid #b7cde6",
-                  borderTop: "3px solid #E31837",
                 }}
               >
                 <div className="flex items-center gap-2 mb-3">
                   <div
                     className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ background: "#fdecef" }}
+                    style={{ background: "#e9f2ff" }}
                   >
-                    <Star size={14} className="text-destructive" />
+                    <Star size={14} className="text-[#0a4f89]" />
                   </div>
                   <h4 className="text-sm sm:text-base font-bold leading-tight" style={{ color: HDFC_BLUE }}>Period Summary</h4>
                 </div>
