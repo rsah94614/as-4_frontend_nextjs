@@ -57,18 +57,7 @@ export default function CategoriesPage() {
         <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
           <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
 
-            {/* Stats */}
-            {!loading && categories.length > 0 && (
-              <div className="mb-6">
-                <RewardStats
-                  total={categories.length}
-                  active={activeCount}
-                  inactive={categories.length - activeCount}
-                  filterState={filterState}
-                  setFilterState={setFilterState}
-                />
-              </div>
-            )}
+
 
             {/* Error Banner */}
             {error && !loading && (
@@ -110,23 +99,20 @@ export default function CategoriesPage() {
                 )}
               </div>
 
-              {/* Filter dropdown */}
-              <div className="relative">
-                <select
-                  value={filterState}
-                  onChange={(e) => setFilterState(e.target.value as "all" | "active" | "inactive")}
-                  className="border border-border rounded-lg px-3 py-2 text-xs bg-white appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-ring/10 focus:border-primary/40 font-medium text-foreground"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-              </div>
+              {/* Filter tabs */}
+              {!loading && categories.length > 0 && (
+                <RewardStats
+                  total={categories.length}
+                  active={activeCount}
+                  inactive={categories.length - activeCount}
+                  filterState={filterState}
+                  setFilterState={setFilterState}
+                />
+              )}
 
               <button
                 onClick={openCreate}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 bg-primary"
+                className="ml-auto flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-widest text-white whitespace-nowrap transition-all hover:opacity-90 active:scale-95 bg-primary"
               >
                 <Plus size={13} />
                 Add Category
