@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
     Users, UserPlus, Search, Loader2,
     Building2, Briefcase, Calendar, MoreVertical,
-    CheckCircle2, XCircle, Info, ChevronDown, Upload,
+    CheckCircle2, XCircle, ChevronDown, Upload,
     X, Eye, EyeOff, FileSpreadsheet, Download, AlertTriangle,
 } from "lucide-react";
 
@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { useToast, ToastContainer } from "@/components/features/admin/roles/UIHelpers";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { employeesClient as empClient, authClient, orgClient } from "@/services/api-clients";
+import { HowItWorks } from "@/components/features/admin/HowItWorks";
 
 
 
@@ -164,39 +165,7 @@ const HOW_IT_WORKS_BULK = [
     { n: "04", title: "Review Results", desc: "Successful rows are created immediately. Errors are listed per-row — fix and re-upload." },
 ];
 
-function HowItWorks({ steps }: { steps: typeof HOW_IT_WORKS_LIST }) {
-    const [open, setOpen] = useState(false);
-    return (
-        <div className="bg-white border border-border rounded-xl overflow-hidden mb-4">
-            <button
-                type="button"
-                onClick={() => setOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-5 py-3 hover:bg-muted transition-colors"
-            >
-                <div className="flex items-center gap-2">
-                    <Info size={13} className="text-destructive shrink-0" />
-                    <span className="text-[11px] font-bold text-primary uppercase tracking-widest">How It Works</span>
-                </div>
-                <ChevronDown size={15} className={cn("text-muted-foreground transition-transform duration-200 shrink-0", open && "rotate-180")} />
-            </button>
-            {open && (
-                <div className="border-t border-gray-100">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-gray-100 sm:divide-x">
-                        {steps.map((s) => (
-                            <div key={s.n} className="flex gap-3 px-5 py-4">
-                                <span className="text-[11px] font-black text-destructive w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
-                                <div>
-                                    <p className="text-xs font-semibold text-primary mb-0.5">{s.title}</p>
-                                    <p className="text-[11px] text-muted-foreground leading-relaxed">{s.desc}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
+
 
 // ─── Searchable Select ────────────────────────────────────────────────────────
 function SearchableSelect({ id, label, value, onChange, options, placeholder, required }: {

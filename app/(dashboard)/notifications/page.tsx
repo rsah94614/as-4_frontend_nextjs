@@ -88,13 +88,13 @@ function toIsoDatetime(dateStr: string): string {
 
 const TYPE_META: Record<
     NotificationType,
-    { label: string; dot: string; textColor: string; bgColor: string }
+    { label: string; textColor: string; bgColor: string }
 > = {
-    REVIEW: { label: "Review", dot: BRAND.navy, textColor: "#004C8F", bgColor: "#EEF4FB" },
-    REWARD: { label: "Reward", dot: BRAND.red, textColor: "#B91C1C", bgColor: "#FEF2F2" },
-    SYSTEM: { label: "System", dot: "#6B7280", textColor: "#374151", bgColor: "#F3F4F6" },
-    CELEBRATION: { label: "Celebration", dot: BRAND.red, textColor: "#9D174D", bgColor: "#FDF2F8" },
-    ANNOUNCEMENT: { label: "Announcement", dot: BRAND.navy, textColor: "#004C8F", bgColor: "#EEF4FB" },
+    REVIEW: { label: "Review", textColor: "#004C8F", bgColor: "#EEF4FB" },
+    REWARD: { label: "Reward", textColor: "#004C8F", bgColor: "#FEF2F2" },
+    SYSTEM: { label: "System", textColor: "#004C8F", bgColor: "#F3F4F6" },
+    CELEBRATION: { label: "Celebration", textColor: "#004C8F", bgColor: "#FDF2F8" },
+    ANNOUNCEMENT: { label: "Announcement", textColor: "#004C8F", bgColor: "#EEF4FB" },
 };
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
@@ -179,10 +179,9 @@ function TypeBadge({ type }: { type: NotificationType }) {
     const m = TYPE_META[type] ?? TYPE_META.SYSTEM;
     return (
         <span
-            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10.5px] font-bold tracking-widest uppercase whitespace-nowrap rounded-sm"
+            className="inline-flex items-center px-2.5 py-0.5 text-[10.5px] font-bold tracking-widest uppercase whitespace-nowrap rounded-sm"
             style={{ color: m.textColor, background: m.bgColor }}
         >
-            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: m.dot }} />
             {m.label}
         </span>
     );

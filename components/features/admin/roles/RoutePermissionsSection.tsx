@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Plus, X, Loader2, Search, Lock, Info, ChevronDown } from "lucide-react";
+import { Plus, X, Loader2, Search, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import {
     rolesApi,
     routePermissionsApi,
@@ -12,51 +11,18 @@ import {
 } from "@/services/roles-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { MethodBadge, type ToastType } from "./UIHelpers";
+import { HowItWorks } from "@/components/features/admin/HowItWorks";
 
 interface RoutePermissionsSectionProps {
     toast: (msg: string, t?: ToastType) => void;
 }
 
-const HOW_IT_WORKS = [
+const ROUTE_PERM_STEPS = [
     { n: "01", title: "Select a Role", desc: "Click a role pill to load its current route permissions." },
     { n: "02", title: "Assigned Routes", desc: "Routes in the left panel are accessible by the selected role." },
     { n: "03", title: "Grant Access", desc: "Click + on any available route to grant the role access instantly." },
     { n: "04", title: "Revoke Access", desc: "Hover an assigned route and click × to remove access immediately." },
 ];
-
-function HowItWorks() {
-    const [open, setOpen] = useState(false);
-    return (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
-            <button
-                type="button"
-                onClick={() => setOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-4 sm:px-6 py-3.5 hover:bg-gray-50 transition-colors"
-            >
-                <div className="flex items-center gap-2">
-                    <Info size={13} className="text-[#E31837]" />
-                    <span className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</span>
-                </div>
-                <ChevronDown size={15} className={cn("text-gray-400 transition-transform duration-200", open && "rotate-180")} />
-            </button>
-            {open && (
-                <div className="border-t border-gray-100">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
-                        {HOW_IT_WORKS.map((s) => (
-                            <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-4">
-                                <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
-                                <div>
-                                    <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
-                                    <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
 
 export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps) {
     const [permissions, setPermissions] = useState<RoutePermission[]>([]);
@@ -160,7 +126,7 @@ export function RoutePermissionsSection({ toast }: RoutePermissionsSectionProps)
 
     return (
         <div className="w-full">
-            <HowItWorks />
+            <HowItWorks steps={ROUTE_PERM_STEPS} />
 
             {/* Role selector card */}
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-4">
