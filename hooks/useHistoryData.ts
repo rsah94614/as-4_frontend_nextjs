@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createAuthenticatedClient } from "@/lib/api-utils";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { auth } from "@/services/auth-service";
@@ -13,11 +13,11 @@ import type {
     TypeFilter,
 } from "../types/history-types";
 
-// ── Proxy clients ────────────────────────────────────────────────────────────
-const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
-const walletClient  = createAuthenticatedClient("/api/proxy/wallet");
+const FETCH_BATCH_SIZE = 100;
 
-// ── Wallet transaction types (mirrors backend) ──────────────────────────────
+const rewardsClient = createAuthenticatedClient("/api/proxy/rewards");
+const walletClient = createAuthenticatedClient("/api/proxy/wallet");
+
 interface TransactionType {
     type_id: string;
     code: string;
@@ -47,104 +47,182 @@ interface WalletData {
     available_points: number;
 }
 
-/**
- * Convert a credit (points-earned) transaction into a HistoryItem shape.
- * These items have NO `reward_catalog`, so matchesPeriod("Points History")
- * returns true for them.
- */
 function transactionToHistoryItem(txn: Transaction): HistoryItem {
     return {
         history_id: txn.transaction_id,
         points: txn.amount,
         comment: txn.description ?? "Points earned",
         granted_at: txn.transaction_at,
-        // No reward_catalog → "Points History" filter will include these
         reward_catalog: undefined,
     };
 }
 
+function walletDebitToHistoryItem(txn: Transaction): HistoryItem {
+    return {
+        history_id: txn.transaction_id,
+        points: txn.amount,
+        comment: txn.description ?? "Reward redeemed",
+        granted_at: txn.transaction_at,
+        reward_catalog: {
+            reward_name: txn.description ?? "Reward redeemed",
+            reward_code: "WALLET-REDEEM",
+        },
+    };
+}
+
+function isLikelyDuplicateRedemption(
+    rewardsHistoryItem: HistoryItem,
+    walletHistoryItem: HistoryItem
+): boolean {
+    if (!rewardsHistoryItem.reward_catalog || !walletHistoryItem.reward_catalog) {
+        return false;
+    }
+
+    const timeDiffMs = Math.abs(
+        new Date(rewardsHistoryItem.granted_at).getTime() -
+            new Date(walletHistoryItem.granted_at).getTime()
+    );
+
+    return rewardsHistoryItem.points === walletHistoryItem.points && timeDiffMs <= 5 * 60 * 1000;
+}
+
 export function useHistoryData() {
-    // ── Filter state ──────────────────────────────────────────────────────────
     const [selectedPeriod, setSelectedPeriod] = useState<PeriodFilter>("All History");
     const [selectedType, setSelectedType] = useState<TypeFilter>("All");
 
-    // ── Data state ────────────────────────────────────────────────────────────
     const [allHistory, setAllHistory] = useState<HistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [page, setPage] = useState(1);
-    const [totalItems, setTotalItems] = useState(0);
-
-    // Cache walletId so we don't re-fetch it on every pagination
     const [cachedWalletId, setCachedWalletId] = useState<string | null>(null);
 
-    // ── Fetch on page change ──────────────────────────────────────────────────
     useEffect(() => {
-        fetchHistory(page);
+        fetchHistory();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page]);
+    }, []);
 
-    // ── Reset to page 1 when filters change ──────────────────────────────────
     useEffect(() => {
         setPage(1);
     }, [selectedPeriod, selectedType]);
 
-    async function fetchHistory(pageNum: number) {
+    useEffect(() => {
+        if (selectedPeriod === "Points History" && selectedType !== "All") {
+            setSelectedType("All");
+        }
+    }, [selectedPeriod, selectedType]);
+
+    async function fetchAllRewardHistory(): Promise<HistoryItem[]> {
+        let currentPage = 1;
+        let totalRewardItems = 0;
+        const rewardItems: HistoryItem[] = [];
+
+        do {
+            const response = await rewardsClient.get<PaginatedHistoryResponse>(
+                `/history/me?page=${currentPage}&size=${FETCH_BATCH_SIZE}`
+            );
+            const pageItems = response.data.data || [];
+            totalRewardItems = response.data.total_items || 0;
+            rewardItems.push(...pageItems);
+            currentPage += 1;
+
+            if (pageItems.length === 0) {
+                break;
+            }
+        } while (rewardItems.length < totalRewardItems);
+
+        return rewardItems;
+    }
+
+    async function fetchAllWalletHistory(employeeId?: string): Promise<{
+        pointItems: HistoryItem[];
+        walletRedemptionItems: HistoryItem[];
+    }> {
+        if (!employeeId) {
+            return {
+                pointItems: [],
+                walletRedemptionItems: [],
+            };
+        }
+
+        try {
+            let walletId = cachedWalletId;
+
+            if (!walletId) {
+                const walletRes = await walletClient.get<WalletData>(`/employees/${employeeId}`);
+                walletId = walletRes.data.wallet_id;
+                setCachedWalletId(walletId);
+            }
+
+            if (!walletId) {
+                return {
+                    pointItems: [],
+                    walletRedemptionItems: [],
+                };
+            }
+
+            let currentPage = 1;
+            let totalTransactions = 0;
+            const transactions: Transaction[] = [];
+
+            do {
+                const txnRes = await walletClient.get<TransactionListResponse>(
+                    `/transactions?wallet_id=${walletId}&page=${currentPage}&limit=${FETCH_BATCH_SIZE}`
+                );
+                const pageTransactions = txnRes.data.transactions || [];
+                totalTransactions = txnRes.data.total ?? 0;
+                transactions.push(...pageTransactions);
+                currentPage += 1;
+
+                if (pageTransactions.length === 0) {
+                    break;
+                }
+            } while (transactions.length < totalTransactions);
+
+            return {
+                pointItems: transactions
+                    .filter((txn) => txn.transaction_type.is_credit)
+                    .map(transactionToHistoryItem),
+                walletRedemptionItems: transactions
+                    .filter((txn) => !txn.transaction_type.is_credit)
+                    .map(walletDebitToHistoryItem),
+            };
+        } catch (err) {
+            console.warn("Failed to fetch wallet transactions", err);
+            return {
+                pointItems: [],
+                walletRedemptionItems: [],
+            };
+        }
+    }
+
+    async function fetchHistory() {
         setLoading(true);
         setError(null);
+
         try {
             const user = auth.getUser();
-            
-            // 1. Kick off rewards fetch immediately
-            const rewardsPromise = rewardsClient.get<PaginatedHistoryResponse>(
-                `/history/me?page=${pageNum}&size=${PAGE_SIZE}`
-            );
 
-            // 2. Fetch Wallet transactions concurrently
-            const walletTxnPromise = (async () => {
-                if (!user?.employee_id) return [];
-                
-                try {
-                    let wId = cachedWalletId;
-                    
-                    // Only fetch wallet_id if we don't have it cached
-                    if (!wId) {
-                        const walletRes = await walletClient.get<WalletData>(
-                            `/employees/${user.employee_id}`
-                        );
-                        wId = walletRes.data.wallet_id;
-                        setCachedWalletId(wId);
-                    }
-
-                    if (wId) {
-                        const txnRes = await walletClient.get<TransactionListResponse>(
-                            `/transactions?wallet_id=${wId}&page=${pageNum}&limit=${PAGE_SIZE}`
-                        );
-                        return txnRes.data.transactions
-                            .filter((txn) => txn.transaction_type.is_credit)
-                            .map(transactionToHistoryItem);
-                    }
-                } catch (err) {
-                    console.warn("Failed to fetch wallet transactions", err);
-                }
-                return [];
-            })();
-
-            // 3. Await both promises concurrently (eliminating waterfall)
-            const [rewardsRes, pointsItems] = await Promise.all([
-                rewardsPromise,
-                walletTxnPromise
+            const [redemptionItems, walletData] = await Promise.all([
+                fetchAllRewardHistory(),
+                fetchAllWalletHistory(user?.employee_id),
             ]);
 
-            const redemptionItems: HistoryItem[] = rewardsRes.data.data || [];
+            const fallbackRedemptionItems = walletData.walletRedemptionItems.filter(
+                (walletItem) =>
+                    !redemptionItems.some((rewardItem) =>
+                        isLikelyDuplicateRedemption(rewardItem, walletItem)
+                    )
+            );
 
-            // 4. Merge and sort
-            const merged = [...redemptionItems, ...pointsItems].sort(
+            const merged = [
+                ...redemptionItems,
+                ...fallbackRedemptionItems,
+                ...walletData.pointItems,
+            ].sort(
                 (a, b) => new Date(b.granted_at).getTime() - new Date(a.granted_at).getTime()
             );
 
             setAllHistory(merged);
-            setTotalItems((rewardsRes.data.total_items || 0) + pointsItems.length);
         } catch (err) {
             setError(extractErrorMessage(err, "Something went wrong fetching history"));
         } finally {
@@ -152,7 +230,6 @@ export function useHistoryData() {
         }
     }
 
-    // ── Client-side filtering ─────────────────────────────────────────────────
     const filteredHistory = useMemo(
         () =>
             allHistory.filter(
@@ -163,7 +240,18 @@ export function useHistoryData() {
         [allHistory, selectedPeriod, selectedType]
     );
 
-    const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+    const totalItems = filteredHistory.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+    const paginatedHistory = useMemo(() => {
+        const startIndex = (page - 1) * PAGE_SIZE;
+        return filteredHistory.slice(startIndex, startIndex + PAGE_SIZE);
+    }, [filteredHistory, page]);
+
+    useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     function clearFilters() {
         setSelectedPeriod("All History");
@@ -171,21 +259,20 @@ export function useHistoryData() {
     }
 
     return {
-        // filters
         selectedPeriod,
         setSelectedPeriod,
         selectedType,
         setSelectedType,
         clearFilters,
-        // data
         allHistory,
         filteredHistory,
+        paginatedHistory,
         loading,
         error,
         page,
         setPage,
         totalItems,
         totalPages,
-        retry: () => fetchHistory(page),
+        retry: fetchHistory,
     };
 }

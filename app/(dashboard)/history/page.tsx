@@ -27,7 +27,7 @@ export default function HistoryPage() {
         selectedPeriod, setSelectedPeriod,
         selectedType, setSelectedType,
         clearFilters,
-        allHistory, filteredHistory,
+        allHistory, filteredHistory, paginatedHistory,
         loading, error, retry,
         page, setPage, totalPages,
     } = useHistoryData();
@@ -83,7 +83,7 @@ export default function HistoryPage() {
                 />
 
                 <HistoryList
-                    items={filteredHistory}
+                    items={paginatedHistory}
                     allItemsCount={allHistory.length}
                     loading={loading}
                     error={error}
@@ -98,6 +98,7 @@ export default function HistoryPage() {
                         totalPages={totalPages}
                         onPrev={() => setPage((p) => Math.max(1, p - 1))}
                         onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        onPageSelect={setPage}
                     />
                 )}
             </div>

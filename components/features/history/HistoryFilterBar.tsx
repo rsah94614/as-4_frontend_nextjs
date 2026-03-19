@@ -41,6 +41,7 @@ export default function HistoryFilterBar({
 }: HistoryFilterBarProps) {
     const hasActiveFilter =
         selectedPeriod !== "All History" || selectedType !== "All";
+    const disableTypeFilter = selectedPeriod === "Points History";
 
     return (
         <div className="space-y-6">
@@ -87,17 +88,18 @@ export default function HistoryFilterBar({
                     )}
                 </div>
 
-                {/* Transaction Type Dropdown */}
-                {selectedPeriod !== "Points History" && (
                 <div
-                    className="relative"
+                    className={`relative ${disableTypeFilter ? "opacity-50" : ""}`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <button
+                        type="button"
                         onClick={() => {
+                            if (disableTypeFilter) return;
                             setTypeDropdownOpen(!typeDropdownOpen);
                             setPeriodDropdownOpen(false);
                         }}
+                        disabled={disableTypeFilter}
                         className={`${FILTER_BTN_BASE} ${selectedType !== "All" ? FILTER_BTN_ACTIVE : ""
                             }`}
                     >
@@ -129,7 +131,6 @@ export default function HistoryFilterBar({
                         </div>
                     )}
                 </div>
-                )}
 
                 {/* Clear filters button */}
                 {hasActiveFilter && (

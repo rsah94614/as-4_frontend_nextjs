@@ -68,7 +68,7 @@ export default React.memo(function HistoryCard({ item, onClick }: HistoryCardPro
 
                 <div className="text-right shrink-0">
                     <span
-                        className="text-base font-bold tracking-tight"
+                        className="text-base font-bold tracking-tight text-[#374151]"
                         style={{ color: amountColor }}
                     >
                         {isRedemption ? `${item.points}` : `${item.points}`}

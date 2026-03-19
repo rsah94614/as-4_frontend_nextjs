@@ -1,6 +1,8 @@
 export interface RewardCatalog {
     reward_name: string;
     reward_code: string;
+    category_name?: string;
+    category_code?: string;
 }
 
 export interface GrantedByEmployee {
