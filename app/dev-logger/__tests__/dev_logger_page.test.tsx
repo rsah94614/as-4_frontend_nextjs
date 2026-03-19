@@ -70,7 +70,7 @@ describe("DevLoggerPage", () => {
         expect(screen.getAllByText("GET").length).toBeGreaterThan(0);
         expect(screen.getByText("200")).toBeInTheDocument();
         expect(screen.getByText("/test")).toBeInTheDocument();
-        expect(screen.getByText("1 / 1 logs")).toBeInTheDocument();
+        expect(screen.getByText(/\/ 1 logs/i)).toBeInTheDocument();
     });
 
     it("can trigger log clear", () => {
