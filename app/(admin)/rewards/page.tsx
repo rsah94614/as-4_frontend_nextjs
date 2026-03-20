@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, Search, X } from "lucide-react";
 
 import { extractErrorMessage } from "@/lib/error-utils";
-import { Category, RewardItem, Pagination } from "@/types/reward-types";
+import { Category, RewardItem } from "@/types/reward-types";
 import { fetchAdminCatalog, fetchAdminCategories } from "@/services/rewards-service";
 
 // Modular Components
@@ -27,29 +27,7 @@ export default function RewardsPage() {
   const [selected, setSelected] = useState<RewardItem | undefined>();
 
   // ─── Data Fetching ────────────────────────────────────────────────────────
-<<<<<<< Updated upstream
-  const loadStats = useCallback(async () => {
-    try {
-      const [all, active] = await Promise.all([
-        fetchAdminCatalog({ page: 1, size: 1 }),
-        fetchAdminCatalog({ page: 1, size: 1, active_only: true })
-      ]);
-      setGlobalStats({
-        total: all.pagination?.total || 0,
-        active: active.pagination?.total || 0,
-        inactive: (all.pagination?.total || 0) - (active.pagination?.total || 0)
-      });
-    } catch (e) {
-      console.error("Failed to load global stats", e);
-    }
-  }, []);
 
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
-
-=======
->>>>>>> Stashed changes
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -57,15 +35,7 @@ export default function RewardsPage() {
       // Fetch up to 100 items to do complete local filtering and pagination, avoiding grid gaps
       const [cats, catalog] = await Promise.all([
         fetchAdminCategories(),
-<<<<<<< Updated upstream
-        fetchAdminCatalog({
-          page: fetchPage,
-          size: fetchSize,
-          active_only: filterState === "active" ? true : undefined
-        }),
-=======
         fetchAdminCatalog({ page: 1, size: 100 })
->>>>>>> Stashed changes
       ]);
 
       setCategories(cats as Category[]);
@@ -102,20 +72,10 @@ export default function RewardsPage() {
           i.reward_code.toLowerCase().includes(lowerSearch)
       );
     }
-<<<<<<< Updated upstream
-
-    if (isInactive) {
-      // Local pagination for inactive
-      return result.slice((page - 1) * 12, page * 12);
-    }
-    return result;
-  }, [items, search, filterState, page, isInactive]);
-=======
     
     // Local pagination for ALL tabs to ensure fully packed pages
     return result.slice((page - 1) * 12, page * 12);
   }, [items, search, filterState, page]);
->>>>>>> Stashed changes
 
   const displayPagination = useMemo(() => {
     let result = items;

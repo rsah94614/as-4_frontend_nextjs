@@ -9,8 +9,6 @@ import {
   CARD_DISABLED,
   CARD_BODY,
   ICON_BOX,
-  GRADIENT_PRIMARY,
-  GRADIENT_PRIMARY_HOVER,
   ANIMATE_FADE_IN_UP,
 } from "@/components/features/dashboard/redeem/redeem-styles";
 
