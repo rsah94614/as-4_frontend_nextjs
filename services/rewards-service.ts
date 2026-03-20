@@ -8,6 +8,7 @@ import type {
     WalletData,
     RedemptionResponse,
     PaginatedCatalogResponse,
+    RewardItem as RedeemRewardItem,
 } from "@/types/redeem-types";
 import type {
     Category,
@@ -30,7 +31,7 @@ export async function fetchCatalog(page = 1, size = 20): Promise<PaginatedCatalo
         const raw = res.data;
 
         // Client-side active filter
-        const activeItems = raw.data.filter((item: any) => item.is_active === true);
+        const activeItems = raw.data.filter((item: RedeemRewardItem) => item.is_active === true);
         const total = activeItems.length;
         const totalPages = Math.ceil(total / size) || 1;
         const start = (page - 1) * size;
