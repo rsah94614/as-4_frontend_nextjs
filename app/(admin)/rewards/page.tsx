@@ -17,7 +17,6 @@ import { AdminPageHeader } from "@/components/features/admin/AdminControlPanelPa
 export default function RewardsPage() {
   const [items, setItems] = useState<RewardItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
   const [filterState, setFilterState] = useState<"all" | "active" | "inactive">("all");
   const [loading, setLoading] = useState(true);
@@ -27,9 +26,8 @@ export default function RewardsPage() {
   const [modal, setModal] = useState<null | "create" | "edit" | "restock">(null);
   const [selected, setSelected] = useState<RewardItem | undefined>();
 
-  const [globalStats, setGlobalStats] = useState({ total: 0, active: 0, inactive: 0 });
-
   // ─── Data Fetching ────────────────────────────────────────────────────────
+<<<<<<< Updated upstream
   const loadStats = useCallback(async () => {
     try {
       const [all, active] = await Promise.all([
@@ -50,44 +48,50 @@ export default function RewardsPage() {
     loadStats();
   }, [loadStats]);
 
+=======
+>>>>>>> Stashed changes
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const isInactive = filterState === "inactive";
-      const fetchPage = isInactive ? 1 : page; // Fetch page 1 always for inactive bulk
-      const fetchSize = isInactive ? 1000 : 12; // Fetch max items to filter inactive locally
-
+      // Fetch up to 100 items to do complete local filtering and pagination, avoiding grid gaps
       const [cats, catalog] = await Promise.all([
         fetchAdminCategories(),
+<<<<<<< Updated upstream
         fetchAdminCatalog({
           page: fetchPage,
           size: fetchSize,
           active_only: filterState === "active" ? true : undefined
         }),
+=======
+        fetchAdminCatalog({ page: 1, size: 100 })
+>>>>>>> Stashed changes
       ]);
 
       setCategories(cats as Category[]);
       setItems(catalog.data as unknown as RewardItem[]);
-      setPagination(catalog.pagination as Pagination);
-
     } catch (e: unknown) {
       setError(extractErrorMessage(e, "Failed to load catalog. Check your connection."));
     } finally {
       setLoading(false);
     }
-  }, [page, filterState]);
+  }, []);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  // ─── Filtering ────────────────────────────────────────────────────────────
-  const isInactive = filterState === "inactive";
+  // Compute stats directly from the fetched items — no separate API call needed
+  const globalStats = useMemo(() => ({
+    total: items.length,
+    active: items.filter(i => i.is_active).length,
+    inactive: items.filter(i => !i.is_active).length,
+  }), [items]);
 
+  // ─── Filtering ────────────────────────────────────────────────────────────
   const displayItems = useMemo(() => {
     let result = items;
-    if (isInactive) result = result.filter((i) => !i.is_active);
+    if (filterState === "inactive") result = result.filter((i) => !i.is_active);
     else if (filterState === "active") result = result.filter((i) => i.is_active);
 
     if (search) {
@@ -98,6 +102,7 @@ export default function RewardsPage() {
           i.reward_code.toLowerCase().includes(lowerSearch)
       );
     }
+<<<<<<< Updated upstream
 
     if (isInactive) {
       // Local pagination for inactive
@@ -105,31 +110,39 @@ export default function RewardsPage() {
     }
     return result;
   }, [items, search, filterState, page, isInactive]);
+=======
+    
+    // Local pagination for ALL tabs to ensure fully packed pages
+    return result.slice((page - 1) * 12, page * 12);
+  }, [items, search, filterState, page]);
+>>>>>>> Stashed changes
 
   const displayPagination = useMemo(() => {
-    if (isInactive) {
-      let result = items.filter((i) => !i.is_active);
-      if (search) {
-        const lowerSearch = search.toLowerCase();
-        result = result.filter(
-          (i) =>
-            i.reward_name.toLowerCase().includes(lowerSearch) ||
-            i.reward_code.toLowerCase().includes(lowerSearch)
-        );
-      }
-      const total = result.length;
-      const total_pages = Math.ceil(total / 12) || 1;
-      return {
-        current_page: page,
-        per_page: 12,
-        total: total,
-        total_pages: total_pages,
-        has_next: page < total_pages,
-        has_previous: page > 1,
-      };
+    let result = items;
+    if (filterState === "inactive") result = result.filter((i) => !i.is_active);
+    else if (filterState === "active") result = result.filter((i) => i.is_active);
+
+    if (search) {
+      const lowerSearch = search.toLowerCase();
+      result = result.filter(
+        (i) =>
+          i.reward_name.toLowerCase().includes(lowerSearch) ||
+          i.reward_code.toLowerCase().includes(lowerSearch)
+      );
     }
-    return pagination;
-  }, [items, search, page, isInactive, pagination]);
+    
+    const total = result.length;
+    const total_pages = Math.ceil(total / 12) || 1;
+    
+    return {
+      current_page: page,
+      per_page: 12,
+      total: total,
+      total_pages: total_pages,
+      has_next: page < total_pages,
+      has_previous: page > 1,
+    };
+  }, [items, search, filterState, page]);
 
   // ─── Modal Helpers ────────────────────────────────────────────────────────
   const close = () => {
@@ -138,7 +151,6 @@ export default function RewardsPage() {
   };
   const saved = () => {
     close();
-    loadStats();
     load();
   };
 
