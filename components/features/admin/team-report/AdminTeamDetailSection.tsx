@@ -12,7 +12,6 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid,
     Tooltip, ResponsiveContainer, Cell, Legend,
 } from "recharts";
-import { scoreColor } from "@/lib/common-utils";
 
 interface Props { report: TeamReportResponse }
 
@@ -40,7 +39,7 @@ async function exportTeamToXLSX(report: TeamReportResponse) {
         "Reviews Received", "Reviews This Month", "Rewards Redeemed"]);
     report.members.forEach((m, i) => membersSheet.addRow([
         i + 1, m.username, m.designation, m.performance_score,
-        scoreColor(m.performance_score).label,
+        m.performance_score >= 75 ? "Excellent" : m.performance_score >= 50 ? "Good" : m.performance_score >= 25 ? "Fair" : "Needs Attention",
         m.total_earned_points, m.available_points, m.points_this_month,
         m.reviews_received, m.reviews_this_month, m.rewards_redeemed,
     ]));
@@ -58,24 +57,18 @@ async function exportTeamToXLSX(report: TeamReportResponse) {
 // ─── KPI cards ───────────────────────────────────────────────────────────────
 
 const KPI_CONFIG = [
-    { key: "total_members" as const, label: "Members", icon: Users, gradient: "from-[#004C8F] to-[#1D6EC5]" },
-    { key: "total_points" as const, label: "Total Points", icon: Star, gradient: "from-[#C2410C] to-[#F59E0B]" },
-    { key: "total_reviews" as const, label: "Reviews Received", icon: MessageSquare, gradient: "from-[#0D9488] to-[#0891B2]" },
-    { key: "total_rewards" as const, label: "Rewards Redeemed", icon: Gift, gradient: "from-[#6D28D9] to-[#8B5CF6]" },
+    { key: "total_members" as const,  label: "Members",          icon: Users,        gradient: "from-[#004C8F] to-[#1D6EC5]" },
+    { key: "total_points" as const,   label: "Total Points",     icon: Star,         gradient: "from-[#004C8F] to-[#1D6EC5]" },
+    { key: "total_reviews" as const,  label: "Reviews Received", icon: MessageSquare, gradient: "from-[#004C8F] to-[#1D6EC5]" },
+    { key: "total_rewards" as const,  label: "Rewards Redeemed", icon: Gift,         gradient: "from-[#004C8F] to-[#1D6EC5]" },
 ];
 
-function perfGradient(score: number) {
-    if (score >= 75) return "from-[#059669] to-[#10B981]";
-    if (score >= 50) return "from-[#D97706] to-[#F59E0B]";
-    if (score >= 25) return "from-[#C2410C] to-[#F97316]";
-    return "from-[#DC2626] to-[#EF4444]";
-}
 
 function KpiCard({ label, value, icon: Icon, gradient }: {
     label: string; value: string | number; icon: typeof Users; gradient: string;
 }) {
     return (
-        <div className={`relative rounded-2xl p-5 text-white overflow-hidden bg-gradient-to-br ${gradient}`}>
+        <div className={`relative rounded-2xl p-5 text-white overflow-hidden bg-linear-to-br ${gradient}`}>
             <div className="absolute -right-5 -top-5 w-24 h-24 rounded-full bg-white/10" />
             <div className="absolute -right-2 -bottom-6 w-16 h-16 rounded-full bg-white/10" />
             <div className="relative">
@@ -127,15 +120,12 @@ function MemberPointsChart({ report }: Props) {
 }
 
 function MemberScoreChart({ report }: Props) {
-    const COLOR_MAP: Record<string, string> = {
-        Excellent: "#059669", Good: "#D97706", Fair: "#F97316", "Needs Attention": "#DC2626",
-    };
+    const BLUE_SHADES = ["#004C8F", "#1D6EC5", "#5B9BD5", "#93C5FD", "#BFDBFE"];
     const data = [...report.members]
         .sort((a, b) => b.performance_score - a.performance_score)
         .map((m) => ({
             name: m.username.split(/[._\s]/)[0],
             Score: m.performance_score,
-            label: scoreColor(m.performance_score).label,
         }));
 
     return (
@@ -153,7 +143,7 @@ function MemberScoreChart({ report }: Props) {
                             return [`${s} — ${lbl}`, "Score"];
                         }} />
                     <Bar dataKey="Score" radius={[4, 4, 0, 0]}>
-                        {data.map((e, i) => <Cell key={i} fill={COLOR_MAP[e.label] ?? "#004C8F"} />)}
+                        {data.map((_, i) => <Cell key={i} fill={BLUE_SHADES[i % BLUE_SHADES.length]} />)}
                     </Bar>
                 </BarChart>
             </ResponsiveContainer>
@@ -164,13 +154,11 @@ function MemberScoreChart({ report }: Props) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function AdminTeamDetailSection({ report }: Props) {
-    const perfColors = scoreColor(report.avg_performance_score);
-    const gradient = perfGradient(report.avg_performance_score);
 
     return (
         <div className="space-y-5">
             {/* Hero banner */}
-            <div className={`relative rounded-2xl overflow-hidden bg-gradient-to-br ${gradient} px-6 py-6 text-white`}>
+            <div className="relative rounded-2xl overflow-hidden bg-linear-to-br from-[#003A70] via-[#004C8F] to-[#1D6EC5] px-6 py-6 text-white">
                 <div className="absolute top-0 right-0 w-64 h-full opacity-10 pointer-events-none">
                     <div className="absolute top-[-20%] right-[-10%] w-72 h-72 rounded-full bg-white" />
                     <div className="absolute bottom-[-30%] right-[20%] w-40 h-40 rounded-full bg-white" />
@@ -186,9 +174,6 @@ export default function AdminTeamDetailSection({ report }: Props) {
                         <div className="flex items-center gap-2 mt-3 flex-wrap">
                             <span className="bg-white/15 text-white text-xs font-semibold px-3 py-1 rounded-full">
                                 {report.total_members} member{report.total_members !== 1 ? "s" : ""}
-                            </span>
-                            <span className="bg-white/15 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                                {perfColors.label}
                             </span>
                         </div>
                     </div>
@@ -226,7 +211,7 @@ export default function AdminTeamDetailSection({ report }: Props) {
                     label="Avg Performance"
                     value={`${report.avg_performance_score}%`}
                     icon={TrendingUp}
-                    gradient={gradient}
+                    gradient="from-[#004C8F] to-[#1D6EC5]"
                 />
             </div>
 

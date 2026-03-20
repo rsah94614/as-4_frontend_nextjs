@@ -2,7 +2,6 @@
 
 import type { TeamMemberReportResponse } from "@/types/dashboard-types";
 import { cn } from "@/lib/utils";
-import { scoreColor } from "@/lib/common-utils";
 
 interface Props {
     member: TeamMemberReportResponse;
@@ -22,9 +21,8 @@ const RANK_AVATAR: Record<number, string> = {
 };
 
 export default function AdminTeamMemberRow({ member, rank }: Props) {
-    const colors = scoreColor(member.performance_score);
-    const rankBg = RANK_AVATAR[rank] ?? "bg-gray-200";
-    const rankText = rank <= 3 ? "text-white" : "text-gray-500";
+    const rankBg = RANK_AVATAR[rank] ?? "bg-[#EEF4FB]";
+    const rankText = rank <= 3 ? "text-white" : "text-[#004C8F]";
 
     return (
         <tr className="border-b border-gray-50 hover:bg-[#F8FAFD] transition-colors">
@@ -33,7 +31,7 @@ export default function AdminTeamMemberRow({ member, rank }: Props) {
                 <div className={cn(
                     "w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold",
                     rankBg, rankText,
-                    rank > 3 && "bg-gray-100",
+                    rank > 3 && "bg-[#EEF4FB]",
                 )}>
                     {rank}
                 </div>
@@ -45,7 +43,7 @@ export default function AdminTeamMemberRow({ member, rank }: Props) {
                     <div className={cn(
                         "w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0",
                         rankBg,
-                        rank > 3 && "bg-gray-300",
+                        rank > 3 && "bg-[#93C5FD]",
                     )}>
                         {initials(member.username)}
                     </div>
@@ -80,16 +78,16 @@ export default function AdminTeamMemberRow({ member, rank }: Props) {
             {/* Performance */}
             <td className="py-3.5 px-4 min-w-[180px]">
                 <div className="flex items-center justify-between mb-1.5">
-                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${colors.text} ${colors.bg} ${colors.border}`}>
-                        {colors.label}
+                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-[#BFDBFE] bg-[#EEF4FB] text-[#004C8F]">
+                        Performance
                     </span>
-                    <span className={`text-xs font-mono font-bold ${colors.text}`}>
+                    <span className="text-xs font-mono font-bold text-[#004C8F]">
                         {member.performance_score}
                     </span>
                 </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-[#EEF4FB] rounded-full overflow-hidden">
                     <div
-                        className={`h-full rounded-full transition-all duration-700 ${colors.bar}`}
+                        className="h-full bg-[#004C8F] rounded-full transition-all duration-700"
                         style={{ width: `${member.performance_score}%` }}
                     />
                 </div>

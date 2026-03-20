@@ -2,7 +2,6 @@
 
 import { Users, TrendingUp, Star, ArrowRight } from "lucide-react";
 import type { TeamSummaryResponse } from "@/types/dashboard-types";
-import { scoreColor } from "@/lib/common-utils";
 
 
 interface Props {
@@ -12,7 +11,6 @@ interface Props {
 }
 
 export default function AdminTeamReportCard({ team, onClick }: Props) {
-    const colors = scoreColor(team.avg_performance_score);
 
     return (
         <div
@@ -56,14 +54,14 @@ export default function AdminTeamReportCard({ team, onClick }: Props) {
                         {team.total_points.toLocaleString()}
                     </p>
                 </div>
-                <div className={`border rounded-xl p-3 ${colors.bg} ${colors.border}`}>
+                <div className="border border-[#DBEAFE] rounded-xl p-3 bg-[#F0F7FF]">
                     <div className="flex items-center gap-1.5 mb-1">
-                        <TrendingUp className="w-3 h-3 text-gray-400" />
+                        <TrendingUp className="w-3 h-3 text-[#93C5FD]" />
                         <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">
                             Avg Score
                         </p>
                     </div>
-                    <p className={`text-xl font-black tabular-nums ${colors.text}`}>
+                    <p className="text-xl font-black tabular-nums text-[#004C8F]">
                         {team.avg_performance_score}%
                     </p>
                 </div>
@@ -72,8 +70,8 @@ export default function AdminTeamReportCard({ team, onClick }: Props) {
             {/* Performance bar */}
             <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${colors.text} ${colors.bg} ${colors.border}`}>
-                        {colors.label}
+                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-[#BFDBFE] bg-[#EEF4FB] text-[#004C8F]">
+                        Performance
                     </span>
                     <span className="text-[11px] font-bold text-gray-400">{team.avg_performance_score}%</span>
                 </div>
