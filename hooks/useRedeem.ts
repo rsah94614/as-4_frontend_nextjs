@@ -121,6 +121,16 @@ export function useRedeem() {
 
   useEffect(() => { loadInitial(); }, [loadInitial]);
 
+  // Auto-refetch when user switches back to this tab (e.g. after editing in admin)
+  useEffect(() => {
+    const handleFocus = () => {
+      allItemsCacheRef.current = null; // clear category cache
+      loadInitial();
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [loadInitial]);
+
   // When page changes
   const goToPage = useCallback((page: number) => {
     setCurrentPage(page);

@@ -75,7 +75,7 @@ export default function RewardCard({ item, canAfford, onRedeem, staggerIndex = 0
               <p className="text-[11px] text-slate-400 mb-0.5">
                 Points required
               </p>
-              <p className={`text-lg font-bold text-slate-800 transition-all duration-300 ${canAfford && !outOfStock ? "group-hover:text-[#004C8F]" : ""
+              <p className={`text-lg font-bold text-slate-800 transition-all duration-300 ${canAfford && !outOfStock ? "group-hover:text-slate-600" : ""
                 }`}>
                 {item.default_points.toLocaleString()}
                 <span className="text-xs font-normal text-slate-400 ml-1">
@@ -87,9 +87,9 @@ export default function RewardCard({ item, canAfford, onRedeem, staggerIndex = 0
             <button
               disabled={disabled}
               onClick={() => !disabled && onRedeem(item)}
-              className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${disabled
-                  ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                  : `${GRADIENT_PRIMARY} text-white ${GRADIENT_PRIMARY_HOVER} active:scale-95 hover:shadow-md hover:shadow-blue-200`
+              className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 border ${disabled
+                  ? "bg-slate-100 text-slate-400 cursor-not-allowed border-transparent"
+                  : "bg-slate-600 text-white border-[#1E293B] hover:bg-slate-500 active:scale-95 hover:shadow-md hover:shadow-slate-200"
                 }`}
             >
               {outOfStock
