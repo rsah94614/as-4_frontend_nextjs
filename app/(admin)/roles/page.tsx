@@ -28,7 +28,7 @@ export default function RolesPage() {
                 {/* ─── Page Header (matches Employee page) ─── */}
                 <div>
                     <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-                        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+                        <div className="mx-auto flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
                                     Roles &amp; Permissions
@@ -48,7 +48,7 @@ export default function RolesPage() {
 
                 {/* ── Tab bar ── */}
                 <div className="bg-white border-b border-border px-3 sm:px-5 lg:px-8">
-                    <div className="max-w-[1200px] mx-auto flex overflow-x-auto overflow-y-hidden scrollbar-thin">
+                    <div className="mx-auto flex overflow-x-auto overflow-y-hidden scrollbar-thin">
                         {TABS.map((t) => {
                             const active = tab === t.id;
                             return (
@@ -72,7 +72,7 @@ export default function RolesPage() {
 
                 {/* ── Main content ── */}
                 <div className="px-3 sm:px-5 lg:px-8 py-4 sm:py-6 lg:py-8" style={{ background: "#F7F9FC" }}>
-                    <div className="max-w-[1200px] mx-auto">
+                    <div className="mx-auto">
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 sm:p-5 lg:p-8">
                             {tab === "roles" && <RolesSection toast={toast} />}
                             {tab === "assignments" && <AssignmentsSection toast={toast} />}

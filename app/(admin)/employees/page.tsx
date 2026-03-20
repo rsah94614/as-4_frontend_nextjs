@@ -1321,7 +1321,7 @@ export default function EmployeesPage() {
 
                 {/* Page Header */}
                 <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-                    <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+                    <div className="mx-auto flex items-center justify-between">
                         <div>
                             <h1 className="text-[20px] font-bold text-primary leading-tight">
                                 Employee Management
@@ -1339,7 +1339,7 @@ export default function EmployeesPage() {
 
                 {/* Tab bar */}
                 <div className="bg-white border-b border-border px-8 md:px-10">
-                    <div className="max-w-[1200px] mx-auto flex">
+                    <div className="mx-auto flex">
                         {TABS.map((t) => {
                             const active = tab === t.id;
                             return (
@@ -1357,7 +1357,7 @@ export default function EmployeesPage() {
 
                 {/* Content */}
                 <div className="px-8 md:px-10 py-6">
-                    <div className="max-w-[1200px] mx-auto">
+                    <div className="mx-auto">
                         {tab === "list" && <EmployeeListSection toast={toast} />}
                         {tab === "bulk" && <BulkImportSection toast={toast} />}
                     </div>
