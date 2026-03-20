@@ -12,7 +12,7 @@ export default function DashboardHeroSection() {
     });
 
 
-    return <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#003A70] via-[#004C8F] to-[#1D6EC5] px-6 py-7 text-white">
+    return <div className="relative  overflow-hidden bg-gradient-to-br from-[#003A70] via-[#004C8F] to-[#1D6EC5] px-6 py-7 text-white">
         {/* Decorative blobs */}
         <div className="absolute top-0 right-0 w-64 h-full opacity-10 pointer-events-none">
             <div className="absolute top-[-20%] right-[-10%] w-72 h-72 rounded-full bg-white" />

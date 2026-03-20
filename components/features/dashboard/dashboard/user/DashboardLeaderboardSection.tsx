@@ -8,11 +8,11 @@ import DashboardLeaderboardCard from "./DashboardLeaderboardCard";
 import { fetchDashboardLeaderboard } from "@/services/analytics-service";
 import type { LeaderboardEntryResponse } from "@/types/dashboard-types";
 
-const AVATAR_COLORS = [
-    "bg-[#004C8F]", "bg-[#6D28D9]", "bg-[#0D9488]",
-    "bg-[#C2410C]", "bg-[#0891B2]", "bg-[#BE185D]",
-    "bg-[#1E40AF]", "bg-[#065F46]", "bg-[#92400E]", "bg-[#3730A3]",
-];
+// const AVATAR_COLORS = [
+//    , "bg-[#6D28D9]", "bg-[#0D9488]",
+//     "bg-[#C2410C]", "bg-[#0891B2]", "bg-[#BE185D]",
+//     "bg-[#1E40AF]", "bg-[#065F46]", "bg-[#92400E]", "bg-[#3730A3]",
+// ];
 
 function userInitials(username: string): string {
     const parts = username.split(/[._\s-]+/);
@@ -25,27 +25,27 @@ function userInitials(username: string): string {
 const PODIUM_CONFIG = {
     1: {
         platformH: "h-20",
-        platformBg: "bg-gradient-to-t from-amber-500 to-amber-400",
+        platformBg: "bg-gradient-to-t from-[#004C8F] to-[#1D6EC5]",
         avatarSize: "h-14 w-14",
-        avatarRing: "ring-2 ring-amber-400 ring-offset-2",
+        avatarRing: "ring-2 ring-[#1D6EC5] ring-offset-2",
         nameSize: "text-sm font-bold",
         ptsSize: "text-xs",
         order: "order-2",
     },
     2: {
         platformH: "h-14",
-        platformBg: "bg-gradient-to-t from-slate-400 to-slate-300",
+        platformBg: "bg-gradient-to-t from-[#5B9BD5] to-[#93C5FD]",
         avatarSize: "h-11 w-11",
-        avatarRing: "ring-2 ring-slate-300 ring-offset-2",
+        avatarRing: "ring-2 ring-[#93C5FD] ring-offset-2",
         nameSize: "text-xs font-bold",
         ptsSize: "text-[10px]",
         order: "order-1",
     },
     3: {
         platformH: "h-10",
-        platformBg: "bg-gradient-to-t from-amber-700 to-amber-600",
+        platformBg: "bg-gradient-to-t from-[#1E40AF] to-[#2563EB]",
         avatarSize: "h-11 w-11",
-        avatarRing: "ring-2 ring-amber-600 ring-offset-2",
+        avatarRing: "ring-2 ring-[#2563EB] ring-offset-2",
         nameSize: "text-xs font-bold",
         ptsSize: "text-[10px]",
         order: "order-3",
@@ -57,7 +57,7 @@ interface PodiumEntry {
     name: string;
     initials: string;
     points: number;
-    color: string;
+    // color: string;
     image: string | null;
 }
 
@@ -68,12 +68,12 @@ function PodiumSlot({ entry }: { entry: PodiumEntry }) {
         <div className={`flex flex-col items-center flex-1 ${c.order}`}>
             {/* Crown for #1 */}
             {entry.rank === 1 && (
-                <Crown className="w-5 h-5 text-amber-400 mb-1 fill-amber-400" />
+                <Crown className="w-5 h-5 text-[#1D6EC5] mb-1 fill-[#1D6EC5]" />
             )}
 
             {/* Avatar */}
             <Avatar className={`${c.avatarSize} ${c.avatarRing} mb-2 shrink-0`}>
-                <AvatarFallback className={`${entry.color} text-white text-xs font-bold`}>
+                <AvatarFallback className={`bg-[#004C8F] text-white text-xs font-bold`}>
                     {entry.initials}
                 </AvatarFallback>
             </Avatar>
@@ -171,7 +171,7 @@ const DashboardLeaderboardSection = () => {
         name: entry.username,
         initials: userInitials(entry.username),
         points: entry.total_earned_points,
-        color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+        // color: AVATAR_COLORS[i % AVATAR_COLORS.length],
         image: null,
     }));
 
@@ -198,7 +198,7 @@ const DashboardLeaderboardSection = () => {
                 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                     {/* Podium */}
                     {top3.length > 0 && (
-                        <div className="bg-gradient-to-b from-gray-50 to-white px-4 pt-6 pb-0">
+                        <div className="bg-linear-to-b from-gray-50 to-white px-4 pt-6 pb-0">
                             <div className="flex items-end justify-center gap-2">
                                 {/* Render in visual order: 2, 1, 3 */}
                                 {[2, 1, 3].map((r) => {

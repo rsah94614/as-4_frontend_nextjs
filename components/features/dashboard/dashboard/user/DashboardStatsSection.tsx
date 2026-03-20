@@ -9,25 +9,25 @@ const CARDS = [
         label: "Total Points",
         icon: Users,
         key: "total_points" as const,
-        gradient: "from-[#004C8F] to-[#1D6EC5]",
+        // gradient: "from-[#004C8F] to-[#1D6EC5]",
     },
     {
         label: "Rewards Redeemed",
         icon: Trophy,
         key: "rewards_redeemed" as const,
-        gradient: "from-[#6D28D9] to-[#8B5CF6]",
+        // gradient: "from-[#6D28D9] to-[#8B5CF6]",
     },
     {
         label: "Reviews Received",
         icon: LayoutGrid,
         key: "reviews_received" as const,
-        gradient: "from-[#0D9488] to-[#0891B2]",
+        // gradient: "from-[#0D9488] to-[#0891B2]",
     },
     {
         label: "Active Users",
         icon: TrendingUp,
         key: "active_users" as const,
-        gradient: "from-[#C2410C] to-[#F59E0B]",
+        // gradient: "from-[#C2410C] to-[#F59E0B]",
     },
 ];
 
@@ -46,14 +46,13 @@ export default function DashboardStatsSection() {
     }, []);
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 px-4 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {CARDS.map((card) => (
                 <DashboardCard
                     key={card.label}
                     label={card.label}
                     stat={data?.[card.key]}
                     icon={card.icon}
-                    gradient={card.gradient}
                     loading={loading}
                 />
             ))}

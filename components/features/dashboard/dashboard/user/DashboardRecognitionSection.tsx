@@ -7,10 +7,7 @@ import { fetchDashboardRecentReviews } from "@/services/analytics-service";
 import { userInitials, formatTime } from "@/lib/dashboard-utils";
 import type { RecentReviewResponse } from "@/types/dashboard-types";
 
-const AVATAR_COLORS = [
-    "bg-[#004C8F]", "bg-[#6D28D9]", "bg-[#0D9488]",
-    "bg-[#C2410C]", "bg-[#0891B2]",
-];
+
 
 function RecognitionSkeleton() {
     return (
@@ -60,7 +57,7 @@ const DashboardRecognitionSection = () => {
         message: r.comment,
         tags: r.tags ?? [],
         time: formatTime(r.review_at),
-        color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+        color: "bg-[#004C8F]",
         image: null,
     }));
 

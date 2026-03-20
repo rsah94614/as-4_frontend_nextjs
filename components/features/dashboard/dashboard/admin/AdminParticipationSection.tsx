@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Users, UserCheck, UserX, TrendingUp, Activity, AlertTriangle, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { fetchParticipation } from "@/services/analytics-service";
@@ -13,11 +12,11 @@ const DEPT_COLORS = ["#004C8F", "#1D6EC5", "#5B9BD5", "#93C5FD", "#1E40AF", "#25
 
 function ParticipationSkeleton() {
     return (
-        <Card className="rounded-3xl border-0 shadow-none h-full animate-pulse">
-            <CardHeader className="pb-2">
+        <div className="h-full animate-pulse">
+            <div className="pb-2">
                 <Skeleton className="h-4 w-44 rounded-lg" />
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="flex flex-col items-center justify-center gap-4">
                         <Skeleton className="w-64 h-64 rounded-full" />
@@ -50,28 +49,26 @@ function ParticipationSkeleton() {
                         ))}
                     </div>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
 
 function ParticipationError({ onRetry }: { onRetry: () => void }) {
     return (
-        <Card className="rounded-3xl border-0 shadow-none">
-            <CardContent className="flex flex-col items-center justify-center py-20 gap-5 text-center">
-                <div className="p-4 rounded-xl bg-red-50 border border-red-200">
-                    <AlertTriangle className="w-8 h-8 text-red-500" />
-                </div>
-                <div className="space-y-1.5">
-                    <p className="text-base font-bold text-gray-900">Could not load participation data</p>
-                    <p className="text-sm text-gray-500 max-w-xs">Check your connection or try again.</p>
-                </div>
-                <Button size="sm" onClick={onRetry} className="gap-2 font-bold rounded-lg bg-[#004C8F] text-white hover:bg-[#003A70] px-5">
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    Try again
-                </Button>
-            </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center py-20 gap-5 text-center">
+            <div className="p-4 rounded-xl bg-red-50 border border-red-200">
+                <AlertTriangle className="w-8 h-8 text-red-500" />
+            </div>
+            <div className="space-y-1.5">
+                <p className="text-base font-bold text-gray-900">Could not load participation data</p>
+                <p className="text-sm text-gray-500 max-w-xs">Check your connection or try again.</p>
+            </div>
+            <Button size="sm" onClick={onRetry} className="gap-2 font-bold rounded-lg bg-[#004C8F] text-white hover:bg-[#003A70] px-5">
+                <RefreshCw className="w-3.5 h-3.5" />
+                Try again
+            </Button>
+        </div>
     );
 }
 
@@ -120,14 +117,14 @@ export default function AdminParticipationSection() {
     ];
 
     return (
-        <Card className="rounded-3xl border-0 shadow-none h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <CardHeader className="pb-0">
-                <CardTitle className="flex items-center gap-2.5 text-xs font-bold uppercase tracking-widest text-slate-400">
+        <div className="h-full p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="pb-0">
+                <div className="flex items-center gap-2.5 text-xs font-bold uppercase tracking-widest text-slate-400">
                     <Activity className="w-3.5 h-3.5 text-[#004C8F]" />
                     Participation Overview
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2">
+                </div>
+            </div>
+            <div className="pt-2">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                     {/* Left: Chart area (shrunk slightly for better balance) */}
                     <div className="lg:col-span-7 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500 delay-100">
@@ -194,7 +191,7 @@ export default function AdminParticipationSection() {
                         </div>
                     </div>
                 )}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }

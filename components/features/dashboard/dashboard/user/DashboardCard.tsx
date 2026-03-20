@@ -9,7 +9,6 @@ interface DashboardCardProps {
     icon: LucideIcon;
     stat?: Metric;
     loading?: boolean;
-    gradient: string;
     className?: string;
 }
 
@@ -18,14 +17,13 @@ export default function DashboardCard({
     icon: Icon,
     stat,
     loading = false,
-    gradient,
     className,
 }: DashboardCardProps) {
     if (loading) {
         return (
             <div className={cn(
                 "relative rounded-2xl p-5 overflow-hidden bg-gradient-to-br animate-pulse",
-                gradient,
+                "from-[#004C8F] to-[#1D6EC5]",
                 className,
             )}>
                 {/* Decorative circles — same as real card */}
@@ -55,7 +53,7 @@ export default function DashboardCard({
     return (
         <div className={cn(
             "relative rounded-2xl p-5 text-white overflow-hidden bg-gradient-to-br",
-            gradient,
+            "from-[#004C8F] to-[#1D6EC5]",
             className,
         )}>
             {/* Decorative circles */}

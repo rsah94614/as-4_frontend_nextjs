@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download, Loader2, RefreshCw, AlertTriangle } from "lucide-react";
@@ -141,27 +140,25 @@ export default function AdminTeamReportsSection() {
     }, [teams]);
 
     return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <CardTitle className="text-base">Team Reports</CardTitle>
-                    {!loadingTeams && !teamsError && teams.length > 0 && (
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={downloadAllReports}
-                            disabled={downloadingAll}
-                            className="gap-2 font-semibold rounded-lg border-[#004C8F] text-[#004C8F] hover:bg-[#EEF4FB] h-9"
-                        >
-                            {downloadingAll
-                                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Downloading…</>
-                                : <><Download className="w-3.5 h-3.5" /> Download All</>
-                            }
-                        </Button>
-                    )}
-                </div>
-            </CardHeader>
-            <CardContent>
+        <div className="p-6">
+            <div className="flex items-center justify-between gap-3 flex-wrap pb-4">
+                <p className="text-sm font-bold uppercase tracking-wide text-slate-400">Team Reports</p>
+                {!loadingTeams && !teamsError && teams.length > 0 && (
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={downloadAllReports}
+                        disabled={downloadingAll}
+                        className="gap-2 font-semibold rounded-lg border-[#004C8F] text-[#004C8F] hover:bg-[#EEF4FB] h-9"
+                    >
+                        {downloadingAll
+                            ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Downloading…</>
+                            : <><Download className="w-3.5 h-3.5" /> Download All</>
+                        }
+                    </Button>
+                )}
+            </div>
+            <div>
                 {loadingTeams && <TeamsLoadingSkeleton />}
                 {!loadingTeams && teamsError && <TeamsErrorState onRetry={loadTeams} />}
                 {!loadingTeams && !teamsError && (
@@ -174,7 +171,7 @@ export default function AdminTeamReportsSection() {
                         onSortChange={setSortBy}
                     />
                 )}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }

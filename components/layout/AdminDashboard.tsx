@@ -7,7 +7,7 @@ import AdminTeamReportsSection from "../features/dashboard/dashboard/admin/Admin
 
 export default function AdminDashboard() {
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 bg-white">
             <AdminParticipationSection />
             <AdminRecognitionTrendSection />
             <AdminRecognitionSection />
