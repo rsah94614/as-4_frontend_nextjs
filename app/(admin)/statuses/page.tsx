@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, Search, X, ChevronDown, Info } from "lucide-react";
+import { Plus, Search, X, ChevronDown } from "lucide-react";
 import { fetchStatuses, createStatus, updateStatus } from "@/services/org-service";
 import {
   Status,
@@ -20,6 +20,14 @@ import {
 } from "@/components/features/admin/statuses/UIHelpers";
 import { StatusTable, type EditForm } from "@/components/features/admin/statuses/StatusTable";
 import { StatusModal } from "@/components/features/admin/statuses/StatusModal";
+import { HowItWorks } from "@/components/features/admin/HowItWorks";
+
+const STATUS_STEPS = [
+  { n: "01", title: "Create Status", desc: "Add a status with a unique code, name, entity type, and optional description." },
+  { n: "02", title: "Status Code is Fixed", desc: "The code is set at creation and cannot be changed — it is used internally by the system." },
+  { n: "03", title: "Assign to Entities", desc: "Statuses are applied to employees, reviews, transactions, and rewards to describe their current state." },
+  { n: "04", title: "Edit or Deactivate", desc: "You can rename or update the description of a status at any time via the inline edit." },
+];
 
 export default function StatusesPage() {
   const [statuses, setStatuses] = useState<Status[]>([]);
@@ -119,7 +127,7 @@ export default function StatusesPage() {
       <ContentWrapper>
 
 
-        <HowItWorks />
+        <HowItWorks steps={STATUS_STEPS} />
 
         {flash && (
           <FlashBanner
@@ -201,44 +209,4 @@ export default function StatusesPage() {
   );
 }
 
-// ─── HowItWorks ───────────────────────────────────────────────────────────────
-const HOW_IT_WORKS_STEPS = [
-  { n: "01", title: "Create Status", desc: "Add a status with a unique code, name, entity type, and optional description." },
-  { n: "02", title: "Status Code is Fixed", desc: "The code is set at creation and cannot be changed — it is used internally by the system." },
-  { n: "03", title: "Assign to Entities", desc: "Statuses are applied to employees, reviews, transactions, and rewards to describe their current state." },
-  { n: "04", title: "Edit or Deactivate", desc: "You can rename or update the description of a status at any time via the inline edit." },
-];
 
-function HowItWorks() {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="bg-white border border-border rounded-xl overflow-hidden shadow-sm mb-6">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-3.5 hover:bg-muted transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <Info size={13} className="text-destructive shrink-0" />
-          <span className="text-[11px] font-bold text-primary uppercase tracking-widest">How It Works</span>
-        </div>
-        <ChevronDown size={15} className={cn("text-muted-foreground transition-transform duration-200 shrink-0", open && "rotate-180")} />
-      </button>
-      {open && (
-        <div className="border-t border-gray-100">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-gray-100 sm:divide-x">
-            {HOW_IT_WORKS_STEPS.map((s) => (
-              <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-3 sm:py-4">
-                <span className="text-[11px] font-black text-destructive w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
-                <div>
-                  <p className="text-xs font-semibold text-primary mb-0.5">{s.title}</p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{s.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}

@@ -6,59 +6,59 @@ import { employeesClient } from '@/services/api-clients'
 // ─── Types matching backend schemas.py ───────────────────────────────────────
 
 export interface Employee {
-    employee_id:       string
-    username:          string
-    email:             string
-    designation_id?:   string
+    employee_id: string
+    username: string
+    email: string
+    designation_id?: string
     designation_name?: string
-    department_id?:    string
-    department_name?:  string
-    manager_id?:       string
-    manager_name?:     string
-    status_id?:        string
-    status_name?:      string
-    is_active:         boolean
-    date_of_joining:   string
-    created_at:        string
-    updated_at?:       string
+    department_id?: string
+    department_name?: string
+    manager_id?: string
+    manager_name?: string
+    status_id?: string
+    status_name?: string
+    is_active: boolean
+    date_of_joining: string
+    created_at: string
+    updated_at?: string
 }
 
 export interface EmployeeDetail {
-    employee_id:     string
-    username:        string
-    email:           string
-    is_active:       boolean
+    employee_id: string
+    username: string
+    email: string
+    is_active: boolean
     date_of_joining: string
     designation?: {
-        designation_id:   string
+        designation_id: string
         designation_name: string
         designation_code: string
-        level:            number
+        level: number
     }
     department?: {
-        department_id:   string
+        department_id: string
         department_name: string
         department_code: string
     }
     manager?: {
         employee_id: string
-        username:    string
-        email:       string
+        username: string
+        email: string
     }
     status?: {
-        status_id:   string
+        status_id: string
         status_code: string
         status_name: string
     }
     roles?: { role_id: string; role_name: string; role_code: string }[]
-    created_at:  string
+    created_at: string
     updated_at?: string
 }
 
 export interface TeamMember {
-    id:           string
-    name:         string
-    email?:       string
+    id: string
+    name: string
+    email?: string
     designation?: string
 }
 
@@ -86,24 +86,24 @@ export const employeeService = {
     },
 
     async listEmployees(params?: {
-        page?:          number
-        limit?:         number
-        manager_id?:    string
+        page?: number
+        limit?: number
+        manager_id?: string
         department_id?: string
-        is_active?:     boolean
-        search?:        string
-        sort_by?:       string
-        sort_order?:    string
+        is_active?: boolean
+        search?: string
+        sort_by?: string
+        sort_order?: string
     }): Promise<{ data: Employee[]; pagination: Record<string, unknown> }> {
         const q = new URLSearchParams()
-        if (params?.page)              q.set('page',          String(params.page))
-        if (params?.limit)             q.set('limit',         String(params.limit))
-        if (params?.manager_id)        q.set('manager_id',    params.manager_id)
-        if (params?.department_id)     q.set('department_id', params.department_id)
-        if (params?.is_active != null) q.set('is_active',     String(params.is_active))
-        if (params?.search)            q.set('search',        params.search)
-        if (params?.sort_by)           q.set('sort_by',       params.sort_by)
-        if (params?.sort_order)        q.set('sort_order',    params.sort_order)
+        if (params?.page) q.set('page', String(params.page))
+        if (params?.limit) q.set('limit', String(params.limit))
+        if (params?.manager_id) q.set('manager_id', params.manager_id)
+        if (params?.department_id) q.set('department_id', params.department_id)
+        if (params?.is_active != null) q.set('is_active', String(params.is_active))
+        if (params?.search) q.set('search', params.search)
+        if (params?.sort_by) q.set('sort_by', params.sort_by)
+        if (params?.sort_order) q.set('sort_order', params.sort_order)
 
         try {
             // Direct client base URL already includes /v1/employees.
@@ -121,11 +121,11 @@ export const employeeService = {
 
 export async function getTeamMembersForUI(): Promise<{
     loggedInUser: TeamMember
-    teamMembers:  TeamMember[]
-    teamLeader:   TeamMember | null
+    teamMembers: TeamMember[]
+    teamLeader: TeamMember | null
 }> {
-    const myId      = requireAuthenticatedUserId()
-    const myDetail  = await employeeService.getEmployee(myId)
+    const myId = requireAuthenticatedUserId()
+    const myDetail = await employeeService.getEmployee(myId)
     const managerId = myDetail.manager?.employee_id
 
     if (managerId) {
@@ -136,7 +136,7 @@ export async function getTeamMembersForUI(): Promise<{
 
         return {
             loggedInUser: detailToTeamMember(myDetail),
-            teamMembers:  colleaguesRes.data
+            teamMembers: colleaguesRes.data
                 .filter((e) => e.employee_id !== myId)
                 .map(listItemToTeamMember),
             teamLeader: teamLeaderDetail?.is_active ? detailToTeamMember(teamLeaderDetail) : null,
@@ -145,8 +145,8 @@ export async function getTeamMembersForUI(): Promise<{
         const directReportsRes = await employeeService.listEmployees({ manager_id: myId, limit: 100, is_active: true })
         return {
             loggedInUser: detailToTeamMember(myDetail),
-            teamMembers:  directReportsRes.data.map(listItemToTeamMember),
-            teamLeader:   null,
+            teamMembers: directReportsRes.data.map(listItemToTeamMember),
+            teamLeader: null,
         }
     }
 }

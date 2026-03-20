@@ -14,19 +14,19 @@ interface AuditTableProps {
     hasActiveFilters: boolean;
 }
 
-const OP_STYLES: Record<string, { label: string; bg: string; color: string }> = {
-    INSERT: { label: "Added", bg: "#F3F4F6", color: "#374151" },
-    UPDATE: { label: "Updated", bg: "#F3F4F6", color: "#374151" },
-    DELETE: { label: "Deleted", bg: "#F3F4F6", color: "#374151" },
+const OP_STYLES: Record<string, { label: string }> = {
+    INSERT: { label: "Added" },
+    UPDATE: { label: "Updated" },
+    DELETE: { label: "Deleted" },
 };
 
 export function OperationBadge({ op, tableName }: { op: string; tableName?: string }) {
-    const style = OP_STYLES[op] ?? { label: op, bg: "#6b7280", color: "#fff" };
+    const style = OP_STYLES[op] ?? { label: op };
+    const tableLabel = tableName
+        ? tableName.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()).replace(/s$/, "")
+        : "";
     return (
-        <span
-            className="inline-flex max-w-full items-center px-2.5 py-1 rounded text-[11px] font-semibold whitespace-nowrap"
-            style={{ backgroundColor: style.bg, color: style.color }}
-        >
+        <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "#374151" }}>
             {style.label}
         </span>
     );

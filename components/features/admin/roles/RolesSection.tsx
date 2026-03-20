@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Shield, Plus, Loader2, Hash, ChevronDown, Info, ArrowUpRight } from "lucide-react";
+import { Shield, Plus, Loader2, Hash, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,10 +14,10 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import { rolesApi, type Role } from "@/services/roles-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import type { ToastType } from "./UIHelpers";
+import { HowItWorks } from "@/components/features/admin/HowItWorks";
 
 interface RolesSectionProps {
     toast: (msg: string, t?: ToastType) => void;
@@ -25,49 +25,12 @@ interface RolesSectionProps {
 
 
 
-const HOW_IT_WORKS = [
+const ROLES_STEPS = [
     { n: "01", title: "Create a Role", desc: "Define a role with a unique name and code (e.g. HR_ADMIN). Add an optional description." },
     { n: "02", title: "Assign to Employees", desc: "Go to the Assignments tab to link a role to specific employees by their ID." },
     { n: "03", title: "Set Route Access", desc: "Use Route Permissions to control which API routes each role can access." },
     { n: "04", title: "Immediate Effect", desc: "Role changes take effect on the employee's next login." },
 ];
-
-function HowItWorks() {
-    const [open, setOpen] = useState(false);
-    return (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
-            <button
-                type="button"
-                onClick={() => setOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-4 sm:px-6 py-3.5 hover:bg-gray-50 transition-colors"
-            >
-                <div className="flex items-center gap-2">
-                    <Info size={13} className="text-[#E31837]" />
-                    <span className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</span>
-                </div>
-                <ChevronDown
-                    size={15}
-                    className={cn("text-gray-400 transition-transform duration-200", open && "rotate-180")}
-                />
-            </button>
-            {open && (
-                <div className="border-t border-gray-100">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
-                        {HOW_IT_WORKS.map((s) => (
-                            <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-4">
-                                <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
-                                <div>
-                                    <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
-                                    <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
 
 export function RolesSection({ toast }: RolesSectionProps) {
     const [roles, setRoles] = useState<Role[]>([]);
@@ -110,7 +73,7 @@ export function RolesSection({ toast }: RolesSectionProps) {
 
     return (
         <div className="w-full">
-            <HowItWorks />
+            <HowItWorks steps={ROLES_STEPS} />
 
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                 {/* Card header */}

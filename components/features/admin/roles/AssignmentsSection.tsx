@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { UserPlus, UserMinus, Loader2, ChevronDown, Search, Users, Info } from "lucide-react";
+import { UserPlus, UserMinus, Loader2, ChevronDown, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,7 @@ import {
 } from "@/services/roles-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import type { ToastType } from "./UIHelpers";
+import { HowItWorks } from "@/components/features/admin/HowItWorks";
 
 interface AssignmentsSectionProps {
     toast: (msg: string, t?: ToastType) => void;
@@ -31,46 +32,12 @@ interface AssignmentsSectionProps {
 
 
 
-const HOW_IT_WORKS = [
+const ASSIGNMENT_STEPS = [
     { n: "01", title: "Find Employee ID", desc: "Employee IDs are found on the employee profile page in the admin panel." },
     { n: "02", title: "Select Role", desc: "Choose the appropriate role based on the employee's responsibilities." },
     { n: "03", title: "Confirm Access", desc: "Role takes effect immediately on the employee's next login." },
     { n: "04", title: "Revoke Anytime", desc: "Remove a role assignment at any time using the Revoke button in the table." },
 ];
-
-function HowItWorks() {
-    const [open, setOpen] = useState(false);
-    return (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
-            <button
-                type="button"
-                onClick={() => setOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-4 sm:px-6 py-3.5 hover:bg-gray-50 transition-colors"
-            >
-                <div className="flex items-center gap-2">
-                    <Info size={13} className="text-[#E31837]" />
-                    <span className="text-[11px] font-bold text-[#004C8F] uppercase tracking-widest">How It Works</span>
-                </div>
-                <ChevronDown size={15} className={cn("text-gray-400 transition-transform duration-200", open && "rotate-180")} />
-            </button>
-            {open && (
-                <div className="border-t border-gray-100">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
-                        {HOW_IT_WORKS.map((s) => (
-                            <div key={s.n} className="flex gap-3 px-4 sm:px-5 py-4">
-                                <span className="text-[11px] font-black text-[#E31837] w-6 shrink-0 tabular-nums pt-0.5">{s.n}</span>
-                                <div>
-                                    <p className="text-xs font-semibold text-[#004C8F] mb-0.5">{s.title}</p>
-                                    <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
 
 export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
     const [records, setRecords] = useState<EmployeeRole[]>([]);
@@ -144,7 +111,7 @@ export function AssignmentsSection({ toast }: AssignmentsSectionProps) {
 
     return (
         <div className="w-full">
-            <HowItWorks />
+            <HowItWorks steps={ASSIGNMENT_STEPS} />
 
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
 
