@@ -96,7 +96,18 @@ function formatDate(d?: string) {
 }
 function normalizeId(value: unknown): string {
     if (value === null || value === undefined) return "";
-    return String(value).trim();
+    if (typeof value === "object") {
+        const obj = value as { employee_id?: unknown; id?: unknown; value?: unknown };
+        if (obj.employee_id !== undefined) return normalizeId(obj.employee_id);
+        if (obj.id !== undefined) return normalizeId(obj.id);
+        if (obj.value !== undefined) return normalizeId(obj.value);
+    }
+    const normalized = String(value).trim().replace(/^\{|\}$/g, "");
+    // Keep UUID casing consistent across endpoints to prevent option-value mismatch.
+    if (/^[0-9a-f-]{8}-[0-9a-f-]{4}-[1-5][0-9a-f-]{3}-[89ab][0-9a-f-]{3}-[0-9a-f-]{12}$/i.test(normalized)) {
+        return normalized.toLowerCase();
+    }
+    return normalized;
 }
 
 // Active/Inactive shown as plain text (no filled background badges)
@@ -382,7 +393,7 @@ function CreateEmployeeDialog({ open, onClose, onCreated, toast, designations, d
 
                     <SearchableSelect id="manager_id" label="Manager" value={form.manager_id}
                         onChange={(v) => setForm((f) => ({ ...f, manager_id: v }))} placeholder="No manager (optional)"
-                        options={employees.map((e) => ({ value: e.employee_id, label: `${e.username} (${e.email})` }))} />
+                        options={employees.map((e) => ({ value: normalizeId(e.employee_id), label: `${e.username} (${e.email})` }))} />
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
@@ -457,7 +468,9 @@ function EmployeeDetailDialog({ employee, open, onClose, onUpdated, toast, desig
             if (form.email !== employee.email) payload.email = form.email;
             if (form.designation_id !== employee.designation_id) payload.designation_id = form.designation_id;
             if (form.department_id !== employee.department_id) payload.department_id = form.department_id;
-            if (form.manager_id !== (employee.manager_id ?? "")) payload.manager_id = form.manager_id || undefined;
+            if (normalizeId(form.manager_id) !== normalizeId(employee.manager_id)) {
+                payload.manager_id = normalizeId(form.manager_id) || undefined;
+            }
             if (form.status_id !== employee.status_id) payload.status_id = form.status_id;
             const formDob = form.date_of_birth || undefined;
             const empDob = employee.date_of_birth ? employee.date_of_birth.split("T")[0] : undefined;
@@ -868,20 +881,45 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
 
     const loadAllEmployees = useCallback(async () => {
         try {
-            let all: Employee[] = [];
-            let pg = 1;
-            let hasMore = true;
-            while (hasMore) {
-                const res = await empClient.get<{ data: Employee[]; pagination: PaginationMeta }>(
-                    "/list", { params: { page: pg, limit: 100 } }
+            const requestPage = (pg: number, limit: number) =>
+                empClient.get<{ data: Employee[]; pagination?: PaginationMeta }>(
+                    "/list",
+                    { params: { page: pg, limit } }
                 );
-                all = all.concat(res.data.data);
-                hasMore = res.data.pagination.has_next;
-                pg++;
+
+            let limit = 100;
+            let first;
+            try {
+                first = await requestPage(1, limit);
+            } catch {
+                // Some deployments enforce lower max page sizes.
+                limit = 20;
+                first = await requestPage(1, limit);
             }
+
+            const firstBatch = Array.isArray(first.data?.data) ? first.data.data : [];
+            const totalPages = Math.max(1, Number(first.data?.pagination?.total_pages ?? 1));
+            const all = [...firstBatch];
+
+            for (let pg = 2; pg <= totalPages; pg += 1) {
+                try {
+                    const res = await requestPage(pg, limit);
+                    const batch = Array.isArray(res.data?.data) ? res.data.data : [];
+                    if (batch.length === 0) break;
+                    all.push(...batch);
+                } catch {
+                    // Keep already-fetched pages so manager selectors still work.
+                    break;
+                }
+            }
+
             setAllEmployees(all);
-        } catch (err) { console.error("[loadAllEmployees]", err); }
-    }, []);
+        } catch (err) {
+            console.error("[loadAllEmployees]", err);
+            // Fallback to currently visible rows when full list fetch fails.
+            setAllEmployees((prev) => (prev.length > 0 ? prev : employees));
+        }
+    }, [employees]);
 
     useEffect(() => { loadMeta(); }, [loadMeta]);
     useEffect(() => { load(); }, [load]);
@@ -1191,10 +1229,10 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
             </div>
 
             <CreateEmployeeDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={() => { load(); loadAllEmployees(); }}
-                toast={toast} designations={designations} departments={departments} employees={allEmployees} />
+                toast={toast} designations={designations} departments={departments} employees={allEmployees.length > 0 ? allEmployees : employees} />
             <EmployeeDetailDialog employee={selected} open={detailOpen} onClose={closeDetails}
                 onUpdated={() => { load(); loadAllEmployees(); }} toast={toast} designations={designations} departments={departments}
-                statuses={statuses} employees={allEmployees} startInEdit={startEditMode} />
+                statuses={statuses} employees={allEmployees.length > 0 ? allEmployees : employees} startInEdit={startEditMode} />
             {actionMenu && (() => {
                 const MENU_WIDTH = 160;
                 const MENU_HEIGHT = 112;
