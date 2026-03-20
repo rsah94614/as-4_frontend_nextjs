@@ -5,7 +5,7 @@ interface DashboardLeaderboardCardProps {
     name: string;
     initials: string;
     points: number;
-    color: string;
+    // color: string;
     image?: string | null;
 }
 
@@ -14,7 +14,7 @@ export default function DashboardLeaderboardCard({
     name,
     initials,
     points,
-    color,
+    // color,
     image,
 }: DashboardLeaderboardCardProps) {
     return (
@@ -24,7 +24,7 @@ export default function DashboardLeaderboardCard({
             </span>
             <Avatar className="h-7 w-7 shrink-0">
                 <AvatarImage src={image ?? undefined} />
-                <AvatarFallback className={`${color} text-white text-[9px] font-bold`}>
+                <AvatarFallback className={`bg-[#004C8F] text-white text-[9px] font-bold`}>
                     {initials}
                 </AvatarFallback>
             </Avatar>

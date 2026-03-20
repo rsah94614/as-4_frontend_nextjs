@@ -13,13 +13,10 @@ interface DashboardRecognitionCardProps {
     image: string | null;
 }
 
-const TAG_COLORS = [
-    "bg-blue-50 text-blue-700 border-blue-200",
-    "bg-violet-50 text-violet-700 border-violet-200",
-    "bg-teal-50 text-teal-700 border-teal-200",
-    "bg-amber-50 text-amber-700 border-amber-200",
-    "bg-rose-50 text-rose-700 border-rose-200",
-];
+// const TAG_COLORS = [
+//     ,
+
+// ];
 
 export default function DashboardRecognitionCard({
     from,
@@ -63,7 +60,7 @@ export default function DashboardRecognitionCard({
                     {tags.map((tag, i) => (
                         <span
                             key={tag}
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${TAG_COLORS[i % TAG_COLORS.length]}`}
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border bg-blue-50 text-blue-700 border-blue-200`}
                         >
                             {tag}
                         </span>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -203,13 +202,13 @@ export default function AdminRecognitionSection() {
     ];
 
     return (
-        <Card>
-            <CardHeader className="pb-3">
+        <div className="p-6">
+            <div className="pb-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 flex-wrap">
-                    <CardTitle className="flex items-center gap-2 text-sm uppercase tracking-wide">
+                    <div className="flex items-center gap-2 text-sm uppercase tracking-wide font-bold text-slate-400">
                         <Trophy className="w-4 h-4 text-[#004C8F]" />
                         Recognition
-                    </CardTitle>
+                    </div>
                     <div className="flex items-center gap-2 flex-wrap">
                         <div className="flex items-center gap-2">
                             <span className="text-xs text-muted-foreground font-medium">View by</span>
@@ -230,8 +229,8 @@ export default function AdminRecognitionSection() {
                         </Select>
                     </div>
                 </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            </div>
+            <div className="space-y-6">
                 {loading ? <AggSkeleton /> : (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         {aggCards.map(({ label, value, icon: Icon, color }, i) => (
@@ -267,7 +266,7 @@ export default function AdminRecognitionSection() {
                         {layout === "team"  && (loading ? <TableSkeleton /> : <TeamBreakdown teams={teams} />)}
                     </>
                 )}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }

@@ -14,7 +14,7 @@ export default function UserDashboard() {
             <DashboardStatsSection />
 
             {/* Reviews + Leaderboard */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 px-4 lg:grid-cols-5 gap-6">
                 <DashboardRecognitionSection />
                 <DashboardLeaderboardSection />
             </div>

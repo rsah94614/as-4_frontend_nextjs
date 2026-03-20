@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { TrendingUp, AlertTriangle, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,23 +29,19 @@ type TrendState =
 
 function TrendSkeleton() {
     return (
-        <Card>
-            <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                    <Skeleton className="h-4 w-40 rounded-lg" />
-                    <Skeleton className="h-8 w-52 rounded-xl" />
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-end gap-1.5 h-[320px] pt-4">
-                    {SKELETON_HEIGHTS.map((height, i) => (
-                        <div key={i} className="flex-1 flex flex-col justify-end gap-1">
-                            <Skeleton className="w-full rounded-t-sm animate-pulse" style={{ height: `${height}%` }} />
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
+        <div className="p-6">
+            <div className="flex items-center justify-between pb-2">
+                <Skeleton className="h-4 w-40 rounded-lg" />
+                <Skeleton className="h-8 w-52 rounded-xl" />
+            </div>
+            <div className="flex items-end gap-1.5 h-[320px] pt-4">
+                {SKELETON_HEIGHTS.map((height, i) => (
+                    <div key={i} className="flex-1 flex flex-col justify-end gap-1">
+                        <Skeleton className="w-full rounded-t-sm animate-pulse" style={{ height: `${height}%` }} />
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 }
 
@@ -69,13 +64,13 @@ export default function AdminRecognitionTrendSection() {
     if (trendState.status === "loading") return <TrendSkeleton />;
 
     return (
-        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <CardHeader className="pb-2">
+        <div className="p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="pb-2">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <CardTitle className="flex items-center gap-2 text-sm uppercase tracking-wide">
+                    <div className="flex items-center gap-2 text-sm uppercase tracking-wide font-bold text-slate-400">
                         <TrendingUp className="w-4 h-4 text-purple-500" />
                         Recognition Trend
-                    </CardTitle>
+                    </div>
                     <div className="flex items-center gap-1 p-1 bg-muted rounded-xl">
                         {RANGES.map(r => (
                             <button
@@ -91,8 +86,8 @@ export default function AdminRecognitionTrendSection() {
                         ))}
                     </div>
                 </div>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div>
                 {trendState.status === "error" ? (
                     <div className="flex flex-col items-center justify-center h-[320px] gap-4 text-center">
                         <div className="p-3 rounded-xl bg-red-50 border border-red-200">
@@ -127,7 +122,7 @@ export default function AdminRecognitionTrendSection() {
                         </AreaChart>
                     </ResponsiveContainer>
                 )}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
