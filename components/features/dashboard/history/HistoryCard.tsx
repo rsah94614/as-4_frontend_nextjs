@@ -19,9 +19,12 @@ export default React.memo(function HistoryCard({ item, onClick }: HistoryCardPro
     const isRedemption = !!item.reward_catalog;
 
     const badgeBg = isRedemption
-        ? "bg-rose-50 text-rose-600 border-rose-100"
-        : "bg-emerald-50 text-emerald-600 border-emerald-100";
-    const amountColor = isRedemption ? "#374151" : SUCCESS_GREEN; // Use neutral slate for redemptions or the green for earnings
+        ? "bg-[#004C8F]/5 text-[#004C8F] border-[#004C8F]/10"
+        : "bg-emerald-50 text-emerald-700 border-emerald-100";
+    const iconWrap = isRedemption
+        ? "bg-[#004C8F]/5 text-[#004C8F] border-[#004C8F]/10"
+        : "bg-emerald-50 text-emerald-700 border-emerald-100";
+    const amountColor = isRedemption ? "#004C8F" : SUCCESS_GREEN;
 
     return (
         <button
@@ -29,23 +32,27 @@ export default React.memo(function HistoryCard({ item, onClick }: HistoryCardPro
             onClick={() => onClick?.(item)}
             className={CARD_CONTAINER}
         >
-
-            <div className="p-5 flex items-center justify-between gap-4">
+            <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#004C8F]/30 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+            <div className="p-3 sm:p-4 flex items-center justify-between gap-4 sm:gap-5">
+                <div className={cn(
+                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border",
+                    iconWrap
+                )}>
+                    {isRedemption
+                        ? <ArrowUpRight size={18} />
+                        : <ArrowDownLeft size={18} />
+                    }
+                </div>
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                        {/* Direction badge */}
+                    <div className="flex flex-wrap items-center gap-2">
                         <span className={cn(
-                            "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded border",
+                            "inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.18em] px-3 py-1.5 rounded-full border",
                             badgeBg
                         )}>
-                            {isRedemption
-                                ? <ArrowUpRight size={10} />
-                                : <ArrowDownLeft size={10} />
-                            }
                             {isRedemption ? "Redeemed" : "Earned"}
                         </span>
 
-                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                        <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-medium text-slate-500">
                             {new Date(item.granted_at).toLocaleDateString("en-US", {
                                 year: "numeric",
                                 month: "short",
@@ -54,24 +61,24 @@ export default React.memo(function HistoryCard({ item, onClick }: HistoryCardPro
                         </span>
                     </div>
 
-                    <p className="text-sm font-semibold text-gray-800 leading-snug transition-colors">
+                    <p className="mt-3 text-[15px] font-semibold leading-6 text-slate-900 transition-colors group-hover:text-slate-950">
                         {getMessage(item)}
                     </p>
 
                     {item.comment && isRedemption && (
-                        <p className="text-xs text-gray-400 italic mt-1.5 flex items-center gap-1.5">
-                            <span className="w-1 h-1 rounded-full bg-gray-300" />
+                        <p className="mt-2 flex items-center gap-2 text-sm text-slate-500">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
                             {item.comment}
                         </p>
                     )}
                 </div>
 
-                <div className="text-right shrink-0">
+                <div className="shrink-0 text-right px-4">
                     <span
-                        className="text-base font-bold tracking-tight text-[#374151]"
+                        className="block text-xl font-bold tracking-tight"
                         style={{ color: amountColor }}
                     >
-                        {isRedemption ? `${item.points}` : `${item.points}`}
+                        {item.points.toLocaleString()}
                     </span>
                 </div>
             </div>

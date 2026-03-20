@@ -51,14 +51,14 @@ export default function HistoryPage() {
             <div className={PAGE_HEADER}>
                 <div className={PAGE_HEADER_INNER}>
                     <div>
-                        <h1 className="text-2xl font-bold leading-tight" style={{ color: HDFC_BLUE }}>
+                        <h1 className="text-3xl font-semibold tracking-tight" style={{ color: HDFC_BLUE }}>
                             History
                         </h1>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            View your points transactions and redemptions
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                            Review every point movement, reward redemption, and supporting transaction detail in one place.
                         </p>
                     </div>
-                    <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
+                    <span className="hidden md:flex items-center text-2xl font-black tracking-tight select-none">
                         <span style={{ color: HDFC_RED }}>A</span>
                         <span style={{ color: HDFC_BLUE }}>abhar</span>
                     </span>

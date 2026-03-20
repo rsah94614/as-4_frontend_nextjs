@@ -36,6 +36,7 @@ export default function HistoryFilterBar({
     setSelectedType,
     typeOptions,
     clearFilters,
+    filteredCount,
     periodDropdownOpen,
     setPeriodDropdownOpen,
     typeDropdownOpen,
@@ -50,18 +51,42 @@ export default function HistoryFilterBar({
             : typeOptions.find((option) => option.value === selectedType)?.label ?? selectedType;
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+        <div className="rounded-[24px] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 sm:p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="space-y-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                        Refine Results
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center rounded-full border border-[#004C8F]/15 bg-[#004C8F]/5 px-3 py-1 text-sm font-medium text-[#004C8F]">
+                            {filteredCount} {filteredCount === 1 ? "transaction" : "transactions"}
+                        </span>
+                        {hasActiveFilter && (
+                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500">
+                                Filters active
+                            </span>
+                        )}
+                        {disableTypeFilter && (
+                            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500">
+                                Type filter is unavailable for points history
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                 {/* Period Dropdown */}
                 <div
                     className="relative"
                     onClick={(e) => e.stopPropagation()}
                 >
                     <button
+                        type="button"
                         onClick={() => {
                             setPeriodDropdownOpen(!periodDropdownOpen);
                             setTypeDropdownOpen(false);
                         }}
+                        aria-expanded={periodDropdownOpen}
                         className={`${FILTER_BTN_BASE} ${selectedPeriod !== "All History" ? FILTER_BTN_ACTIVE : ""
                             }`}
                     >
@@ -105,6 +130,7 @@ export default function HistoryFilterBar({
                             setTypeDropdownOpen(!typeDropdownOpen);
                             setPeriodDropdownOpen(false);
                         }}
+                        aria-expanded={typeDropdownOpen}
                         disabled={disableTypeFilter}
                         className={`${FILTER_BTN_BASE} ${selectedType !== "All" ? FILTER_BTN_ACTIVE : ""
                             }`}
@@ -153,12 +179,14 @@ export default function HistoryFilterBar({
                 {/* Clear filters button */}
                 {hasActiveFilter && (
                     <button
+                        type="button"
                         onClick={clearFilters}
                         className={CLEAR_BTN}
                     >
                         Clear filters
                     </button>
                 )}
+                </div>
             </div>
         </div>
     );
