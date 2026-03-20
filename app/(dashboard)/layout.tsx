@@ -1,6 +1,5 @@
 "use client";
 
-
 import Navbar from "@/components/layout/Navbar";
 import ProtectedRoute from "@/components/features/auth/ProtectedRoute";
 

@@ -50,6 +50,8 @@ export default function DepartmentsPage() {
     const totalCount = pagination?.total ?? departments.length;
     const activeCount = departments.filter(d => d.is_active).length;
     const typeCount = new Set(departments.map(d => d.department_type?.type_code).filter(Boolean)).size;
+    const showStatsSkeleton = loading && departments.length === 0 && !pagination;
+    const sectionSpacing = "space-y-4 sm:space-y-5";
 
     return (
         <>
@@ -59,10 +61,11 @@ export default function DepartmentsPage() {
                     title="Departments"
                     subtitle="Create and manage your organization's departments"
                 />
-                <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
-                    <DepartmentStats total={totalCount} active={activeCount} types={typeCount} />
 
-                    <div className="bg-white rounded-xl shadow-sm px-3 sm:px-4 lg:px-6 py-4 sm:py-5 space-y-4">
+                <div className={`px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 ${sectionSpacing}`}>
+                    <DepartmentStats total={totalCount} active={activeCount} types={typeCount} loading={showStatsSkeleton} />
+
+                    <div className={`bg-white rounded-xl shadow-sm px-3 py-4 sm:px-4 sm:py-5 lg:px-6 ${sectionSpacing}`}>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                             <div className="relative w-full sm:flex-1 sm:max-w-sm">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9ca3af" }} />

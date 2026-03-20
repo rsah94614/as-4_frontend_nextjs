@@ -23,6 +23,7 @@ import { extractErrorMessage } from "@/lib/error-utils";
 import { AdminPageHeader } from "@/components/features/admin/AdminControlPanelPageHeader";
 import { employeesClient as empClient, authClient, orgClient } from "@/services/api-clients";
 import { HowItWorks } from "@/components/features/admin/HowItWorks";
+import PaginationControls from "@/components/shared/PaginationControls";
 
 
 
@@ -1206,25 +1207,17 @@ function EmployeeListSection({ toast }: { toast: (msg: string, t?: "success" | "
                     </div>
                 )}
 
-                {/* Pagination — 20 per page */}
-                <div className="px-5 py-3 bg-muted border-t border-gray-100 flex items-center justify-between gap-2">
-                    <p className="text-[12px] text-muted-foreground">
-                        {loading ? "Loading…" : pagination
-                            ? `${((page - 1) * 20) + 1}–${Math.min(page * 20, pagination.total)} of ${pagination.total}`
-                            : ""}
-                    </p>
+                {/* Pagination */}
+                <div className="px-5 py-3 bg-muted border-t border-gray-100">
                     {pagination && pagination.total_pages > 1 && (
-                        <div className="flex items-center gap-1">
-                            <button disabled={!pagination.has_previous} onClick={() => setPage((p) => p - 1)}
-                                className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-white disabled:opacity-40 transition-colors">
-                                Prev
-                            </button>
-                            <span className="px-3 py-1.5 text-xs font-bold text-primary">{page} / {pagination.total_pages}</span>
-                            <button disabled={!pagination.has_next} onClick={() => setPage((p) => p + 1)}
-                                className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-foreground hover:bg-white disabled:opacity-40 transition-colors">
-                                Next
-                            </button>
-                        </div>
+                        <PaginationControls
+                            currentPage={page}
+                            totalPages={pagination.total_pages}
+                            hasPrevious={pagination.has_previous}
+                            hasNext={pagination.has_next}
+                            onPageChange={setPage}
+                            className="mt-0"
+                        />
                     )}
                 </div>
             </div>
@@ -1357,3 +1350,5 @@ export default function EmployeesPage() {
         </>
     );
 }
+
+
