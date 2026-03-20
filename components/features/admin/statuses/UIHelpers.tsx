@@ -26,7 +26,7 @@ export function PageHeader({
     return (
         <>
             <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-                <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+                <div className="mx-auto flex items-center justify-between">
                     <div>
                         <h1
                             className="text-2xl font-bold leading-tight"
@@ -52,7 +52,7 @@ export function PageHeader({
 export function ContentWrapper({ children }: { children: React.ReactNode }) {
     return (
         <div className="flex-1 px-8 md:px-10 py-8 flex flex-col" style={{ background: "#F7F9FC" }}>
-            <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
+            <div className="w-full mx-auto flex-1 flex flex-col">
                 <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                     {children}
                 </div>

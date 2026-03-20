@@ -46,7 +46,7 @@ export default function AdminReviewsPage() {
 
                     {/* ── Page Header ── */}
                     <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-                        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+                        <div className="mx-auto flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
                                     Recognition Admin
@@ -64,7 +64,7 @@ export default function AdminReviewsPage() {
 
 
 
-                    <div className="px-8 md:px-10 py-8 max-w-[1200px] mx-auto space-y-6">
+                    <div className="px-8 md:px-10 py-8 mx-auto space-y-6">
 
                         {/* ── Summary Stats ── */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
