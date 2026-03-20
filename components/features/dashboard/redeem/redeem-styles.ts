@@ -19,13 +19,13 @@ export const SECTION_HEADER = "flex items-center justify-between mb-5";
 // ── Gradients ────────────────────────────────────────────────────────────────
 
 export const GRADIENT_PRIMARY =
-    "bg-[#004C8F] border-r border-white/10";
+    "bg-[#4A3B32] border-r border-white/10";
 
 export const GRADIENT_PRIMARY_HOVER =
-    "hover:bg-[#004C8F] hover:border-r hover:border-white/10";
+    "hover:bg-[#18181B] hover:border-r hover:border-white/10";
 
 export const GRADIENT_SECONDARY =
-    "bg-[#004C8F] border-r border-white/10";
+    "bg-[#18181B] border-r border-white/10";
 
 // ── Category pills ───────────────────────────────────────────────────────────
 
@@ -35,10 +35,10 @@ export const PILL_BASE =
     "rounded-full px-4 py-1.5 text-sm font-medium transition-all";
 
 export const PILL_ACTIVE =
-    `${GRADIENT_PRIMARY} text-white shadow-sm ${GRADIENT_PRIMARY_HOVER}`;
+    "bg-white text-[#1E293B] border-[#1E293B] shadow-sm hover:bg-slate-50";
 
 export const PILL_INACTIVE =
-    "bg-slate-100 text-slate-600 hover:bg-slate-200 border-transparent";
+    "bg-slate-100 text-slate-500 hover:bg-slate-200 border-transparent";
 
 // ── Pagination ───────────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ export const PAG_NUM_BASE =
     "rounded-lg min-w-[36px] px-2 py-1.5 text-sm font-medium transition-all";
 
 export const PAG_NUM_ACTIVE =
-    "bg-[#004C8F] text-white shadow-sm hover:bg-[#003d73]";
+    "bg-[#1E293B] text-white shadow-sm hover:bg-[#0F172A]";
 
 export const PAG_NUM_INACTIVE =
     "text-slate-800 font-bold hover:bg-slate-100 border-slate-200";

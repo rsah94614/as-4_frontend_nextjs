@@ -22,10 +22,31 @@ import type {
 
 export async function fetchCatalog(page = 1, size = 20): Promise<PaginatedCatalogResponse> {
     try {
+        // Fetch with active_only=false to bypass stale backend cache,
+        // then filter active items client-side for accurate results.
         const res = await rewardsClient.get<PaginatedCatalogResponse>(
-            `/catalog?active_only=true&page=${page}&size=${size}`
+            `/catalog?active_only=false&page=1&size=100`
         );
-        return res.data;
+        const raw = res.data;
+
+        // Client-side active filter
+        const activeItems = raw.data.filter((item: any) => item.is_active === true);
+        const total = activeItems.length;
+        const totalPages = Math.ceil(total / size) || 1;
+        const start = (page - 1) * size;
+        const pageItems = activeItems.slice(start, start + size);
+
+        return {
+            data: pageItems,
+            pagination: {
+                current_page: page,
+                per_page: size,
+                total,
+                total_pages: totalPages,
+                has_next: page < totalPages,
+                has_previous: page > 1,
+            },
+        };
     } catch (error) {
         throw new Error(extractErrorMessage(error, "Failed to load catalog"));
     }
@@ -81,9 +102,13 @@ export interface AdminCatalogParams {
 export async function fetchAdminCatalog(params: AdminCatalogParams = {}): Promise<PaginatedCatalogResponse> {
     try {
         const { page = 1, size = 12, active_only } = params;
-        const res = await rewardsClient.get<PaginatedCatalogResponse>(
-            `/catalog?active_only=${active_only ?? false}&page=${page}&size=${size}`
-        );
+
+        let url = `/catalog?page=${page}&size=${size}`;
+        if (active_only !== undefined) {
+            url += `&is_active=${active_only}`;
+        }
+
+        const res = await rewardsClient.get<PaginatedCatalogResponse>(url);
         return res.data;
     } catch (error) {
         throw new Error(extractErrorMessage(error, "Failed to load catalog"));
@@ -141,7 +166,7 @@ export async function restockCatalogItem(catalogId: string, amount: number): Pro
 
 export async function fetchAdminCategories(): Promise<Category[]> {
     try {
-        const res = await rewardsClient.get<Category[]>(`/categories?active_only=false`);
+        const res = await rewardsClient.get<Category[]>(`/categories`);
         return res.data;
     } catch (error) {
         throw new Error(extractErrorMessage(error, "Failed to load categories"));
