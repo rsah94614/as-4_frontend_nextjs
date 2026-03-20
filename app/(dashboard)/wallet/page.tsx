@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 /**
- * Wallet page � live API calls via the direct wallet microservice client.
+ * Wallet page � live API calls via the direct wallet microservice client.
  *
  * Endpoints:
  *   GET /employees/{employee_id}        ? WalletResponse
@@ -14,6 +14,7 @@ import {
   Gift,
   Ticket,
   RefreshCw,
+  ChevronLeft,
   ChevronRight,
   ArrowDownCircle,
   TrendingUp,
@@ -125,7 +126,7 @@ interface TransactionListResponse {
   transactions: Transaction[];
 }
 
-// Fetchers � all use the direct wallet client
+// Fetchers � all use the direct wallet client
 
 async function fetchWallet(employeeId: string): Promise<WalletData> {
   try {
@@ -250,6 +251,7 @@ export default function Wallet() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [summary, setSummary] = useState<PointsSummary | null>(null);
   const [txnData, setTxnData] = useState<TransactionListResponse | null>(null);
+  const [txnPage, setTxnPage] = useState(1);
   const [showAllTxns, setShowAllTxns] = useState(false);
 
   const [loadingWallet, setLoadingWallet] = useState(true);
@@ -296,12 +298,13 @@ export default function Wallet() {
 
   // ── Load transactions ─────────────────────────────────────────────────────
   const loadTransactions = useCallback(
-    async (walletId: string) => {
+    async (walletId: string, page = 1) => {
       setLoadingTxns(true);
       setTxnError(null);
       try {
-        const data = await fetchTransactions(walletId, 1, TXN_PAGE_SIZE);
+        const data = await fetchTransactions(walletId, page, TXN_PAGE_SIZE);
         setTxnData(data);
+        setShowAllTxns(false);
       } catch (e) {
         setTxnError(extractErrorMessage(e, "Failed to load transactions."));
       } finally {
@@ -351,10 +354,9 @@ export default function Wallet() {
   // ── Load latest 3 txns whenever wallet_id changes (unless in View All) ────
   useEffect(() => {
     if (wallet?.wallet_id && !showAllTxns) {
-      loadTransactions(wallet.wallet_id);
+      loadTransactions(wallet.wallet_id, txnPage);
     }
-<<<<<<< Updated upstream
-  }, [wallet?.wallet_id, txnPage, loadTransactions]);
+  }, [wallet?.wallet_id, txnPage, showAllTxns, loadTransactions]);
 
   // ── Pagination ────────────────────────────────────────────────────────────
   const totalPages = txnData
@@ -419,9 +421,6 @@ export default function Wallet() {
       .getElementById("txn-section")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
-=======
-  }, [wallet?.wallet_id, showAllTxns, loadTransactions]);
->>>>>>> Stashed changes
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
@@ -541,7 +540,7 @@ export default function Wallet() {
                       if (showAllTxns) {
                         loadAllTransactions(wallet.wallet_id);
                       } else {
-                        loadTransactions(wallet.wallet_id);
+                        loadTransactions(wallet.wallet_id, txnPage);
                       }
                     }
                   }}
@@ -564,7 +563,10 @@ export default function Wallet() {
                     <ErrorBanner
                       message={txnError}
                       onRetry={() =>
-                        wallet && loadTransactions(wallet.wallet_id)
+                        wallet &&
+                        (showAllTxns
+                          ? loadAllTransactions(wallet.wallet_id)
+                          : loadTransactions(wallet.wallet_id, txnPage))
                       }
                     />
                   </div>
@@ -590,9 +592,11 @@ export default function Wallet() {
                 )}
               </div>
 
-<<<<<<< Updated upstream
               {/* Pagination footer */}
-              {!loadingTxns && txnData && txnData.total > TXN_PAGE_SIZE && (
+              {!loadingTxns &&
+                !showAllTxns &&
+                txnData &&
+                txnData.total > TXN_PAGE_SIZE && (
                 <div className="flex items-center justify-between px-6 py-3 border-t border-border">
                   <span className="text-xs text-muted-foreground">
                     Page <b className="text-foreground">{txnPage}</b> of{" "}
@@ -625,27 +629,19 @@ export default function Wallet() {
 
               {/* View All Activity link */}
               <div className="px-5 py-2.5 border-t border-border flex justify-center">
-                <Link
-                  href="/history"
-                  className="text-sm font-semibold flex items-center gap-1 transition-colors hover:opacity-80"
-                  style={{ color: HDFC_BLUE }}
-=======
-              {/* View All Activity / Back to Paginated View */}
-              <div className="px-5 py-2.5 border-t border-[#d9e4f2] flex justify-center">
                 <button
                   onClick={() => {
-                    if (!wallet?.wallet_id || loadingTxns) return;
+                    if (!wallet?.wallet_id) return;
                     if (showAllTxns) {
+                      setTxnPage(1);
                       setShowAllTxns(false);
-                      loadTransactions(wallet.wallet_id);
                     } else {
                       loadAllTransactions(wallet.wallet_id);
                     }
                   }}
                   disabled={loadingTxns || !wallet}
-                  className="text-xs sm:text-sm font-bold flex items-center gap-1 transition-colors hover:opacity-80 disabled:opacity-60"
-                  style={{ color: HDFC_RED }}
->>>>>>> Stashed changes
+                  className="text-sm font-semibold flex items-center gap-1 transition-colors hover:opacity-80"
+                  style={{ color: HDFC_BLUE }}
                 >
                   {showAllTxns ? "View Less" : "View All Activity"}
                   <ChevronRight size={15} />
