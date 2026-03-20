@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast, ToastContainer } from "@/components/features/admin/roles/UIHelpers";
 import { extractErrorMessage } from "@/lib/error-utils";
+import { AdminPageHeader } from "@/components/features/admin/AdminControlPanelPageHeader";
 import { employeesClient as empClient, authClient, orgClient } from "@/services/api-clients";
 import { HowItWorks } from "@/components/features/admin/HowItWorks";
 
@@ -1320,22 +1321,10 @@ export default function EmployeesPage() {
             <main className="flex-1 overflow-y-auto bg-muted">
 
                 {/* Page Header */}
-                <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-                    <div className="mx-auto flex items-center justify-between">
-                        <div>
-                            <h1 className="text-[20px] font-bold text-primary leading-tight">
-                                Employee Management
-                            </h1>
-                            <p className="text-[14px] text-muted-foreground mt-0.5">
-                                Create employees · Bulk import · Manage profiles &amp; hierarchy
-                            </p>
-                        </div>
-                        <span className="hidden lg:flex items-center text-xl font-black tracking-tight select-none shrink-0">
-                            <span className="text-destructive">A</span>
-                            <span className="text-primary">abhar</span>
-                        </span>
-                    </div>
-                </div>
+                <AdminPageHeader
+                    title="Employee Management"
+                    subtitle="Create employees · Bulk import · Manage profiles & hierarchy"
+                />
 
                 {/* Tab bar */}
                 <div className="bg-white border-b border-border px-8 md:px-10">

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { DesignationStats } from "@/components/features/admin/designations/DesignationStats";
 import { DesignationTable } from "@/components/features/admin/designations/DesignationTable";
 import { DesignationModal } from "@/components/features/admin/designations/DesignationModal";
+import { AdminPageHeader } from "@/components/features/admin/AdminControlPanelPageHeader";
 
 export default function DesignationsPage() {
     const {
@@ -65,26 +66,11 @@ export default function DesignationsPage() {
     return (
         <>
             <main className="flex-1 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5">
-                {/* ─── Page Header (matches Employee page) ─── */}
-                <div>
-                    <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-                        <div className="mx-auto flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
-                                    Designations
-                                </h1>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    Create and manage employee designations
-                                </p>
-                            </div>
-                            <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-                                <span style={{ color: "#E31837" }}>A</span>
-                                <span style={{ color: "#004C8F" }}>abhar</span>
-                            </span>
-                        </div>
-                    </div>
-
-                </div>
+                {/* ─── Page Header ─── */}
+                <AdminPageHeader
+                    title="Designations"
+                    subtitle="Create and manage employee designations"
+                />
                 <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
                     <DesignationStats total={totalCount} active={activeCount} avgLevel={avgLevel} />
 

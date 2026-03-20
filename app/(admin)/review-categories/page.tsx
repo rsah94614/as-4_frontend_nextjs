@@ -12,6 +12,7 @@ import { ReviewCategoryTable } from "@/components/features/admin/review-categori
 import { ReviewCategoryModals } from "@/components/features/admin/review-categories/ReviewCategoryModal";
 import { ReviewCategoryFilters } from "@/components/features/admin/review-categories/ReviewCategoryFilters";
 import { HowItWorks } from "@/components/features/admin/HowItWorks";
+import { AdminPageHeader } from "@/components/features/admin/AdminControlPanelPageHeader";
 
 const REVIEW_CAT_STEPS = [
   { n: "01", title: "Create Category", desc: "Add a category with a unique code, name, and multiplier value greater than 0." },
@@ -135,22 +136,10 @@ export default function ReviewCategoriesPage() {
       <main className="flex-1 overflow-y-auto flex flex-col bg-white">
 
         {/* ── Page Header ── */}
-        <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-          <div className="mx-auto flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
-                Review Categories
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage category tags · Set point multipliers · Activate or deactivate
-              </p>
-            </div>
-            <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-              <span style={{ color: "#E31837" }}>A</span>
-              <span style={{ color: "#004C8F" }}>abhar</span>
-            </span>
-          </div>
-        </div>
+        <AdminPageHeader
+          title="Review Categories"
+          subtitle="Manage category tags · Set point multipliers · Activate or deactivate"
+        />
 
 
 

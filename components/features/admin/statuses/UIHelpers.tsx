@@ -2,7 +2,10 @@
 
 import React from "react";
 import { Check, AlertCircle, X, Info, HelpCircle, } from "lucide-react";
+import { AdminPageHeader as PageHeader } from "@/components/features/admin/AdminControlPanelPageHeader";
 
+// Re-export the shared header so existing imports work unchanged
+export { PageHeader };
 
 // ─── Page Shell ───────────────────────────────────────────────────────────────
 
@@ -11,39 +14,6 @@ export function PageShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-y-auto flex flex-col bg-white">
             {children}
         </main>
-    );
-}
-
-// ─── Page Header ──────────────────────────────────────────────────────────────
-
-export function PageHeader({
-    title,
-    subtitle,
-}: {
-    title: string;
-    subtitle: string;
-}) {
-    return (
-        <>
-            <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-                <div className="mx-auto flex items-center justify-between">
-                    <div>
-                        <h1
-                            className="text-2xl font-bold leading-tight"
-                            style={{ color: "#004C8F" }}
-                        >
-                            {title}
-                        </h1>
-                        <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
-                    </div>
-                    <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-                        <span style={{ color: "#E31837" }}>A</span>
-                        <span style={{ color: "#004C8F" }}>abhar</span>
-                    </span>
-                </div>
-            </div>
-            {/* Red accent line */}
-        </>
     );
 }
 

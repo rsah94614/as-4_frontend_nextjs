@@ -11,6 +11,7 @@ import { extractErrorMessage } from "@/lib/error-utils";
 import { AuditTable } from "@/components/features/admin/audit-logs/AuditTable";
 import { AuditDetailModal } from "@/components/features/admin/audit-logs/AuditDetailModal";
 import { AuditFilterPanel } from "@/components/features/admin/audit-logs/AuditFilters";
+import { AdminPageHeader } from "@/components/features/admin/AdminControlPanelPageHeader";
 
 export default function AuditLogsPage() {
     const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -44,11 +45,11 @@ export default function AuditLogsPage() {
             const { data, pagination } = await fetchAuditLogs({
                 page,
                 limit: 10,
-                ...(filters.tableName      && { table_name:      filters.tableName }),
-                ...(filters.operationType  && { operation_type:  filters.operationType }),
-                ...(filters.performedBy    && { performed_by:    filters.performedBy }),
-                ...(filters.startDate      && { start_date:      new Date(filters.startDate).toISOString() }),
-                ...(filters.endDate        && { end_date:        new Date(filters.endDate).toISOString() }),
+                ...(filters.tableName && { table_name: filters.tableName }),
+                ...(filters.operationType && { operation_type: filters.operationType }),
+                ...(filters.performedBy && { performed_by: filters.performedBy }),
+                ...(filters.startDate && { start_date: new Date(filters.startDate).toISOString() }),
+                ...(filters.endDate && { end_date: new Date(filters.endDate).toISOString() }),
             });
             setLogs(data);
             setPagination(pagination ?? null);
@@ -78,23 +79,11 @@ export default function AuditLogsPage() {
     return (
         <>
             <main className="flex-1 overflow-y-auto overflow-x-hidden">
-                {/* ─── Page Header (matches Employee page) ─── */}
-                <div className="bg-white border-b border-border px-4 sm:px-5 md:px-6 lg:px-8 py-4 sm:py-[18px]">
-                    <div className="mx-auto flex items-center justify-between gap-4">
-                        <div>
-                            <h1 className="text-xl sm:text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
-                                Audit Logs
-                            </h1>
-                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                                Track and monitor all system activity
-                            </p>
-                        </div>
-                        <span className="hidden lg:flex items-center text-xl font-black tracking-tight select-none">
-                            <span style={{ color: "#E31837" }}>A</span>
-                            <span style={{ color: "#004C8F" }}>abhar</span>
-                        </span>
-                    </div>
-                </div>
+                {/* ─── Page Header ─── */}
+                <AdminPageHeader
+                    title="Audit Logs"
+                    subtitle="Track and monitor all system activity"
+                />
 
                 <div className="p-3 sm:p-4 md:p-5 lg:p-6 pt-2 sm:pt-3 md:pt-4 space-y-3 sm:space-y-4">
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-3 sm:px-4 md:px-5 lg:px-6 py-3 sm:py-3.5 space-y-3 sm:space-y-3.5">

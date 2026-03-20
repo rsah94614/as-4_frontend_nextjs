@@ -7,6 +7,7 @@ import { Department } from "@/types/department-types";
 import { DepartmentStats } from "@/components/features/admin/departments/DepartmentStats";
 import { DepartmentTable } from "@/components/features/admin/departments/DepartmentTable";
 import { DepartmentModal } from "@/components/features/admin/departments/DepartmentModal";
+import { AdminPageHeader } from "@/components/features/admin/AdminControlPanelPageHeader";
 
 export default function DepartmentsPage() {
     const {
@@ -53,26 +54,11 @@ export default function DepartmentsPage() {
     return (
         <>
             <main className="flex-1 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5">
-                {/* ─── Page Header (matches Employee page) ─── */}
-                <div>
-                    <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-                        <div className="mx-auto flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
-                                    Departments
-                                </h1>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    Create and manage your organization&apos;s departments
-                                </p>
-                            </div>
-                            <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-                                <span style={{ color: "#E31837" }}>A</span>
-                                <span style={{ color: "#004C8F" }}>abhar</span>
-                            </span>
-                        </div>
-                    </div>
-
-                </div>
+                {/* ─── Page Header ─── */}
+                <AdminPageHeader
+                    title="Departments"
+                    subtitle="Create and manage your organization's departments"
+                />
                 <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
                     <DepartmentStats total={totalCount} active={activeCount} types={typeCount} />
 

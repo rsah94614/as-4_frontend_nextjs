@@ -8,6 +8,7 @@ import { useRewardCategories } from "@/hooks/useRewardCategories";
 import { RewardStats } from "@/components/features/admin/rewards/UIHelpers";
 import { CategoryModal } from "@/components/features/admin/rewards/CategoryModal";
 import { CategoryTable } from "@/components/features/admin/rewards/CategoryTable";
+import { AdminPageHeader } from "@/components/features/admin/AdminControlPanelPageHeader";
 
 export default function CategoriesPage() {
   const {
@@ -33,22 +34,10 @@ export default function CategoriesPage() {
     <main className="flex-1 overflow-y-auto flex flex-col bg-white">
 
       {/* ─── Page Header ─── */}
-      <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-        <div className="mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
-              Reward Categories
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Create and manage the categories for reward items
-            </p>
-          </div>
-          <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-            <span style={{ color: "#E31837" }}>A</span>
-            <span style={{ color: "#004C8F" }}>abhar</span>
-          </span>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Reward Categories"
+        subtitle="Create and manage the categories for reward items"
+      />
 
 
 

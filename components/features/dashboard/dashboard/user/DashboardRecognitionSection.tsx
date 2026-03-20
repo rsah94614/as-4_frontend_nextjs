@@ -48,7 +48,7 @@ const DashboardRecognitionSection = () => {
         load();
     }, []);
 
-    const items = reviews.map((r, i) => ({
+    const items = reviews.map((r) => ({
         id: r.review_id,
         from: r.reviewer_name,
         fromInitials: userInitials(r.reviewer_name),

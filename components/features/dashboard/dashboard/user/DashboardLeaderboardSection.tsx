@@ -166,7 +166,7 @@ const DashboardLeaderboardSection = () => {
         load();
     }, []);
 
-    const mapped = entries.map((entry, i) => ({
+    const mapped = entries.map((entry) => ({
         rank: entry.rank,
         name: entry.username,
         initials: userInitials(entry.username),
