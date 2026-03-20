@@ -1,19 +1,41 @@
 "use client";
 
 import { Layers, Users, TrendingUp } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DesignationStatsProps {
     total: number;
     active: number;
     avgLevel: string;
+    loading?: boolean;
 }
 
-export function DesignationStats({ total, active, avgLevel }: DesignationStatsProps) {
+export function DesignationStats({ total, active, avgLevel, loading = false }: DesignationStatsProps) {
     const stats = [
         { label: "Total Designations", value: total, icon: Layers, accent: "#1a4ab5" },
-        { label: "Active", value: active, icon: Users, accent: "#14a882" },
-        { label: "Avg Level", value: avgLevel, icon: TrendingUp, accent: "#e8192c" },
+        { label: "Active", value: active, icon: Users, accent: "#1a4ab5" },
+        { label: "Avg Level", value: avgLevel, icon: TrendingUp, accent: "#1a4ab5" },
     ];
+
+    if (loading) {
+        return (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {Array.from({ length: 3 }).map((_, index) => (
+                    <div
+                        key={index}
+                        className="bg-white rounded-xl px-5 py-4 flex items-center gap-4 shadow-sm"
+                        style={{ border: "1px solid #e5e7eb" }}
+                    >
+                        <Skeleton className="w-10 h-10 rounded-lg flex-shrink-0" />
+                        <div className="space-y-2 flex-1">
+                            <Skeleton className="h-3.5 w-28" />
+                            <Skeleton className="h-7 w-16" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

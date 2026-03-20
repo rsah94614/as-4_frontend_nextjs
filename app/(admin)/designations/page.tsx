@@ -62,6 +62,8 @@ export default function DesignationsPage() {
     const avgLevel = designations.length
         ? (designations.reduce((s, d) => s + d.level, 0) / designations.length).toFixed(1)
         : "-";
+    const showStatsSkeleton = loading && designations.length === 0 && !pagination;
+    const sectionSpacing = "space-y-4 sm:space-y-5";
 
     return (
         <>
@@ -72,9 +74,9 @@ export default function DesignationsPage() {
                     subtitle="Create and manage employee designations"
                 />
                 <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
-                    <DesignationStats total={totalCount} active={activeCount} avgLevel={avgLevel} />
+                    <DesignationStats total={totalCount} active={activeCount} avgLevel={avgLevel}  loading={showStatsSkeleton}/>
 
-                    <div className="bg-white rounded-xl shadow-sm px-3 sm:px-4 lg:px-6 py-4 sm:py-5 space-y-4">
+                    <div className={`bg-white rounded-xl shadow-sm px-3 py-4 sm:px-4 sm:py-5 lg:px-6 ${sectionSpacing}`}>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                             <div className="relative w-full sm:flex-1 sm:max-w-sm">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />

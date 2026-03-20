@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { usePathname } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
 import ProtectedRoute from "@/components/features/auth/ProtectedRoute";
@@ -12,8 +11,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const pathname = usePathname();
-  // const isDashboardPage = pathname === "/dashb/oard";
+
 
   return (
     <ProtectedRoute>

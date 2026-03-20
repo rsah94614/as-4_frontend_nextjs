@@ -14,11 +14,10 @@ import {
   Gift,
   Ticket,
   RefreshCw,
-  ChevronLeft,
-  ChevronRight,
   ArrowDownCircle,
   TrendingUp,
   Star,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -33,6 +32,7 @@ import { walletClient } from "@/services/api-clients";
 import { auth } from "@/services/auth-service";
 import { extractErrorMessage } from "@/lib/error-utils";
 import { Button } from "@/components/ui/button";
+import PaginationControls from "@/components/shared/PaginationControls";
 
 
 
@@ -379,15 +379,6 @@ export default function Wallet() {
     );
   }
 
-  function handlePageChange(dir: 1 | -1) {
-    const next = txnPage + dir;
-    if (next < 1 || next > totalPages) return;
-    setTxnPage(next);
-    document
-      .getElementById("txn-section")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   // Render
   return (
     <div className={PAGE_WRAPPER}>
@@ -553,33 +544,15 @@ export default function Wallet() {
 
               {/* Pagination footer */}
               {!loadingTxns && txnData && txnData.total > TXN_PAGE_SIZE && (
-                <div className="flex items-center justify-between px-6 py-3 border-t border-border">
-                  <span className="text-xs text-muted-foreground">
-                    Page <b className="text-foreground">{txnPage}</b> of{" "}
-                    <b className="text-foreground">{totalPages}</b>
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(-1)}
-                      disabled={txnPage === 1}
-                      className="bg-white hover:bg-muted text-foreground border-border shadow-none"
-                    >
-                      <ChevronLeft size={14} className="mr-1" />
-                      Prev
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(1)}
-                      disabled={txnPage >= totalPages}
-                      className="bg-white hover:bg-muted text-foreground border-border shadow-none"
-                    >
-                      Next
-                      <ChevronRight size={14} className="ml-1" />
-                    </Button>
-                  </div>
+                <div className="px-6 py-3 border-t border-border">
+                  <PaginationControls
+                    currentPage={txnPage}
+                    totalPages={totalPages}
+                    hasPrevious={txnPage > 1}
+                    hasNext={txnPage < totalPages}
+                    onPageChange={setTxnPage}
+                    className="mt-0"
+                  />
                 </div>
               )}
 

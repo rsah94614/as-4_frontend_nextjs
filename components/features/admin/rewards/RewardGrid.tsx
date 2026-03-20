@@ -6,8 +6,6 @@ import {
     Plus,
     RefreshCw,
     AlertCircle,
-    ChevronLeft,
-    ChevronRight,
     Loader2,
 } from "lucide-react";
 import { RewardItem, Pagination } from "@/types/reward-types";
@@ -15,7 +13,7 @@ import { SkeletonCard } from "./UIHelpers";
 import { RewardCard } from "./RewardCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import PaginationControls from "@/components/shared/PaginationControls";
 
 interface RewardGridProps {
     items: RewardItem[];
@@ -30,18 +28,6 @@ interface RewardGridProps {
     onCreateNew: () => void;
 }
 
-// ─── Pagination Helper ────────────────────────────────────────────────────────
-function getPages(total: number, current: number): (number | "...")[] {
-    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-    const pages: (number | "...")[] = [1];
-    if (current > 3) pages.push("...");
-    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++)
-        pages.push(i);
-    if (current < total - 2) pages.push("...");
-    pages.push(total);
-    return pages;
-}
-
 export function RewardGrid({
     items,
     loading,
@@ -54,7 +40,6 @@ export function RewardGrid({
     onRestock,
     onCreateNew,
 }: RewardGridProps) {
-    // Error
     if (error && !loading) {
         return (
             <Card className="flex flex-col items-center justify-center py-24 gap-4 bg-red-50 border border-red-100 rounded-xl shadow-sm">
@@ -80,7 +65,6 @@ export function RewardGrid({
         );
     }
 
-    // Loading
     if (loading) {
         return (
             <div className="space-y-6">
@@ -99,7 +83,6 @@ export function RewardGrid({
         );
     }
 
-    // Empty
     if (items.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-40 text-slate-400 text-sm bg-white rounded-xl border border-dashed border-slate-200 gap-6 group hover:border-blue-200 transition-all cursor-default">
@@ -128,7 +111,6 @@ export function RewardGrid({
 
     return (
         <div className="space-y-8">
-            {/* Card Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {items.map((item) => (
                     <RewardCard
@@ -140,59 +122,15 @@ export function RewardGrid({
                 ))}
             </div>
 
-            {/* Pagination */}
             {pagination && pagination.total_pages > 1 && (
-                <div className="flex justify-center items-center gap-2 pt-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage(page - 1)}
-                        disabled={!pagination.has_previous}
-                        className="h-10 px-5 rounded-xl text-[10px] font-semibold tracking-wider uppercase border-slate-200 disabled:opacity-40 active:scale-95 transition-all"
-
-                    >
-                        <ChevronLeft className="w-3.5 h-3.5" />
-                        Prev
-                    </Button>
-
-                    {getPages(pagination.total_pages, page).map((p, idx) =>
-                        p === "..." ? (
-                            <span
-                                key={`e${idx}`}
-                                className="px-2 text-slate-300 text-sm font-bold"
-                            >
-                                …
-                            </span>
-                        ) : (
-                            <Button
-                                key={p}
-                                variant={p === page ? "default" : "outline"}
-                                size="icon"
-                                onClick={() => setPage(p as number)}
-                                className={cn(
-                                    "w-10 h-10 rounded-xl text-xs font-semibold transition-all active:scale-95",
-                                    p === page
-                                        ? "bg-[#004C8F] text-white shadow-lg border-none hover:bg-[#003d73]"
-                                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
-                                )}
-                            >
-                                {p}
-                            </Button>
-                        )
-                    )}
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage(page + 1)}
-                        disabled={!pagination.has_next}
-                        className="h-10 px-5 rounded-xl text-[10px] font-semibold tracking-wider uppercase border-slate-200 disabled:opacity-40 active:scale-95 transition-all"
-
-                    >
-                        Next
-                        <ChevronRight className="w-3.5 h-3.5" />
-                    </Button>
-                </div>
+                <PaginationControls
+                    currentPage={page}
+                    totalPages={pagination.total_pages}
+                    hasPrevious={pagination.has_previous}
+                    hasNext={pagination.has_next}
+                    onPageChange={setPage}
+                    className="pt-4"
+                />
             )}
         </div>
     );

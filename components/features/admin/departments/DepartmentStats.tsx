@@ -1,19 +1,41 @@
 "use client";
 
 import { Building2, Users, Tag } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DepartmentStatsProps {
     total: number;
     active: number;
     types: number;
+    loading?: boolean;
 }
 
-export function DepartmentStats({ total, active, types }: DepartmentStatsProps) {
+export function DepartmentStats({ total, active, types, loading = false }: DepartmentStatsProps) {
     const stats = [
         { label: "Total Departments", value: total, icon: Building2, accent: "#1a4ab5" },
-        { label: "Active", value: active, icon: Users, accent: "#14a882" },
-        { label: "Department Types", value: types, icon: Tag, accent: "#e8192c" },
+        { label: "Active", value: active, icon: Users, accent: "#1a4ab5" },
+        { label: "Department Types", value: types, icon: Tag, accent: "#1a4ab5" },
     ];
+
+    if (loading) {
+        return (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {Array.from({ length: 3 }).map((_, index) => (
+                    <div
+                        key={index}
+                        className="bg-white rounded-xl px-5 py-4 flex items-center gap-4 shadow-sm"
+                        style={{ border: "1px solid #e5e7eb" }}
+                    >
+                        <Skeleton className="w-10 h-10 rounded-lg flex-shrink-0" />
+                        <div className="space-y-2 flex-1">
+                            <Skeleton className="h-3.5 w-28" />
+                            <Skeleton className="h-7 w-16" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

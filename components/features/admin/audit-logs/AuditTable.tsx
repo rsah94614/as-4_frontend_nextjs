@@ -1,9 +1,9 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AuditLog } from "@/types/audit-types";
 import { PaginationMeta } from "@/types/pagination";
+import PaginationControls from "@/components/shared/PaginationControls";
 
 interface AuditTableProps {
     logs: AuditLog[];
@@ -67,6 +67,104 @@ function getEmployeeName(log: AuditLog) {
     return withNames.employee_name || withNames.performed_by_name || "Admin";
 }
 
+function AuditTableSkeleton() {
+    return (
+        <>
+            <div className="space-y-3 p-3 sm:p-4 md:hidden overflow-x-hidden">
+                {Array.from({ length: 4 }).map((_, index) => (
+                    <div
+                        key={index}
+                        className="rounded-xl border border-slate-200 p-3.5 sm:p-4 space-y-3 w-full max-w-full overflow-hidden"
+                        style={{ backgroundColor: "#ffffff" }}
+                    >
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <Skeleton className="h-4 w-20" />
+                            <Skeleton className="h-4 w-16" />
+                        </div>
+
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
+                            <Skeleton className="h-4 w-32" />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                            <div className="col-span-2 space-y-2">
+                                <Skeleton className="h-3 w-14" />
+                                <Skeleton className="h-4 w-36" />
+                            </div>
+                            <div className="space-y-2">
+                                <Skeleton className="h-3 w-16" />
+                                <Skeleton className="h-4 w-28" />
+                            </div>
+                            <div className="space-y-2">
+                                <Skeleton className="h-3 w-16" />
+                                <Skeleton className="h-4 w-24" />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
+                <table className="w-full min-w-[720px] lg:min-w-[860px] text-sm">
+                    <thead>
+                        <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
+                            <th className="text-left py-3 px-3 lg:px-4 font-semibold text-sm" style={{ color: "#374151" }}>
+                                Log ID
+                            </th>
+                            <th className="text-left py-3 px-3 lg:px-4 font-semibold text-sm" style={{ color: "#374151" }}>
+                                User
+                            </th>
+                            <th className="text-left py-3 px-3 lg:px-4 font-semibold text-sm" style={{ color: "#374151" }}>
+                                Action
+                            </th>
+                            <th className="text-left py-3 px-3 lg:px-4 font-semibold text-sm" style={{ color: "#374151" }}>
+                                Module
+                            </th>
+                            <th className="text-left py-3 px-3 lg:px-4 font-semibold text-sm" style={{ color: "#374151" }}>
+                                Timestamp
+                            </th>
+                            <th
+                                className="hidden xl:table-cell text-left py-3 px-3 lg:px-4 font-semibold text-sm"
+                                style={{ color: "#374151" }}
+                            >
+                                IP Address
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {Array.from({ length: 6 }).map((_, index) => (
+                            <tr key={index} style={{ borderBottom: index < 5 ? "1px solid #f3f4f6" : "none" }}>
+                                <td className="py-3.5 px-3 lg:px-4">
+                                    <Skeleton className="h-4 w-20" />
+                                </td>
+                                <td className="py-3.5 px-3 lg:px-4">
+                                    <div className="flex items-center gap-2">
+                                        <Skeleton className="w-8 h-8 rounded-full" />
+                                        <Skeleton className="h-4 w-28" />
+                                    </div>
+                                </td>
+                                <td className="py-3.5 px-3 lg:px-4">
+                                    <Skeleton className="h-4 w-16" />
+                                </td>
+                                <td className="py-3.5 px-3 lg:px-4">
+                                    <Skeleton className="h-4 w-32" />
+                                </td>
+                                <td className="py-3.5 px-3 lg:px-4">
+                                    <Skeleton className="h-4 w-36" />
+                                </td>
+                                <td className="hidden xl:table-cell py-3.5 px-3 lg:px-4">
+                                    <Skeleton className="h-4 w-24" />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </>
+    );
+}
+
 export function AuditTable({
     logs,
     loading,
@@ -78,9 +176,7 @@ export function AuditTable({
     return (
         <div className="space-y-0">
             {loading ? (
-                <div className="py-20 text-center">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto" style={{ color: "#1a4ab5" }} />
-                </div>
+                <AuditTableSkeleton />
             ) : logs.length === 0 ? (
                 <div className="py-20 text-center text-sm" style={{ color: "#9ca3af" }}>
                     {hasActiveFilters ? "No logs match your filters." : "No audit logs recorded yet."}
@@ -234,66 +330,15 @@ export function AuditTable({
             )}
 
             {pagination && (
-                <div
-                    className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-3 sm:px-4 py-4"
-                    style={{ borderTop: "1px solid #e5e7eb" }}
-                >
-                    <span className="text-xs text-center sm:text-left" style={{ color: "#6b7280" }}>
-                        {(() => {
-                            const perPage = pagination.per_page ?? logs.length ?? 10;
-                            const from = (pagination.current_page - 1) * perPage + 1;
-                            const to = Math.min(pagination.current_page * perPage, pagination.total);
-                            return `Showing ${isNaN(from) ? 1 : from}-${isNaN(to) ? logs.length : to} of ${pagination.total.toLocaleString()}`;
-                        })()}
-                    </span>
-
-                    <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onPageChange(pagination.current_page - 1)}
-                            disabled={!pagination.has_previous}
-                            className="h-8 w-8 p-0 rounded border-slate-300"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </Button>
-
-                        <span
-                            className="text-xs font-semibold px-3 py-1 rounded"
-                            style={{ border: "1.5px solid #d1d5db", color: "#374151" }}
-                        >
-                            {pagination.current_page} of {pagination.total_pages}
-                        </span>
-
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onPageChange(pagination.current_page + 1)}
-                            disabled={!pagination.has_next}
-                            className="h-8 w-8 p-0 rounded border-slate-300"
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </Button>
-
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onPageChange(pagination.current_page - 1)}
-                            disabled={!pagination.has_previous}
-                            className="hidden md:inline-flex h-8 px-4 rounded border-slate-300 text-slate-700"
-                        >
-                            Previous
-                        </Button>
-                        <Button
-                            size="sm"
-                            onClick={() => onPageChange(pagination.current_page + 1)}
-                            disabled={!pagination.has_next}
-                            className="hidden md:inline-flex h-8 px-4 rounded font-semibold text-white hover:opacity-90"
-                            style={{ backgroundColor: "#1a4ab5", border: "none" }}
-                        >
-                            Next
-                        </Button>
-                    </div>
+                <div className="px-3 sm:px-4 py-4 border-t border-[#e5e7eb]">
+                    <PaginationControls
+                        currentPage={pagination.current_page}
+                        totalPages={pagination.total_pages}
+                        hasPrevious={pagination.has_previous}
+                        hasNext={pagination.has_next}
+                        onPageChange={onPageChange}
+                        className="mt-0"
+                    />
                 </div>
             )}
         </div>

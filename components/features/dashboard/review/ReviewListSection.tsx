@@ -1,12 +1,13 @@
 "use client"
 
-import { AlertCircle, MessageSquare, ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
+import { AlertCircle, MessageSquare } from "lucide-react"
 import ReviewCard from "./RecognitionHistoryCard"
 import { ReviewListSkeleton } from "./ReviewPageSkeleton"
 import type { Review, ReviewCategory } from "@/types/review-types"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import PaginationControls from "@/components/shared/PaginationControls"
 
 interface ReviewListSectionProps {
     filteredReviews: Review[]
@@ -28,23 +29,6 @@ const TABS = [
     { key: "received", label: "Received" },
 ] as const
 
-// Helper to generate pagination window
-function getPaginationArray(current: number, total: number) {
-    if (total <= 7) {
-        return Array.from({ length: total }, (_, i) => i + 1)
-    }
-
-    if (current <= 4) {
-        return [1, 2, 3, 4, 5, "...", total]
-    }
-
-    if (current >= total - 3) {
-        return [1, "...", total - 4, total - 3, total - 2, total - 1, total]
-    }
-
-    return [1, "...", current - 1, current, current + 1, "...", total]
-}
-
 export default function ReviewListSection({
     filteredReviews,
     myId,
@@ -58,8 +42,6 @@ export default function ReviewListSection({
     onCompose,
     onLoadReviews,
 }: ReviewListSectionProps) {
-    const paginationItems = getPaginationArray(page, totalPages)
-
     return (
         <div>
             <Tabs 
@@ -142,58 +124,14 @@ export default function ReviewListSection({
                     </div>
 
                     {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-1.5 mt-10">
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                disabled={page <= 1}
-                                onClick={() => onLoadReviews(page - 1)}
-                                className="w-9 h-9 border-gray-200 text-gray-500 hover:bg-gray-50"
-                            >
-                                <ChevronLeft size={16} />
-                            </Button>
-
-                            <div className="flex items-center gap-1 mx-2">
-                                {paginationItems.map((item, idx) => {
-                                    if (item === "...") {
-                                        return (
-                                            <div key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-gray-400">
-                                                <MoreHorizontal size={16} />
-                                            </div>
-                                        )
-                                    }
-                                    
-                                    const pg = item as number;
-                                    const isActive = pg === page;
-                                    
-                                    return (
-                                        <Button
-                                            key={pg}
-                                            variant={isActive ? "default" : "ghost"}
-                                            onClick={() => onLoadReviews(pg)}
-                                            className={cn(
-                                                "w-9 h-9 p-0 font-semibold text-sm",
-                                                isActive 
-                                                    ? "bg-[#004C8F] text-white hover:bg-[#003a6e]" 
-                                                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                                            )}
-                                        >
-                                            {pg}
-                                        </Button>
-                                    )
-                                })}
-                            </div>
-
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                disabled={page >= totalPages}
-                                onClick={() => onLoadReviews(page + 1)}
-                                className="w-9 h-9 border-gray-200 text-gray-500 hover:bg-gray-50"
-                            >
-                                <ChevronRight size={16} />
-                            </Button>
-                        </div>
+                        <PaginationControls
+                            currentPage={page}
+                            totalPages={totalPages}
+                            hasPrevious={page > 1}
+                            hasNext={page < totalPages}
+                            onPageChange={onLoadReviews}
+                            className="mt-10"
+                        />
                     )}
                 </>
             )}
