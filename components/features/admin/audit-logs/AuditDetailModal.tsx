@@ -110,7 +110,7 @@ export function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
                         </div>
                         <div className="rounded-lg px-4 py-3" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
                             <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#6b7280" }}>Action</p>
-                            <OperationBadge op={log.operation_type} tableName={log.table_name} />
+                            <OperationBadge op={log.operation_type} />
                         </div>
                         <div className="rounded-lg px-4 py-3" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
                             <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#6b7280" }}>Date & Time</p>

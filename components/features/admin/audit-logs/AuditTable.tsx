@@ -20,11 +20,8 @@ const OP_STYLES: Record<string, { label: string }> = {
     DELETE: { label: "Deleted" },
 };
 
-export function OperationBadge({ op, tableName }: { op: string; tableName?: string }) {
+export function OperationBadge({ op }: { op: string }) {
     const style = OP_STYLES[op] ?? { label: op };
-    const tableLabel = tableName
-        ? tableName.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()).replace(/s$/, "")
-        : "";
     return (
         <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "#374151" }}>
             {style.label}
@@ -105,7 +102,7 @@ export function AuditTable({
                                             {shortId(log.audit_id)}
                                         </span>
                                         <div className="max-w-full overflow-hidden">
-                                            <OperationBadge op={log.operation_type} tableName={log.table_name} />
+                                            <OperationBadge op={log.operation_type} />
                                         </div>
                                     </div>
 
@@ -213,7 +210,7 @@ export function AuditTable({
                                             </td>
 
                                             <td className="py-3.5 px-3 lg:px-4">
-                                                <OperationBadge op={log.operation_type} tableName={log.table_name} />
+                                                <OperationBadge op={log.operation_type} />
                                             </td>
 
                                             <td className="py-3.5 px-3 lg:px-4" style={{ color: "#374151" }}>

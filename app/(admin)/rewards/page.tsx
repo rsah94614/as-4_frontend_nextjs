@@ -12,6 +12,7 @@ import { RewardGrid } from "@/components/features/admin/rewards/RewardGrid";
 import { RewardModal } from "@/components/features/admin/rewards/RewardModal";
 import { RestockModal } from "@/components/features/admin/rewards/RestockModal";
 import { RewardStats } from "@/components/features/admin/rewards/UIHelpers";
+import { AdminPageHeader } from "@/components/features/admin/AdminControlPanelPageHeader";
 
 export default function RewardsPage() {
   const [items, setItems] = useState<RewardItem[]>([]);
@@ -40,7 +41,7 @@ export default function RewardsPage() {
         active: active.pagination?.total || 0,
         inactive: (all.pagination?.total || 0) - (active.pagination?.total || 0)
       });
-    } catch(e) {
+    } catch (e) {
       console.error("Failed to load global stats", e);
     }
   }, []);
@@ -59,10 +60,10 @@ export default function RewardsPage() {
 
       const [cats, catalog] = await Promise.all([
         fetchAdminCategories(),
-        fetchAdminCatalog({ 
-          page: fetchPage, 
-          size: fetchSize, 
-          active_only: filterState === "active" ? true : undefined 
+        fetchAdminCatalog({
+          page: fetchPage,
+          size: fetchSize,
+          active_only: filterState === "active" ? true : undefined
         }),
       ]);
 
@@ -97,7 +98,7 @@ export default function RewardsPage() {
           i.reward_code.toLowerCase().includes(lowerSearch)
       );
     }
-    
+
     if (isInactive) {
       // Local pagination for inactive
       return result.slice((page - 1) * 12, page * 12);
@@ -144,23 +145,11 @@ export default function RewardsPage() {
   return (
     <main className="flex-1 overflow-y-auto flex flex-col bg-white">
 
-      {/* ─── Page Header (matches Employee page) ─── */}
-      <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-        <div className="mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
-              Reward Catalog
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Create and manage individual items in your reward list
-            </p>
-          </div>
-          <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-            <span style={{ color: "#E31837" }}>A</span>
-            <span style={{ color: "#004C8F" }}>abhar</span>
-          </span>
-        </div>
-      </div>
+      {/* ─── Page Header ─── */}
+      <AdminPageHeader
+        title="Reward Catalog"
+        subtitle="Create and manage individual items in your reward list"
+      />
 
 
 

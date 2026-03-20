@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Shield, UserPlus, Lock } from "lucide-react";
+import { AdminPageHeader } from "@/components/features/admin/AdminControlPanelPageHeader";
 
 
 import { useToast, ToastContainer } from "@/components/features/admin/roles/UIHelpers";
@@ -25,26 +26,11 @@ export default function RolesPage() {
         <>
             <main className="flex-1 overflow-y-auto bg-white">
 
-                {/* ─── Page Header (matches Employee page) ─── */}
-                <div>
-                    <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-                        <div className="mx-auto flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
-                                    Roles &amp; Permissions
-                                </h1>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    Manage roles, assignments and route permissions
-                                </p>
-                            </div>
-                            <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-                                <span style={{ color: "#E31837" }}>A</span>
-                                <span style={{ color: "#004C8F" }}>abhar</span>
-                            </span>
-                        </div>
-                    </div>
-
-                </div>
+                {/* ─── Page Header ─── */}
+                <AdminPageHeader
+                    title="Roles & Permissions"
+                    subtitle="Manage roles, assignments and route permissions"
+                />
 
                 {/* ── Tab bar ── */}
                 <div className="bg-white border-b border-border px-3 sm:px-5 lg:px-8">
