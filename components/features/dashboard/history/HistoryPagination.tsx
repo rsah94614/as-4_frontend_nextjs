@@ -36,47 +36,55 @@ export default function HistoryPagination({
     }
 
     return (
-        <div className="flex items-center justify-center gap-2 mt-8">
-            <button
-                onClick={onPrev}
-                disabled={page <= 1}
-                className={cn(PAG_BTN, "w-auto px-3.5 gap-1.5 text-sm font-semibold")}
-            >
-                <ChevronLeft size={15} />
-                Previous
-            </button>
+        <div className="mt-8 flex flex-col gap-3 rounded-[24px] border border-slate-200/80 bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.04)] sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-slate-500">
+                Page <span className="font-semibold text-slate-800">{page}</span> of <span className="font-semibold text-slate-800">{totalPages}</span>
+            </p>
 
-            <div className="flex items-center gap-1">
-                {pages.map((item, idx) =>
-                    typeof item === "string" ? (
-                        <span key={`ellipsis-${idx}`} className="px-2 text-slate-600 font-bold text-sm">
-                            {item}
-                        </span>
-                    ) : (
-                        <button
-                            key={item}
-                            type="button"
-                            onClick={() => onPageSelect(item)}
-                            className={cn(
-                                PAG_NUM_BASE,
-                                "flex items-center justify-center",
-                                item === page ? PAG_NUM_ACTIVE : PAG_NUM_INACTIVE
-                            )}
-                        >
-                            {item}
-                        </button>
-                    )
-                )}
+            <div className="flex items-center justify-center gap-2">
+                <button
+                    type="button"
+                    onClick={onPrev}
+                    disabled={page <= 1}
+                    className={cn(PAG_BTN, "w-auto px-4 gap-1.5 text-sm font-medium")}
+                >
+                    <ChevronLeft size={15} />
+                    Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                    {pages.map((item, idx) =>
+                        typeof item === "string" ? (
+                            <span key={`ellipsis-${idx}`} className="px-2 text-sm font-semibold text-slate-500">
+                                {item}
+                            </span>
+                        ) : (
+                            <button
+                                key={item}
+                                type="button"
+                                onClick={() => onPageSelect(item)}
+                                className={cn(
+                                    PAG_NUM_BASE,
+                                    "flex items-center justify-center",
+                                    item === page ? PAG_NUM_ACTIVE : PAG_NUM_INACTIVE
+                                )}
+                            >
+                                {item}
+                            </button>
+                        )
+                    )}
+                </div>
+
+                <button
+                    type="button"
+                    onClick={onNext}
+                    disabled={page >= totalPages}
+                    className={cn(PAG_BTN, "w-auto px-4 gap-1.5 text-sm font-medium")}
+                >
+                    Next
+                    <ChevronRight size={15} />
+                </button>
             </div>
-
-            <button
-                onClick={onNext}
-                disabled={page >= totalPages}
-                className={cn(PAG_BTN, "w-auto px-3.5 gap-1.5 text-sm font-semibold")}
-            >
-                Next
-                <ChevronRight size={15} />
-            </button>
         </div>
     );
 }
