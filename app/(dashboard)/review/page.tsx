@@ -15,7 +15,7 @@ export default function ReviewPage() {
     <div className="flex-1 w-full bg-white overflow-hidden min-h-[calc(100vh-4rem)] md:min-h-[calc(100vh-5rem)] transition-all">
       {/* ── Page Header ── */}
       <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
+        <div className="mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-[20px] font-bold text-primary leading-tight">
               Employee Recognition

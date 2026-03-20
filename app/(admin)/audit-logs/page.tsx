@@ -77,128 +77,126 @@ export default function AuditLogsPage() {
 
     return (
         <>
-            <main className="flex-1 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5">
+            <main className="flex-1 overflow-y-auto overflow-x-hidden">
                 {/* ─── Page Header (matches Employee page) ─── */}
-                <div>
-                    <div className="bg-white border-b border-border px-8 md:px-10 py-5">
-                        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
-                                    Audit Logs
-                                </h1>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                    Track and monitor all system activity
-                                </p>
-                            </div>
-                            <span className="hidden md:flex items-center text-xl font-black tracking-tight select-none">
-                                <span style={{ color: "#E31837" }}>A</span>
-                                <span style={{ color: "#004C8F" }}>abhar</span>
-                            </span>
+                <div className="bg-white border-b border-border px-4 sm:px-5 md:px-6 lg:px-8 py-4 sm:py-[18px]">
+                    <div className="mx-auto flex items-center justify-between gap-4">
+                        <div>
+                            <h1 className="text-xl sm:text-2xl font-bold leading-tight" style={{ color: "#004C8F" }}>
+                                Audit Logs
+                            </h1>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                                Track and monitor all system activity
+                            </p>
                         </div>
-                    </div>
-
-                </div>
-                <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-5">
-                <div className="bg-white rounded-xl shadow-sm px-3 sm:px-4 lg:px-6 py-4 sm:py-5 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={() => setFiltersOpen(f => !f)}
-                            className="h-10 w-full sm:w-auto px-4 rounded-lg font-semibold border-border text-foreground hover:bg-muted"
-                        >
-                            <Filter className="w-4 h-4 mr-2" />
-                            {filtersOpen ? "Hide Filters" : "Filter"}
-                            {hasActiveFilters && <span className="ml-2 w-2 h-2 rounded-full bg-red-400 inline-block" />}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={fetchLogs}
-                            className="h-10 w-full sm:w-10 p-0 rounded-lg border-border text-muted-foreground hover:bg-muted sm:ml-auto"
-                            title="Refresh"
-                        >
-                            <RefreshCw className="w-4 h-4" />
-                        </Button>
-                    </div>
-
-                {filtersOpen && (
-                    <AuditFilterPanel initialFilters={filters} onApply={applyFilters} onClear={clearFilters} />
-                )}
-
-                {hasActiveFilters && (
-                    <div className="flex flex-wrap items-center gap-2 overflow-x-hidden">
-                        <span className="text-xs font-medium" style={{ color: "#6b7280" }}>
-                            Active filters:
+                        <span className="hidden lg:flex items-center text-xl font-black tracking-tight select-none">
+                            <span style={{ color: "#E31837" }}>A</span>
+                            <span style={{ color: "#004C8F" }}>abhar</span>
                         </span>
-                        {filters.tableName && (
-                            <span
-                                className="text-xs px-2.5 py-1 rounded-full font-medium break-all"
-                                style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}
-                            >
-                                Module: {filters.tableName}
-                            </span>
-                        )}
-                        {filters.operationType && (
-                            <span
-                                className="text-xs px-2.5 py-1 rounded-full font-medium break-all"
-                                style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}
-                            >
-                                Action: {filters.operationType}
-                            </span>
-                        )}
-                        {filters.performedBy && (
-                            <span
-                                className="text-xs px-2.5 py-1 rounded-full font-medium break-all"
-                                style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}
-                            >
-                                Employee ID: {filters.performedBy.slice(0, 8)}...
-                            </span>
-                        )}
-                        {filters.startDate && (
-                            <span
-                                className="text-xs px-2.5 py-1 rounded-full font-medium break-all"
-                                style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}
-                            >
-                                From: {new Date(filters.startDate).toLocaleDateString()}
-                            </span>
-                        )}
-                        {filters.endDate && (
-                            <span
-                                className="text-xs px-2.5 py-1 rounded-full font-medium break-all"
-                                style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}
-                            >
-                                To: {new Date(filters.endDate).toLocaleDateString()}
-                            </span>
-                        )}
-                        <button
-                            onClick={clearFilters}
-                            className="text-xs flex items-center gap-1 px-2.5 py-1 rounded-full transition-all hover:bg-destructive/10"
-                            style={{ color: "#e8192c", border: "1px solid #fecaca" }}
-                        >
-                            <X className="w-3 h-3" /> Clear all
-                        </button>
                     </div>
-                )}
+                </div>
 
-                {error && (
-                    <div
-                        className="px-4 py-3 rounded-lg text-sm"
-                        style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c" }}
-                    >
-                        {error}
+                <div className="p-3 sm:p-4 md:p-5 lg:p-6 pt-2 sm:pt-3 md:pt-4 space-y-3 sm:space-y-4">
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-3 sm:px-4 md:px-5 lg:px-6 py-3 sm:py-3.5 space-y-3 sm:space-y-3.5">
+                        <div className="flex items-center gap-2.5 sm:gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => setFiltersOpen(f => !f)}
+                                className="h-10 flex-1 sm:flex-none sm:w-auto px-4 rounded-lg font-semibold border-border text-foreground hover:bg-muted"
+                            >
+                                <Filter className="w-4 h-4 mr-2" />
+                                {filtersOpen ? "Hide Filters" : "Filter"}
+                                {hasActiveFilters && <span className="ml-2 w-2 h-2 rounded-full bg-red-400 inline-block" />}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={fetchLogs}
+                                className="h-10 w-10 p-0 rounded-lg border-border text-muted-foreground hover:bg-muted sm:ml-auto"
+                                title="Refresh"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                            </Button>
+                        </div>
+
+                        {filtersOpen && (
+                            <AuditFilterPanel initialFilters={filters} onApply={applyFilters} onClear={clearFilters} />
+                        )}
+
+                        {hasActiveFilters && (
+                            <div className="flex flex-wrap items-center gap-2 overflow-x-hidden">
+                                <span className="text-xs font-medium" style={{ color: "#6b7280" }}>
+                                    Active filters:
+                                </span>
+                                {filters.tableName && (
+                                    <span
+                                        className="text-xs px-2.5 py-1 rounded-full font-medium break-all"
+                                        style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}
+                                    >
+                                        Module: {filters.tableName}
+                                    </span>
+                                )}
+                                {filters.operationType && (
+                                    <span
+                                        className="text-xs px-2.5 py-1 rounded-full font-medium break-all"
+                                        style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}
+                                    >
+                                        Action: {filters.operationType}
+                                    </span>
+                                )}
+                                {filters.performedBy && (
+                                    <span
+                                        className="text-xs px-2.5 py-1 rounded-full font-medium break-all"
+                                        style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}
+                                    >
+                                        Employee ID: {filters.performedBy.slice(0, 8)}...
+                                    </span>
+                                )}
+                                {filters.startDate && (
+                                    <span
+                                        className="text-xs px-2.5 py-1 rounded-full font-medium break-all"
+                                        style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}
+                                    >
+                                        From: {new Date(filters.startDate).toLocaleDateString()}
+                                    </span>
+                                )}
+                                {filters.endDate && (
+                                    <span
+                                        className="text-xs px-2.5 py-1 rounded-full font-medium break-all"
+                                        style={{ backgroundColor: "#eff6ff", color: "#1a4ab5", border: "1px solid #bfdbfe" }}
+                                    >
+                                        To: {new Date(filters.endDate).toLocaleDateString()}
+                                    </span>
+                                )}
+                                <button
+                                    onClick={clearFilters}
+                                    className="text-xs flex items-center gap-1 px-2.5 py-1 rounded-full transition-all hover:bg-destructive/10"
+                                    style={{ color: "#e8192c", border: "1px solid #fecaca" }}
+                                >
+                                    <X className="w-3 h-3" /> Clear all
+                                </button>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div
+                                className="px-4 py-3 rounded-lg text-sm"
+                                style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c" }}
+                            >
+                                {error}
+                            </div>
+                        )}
                     </div>
-                )}
 
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <AuditTable
-                        logs={logs}
-                        loading={loading}
-                        pagination={pagination}
-                        onPageChange={setPage}
-                        onViewDetails={setSelectedLog}
-                        hasActiveFilters={hasActiveFilters}
-                    />
-                </div>
-                </div>
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <AuditTable
+                            logs={logs}
+                            loading={loading}
+                            pagination={pagination}
+                            onPageChange={setPage}
+                            onViewDetails={setSelectedLog}
+                            hasActiveFilters={hasActiveFilters}
+                        />
+                    </div>
                 </div>
             </main>
             <AuditDetailModal log={selectedLog} onClose={() => setSelectedLog(null)} />

@@ -28,7 +28,7 @@ function ChangeTable({ data, emptyMessage }: { data: unknown; emptyMessage: stri
     const entries = Object.entries(data as Record<string, unknown>);
 
     return (
-        <div className="rounded-lg overflow-hidden" style={{ border: "1px solid #e5e7eb" }}>
+        <div className="rounded-lg overflow-x-auto" style={{ border: "1px solid #e5e7eb" }}>
             <table className="w-full text-sm">
                 <thead>
                     <tr style={{ backgroundColor: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
@@ -75,11 +75,11 @@ export function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
 
     return (
         <Dialog open={!!log} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 rounded-xl [&>button]:hidden" style={{ border: "none" }}>
+            <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0 rounded-xl [&>button]:hidden" style={{ border: "none" }}>
 
                 {/* Blue header */}
                 <div
-                    className="flex items-center justify-between px-6 py-4 sticky top-0 z-10"
+                    className="flex items-center justify-between px-4 sm:px-6 py-4 sticky top-0 z-10"
                     style={{ backgroundColor: "#1a4ab5" }}
                 >
                     <div>
@@ -100,10 +100,10 @@ export function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
                     </Button>
                 </div>
 
-                <div className="bg-white px-6 py-6 space-y-6">
+                <div className="bg-white px-4 sm:px-6 py-5 sm:py-6 space-y-5 sm:space-y-6">
 
                     {/* Summary cards */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="rounded-lg px-4 py-3" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
                             <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#6b7280" }}>Done by</p>
                             <p className="text-sm font-semibold" style={{ color: "#111827" }}>{employeeName}</p>
@@ -124,7 +124,7 @@ export function AuditDetailModal({ log, onClose }: AuditDetailModalProps) {
                                 {log.ip_address ?? "Not recorded"}
                             </p>
                         </div>
-                        <div className="rounded-lg px-4 py-3 col-span-2" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
+                        <div className="rounded-lg px-4 py-3 sm:col-span-2" style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}>
                             <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#6b7280" }}>Section / Module</p>
                             <p className="text-sm font-semibold" style={{ color: "#111827" }}>
                                 {log.table_name.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}

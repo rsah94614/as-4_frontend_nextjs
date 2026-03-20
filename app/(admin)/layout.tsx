@@ -13,9 +13,11 @@ export default function AdminLayout({
         <ProtectedRoute adminOnly>
 
             <div className="flex h-screen overflow-hidden" style={{ backgroundColor: "#eef0f8" }}>
-                <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+                <div className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
                     <Navbar onMenuClick={() => { }} />
-                    {children}
+                    <main className="flex-1 min-h-0 overflow-auto">
+                        {children}
+                    </main>
                 </div>
             </div>
 

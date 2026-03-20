@@ -28,7 +28,6 @@ export function OperationBadge({ op, tableName }: { op: string; tableName?: stri
     return (
         <span className="text-xs font-semibold whitespace-nowrap" style={{ color: "#374151" }}>
             {style.label}
-            {tableLabel ? ` ${tableLabel}` : ""}
         </span>
     );
 }
@@ -91,32 +90,34 @@ export function AuditTable({
                 </div>
             ) : (
                 <>
-                    <div className="space-y-3 p-3 xl:hidden overflow-x-hidden">
+                    <div className="space-y-3 p-3 sm:p-4 md:hidden overflow-x-hidden">
                         {logs.map(log => {
                             const employeeName = getEmployeeName(log);
                             return (
                                 <div
                                     key={log.audit_id}
-                                    className="rounded-lg border border-slate-200 p-4 space-y-3 w-full max-w-full overflow-hidden cursor-pointer"
+                                    className="rounded-xl border border-slate-200 p-3.5 sm:p-4 space-y-3 w-full max-w-full overflow-hidden cursor-pointer transition-colors"
                                     style={{ backgroundColor: "#ffffff" }}
                                     onClick={() => onViewDetails(log)}
                                 >
-                                    <div className="flex items-start justify-between gap-3">
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                                         <span className="font-mono text-xs font-semibold" style={{ color: "#374151" }}>
                                             {shortId(log.audit_id)}
                                         </span>
-                                        <OperationBadge op={log.operation_type} tableName={log.table_name} />
+                                        <div className="max-w-full overflow-hidden">
+                                            <OperationBadge op={log.operation_type} tableName={log.table_name} />
+                                        </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2 min-w-0">
+                                    <div className="flex items-center gap-2.5 min-w-0">
                                         <UserAvatar name={employeeName} />
-                                        <span className="min-w-0 break-words font-medium text-sm" style={{ color: "#111827" }}>
+                                        <span className="min-w-0 break-words font-medium text-sm sm:text-[15px]" style={{ color: "#111827" }}>
                                             {employeeName}
                                         </span>
                                     </div>
 
-                                    <div className="grid grid-cols-1 gap-2 text-xs">
-                                        <div>
+                                    <div className="grid grid-cols-2 gap-3 text-xs">
+                                        <div className="col-span-2">
                                             <p className="mb-1" style={{ color: "#6b7280" }}>
                                                 Module
                                             </p>
@@ -144,19 +145,46 @@ export function AuditTable({
                         })}
                     </div>
 
-                    <div className="hidden xl:block overflow-x-auto">
-                        <table className="w-full min-w-[980px] text-sm">
+                    <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full min-w-[720px] lg:min-w-[860px] text-sm">
                             <thead>
                                 <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-                                    {["Log ID", "User", "Action", "Table", "Timestamp", "IP Address"].map(col => (
-                                        <th
-                                            key={col}
-                                            className="text-left py-3 px-4 font-semibold text-sm"
-                                            style={{ color: "#374151" }}
-                                        >
-                                            {col}
-                                        </th>
-                                    ))}
+                                    <th
+                                        className="text-left py-3 px-3 lg:px-4 font-semibold text-sm"
+                                        style={{ color: "#374151" }}
+                                    >
+                                        Log ID
+                                    </th>
+                                    <th
+                                        className="text-left py-3 px-3 lg:px-4 font-semibold text-sm"
+                                        style={{ color: "#374151" }}
+                                    >
+                                        User
+                                    </th>
+                                    <th
+                                        className="text-left py-3 px-3 lg:px-4 font-semibold text-sm"
+                                        style={{ color: "#374151" }}
+                                    >
+                                        Action
+                                    </th>
+                                    <th
+                                        className="text-left py-3 px-3 lg:px-4 font-semibold text-sm"
+                                        style={{ color: "#374151" }}
+                                    >
+                                        Module
+                                    </th>
+                                    <th
+                                        className="text-left py-3 px-3 lg:px-4 font-semibold text-sm"
+                                        style={{ color: "#374151" }}
+                                    >
+                                        Timestamp
+                                    </th>
+                                    <th
+                                        className="hidden xl:table-cell text-left py-3 px-3 lg:px-4 font-semibold text-sm"
+                                        style={{ color: "#374151" }}
+                                    >
+                                        IP Address
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -171,11 +199,11 @@ export function AuditTable({
                                             onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
                                             onClick={() => onViewDetails(log)}
                                         >
-                                            <td className="py-3.5 px-4 font-mono text-sm font-semibold" style={{ color: "#374151" }}>
+                                            <td className="py-3.5 px-3 lg:px-4 font-mono text-sm font-semibold" style={{ color: "#374151" }}>
                                                 {shortId(log.audit_id)}
                                             </td>
 
-                                            <td className="py-3.5 px-4">
+                                            <td className="py-3.5 px-3 lg:px-4">
                                                 <div className="flex items-center gap-2">
                                                     <UserAvatar name={employeeName} />
                                                     <span className="font-medium text-sm" style={{ color: "#111827" }}>
@@ -184,19 +212,19 @@ export function AuditTable({
                                                 </div>
                                             </td>
 
-                                            <td className="py-3.5 px-4">
+                                            <td className="py-3.5 px-3 lg:px-4">
                                                 <OperationBadge op={log.operation_type} tableName={log.table_name} />
                                             </td>
 
-                                            <td className="py-3.5 px-4" style={{ color: "#374151" }}>
+                                            <td className="py-3.5 px-3 lg:px-4" style={{ color: "#374151" }}>
                                                 {log.table_name.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
                                             </td>
 
-                                            <td className="py-3.5 px-4" style={{ color: "#374151" }}>
+                                            <td className="py-3.5 px-3 lg:px-4 whitespace-nowrap" style={{ color: "#374151" }}>
                                                 {formatDateTime(log.performed_at)}
                                             </td>
 
-                                            <td className="py-3.5 px-4 font-mono text-sm" style={{ color: "#374151" }}>
+                                            <td className="hidden xl:table-cell py-3.5 px-3 lg:px-4 font-mono text-sm" style={{ color: "#374151" }}>
                                                 {log.ip_address ?? "-"}
                                             </td>
                                         </tr>
@@ -213,7 +241,7 @@ export function AuditTable({
                     className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-3 sm:px-4 py-4"
                     style={{ borderTop: "1px solid #e5e7eb" }}
                 >
-                    <span className="text-xs" style={{ color: "#6b7280" }}>
+                    <span className="text-xs text-center sm:text-left" style={{ color: "#6b7280" }}>
                         {(() => {
                             const perPage = pagination.per_page ?? logs.length ?? 10;
                             const from = (pagination.current_page - 1) * perPage + 1;
@@ -222,7 +250,7 @@ export function AuditTable({
                         })()}
                     </span>
 
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
                         <Button
                             variant="outline"
                             size="sm"
@@ -255,7 +283,7 @@ export function AuditTable({
                             size="sm"
                             onClick={() => onPageChange(pagination.current_page - 1)}
                             disabled={!pagination.has_previous}
-                            className="hidden xl:inline-flex h-8 px-4 rounded border-slate-300 text-slate-700"
+                            className="hidden md:inline-flex h-8 px-4 rounded border-slate-300 text-slate-700"
                         >
                             Previous
                         </Button>
@@ -263,7 +291,7 @@ export function AuditTable({
                             size="sm"
                             onClick={() => onPageChange(pagination.current_page + 1)}
                             disabled={!pagination.has_next}
-                            className="hidden xl:inline-flex h-8 px-4 rounded font-semibold text-white hover:opacity-90"
+                            className="hidden md:inline-flex h-8 px-4 rounded font-semibold text-white hover:opacity-90"
                             style={{ backgroundColor: "#1a4ab5", border: "none" }}
                         >
                             Next
