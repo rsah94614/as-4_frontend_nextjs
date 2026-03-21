@@ -87,7 +87,7 @@ export default function RewardCard({ item, canAfford, onRedeem, staggerIndex = 0
               onClick={() => !disabled && onRedeem(item)}
               className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 border ${disabled
                   ? "bg-slate-100 text-slate-400 cursor-not-allowed border-transparent"
-                  : "bg-slate-600 text-white border-[#1E293B] hover:bg-slate-500 active:scale-95 hover:shadow-md hover:shadow-slate-200"
+                  : "bg-[#004C8F] text-white border-[#1E293B] hover:bg-[#004C8F] active:scale-95 hover:shadow-md hover:shadow-slate-200"
                 }`}
             >
               {outOfStock

@@ -137,7 +137,28 @@ export default function RedeemPage() {
           </div>
         )}
 
-        {redeem.productItems.length > 0 ? (
+        {/* Skeleton loading when switching categories */}
+        {redeem.categoryLoading ? (
+          <>
+            <div className={SECTION_HEADER}>
+              <Skeleton className="h-7 w-28" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+            <div className={PRODUCT_GRID}>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="rounded-2xl border border-slate-100 p-4 space-y-3 animate-pulse">
+                  <Skeleton className="h-36 w-full rounded-xl" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <div className="flex justify-between items-center pt-2">
+                    <Skeleton className="h-5 w-20" />
+                    <Skeleton className="h-8 w-24 rounded-lg" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : redeem.productItems.length > 0 ? (
           <>
             <div className={SECTION_HEADER}>
               <h2 className="text-[22px] font-semibold text-foreground">
