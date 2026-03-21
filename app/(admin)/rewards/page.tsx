@@ -27,7 +27,6 @@ export default function RewardsPage() {
   const [selected, setSelected] = useState<RewardItem | undefined>();
 
   // ─── Data Fetching ────────────────────────────────────────────────────────
-
   const load = useCallback(async () => {
     setLoading(true);
     setError("");

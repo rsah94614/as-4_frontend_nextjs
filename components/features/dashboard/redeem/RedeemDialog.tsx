@@ -112,7 +112,7 @@ function RedeemDialogBody({
               <span
                 className={`font-bold ${availablePoints - item.default_points < 0
                     ? "text-red-500"
-                    : "text-emerald-600"
+                    : "text-slate-800"
                   }`}
               >
                 {(availablePoints - item.default_points).toLocaleString()} pts
@@ -134,7 +134,7 @@ function RedeemDialogBody({
               onChange={(e) => setComment(e.target.value)}
               placeholder="e.g. for team lunch"
               maxLength={200}
-              className="rounded-xl border-slate-200 bg-slate-50 text-sm text-slate-800 placeholder:text-slate-400"
+              className="rounded-md border-slate-100 bg-slate-50 text-sm text-slate-800 placeholder:text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-slate-200"
             />
           </div>
         </div>
@@ -149,7 +149,7 @@ function RedeemDialogBody({
           </Button>
           <Button
             onClick={handleConfirm}
-            className="flex-1 rounded-xl bg-[#1E293B] hover:bg-[#0F172A] active:scale-[0.98] transition-all"
+            className="flex-1 rounded-xl bg-[#004C8F] hover:bg-[#0b487d] active:scale-[0.98] transition-all"
           >
             Confirm
           </Button>
@@ -162,7 +162,7 @@ function RedeemDialogBody({
   if (phase === "loading") {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-7">
-        <Loader2 size={36} className="text-slate-700 animate-spin mb-4" />
+        <Loader2 size={36} className="text-[#004C8F] animate-spin mb-4" />
         <p className="text-sm text-slate-500 font-medium">
           Processing redemption…
         </p>
@@ -193,7 +193,7 @@ function RedeemDialogBody({
           <div className="flex justify-between text-xs text-slate-500 mb-1.5">
             <span>Points spent</span>
             <span className="font-bold text-slate-800">
-              −{item.default_points.toLocaleString()}
+              {item.default_points.toLocaleString()}
             </span>
           </div>
           <div className="flex justify-between text-xs text-slate-500">
